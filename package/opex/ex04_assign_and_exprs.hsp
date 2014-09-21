@@ -1,0 +1,22 @@
+// ex04
+
+#include "opex.as"
+
+// assign( var, values... )
+// @ v = values... と同じことをする。
+// @ 命令としても関数としても呼び出せる。
+// @ 関数形式の場合、変数 v に代入された最後の値を返す。
+
+// exprs( exprs... )
+// @ 引数を左から順番に評価し、最後の引数を返す。
+// @ C言語などにあるカンマ , 演算子に等しい。
+// @ 引数 0 で呼び出すと「関数の戻り値が設定されていません」のエラー。
+	
+	mes exprs( assign(a, 0, 1, 2, 3, 4), length(a) )
+;⇔	a = 0, 1, 2, 3, 4 : mes length(a)
+	
+	repeat length(a)
+		mes "a(" + cnt + ") = " + a(cnt)
+	loop
+	
+	stop

@@ -1,0 +1,47 @@
+// ex00 : テキトーなサンプル
+
+#include "var_assoc.as"
+
+// ごちゃごちゃ
+
+	assoc m, 2		// 要素数 2 の assoc 型の配列変数
+	
+;	AssocDim m("string"), vartype("str"), 3		// m("string") を文字列型で要素数 3 の配列にする
+;	mes "m(\"string\").vartype = " + AssocVartype( m("string") )
+;	mes "m(\"string\").length  = " + AssocLen    ( m("string") )
+	
+	// 代入
+	m("string")  = "Hello, world!"
+	m("double")  = 3.14159
+	m("integer") = 42
+	
+	AssocInsert m, "_"		// キーの追加だけ
+	AssocRemove m, "_"		// キーを除去する
+;	AssocRemove m, "x"		// (存在しないキーは除去できない)
+	
+	// 表示
+	mes "m(\"string\")  = " + m("string")
+	mes "m(\"double\")  = " + m("double")
+	mes "m(\"integer\") = " + m("integer")
+;	mes "m(\"default\") = " + m("default")		// (存在しないキーは参照できない)
+	mes
+	
+		m(1, "string") = "This is the second's string."	// m(1) の "string"
+	mes m(1, "string")
+	
+		m("string", 1) = "string の二番目の文字列"		// m(0) の "string" の (1)
+	mes m("string", 1)
+	
+	// 変数情報を出力する
+	mes AssocVartype( m("string") )		// m("string") の型
+	
+	// COMオブジェクトを使用する
+	// (この手の「変数の中に何かを入れる」系の関数は、一旦他の変数を使う必要がある)
+/*
+	newcom com_tmp, "WScript.Shell"
+	m("com") = com_tmp
+	
+	com_temp = m("com")
+	mcall com_temp, "Run", "notepad.exe"	// notepad を起動
+//*/
+	stop

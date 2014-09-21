@@ -1,0 +1,75 @@
+// call.hpi - sample 14
+
+#include "call.as"
+
+// コマンド呼び出し (番外編)
+
+// @ 任意のコマンドの axcmd を使って、callc(s|f) で実行できる。
+// @ 書式が奇妙なので注意する。
+// @	callcs( axcmd ) 実引数リスト	// 命令形式
+// @	callcf( axcmd, (実引数リスト) )	// 関数形式 ( 引数が無くても () は必要 )
+// @	callcf( axcmd )					// システム変数形式 ( ()なし関数 )
+// @ なお、c, s, f はそれぞれ
+// @	command   (コマンド)
+// @	statement (命令)
+// @	function  (関数)
+// @― の頭文字から取っている。
+
+// @ サンプルの最後のように、処理を動的に変更できるのが特徴。
+// @ 実際は defid を配列に格納して、callc_( arr(x) ) ってするだろうけど。
+
+#define printx callcs( axcmd_print )
+
+	// コマンドから id を取り出し、変数に代入する。
+	axcmd_print  = axcmdOf( mes )		// HSP内蔵コマンド
+	axcmd_opBin  = axcmdOf( opAdd )		// ユーザ定義命令・関数
+	axcmd_result = axcmdOf( stat )		// システム変数
+	axcmd_const  = axcmdOf( "Hello, world!" )	// 定数も ok
+	
+	// 命令形式
+	callcs(axcmd_print) "callcs(axcmd_print) \"Hello, world!\""
+	printx "命令は、マクロにすると使いやすい。"
+	
+	// 関数形式
+	printx "op(    ) = " + callcf( axcmd_opBin, () )	// 引数なし
+	printx "op(1, 2) = " + callcf( axcmd_opBin, (1, 2) )
+	
+	// システム変数形式
+	printx "result = " + callcf( axcmd_result )	// axcmd_opBin の呼び出しで、stat は値が変わっている
+	printx "const  = " + callcf( axcmd_const  )
+	
+	// 呼び出すコマンドを書き換えてみる
+	axcmd_print = axcmdOf( print_withShadow )	
+	axcmd_opBin = axcmdOf( opCatStr )
+	
+	callcs(axcmd_print) callcf( axcmd_opBin, ("処理", "変更") )
+	
+	stop
+	
+#module
+
+// f(a, b) = a + b
+#defcfunc opAdd int lhs, int rhs
+	return lhs + rhs
+	
+#defcfunc opCatStr str lhs, str rhs
+	return lhs + rhs
+	
+// 影文字装飾の print 命令
+#deffunc print_withShadow str s,  local curpos, local curclr
+	curpos = ginfo_cx, ginfo_cy
+	curclr = ginfo_r,  ginfo_g,  ginfo_b
+	
+	// 影を描画
+	color 192, 192, 192
+	pos curpos(0) + 1, curpos(1) + 1
+	mes s
+	
+	// 元の状態に戻して、普通に描画
+	color curclr(0), curclr(1), curclr(2)
+	pos curpos(0), curpos(1)
+	mes s
+	
+	return
+	
+#global

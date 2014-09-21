@@ -1,0 +1,300 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="リソース ファイル">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="opex">
+      <UniqueIdentifier>{ffea47d7-140f-489d-8161-cdebc46af0e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="var_vector">
+      <UniqueIdentifier>{62575e29-cc71-43f5-95b2-605e6a1b728c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="var_assoc">
+      <UniqueIdentifier>{08ae6401-3b6f-4106-aa4e-4f4fbecf1c8d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="hpimod">
+      <UniqueIdentifier>{ff6ed210-2204-4ca7-bc9c-69310e60d761}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="hpimod\hspsdk">
+      <UniqueIdentifier>{fd8a7911-9018-4662-892f-9fb9aa90a652}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="functor">
+      <UniqueIdentifier>{6564e1b6-4124-4e28-be49-21b01e5993d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="call_core">
+      <UniqueIdentifier>{282c7610-1862-42d5-b604-90f114ab2df4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="call_core\structWrap">
+      <UniqueIdentifier>{0458caca-cdab-4080-9311-836e62a51f7c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="call_core\method">
+      <UniqueIdentifier>{d7f9db15-2577-48da-8593-7f94259ee2a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="functor\IFunctor">
+      <UniqueIdentifier>{d377a5ef-989e-460d-9bc5-978ab7a82b6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="hpimod\knowbug">
+      <UniqueIdentifier>{a528324b-78ef-418b-abc1-460819ee2c1e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="call_core\cmd">
+      <UniqueIdentifier>{f298ef19-1e89-4e25-bcab-e45bf003e3c0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\hpimod\axcmd.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\basis.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\CHspCode.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\cmdlistMacro.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\hsp3plugin_custom.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\HspAllocator.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\Managed.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\ManagedPVal.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\mod_argGetter.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\reffuncResult.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\mod_makepval.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\mod_varutil.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\hspsdk\hsp3debug.h">
+      <Filter>hpimod\hspsdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\hspsdk\hsp3plugin.h">
+      <Filter>hpimod\hspsdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\hspsdk\hsp3struct.h">
+      <Filter>hpimod\hspsdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\hspsdk\hspvar_core.h">
+      <Filter>hpimod\hspsdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\hspsdk\hspwnd.h">
+      <Filter>hpimod\hspsdk</Filter>
+    </ClInclude>
+    <ClInclude Include="src\call\CModClsCtor.h">
+      <Filter>call_core\structWrap</Filter>
+    </ClInclude>
+    <ClInclude Include="src\call\modcls_FlexValue.h">
+      <Filter>call_core\structWrap</Filter>
+    </ClInclude>
+    <ClInclude Include="src\call\vt_structWrap.h">
+      <Filter>call_core\structWrap</Filter>
+    </ClInclude>
+    <ClInclude Include="src\call\cmd_modcls.h">
+      <Filter>call_core\structWrap</Filter>
+    </ClInclude>
+    <ClInclude Include="src\call\Functor.h">
+      <Filter>functor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\call\CBound.h">
+      <Filter>functor\IFunctor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\call\CCoRoutine.h">
+      <Filter>functor\IFunctor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\call\CLabelFunc.h">
+      <Filter>functor\IFunctor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\call\CLambda.h">
+      <Filter>functor\IFunctor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\call\CStreamCaller.h">
+      <Filter>functor\IFunctor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\call\vt_functor.h">
+      <Filter>functor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\call\cmd_sub.h">
+      <Filter>call_core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\call\CPrmInfo.h">
+      <Filter>call_core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\call\CPrmStk.h">
+      <Filter>call_core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\call\CPrmStkCreator.h">
+      <Filter>call_core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\call\Invoker.h">
+      <Filter>call_core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\call\PrmType.h">
+      <Filter>call_core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\call\IFunctor.h">
+      <Filter>functor\IFunctor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opex\cmd_opex.h">
+      <Filter>opex</Filter>
+    </ClInclude>
+    <ClInclude Include="src\opex\iface_opex.h">
+      <Filter>opex</Filter>
+    </ClInclude>
+    <ClInclude Include="src\var_assoc\CAssoc.h">
+      <Filter>var_assoc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\var_assoc\cmd_assoc.h">
+      <Filter>var_assoc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\var_assoc\for_knowbug.var_assoc.h">
+      <Filter>var_assoc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\var_assoc\iface_assoc.h">
+      <Filter>var_assoc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\var_assoc\vt_assoc.h">
+      <Filter>var_assoc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\var_vector\cmd_vector.h">
+      <Filter>var_vector</Filter>
+    </ClInclude>
+    <ClInclude Include="src\var_vector\for_knowbug.var_vector.h">
+      <Filter>var_vector</Filter>
+    </ClInclude>
+    <ClInclude Include="src\var_vector\iface_vector.h">
+      <Filter>var_vector</Filter>
+    </ClInclude>
+    <ClInclude Include="src\var_vector\sub_vector.h">
+      <Filter>var_vector</Filter>
+    </ClInclude>
+    <ClInclude Include="src\var_vector\vt_vector.h">
+      <Filter>var_vector</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\knowbug\knowbugForHPI.h">
+      <Filter>hpimod\knowbug</Filter>
+    </ClInclude>
+    <ClInclude Include="src\call\cmd_call.h">
+      <Filter>call_core\cmd</Filter>
+    </ClInclude>
+    <ClInclude Include="src\call\iface_call.h">
+      <Filter>call_core\cmd</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\hpimod\mod_argGetter.cpp">
+      <Filter>hpimod</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hpimod\mod_makepval.cpp">
+      <Filter>hpimod</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hpimod\mod_varutil.cpp">
+      <Filter>hpimod</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hpimod\hspsdk\hsp3plugin.cpp">
+      <Filter>hpimod\hspsdk</Filter>
+    </ClCompile>
+    <ClCompile Include="src\call\CModClsCtor.cpp">
+      <Filter>call_core\structWrap</Filter>
+    </ClCompile>
+    <ClCompile Include="src\call\modcls_FlexValue.cpp">
+      <Filter>call_core\structWrap</Filter>
+    </ClCompile>
+    <ClCompile Include="src\call\vt_structWrap.cpp">
+      <Filter>call_core\structWrap</Filter>
+    </ClCompile>
+    <ClCompile Include="src\call\cmd_modcls.cpp">
+      <Filter>call_core\structWrap</Filter>
+    </ClCompile>
+    <ClCompile Include="src\call\Functor.cpp">
+      <Filter>functor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\call\CBound.cpp">
+      <Filter>functor\IFunctor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\call\CCoRoutine.cpp">
+      <Filter>functor\IFunctor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\call\CLambda.cpp">
+      <Filter>functor\IFunctor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\call\CStreamCaller.cpp">
+      <Filter>functor\IFunctor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\call\cmd_method.cpp">
+      <Filter>call_core\method</Filter>
+    </ClCompile>
+    <ClCompile Include="src\call\vt_functor.cpp">
+      <Filter>functor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\call\cmd_sub.cpp">
+      <Filter>call_core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\call\CPrmInfo.cpp">
+      <Filter>call_core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\call\Invoker.cpp">
+      <Filter>call_core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\call\PrmType.cpp">
+      <Filter>call_core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\opex\cmd_opex.cpp">
+      <Filter>opex</Filter>
+    </ClCompile>
+    <ClCompile Include="src\opex\iface_opex.cpp">
+      <Filter>opex</Filter>
+    </ClCompile>
+    <ClCompile Include="src\var_assoc\CAssoc.cpp">
+      <Filter>var_assoc</Filter>
+    </ClCompile>
+    <ClCompile Include="src\var_assoc\cmd_assoc.cpp">
+      <Filter>var_assoc</Filter>
+    </ClCompile>
+    <ClCompile Include="src\var_assoc\iface_assoc.cpp">
+      <Filter>var_assoc</Filter>
+    </ClCompile>
+    <ClCompile Include="src\var_assoc\vt_assoc.cpp">
+      <Filter>var_assoc</Filter>
+    </ClCompile>
+    <ClCompile Include="src\var_vector\cmd_vector.cpp">
+      <Filter>var_vector</Filter>
+    </ClCompile>
+    <ClCompile Include="src\var_vector\iface_vector.cpp">
+      <Filter>var_vector</Filter>
+    </ClCompile>
+    <ClCompile Include="src\var_vector\sub_vector.cpp">
+      <Filter>var_vector</Filter>
+    </ClCompile>
+    <ClCompile Include="src\var_vector\vt_vector.cpp">
+      <Filter>var_vector</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hpimod\knowbug\knowbugForHPI.cpp">
+      <Filter>hpimod\knowbug</Filter>
+    </ClCompile>
+    <ClCompile Include="src\call\cmd_call.cpp">
+      <Filter>call_core\cmd</Filter>
+    </ClCompile>
+    <ClCompile Include="src\call\iface_call.cpp">
+      <Filter>call_core\cmd</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="package\call\callcmd.cmdlist.txt">
+      <Filter>call_core\cmd</Filter>
+    </Text>
+  </ItemGroup>
+</Project>

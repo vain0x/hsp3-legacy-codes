@@ -1,0 +1,29 @@
+// ex02: 実引数オブジェクト arguments
+
+#include "obsidian.as"
+
+// arguments
+// @ 実引数の列を vector として受け取る。
+
+// @ 呼び出しが終了した時点で、内部変数が無効になるので注意すること！
+// @	例えば return arguments なんてのは完全にアウト。
+// @	vector 自体は死なないかもだが。
+
+// arguments( n )
+// @ argv(n) と同じ。
+
+	x = 10
+	call *lbf_test, 1, "a", byref x
+	assert x == "changed"
+	
+	stop
+
+*lbf_test
+	args = arguments
+	
+	assert VectorSize( args ) 
+	assert args(0) == 1
+	assert args(1) == "a"
+	assert args(2) == 10
+	args(2) = "changed"
+	return

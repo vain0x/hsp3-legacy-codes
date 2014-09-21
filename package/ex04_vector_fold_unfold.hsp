@@ -1,0 +1,46 @@
+// ex04 : 畳み込み、解きほぐし
+
+#include "obsidian.as"
+
+// VectorFoldL( self, functor fMap )
+// @ self の [0] と [1] に fMap を適用し、
+// @	その返値と self のその次の要素に対して fMap を適用する。
+// @	これを可能な限り繰り返す。
+// @	[ a, b, c, ..., z ] → fMap( fMap( fMap(a, b), c )... , z )
+// @ 例えば、fMap を足し算 ( a + b ) とすると
+// @	[ a, b, c, ..., z ] → a + b + c + ... + z
+
+// VectorFoldR( self, functor fMap )
+// @ VectorFoldL と同様の操作を、右(末尾)から行う。
+// @	[ a, ..., x, y, z ] → fMap( a, ...fMap( x, fMap(y, z) ) )
+// @ 例えば、fMap を累乗 ( a^b ) とすると
+// @	[ a, b, c ] → a^(b^c)    // a の (b の c 乗) 乗
+	
+	v = vector( 1, 2, 3, 4, 5, 6 )
+	v_prodL = VectorFoldL( v, operator_mul )	// 総乗
+	v_pairR = VectorFoldR( v, funcexpr( "(" + __p0 + ", " + __p1 + ")" ) )
+	
+	mes VectorJoin(v, " * ") + " = " + v_prodL
+	mes VectorJoin(v, ", ")  + " → " + v_pairR
+	
+	// unfold
+	list = VectorUnfoldL( funcexpr(__p0 >= 10), functor_id, operator_add1, 0 )
+	mes VectorJoin(list, ", ")
+	stop
+	
+// VectorUnfoldL( functor fPred, fGen, fSuc, any seed )
+// @ 以下の規則に従って vector v を生成し、返却する。
+// @	0. fPred( seed ) が false のとき
+// @		v(0)    = fGen( seed )
+// @		seed(0) = fSuc( seed )
+// @	   そうでなければ v = vector()。
+// @	1. fPred( seed(i) ) が false のとき
+// @		v(i + 1)    = fGen( seed(i) )
+// @		seed(i + 1) = fSuc( seed(i) )
+// @	   そうでなければ v(i + 1) は存在しない。
+// @ 例えば、fPred：「10以上」、fGen：何もしない、fSuc：「1をたす」、seed：0 とすると、
+// @	0 は10以上でないので v(0) が存在し、v(0) = 0, seed(0) = fSuc(0) = 1
+// @	1 は10以上でないので v(1) が存在し、v(1) = 1, seed(1) = fSuc(seed(0)) = 2
+// @	...
+// @	10 は10以上なので v(10) は存在しない。
+// @	∴[ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]

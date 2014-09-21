@@ -1,0 +1,26 @@
+// ex03 : 連続代入
+
+#include "var_vector.as"
+
+// vector 型への連続代入
+// @ 添字によって、代入先が決まる。
+
+	vector v0
+	v0 = 1, 2, 3			// 変数 v0 に 1, 2, 3 を代入
+//	v0 は int 配列になる
+	
+	vector v1
+	v1(0) = 1, 2, 3			// vector配列 v1 に対する [0] から 1, 2, 3 の代入
+	
+	vector v2
+	v2(0, 0) = 1, 2, 3		// 内部変数 "v2(0)" に対する [0] から 1, 2, 3 の代入
+	
+	assert( vartype(v0) == vartype("int") )
+	assert( v0(0) == 1 && v0(1) == 2 && v0(2) == 3 )
+	assert( vartype(v1) == vector )
+	assert( VectorVarType(v1(0)) == vartype("int") )
+	assert( v1(0) == 1 && v1(1) == 2 && v1(2) == 3 )
+	assert( vartype(v2) == vector )
+	assert( v2(0, 0) == 1 && v2(0, 1) == 2 && v2(0, 2) == 3 )
+	
+

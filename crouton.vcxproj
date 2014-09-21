@@ -1,0 +1,167 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{1E058B28-B14F-47E0-9CD8-55C5B9DB024E}</ProjectGuid>
+    <RootNamespace>crouton</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <TargetExt>.hpi</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <TargetExt>.hpi</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>../hpimod;../hpimod/hspsdk</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>HSP3PLUGIN;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>../hpimod;../hpimod/hspsdk</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>HSP3PLUGIN;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\hpimod\axcmd.h" />
+    <ClInclude Include="..\hpimod\basis.h" />
+    <ClInclude Include="..\hpimod\CHspCode.h" />
+    <ClInclude Include="..\hpimod\cmdlistMacro.h" />
+    <ClInclude Include="..\hpimod\hsp3plugin_custom.h" />
+    <ClInclude Include="..\hpimod\HspAllocator.h" />
+    <ClInclude Include="..\hpimod\hspsdk\hsp3debug.h" />
+    <ClInclude Include="..\hpimod\hspsdk\hsp3plugin.h" />
+    <ClInclude Include="..\hpimod\hspsdk\hsp3struct.h" />
+    <ClInclude Include="..\hpimod\hspsdk\hspvar_core.h" />
+    <ClInclude Include="..\hpimod\hspsdk\hspwnd.h" />
+    <ClInclude Include="..\hpimod\knowbug\knowbugForHPI.h" />
+    <ClInclude Include="..\hpimod\Managed.h" />
+    <ClInclude Include="..\hpimod\ManagedPVal.h" />
+    <ClInclude Include="..\hpimod\mod_argGetter.h" />
+    <ClInclude Include="..\hpimod\mod_makepval.h" />
+    <ClInclude Include="..\hpimod\mod_varutil.h" />
+    <ClInclude Include="..\hpimod\reffuncResult.h" />
+    <ClInclude Include="src\call\CBound.h" />
+    <ClInclude Include="src\call\CCoRoutine.h" />
+    <ClInclude Include="src\call\CLabelFunc.h" />
+    <ClInclude Include="src\call\CLambda.h" />
+    <ClInclude Include="src\call\cmd_call.h" />
+    <ClInclude Include="src\call\cmd_modcls.h" />
+    <ClInclude Include="src\call\cmd_sub.h" />
+    <ClInclude Include="src\call\CModClsCtor.h" />
+    <ClInclude Include="src\call\CPrmInfo.h" />
+    <ClInclude Include="src\call\CPrmStk.h" />
+    <ClInclude Include="src\call\CPrmStkCreator.h" />
+    <ClInclude Include="src\call\CStreamCaller.h" />
+    <ClInclude Include="src\call\Functor.h" />
+    <ClInclude Include="src\call\iface_call.h" />
+    <ClInclude Include="src\call\IFunctor.h" />
+    <ClInclude Include="src\call\Invoker.h" />
+    <ClInclude Include="src\call\modcls_FlexValue.h" />
+    <ClInclude Include="src\call\PrmType.h" />
+    <ClInclude Include="src\call\vt_functor.h" />
+    <ClInclude Include="src\call\vt_structWrap.h" />
+    <ClInclude Include="src\opex\cmd_opex.h" />
+    <ClInclude Include="src\opex\iface_opex.h" />
+    <ClInclude Include="src\var_assoc\CAssoc.h" />
+    <ClInclude Include="src\var_assoc\cmd_assoc.h" />
+    <ClInclude Include="src\var_assoc\for_knowbug.var_assoc.h" />
+    <ClInclude Include="src\var_assoc\iface_assoc.h" />
+    <ClInclude Include="src\var_assoc\vt_assoc.h" />
+    <ClInclude Include="src\var_vector\cmd_vector.h" />
+    <ClInclude Include="src\var_vector\for_knowbug.var_vector.h" />
+    <ClInclude Include="src\var_vector\iface_vector.h" />
+    <ClInclude Include="src\var_vector\sub_vector.h" />
+    <ClInclude Include="src\var_vector\vt_vector.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\hpimod\hspsdk\hsp3plugin.cpp" />
+    <ClCompile Include="..\hpimod\knowbug\knowbugForHPI.cpp" />
+    <ClCompile Include="..\hpimod\mod_argGetter.cpp" />
+    <ClCompile Include="..\hpimod\mod_makepval.cpp" />
+    <ClCompile Include="..\hpimod\mod_varutil.cpp" />
+    <ClCompile Include="src\call\CBound.cpp" />
+    <ClCompile Include="src\call\CCoRoutine.cpp" />
+    <ClCompile Include="src\call\CLambda.cpp" />
+    <ClCompile Include="src\call\cmd_call.cpp" />
+    <ClCompile Include="src\call\cmd_method.cpp" />
+    <ClCompile Include="src\call\cmd_modcls.cpp" />
+    <ClCompile Include="src\call\cmd_sub.cpp" />
+    <ClCompile Include="src\call\CModClsCtor.cpp" />
+    <ClCompile Include="src\call\CPrmInfo.cpp" />
+    <ClCompile Include="src\call\CStreamCaller.cpp" />
+    <ClCompile Include="src\call\Functor.cpp" />
+    <ClCompile Include="src\call\iface_call.cpp" />
+    <ClCompile Include="src\call\Invoker.cpp" />
+    <ClCompile Include="src\call\modcls_FlexValue.cpp" />
+    <ClCompile Include="src\call\PrmType.cpp" />
+    <ClCompile Include="src\call\vt_functor.cpp" />
+    <ClCompile Include="src\call\vt_structWrap.cpp" />
+    <ClCompile Include="src\opex\cmd_opex.cpp" />
+    <ClCompile Include="src\opex\iface_opex.cpp" />
+    <ClCompile Include="src\var_assoc\CAssoc.cpp" />
+    <ClCompile Include="src\var_assoc\cmd_assoc.cpp" />
+    <ClCompile Include="src\var_assoc\iface_assoc.cpp" />
+    <ClCompile Include="src\var_assoc\vt_assoc.cpp" />
+    <ClCompile Include="src\var_vector\cmd_vector.cpp" />
+    <ClCompile Include="src\var_vector\iface_vector.cpp" />
+    <ClCompile Include="src\var_vector\sub_vector.cpp" />
+    <ClCompile Include="src\var_vector\vt_vector.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="package\call\callcmd.cmdlist.txt" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

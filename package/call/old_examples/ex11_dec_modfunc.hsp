@@ -1,0 +1,57 @@
+// call.hpi - sample 11
+
+#include "call.as"
+
+// #modfunc などのラベル命令・関数を宣言する
+
+// @ #modfunc などはなくても ok な模様。
+// @ 必ず第一引数を PRM_TYPE_MODVAR にする必要がある。
+
+*main
+	call_dec *point_set,      PRM_TYPE_MODVAR, "int", "int"
+	call_dec *point_getX,     PRM_TYPE_MODVAR
+	call_dec *point_getY,     PRM_TYPE_MODVAR
+	call_dec *point_toString, PRM_TYPE_MODVAR
+	
+	point_new pt
+	call *point_set, pt, 5, 8
+	
+	mes call( *point_toString, pt )
+	stop
+	
+//##############################################################################
+//                Point クラス
+//##############################################################################
+#module MCPoint mX, mY
+
+// 構築者
+#deffunc point_new array v
+	newmod v, MCPoint
+	return
+	
+// コンストラクタ
+#modinit
+	mX = 0
+	mY = 0
+	return
+	
+;#modfunc lbf_point_set int x, int y	// なくてもＯＫ
+*point_set@
+	mX = argv(1)	// x
+	mY = argv(2)	// y
+	return
+	
+#modcfunc lbf_point_getX
+*point_getX@
+	return mX
+	
+#modcfunc lbf_point_getY
+*point_getY@
+	return mY
+	
+#modfunc lbf_point_toString
+*point_toString@
+	return strf("(x, y) = (%d, %d)", mX, mY)
+	
+	point_new
+#global

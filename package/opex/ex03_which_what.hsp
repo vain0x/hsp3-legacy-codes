@@ -1,0 +1,52 @@
+// ex01
+
+#include "opex.as"
+
+// 条件演算 which( bool predicate, value then, value else )
+// @ predicate が真なら then を、そうでなければ else を返す。
+// @ 返さない引数は評価しない。
+
+// 選択演算 what( int idx, value v... )
+// @ v... の idx 番目の値を返す。
+// @ 返さない引数は評価しない。
+
+#module
+
+// 引数の文字列を表示してから返す関数
+#defcfunc logval str s
+	logmes "LOG: " + s
+	return s
+	
+#global
+
+	// which
+	mes which(1, logval("A"), logval("B"))	// (else)は評価されない
+	mes which(0, logval("C"), logval("D"))	// (then)は評価されない
+	
+	// what
+	repeat 12
+		mes what( cnt, logval("Jan"), logval("Feb"), logval("Mar"), logval("Apr"), logval("May"), logval("Jun"), logval("Jul"), logval("Aug"), logval("Sep"), logval("Oct"), logval("Nov"), logval("Dec") )
+	loop
+	
+/*
+このときのログメッセージ
+
+LOG: A
+LOG: D
+LOG: Jan
+LOG: Feb
+LOG: Mar
+LOG: Apr
+LOG: May
+LOG: Jun
+LOG: Jul
+LOG: Aug
+LOG: Sep
+LOG: Oct
+LOG: Nov
+LOG: Dec
+
+logval("B") などが実行されなかったことが分かる。
+*/
+	stop
+	
