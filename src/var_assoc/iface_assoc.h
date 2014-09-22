@@ -1,4 +1,4 @@
-// assoc - iface
+﻿// assoc - iface
 
 #ifndef IG_ASSOC_IFACE_H
 #define IG_ASSOC_IFACE_H

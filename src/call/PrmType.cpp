@@ -1,4 +1,4 @@
-
+ï»¿
 #include <map>
 #include "PrmType.h"
 
@@ -41,7 +41,7 @@ static prmtype_t fromString(char const* s)
 } // namespace PrmType
 
 //------------------------------------------------
-// ‰¼ˆø”ƒ^ƒCƒv‚ğæ“¾‚·‚é
+// ä»®å¼•æ•°ã‚¿ã‚¤ãƒ—ã‚’å–å¾—ã™ã‚‹
 //------------------------------------------------
 prmtype_t code_get_prmtype(prmtype_t _default)
 {
@@ -58,7 +58,7 @@ prmtype_t code_get_prmtype(prmtype_t _default)
 
 		case HSPVAR_FLAG_STR:
 		{
-			// •¶š—ñ => “Áê•¶š—ñ or Œ^–¼( HspVarProc ‚©‚çæ“¾ )
+			// æ–‡å­—åˆ— => ç‰¹æ®Šæ–‡å­—åˆ— or å‹å( HspVarProc ã‹ã‚‰å–å¾— )
 
 			auto const prmtype = PrmType::fromString(VtTraits::asValptr<vtStr>(mpval->pt));
 			if ( prmtype == PrmType::None ) puterror(HSPERR_ILLEGAL_FUNCTION);

@@ -1,4 +1,4 @@
-// opex - command header
+﻿// opex - command header
 
 #ifndef IG_COMMAND_OPEX_H
 #define IG_COMMAND_OPEX_H
@@ -30,7 +30,7 @@ extern int exprs( PDAT** ppResult );
 
 extern int kw_constptr( PDAT** ppResult );
 
-// �萔
+// 定数
 enum OPTYPE
 {
 	OPTYPE_MIN = 0,

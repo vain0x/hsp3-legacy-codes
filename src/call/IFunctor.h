@@ -1,9 +1,9 @@
-// ŠÖ”qƒCƒ“ƒ^[ƒtƒF[ƒX
+ï»¿// é–¢æ•°å­ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹
 
-// uŒÄ‚Ño‚¹‚é‚à‚Ìv‚ğ•\‚·‚½‚ß‚ÉAƒvƒ‰ƒOƒCƒ“‘¤‚Åì¬‚·‚éƒNƒ‰ƒX‚½‚¿‚ÌŠî’êƒNƒ‰ƒXB
-// —á‚¦‚ÎACLabelFunc, CBound, CLambda ‚È‚Ç‚ÉŒp³‚³‚ê‚Ä‚¢‚éB
+// ã€Œå‘¼ã³å‡ºã›ã‚‹ã‚‚ã®ã€ã‚’è¡¨ã™ãŸã‚ã«ã€ãƒ—ãƒ©ã‚°ã‚¤ãƒ³å´ã§ä½œæˆã™ã‚‹ã‚¯ãƒ©ã‚¹ãŸã¡ã®åŸºåº•ã‚¯ãƒ©ã‚¹ã€‚
+// ä¾‹ãˆã°ã€CLabelFunc, CBound, CLambda ãªã©ã«ç¶™æ‰¿ã•ã‚Œã¦ã„ã‚‹ã€‚
 
-// Managed<> ‚É“ü‚ê‚Ä functor_t ‚Æ‚µ‚Äg‚í‚ê‚éB
+// Managed<> ã«å…¥ã‚Œã¦ functor_t ã¨ã—ã¦ä½¿ã‚ã‚Œã‚‹ã€‚
 
 #ifndef IG_INTERFACE_FUNCTOR_H
 #define IG_INTERFACE_FUNCTOR_H
@@ -17,10 +17,10 @@ class CPrmStk;
 class Invoker;
 
 //------------------------------------------------
-// ŠÖ”q‚ğ•\‚·ƒNƒ‰ƒX
+// é–¢æ•°å­ã‚’è¡¨ã™ã‚¯ãƒ©ã‚¹
 // 
-// @ Œp³‚µ‚Äg‚¤B
-// @ ‚±‚±‚Å‚ÍŠù’è“®ì‚ğ’è‹`‚µ‚Ä‚¢‚éB
+// @ ç¶™æ‰¿ã—ã¦ä½¿ã†ã€‚
+// @ ã“ã“ã§ã¯æ—¢å®šå‹•ä½œã‚’å®šç¾©ã—ã¦ã„ã‚‹ã€‚
 //------------------------------------------------
 class IFunctor
 {
@@ -31,14 +31,14 @@ public:
 	virtual ~IFunctor() { clear(); }
 	virtual void clear() { }
 
-	// æ“¾
+	// å–å¾—
 	virtual label_t getLabel() const { return nullptr; }
 	virtual int getAxCmd() const { return 0; }
 
-	virtual int getUsing() const { return 0; }			// g—pó‹µ (0: –³Œø, 1: —LŒø, 2: ƒNƒ[ƒ“)
-	virtual CPrmInfo const& getPrmInfo() const = 0;		// ‰¼ˆø”
+	virtual int getUsing() const { return 0; }			// ä½¿ç”¨çŠ¶æ³ (0: ç„¡åŠ¹, 1: æœ‰åŠ¹, 2: ã‚¯ãƒ­ãƒ¼ãƒ³)
+	virtual CPrmInfo const& getPrmInfo() const = 0;		// ä»®å¼•æ•°
 
-	// ƒLƒƒƒXƒg
+	// ã‚­ãƒ£ã‚¹ãƒˆ
 	template<typename T>       T*     castTo()       { return dynamic_cast<T*>(this); }
 	template<typename T> const T*     castTo() const { return dynamic_cast<T*>(this); }
 	template<typename T>       T* safeCastTo()       { return safeCastTo_Impl<T*>(); }
@@ -50,10 +50,10 @@ public:
 		return result;
 	}
 
-	// “®ì
+	// å‹•ä½œ
 	virtual void invoke(Invoker&) = 0;
 
-	// Œ`®“I”äŠr
+	// å½¢å¼çš„æ¯”è¼ƒ
 	virtual int compare(IFunctor const& obj) const { return this - &obj; }
 };
 

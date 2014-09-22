@@ -1,6 +1,6 @@
-// call - ModCls, functor
+ï»¿// call - ModCls, functor
 
-// ƒ‚ƒWƒ…[ƒ‹ƒNƒ‰ƒX\’zŠÖ”ƒNƒ‰ƒX
+// ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã‚¯ãƒ©ã‚¹æ§‹ç¯‰é–¢æ•°ã‚¯ãƒ©ã‚¹
 #if 0
 #include "hsp3plugin_custom.h"
 
@@ -20,7 +20,7 @@
 using namespace hpimod;
 
 //------------------------------------------------
-// \’z (ƒ‰ƒbƒp[)
+// æ§‹ç¯‰ (ãƒ©ãƒƒãƒ‘ãƒ¼)
 //------------------------------------------------
 modctor_t CModClsCtor::New()
 {
@@ -38,7 +38,7 @@ modctor_t CModClsCtor::New( int modcls )
 }
 
 //------------------------------------------------
-// \’z
+// æ§‹ç¯‰
 //------------------------------------------------
 CModClsCtor::CModClsCtor()
 	: IFunctor()
@@ -76,7 +76,7 @@ CModClsCtor::CModClsCtor( int modcls )
 void CModClsCtor::initialize()
 {
 	if ( !ModCls::isWorking() ) {
-		dbgout("modcls ‹@”\‚ª•K—v");
+		dbgout("modcls æ©Ÿèƒ½ãŒå¿…è¦");
 		puterror( HSPERR_UNSUPPORTED_FUNCTION );
 	}
 	if ( mpStDat && getStPrm()->mptype != MPTYPE_STRUCTTAG ) puterror( HSPERR_TYPE_MISMATCH );
@@ -86,7 +86,7 @@ void CModClsCtor::initialize()
 }
 
 //------------------------------------------------
-// ”jŠü
+// ç ´æ£„
 //------------------------------------------------
 CModClsCtor::~CModClsCtor()
 {
@@ -96,13 +96,13 @@ CModClsCtor::~CModClsCtor()
 }
 
 //------------------------------------------------
-// ŒÄ‚Ño‚µˆ—
+// å‘¼ã³å‡ºã—å‡¦ç†
 // 
-// @ ‚±‚ê‚ğŒÄ‚Ô‚½‚ß‚É—p‚¢‚½ callerInvoke ‚ğ—¬—p‚µ‚Ä‚à‚¢‚¢‚Ì‚¾‚ªA
-// @	thismod ˆø”‚ğÅ‰‚É•t‚¯‰Á‚¦‚È‚¯‚ê‚Î‚¢‚¯‚È‚¢‚½‚ßA
-// @	V‚½‚È caller ‚ğg‚Á‚Ä‚¢‚éB
-// @	( CCall ‚Éuæ“ª‚Éˆø”‚ğ’Ç‰Á‚·‚év‚½‚ß‚ÌŠÖ”‚ğì‚é‚Ì‚ÍŒ™ )
-// @ À¿“I‚É const ‚Èˆ—B
+// @ ã“ã‚Œã‚’å‘¼ã¶ãŸã‚ã«ç”¨ã„ãŸ callerInvoke ã‚’æµç”¨ã—ã¦ã‚‚ã„ã„ã®ã ãŒã€
+// @	thismod å¼•æ•°ã‚’æœ€åˆã«ä»˜ã‘åŠ ãˆãªã‘ã‚Œã°ã„ã‘ãªã„ãŸã‚ã€
+// @	æ–°ãŸãª caller ã‚’ä½¿ã£ã¦ã„ã‚‹ã€‚
+// @	( CCall ã«ã€Œå…ˆé ­ã«å¼•æ•°ã‚’è¿½åŠ ã™ã‚‹ã€ãŸã‚ã®é–¢æ•°ã‚’ä½œã‚‹ã®ã¯å«Œ )
+// @ å®Ÿè³ªçš„ã« const ãªå‡¦ç†ã€‚
 //------------------------------------------------
 void CModClsCtor::call( CCaller& callerInvoke )
 {
@@ -115,34 +115,34 @@ void CModClsCtor::call( CCaller& callerInvoke )
 
 	FlexValue self { };
 	FlexValue_CtorWoCtorCalling( self, mpStDat );
-	FlexValue_AddRefTmp( self );			// Œã‚ÅƒXƒ^ƒbƒN‚ÉÏ‚Ü‚ê‚é
+	FlexValue_AddRefTmp( self );			// å¾Œã§ã‚¹ã‚¿ãƒƒã‚¯ã«ç©ã¾ã‚Œã‚‹
 
 	{
 		CCaller caller;
 		caller.setFunctor( AxCmd::make(TYPE_MODCMD, getCtor()->subid) );
 
-		// thismod ˆø”
+		// thismod å¼•æ•°
 		caller.addArgByVal( &self, HSPVAR_FLAG_STRUCT );
 
-		// ctor ˆø”‚ğ“n‚·
+		// ctor å¼•æ•°ã‚’æ¸¡ã™
 		for ( size_t i = 0; i < callInvoke.getCntArg(); ++ i ) {
 			caller.addArgByRef( callInvoke.getArgPVal(i), callInvoke.getArgAptr(i) );
 		}
 
-		// ŒÄ‚Ño‚·
+		// å‘¼ã³å‡ºã™
 		caller.call();
 	}
 
-	// •Ô’l
+	// è¿”å€¤
 	callInvoke.setResult( &self, HSPVAR_FLAG_STRUCT );
 	
-	// •Ï” self ‚É‚æ‚éŠ—L‚ÌI—¹
+	// å¤‰æ•° self ã«ã‚ˆã‚‹æ‰€æœ‰ã®çµ‚äº†
 	FlexValue_Release(self);
 	return;
 }
 
 //------------------------------------------------
-// Å‰‚Ì STRUCTPRM ‚ğ“¾‚é
+// æœ€åˆã® STRUCTPRM ã‚’å¾—ã‚‹
 //------------------------------------------------
 stprm_t CModClsCtor::getStPrm() const
 {
@@ -150,7 +150,7 @@ stprm_t CModClsCtor::getStPrm() const
 }
 
 //------------------------------------------------
-// ƒRƒ“ƒXƒgƒ‰ƒNƒ^‚Ìƒ†[ƒU’è‹`ƒRƒ}ƒ“ƒhID‚ğæ“¾‚·‚é
+// ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ã®ãƒ¦ãƒ¼ã‚¶å®šç¾©ã‚³ãƒãƒ³ãƒ‰IDã‚’å–å¾—ã™ã‚‹
 //------------------------------------------------
 int CModClsCtor::getCtorId() const
 {
@@ -165,7 +165,7 @@ stdat_t CModClsCtor::getCtor() const
 }
 
 //------------------------------------------------
-// ’è‹`ID
+// å®šç¾©ID
 //------------------------------------------------
 int CModClsCtor::getAxCmd() const
 {
@@ -173,7 +173,7 @@ int CModClsCtor::getAxCmd() const
 }
 
 //------------------------------------------------
-// ƒ‰ƒxƒ‹
+// ãƒ©ãƒ™ãƒ«
 //------------------------------------------------
 label_t CModClsCtor::getLabel() const
 {
@@ -183,7 +183,7 @@ label_t CModClsCtor::getLabel() const
 }
 
 //------------------------------------------------
-// ‰¼ˆø”ƒŠƒXƒg
+// ä»®å¼•æ•°ãƒªã‚¹ãƒˆ
 //------------------------------------------------
 CPrmInfo const& CModClsCtor::getPrmInfo() const
 {
@@ -191,18 +191,18 @@ CPrmInfo const& CModClsCtor::getPrmInfo() const
 }
 
 //------------------------------------------------
-// ‰¼ˆø”ƒŠƒXƒg‚Ì¶¬
+// ä»®å¼•æ•°ãƒªã‚¹ãƒˆã®ç”Ÿæˆ
 //------------------------------------------------
 void CModClsCtor::createPrmInfo()
 {
 	auto const ctor = getCtor();
 	if ( !ctor ) return;
 
-	CPrmInfo const& prminfo = GetPrmInfo( ctor );	// ctor ©‘Ì‚Ì prminfo@‚ğæ“¾‚·‚é
-	int const cntPrms   = prminfo.cntPrms();		// ctor ‚ª‚Âˆø”‚Ì”
+	CPrmInfo const& prminfo = GetPrmInfo( ctor );	// ctor è‡ªä½“ã® prminfoã€€ã‚’å–å¾—ã™ã‚‹
+	int const cntPrms   = prminfo.cntPrms();		// ctor ãŒæŒã¤å¼•æ•°ã®æ•°
 	int const cntLocals = prminfo.cntLocals();
 
-	// ctor ‚Ì prmlist ‚©‚çAÅ‰‚Ì thismod ‚¾‚¯‚ğœ‚¢‚½ prmlist ‚ğì‚é
+	// ctor ã® prmlist ã‹ã‚‰ã€æœ€åˆã® thismod ã ã‘ã‚’é™¤ã„ãŸ prmlist ã‚’ä½œã‚‹
 	CPrmInfo::prmlist_t prmlist;
 	prmlist.reserve( (cntPrms - 1) + cntLocals );
 	for ( int i =  1  ; i < cntPrms; ++ i ) {

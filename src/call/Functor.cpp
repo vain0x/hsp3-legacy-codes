@@ -1,4 +1,4 @@
-
+ï»¿
 #include <map>
 #include "Functor.h"
 #include "CLabelFunc.h"
@@ -6,11 +6,11 @@
 namespace Functor
 {
 
-// ƒLƒƒƒbƒVƒ…
+// ã‚­ãƒ£ãƒƒã‚·ãƒ¥
 static std::map<label_t, functor_t> stt_functorCache;
 
 //------------------------------------------------
-// ƒLƒƒƒbƒVƒ…‚³‚ê‚é functor ‚Ì¶¬
+// ã‚­ãƒ£ãƒƒã‚·ãƒ¥ã•ã‚Œã‚‹ functor ã®ç”Ÿæˆ
 //------------------------------------------------
 functor_t const& New(label_t lb)
 {
@@ -34,7 +34,7 @@ functor_t const& New(int axcmd)
 		{
 			auto const stdat = hpimod::getSTRUCTDAT(AxCmd::getCode(axcmd));
 			if ( stdat->index == STRUCTDAT_INDEX_FUNC || stdat->index == STRUCTDAT_INDEX_CFUNC ) {
-				// ‰¼ˆø”ƒŠƒXƒg‚ğƒLƒƒƒbƒVƒ…‰»‚µ‚Ä‚¨‚­
+				// ä»®å¼•æ•°ãƒªã‚¹ãƒˆã‚’ã‚­ãƒ£ãƒƒã‚·ãƒ¥åŒ–ã—ã¦ãŠã
 				static_cast<void>(GetPrmInfo(stdat));
 
 				return New(hpimod::getLabel(stdat->otindex));
@@ -42,7 +42,7 @@ functor_t const& New(int axcmd)
 			break;
 		}
 	}
-	dbgout("axcmd ‚©‚ç functor ‚Ì¶¬‚É¸”s‚µ‚½B(%d, %d)", AxCmd::getType(axcmd), AxCmd::getCode(axcmd));
+	dbgout("axcmd ã‹ã‚‰ functor ã®ç”Ÿæˆã«å¤±æ•—ã—ãŸã€‚(%d, %d)", AxCmd::getType(axcmd), AxCmd::getCode(axcmd));
 	puterror(HSPERR_UNSUPPORTED_FUNCTION);
 }
 

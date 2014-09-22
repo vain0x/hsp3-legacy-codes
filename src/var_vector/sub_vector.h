@@ -1,4 +1,4 @@
-// multi - SubCommand header
+ï»¿// multi - SubCommand header
 
 #ifndef IG_VECTOR_COMMAND_SUB_H
 #define IG_VECTOR_COMMAND_SUB_H
@@ -6,8 +6,8 @@
 #include "hsp3plugin_custom.h"
 #include "vt_vector.h"
 
-// vector_t —p‚ÌŠÖ”
-// ’u‚­êŠ‚ğl‚¦‚È‚¨‚·•K—v‚ ‚è
+// vector_t ç”¨ã®é–¢æ•°
+// ç½®ãå ´æ‰€ã‚’è€ƒãˆãªãŠã™å¿…è¦ã‚ã‚Š
 
 extern bool isValidIndex(vector_t const& self, int idx);
 extern bool isValidRange(vector_t const& self, size_t iBgn, size_t iEnd);

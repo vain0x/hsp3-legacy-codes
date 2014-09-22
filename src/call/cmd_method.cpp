@@ -1,4 +1,4 @@
-// Call(Method) - Command
+ï»¿// Call(Method) - Command
 #if 0
 #include <vector>
 #include <map>
@@ -17,24 +17,24 @@ static std::map<vartype_t, methods_t> g_distribute;
 static void ObjectMethodCustom(PVal* pval);
 
 //------------------------------------------------
-// ƒƒ\ƒbƒhŒÄ‚Ño‚µŠÖ”‚Ì‚·‚è‘Ö‚¦
+// ãƒ¡ã‚½ãƒƒãƒ‰å‘¼ã³å‡ºã—é–¢æ•°ã®ã™ã‚Šæ›¿ãˆ
 // 
-// @prm p1 = vt : Œ^ƒ^ƒCƒv’l
+// @prm p1 = vt : å‹ã‚¿ã‚¤ãƒ—å€¤
 //------------------------------------------------
 static void replaceProc(vartype_t vtype)
 {
 	HspVarProc* const vp = getHvp( vtype );
 
-	// ƒƒ“ƒo‚Ì‚ÂŠÖ”ƒ|ƒCƒ“ƒ^‚ğ‘‚«Š·‚¦‚é
+	// ãƒ¡ãƒ³ãƒã®æŒã¤é–¢æ•°ãƒã‚¤ãƒ³ã‚¿ã‚’æ›¸ãæ›ãˆã‚‹
 	vp->ObjectMethod = ObjectMethodCustom;
 
-	// ‹ó‚Ìƒƒ\ƒbƒhƒNƒ‰ƒX‚ğì‚èA“o˜^‚µ‚Ä‚¨‚­
+	// ç©ºã®ãƒ¡ã‚½ãƒƒãƒ‰ã‚¯ãƒ©ã‚¹ã‚’ä½œã‚Šã€ç™»éŒ²ã—ã¦ãŠã
 	auto const iter = g_distribute.find(vtype);
 	if ( iter == g_distribute.end() ) {
 		g_distribute.insert({ vtype, methods_t {} });
 
 	} else {
-		dbgout("Œ^ %s ‚Ìƒƒ\ƒbƒh‚ÍŠù‚É‚·‚è‘Ö‚¦‚ç‚ê‚Ä‚¢‚éB", vp->vartype_name);
+		dbgout("å‹ %s ã®ãƒ¡ã‚½ãƒƒãƒ‰ã¯æ—¢ã«ã™ã‚Šæ›¿ãˆã‚‰ã‚Œã¦ã„ã‚‹ã€‚", vp->vartype_name);
 		puterror(HSPERR_ILLEGAL_FUNCTION);
 	}
 	return;
@@ -48,28 +48,28 @@ void Method::replace()
 }
 
 //------------------------------------------------
-// ƒƒ\ƒbƒh‚Ì’Ç‰Á
+// ãƒ¡ã‚½ãƒƒãƒ‰ã®è¿½åŠ 
 // 
-// @prm p1 = vt  : Œ^ƒ^ƒCƒv’l
-// @prm p2 = str : ƒƒ\ƒbƒh–¼Ì (or default)
-// @prm p3 = def : ’è‹` (ƒ‰ƒxƒ‹ + ‰¼ˆø”ƒŠƒXƒg, axcmd)
+// @prm p1 = vt  : å‹ã‚¿ã‚¤ãƒ—å€¤
+// @prm p2 = str : ãƒ¡ã‚½ãƒƒãƒ‰åç§° (or default)
+// @prm p3 = def : å®šç¾© (ãƒ©ãƒ™ãƒ« + ä»®å¼•æ•°ãƒªã‚¹ãƒˆ, axcmd)
 //------------------------------------------------
 void Method::add()
 {
 	vartype_t const vtype = code_get_vartype();
 	std::string const name = code_gets();
 
-	// ŒÄ‚Ño‚µæ or ƒ‰ƒxƒ‹ŠÖ”éŒ¾‚Ìæ“¾
+	// å‘¼ã³å‡ºã—å…ˆ or ãƒ©ãƒ™ãƒ«é–¢æ•°å®£è¨€ã®å–å¾—
 	functor_t&& functor = code_get_functor();
 
-	// ƒ‰ƒxƒ‹ => ‰¼ˆø”ƒŠƒXƒg‚ğó‚¯æ‚é
+	// ãƒ©ãƒ™ãƒ« => ä»®å¼•æ•°ãƒªã‚¹ãƒˆã‚’å—ã‘å–ã‚‹
 	if ( functor.getType() == FuncType_Label ) {
 		CPrmInfo::prmlist_t&& prmlist = code_get_prmlist();
-		prmlist.insert( prmlist.begin(), PrmType::Var );		// æ“ª‚É var this ‚ğ’Ç‰Á
+		prmlist.insert( prmlist.begin(), PrmType::Var );		// å…ˆé ­ã« var this ã‚’è¿½åŠ 
 		DeclarePrmInfo( functor.getLabel(), std::move(CPrmInfo(&prmlist)) );
 	}
 
-	// CMethod ‚É’Ç‰Á
+	// CMethod ã«è¿½åŠ 
 	auto const iter = g_distribute.find(vtype);
 	if ( iter != g_distribute.end() ) {
 		auto& methods = iter->second;
@@ -77,14 +77,14 @@ void Method::add()
 		methods.insert({ name, functor });
 
 	} else {
-		dbgout("Method::replace ‚³‚ê‚Ä‚¢‚Ü‚¹‚ñI");
+		dbgout("Method::replace ã•ã‚Œã¦ã„ã¾ã›ã‚“ï¼");
 		puterror(HSPERR_UNSUPPORTED_FUNCTION);
 	}
 	return;
 }
 
 //------------------------------------------------
-// ƒƒ\ƒbƒhŒÄ‚Ño‚µŒ³‚Ì•Ï”‚ÌƒNƒ[ƒ“‚ğì‚é
+// ãƒ¡ã‚½ãƒƒãƒ‰å‘¼ã³å‡ºã—å…ƒã®å¤‰æ•°ã®ã‚¯ãƒ­ãƒ¼ãƒ³ã‚’ä½œã‚‹
 //------------------------------------------------
 void Method::cloneThis()
 {
@@ -96,10 +96,10 @@ void Method::cloneThis()
 }
 
 //##############################################################################
-//                method ‰º¿‚¯
+//                method ä¸‹è«‹ã‘
 //##############################################################################
 //------------------------------------------------
-// ƒƒ\ƒbƒhŒÄ‚Ño‚µŠÖ” ( method.hpi ”Å )
+// ãƒ¡ã‚½ãƒƒãƒ‰å‘¼ã³å‡ºã—é–¢æ•° ( method.hpi ç‰ˆ )
 //------------------------------------------------
 static void ObjectMethodCustom(PVal* pval)
 {
@@ -114,14 +114,14 @@ static void ObjectMethodCustom(PVal* pval)
 		if ( iter != methods.end() ) {
 			auto& functor = iter->second;
 
-			dbgout("–¢À‘•");
+			dbgout("æœªå®Ÿè£…");
 #if 0
-			// ŒÄ‚Ño‚µ
+			// å‘¼ã³å‡ºã—
 			{
 				CCaller caller;
 				caller.setFunctor(functor);
 
-				// this ˆø”‚ğ’Ç‰Á‚·‚é
+				// this å¼•æ•°ã‚’è¿½åŠ ã™ã‚‹
 				caller.addArgByRef(pvThis, pvThis->offset);
 
 				caller.setArgAll();
@@ -133,7 +133,7 @@ static void ObjectMethodCustom(PVal* pval)
 		}
 
 	} else {
-		// Method::replace ‚µ‚Ä‚¢‚È‚¢Œ^‚Ìƒƒ\ƒbƒh
+		// Method::replace ã—ã¦ã„ãªã„å‹ã®ãƒ¡ã‚½ãƒƒãƒ‰
 		puterror( HSPERR_UNSUPPORTED_FUNCTION );
 	}
 	return;

@@ -1,9 +1,9 @@
-// ƒXƒgƒŠ[ƒ€ŒÄ‚Ño‚µƒIƒuƒWƒFƒNƒg
+ï»¿// ã‚¹ãƒˆãƒªãƒ¼ãƒ å‘¼ã³å‡ºã—ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
 #if 0
 #ifndef IG_CLASS_STREAM_CALLER_H
 #define IG_CLASS_STREAM_CALLER_H
 
-// uŒÄ‚Ño‚µ‚Ì“r’†v‚ğ•Û‘¶‚·‚éƒIƒuƒWƒFƒNƒg
+// ã€Œå‘¼ã³å‡ºã—ã®é€”ä¸­ã€ã‚’ä¿å­˜ã™ã‚‹ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
 
 #include "hsp3plugin_custom.h"
 #include "IFunctor.h"
@@ -16,26 +16,26 @@ using stream_t = CStreamCaller*;
 class CStreamCaller
 	: public IFunctor
 {
-	// ƒƒ“ƒo•Ï”
+	// ãƒ¡ãƒ³ãƒå¤‰æ•°
 private:
-	CCaller* mpCaller;		// ƒXƒgƒŠ[ƒ€‚É’Ç‰Á‚³‚ê‚½ˆø”‚ğ•Û‚·‚é
+	CCaller* mpCaller;		// ã‚¹ãƒˆãƒªãƒ¼ãƒ ã«è¿½åŠ ã•ã‚ŒãŸå¼•æ•°ã‚’ä¿æŒã™ã‚‹
 
-	// \’z
+	// æ§‹ç¯‰
 private:
 	CStreamCaller();
 	~CStreamCaller();
 
 public:
-	void call( CCaller& callerRemain );		// (‘©”›ˆø”‰ğŒˆˆ— + ŒÄ‚Ño‚µ)
+	void call( CCaller& callerRemain );		// (æŸç¸›å¼•æ•°è§£æ±ºå‡¦ç† + å‘¼ã³å‡ºã—)
 
 	CCaller* getCaller()  const { return mpCaller; }
 	label_t   getLabel() const;
 	int       getAxCmd() const;
 	int       getUsing() const;
 
-	CPrmInfo const& getPrmInfo() const;			// ‰¼ˆø”
+	CPrmInfo const& getPrmInfo() const;			// ä»®å¼•æ•°
 
-	// ƒ‰ƒbƒp[
+	// ãƒ©ãƒƒãƒ‘ãƒ¼
 	static stream_t New();
 };
 

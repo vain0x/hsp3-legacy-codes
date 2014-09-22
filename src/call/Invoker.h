@@ -1,14 +1,14 @@
-#ifndef IG_CLASS_FUNCTION_CALLER_H
+ï»¿#ifndef IG_CLASS_FUNCTION_CALLER_H
 #define IG_CLASS_FUNCTION_CALLER_H
 
-// ŠÖ”ŒÄ‚Ño‚µ‚ÌƒIƒuƒWƒFƒNƒg
-// ˆø”‚©‚ç’¼Ú prmstack ‚Ì¶¬‚ğs‚¤B
-// CCaller, CCall ‚Ì‘ã‚í‚è‚É‚·‚é‚Â‚à‚èB
+// é–¢æ•°å‘¼ã³å‡ºã—ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
+// å¼•æ•°ã‹ã‚‰ç›´æ¥ prmstack ã®ç”Ÿæˆã‚’è¡Œã†ã€‚
+// CCaller, CCall ã®ä»£ã‚ã‚Šã«ã™ã‚‹ã¤ã‚‚ã‚Šã€‚
 
-// CStreamCaller ‚É—‚Ä‚¢‚é‚ªAŒÄ‚Ño‚µ‚É’Ç‰Á‚Ìˆø”‚ğ—^‚¦‚ç‚ê‚È‚¢B
+// CStreamCaller ã«ä¼¼ã¦ã„ã‚‹ãŒã€å‘¼ã³å‡ºã—æ™‚ã«è¿½åŠ ã®å¼•æ•°ã‚’ä¸ãˆã‚‰ã‚Œãªã„ã€‚
 
-// ‚Æ‚¢‚¤‚Â‚à‚è‚Åì‚Á‚½‚ªAŠÌ‚Í CPrmStk (Àˆø”ƒf[ƒ^) ‚ğŠ—L‚µAƒR[ƒh‚©‚çÀˆø”‚ğæ‚èo‚·‹@”\‚ğ‚Â‚±‚Æ‚Å‚ ‚éB
-// argument Œ^ƒIƒuƒWƒFƒNƒg‚Æ‚¢‚¤‚±‚Æ‚É‚µ‚½•û‚ªû‚Ü‚è‚ª‚¢‚¢‹C‚ª‚·‚éB
+// ã¨ã„ã†ã¤ã‚‚ã‚Šã§ä½œã£ãŸãŒã€è‚ã¯ CPrmStk (å®Ÿå¼•æ•°ãƒ‡ãƒ¼ã‚¿) ã‚’æ‰€æœ‰ã—ã€ã‚³ãƒ¼ãƒ‰ã‹ã‚‰å®Ÿå¼•æ•°ã‚’å–ã‚Šå‡ºã™æ©Ÿèƒ½ã‚’æŒã¤ã“ã¨ã§ã‚ã‚‹ã€‚
+// argument å‹ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã¨ã„ã†ã“ã¨ã«ã—ãŸæ–¹ãŒåã¾ã‚ŠãŒã„ã„æ°—ãŒã™ã‚‹ã€‚
 
 #include "hsp3plugin_custom.h"
 #include "Functor.h"
@@ -26,21 +26,21 @@ enum class InvokeMode : unsigned char
 class Invoker
 {
 private:
-	// “]‘—æ
+	// è»¢é€å…ˆ
 	functor_t functor_;
 
-	// Àˆø”ƒf[ƒ^
+	// å®Ÿå¼•æ•°ãƒ‡ãƒ¼ã‚¿
 	arguments_t args_;
 
 	InvokeMode invmode_;
 
-	// •Ô’lƒf[ƒ^
+	// è¿”å€¤ãƒ‡ãƒ¼ã‚¿
 	ManagedPVal result_;
 
 	static ManagedPVal lastResult;
 
 public:
-	// \’z
+	// æ§‹ç¯‰
 	// @prm f: must be non-null
 	Invoker(functor_t f, InvokeMode invmode_ = InvokeMode::Call)
 		: functor_ { f }
@@ -57,11 +57,11 @@ public:
 	functor_t const& getFunctor() const { return functor_; }
 	CPrmInfo const& getPrmInfo() const { return args_.getPrmInfo(); }
 
-	// Àˆø”
+	// å®Ÿå¼•æ•°
 	arguments_t& getArgs() { return args_; }
 	arguments_t const& getArgs() const { return args_; }
 
-	// •Ô’l
+	// è¿”å€¤
 	bool hasResult() const { return !result_.isNull(); }
 	PVal* getResult() const {
 		if ( !hasResult() ) puterror(HSPERR_NORETVAL);
@@ -79,19 +79,19 @@ public:
 		return getResult();
 	}
 
-	// ƒR[ƒh‚Ìæ‚èo‚µ
+	// ã‚³ãƒ¼ãƒ‰ã®å–ã‚Šå‡ºã—
 	void code_get_arguments();
 
 private:
 	bool code_get_nextArgument();
 
-	// ŒÄ‚Ño‚µƒXƒ^ƒbƒN
+	// å‘¼ã³å‡ºã—ã‚¹ã‚¿ãƒƒã‚¯
 	static void push(Invoker&);
 	static void pop();
 public:
 	static Invoker& top();
 
-	// •Ô’l
+	// è¿”å€¤
 	static PVal* getLastResult() { return lastResult.valuePtr(); }
 	static void clearLastResult() { lastResult.nullify(); }
 };

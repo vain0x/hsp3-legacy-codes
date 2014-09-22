@@ -1,4 +1,4 @@
-// vector - Command code
+ï»¿// vector - Command code
 
 #include <functional>
 
@@ -18,9 +18,9 @@ static vector_t g_pResultVector { nullptr };
 static void VectorMovingImpl( vector_t& self, int cmd );
 
 //------------------------------------------------
-// vector Œ^‚Ì’l‚ğ•Ô‹p‚·‚é
+// vector å‹ã®å€¤ã‚’è¿”å´ã™ã‚‹
 // 
-// @ ‚»‚Ì‚Ü‚Ü•Ô‹p‚·‚é‚ÆƒXƒ^ƒbƒN‚Éæ‚éB
+// @ ãã®ã¾ã¾è¿”å´ã™ã‚‹ã¨ã‚¹ã‚¿ãƒƒã‚¯ã«ä¹—ã‚‹ã€‚
 //------------------------------------------------
 int SetReffuncResult( PDAT** ppResult, vector_t const& self )
 {
@@ -37,7 +37,7 @@ int SetReffuncResult( PDAT** ppResult, vector_t&& self )
 }
 
 //------------------------------------------------
-// vector Œ^‚Ì’l‚ğó‚¯æ‚é
+// vector å‹ã®å€¤ã‚’å—ã‘å–ã‚‹
 //------------------------------------------------
 vector_t code_get_vector()
 {
@@ -47,7 +47,7 @@ vector_t code_get_vector()
 }
 
 //------------------------------------------------
-// vector ‚Ì“à•”•Ï”‚ğó‚¯æ‚é
+// vector ã®å†…éƒ¨å¤‰æ•°ã‚’å—ã‘å–ã‚‹
 //------------------------------------------------
 PVal* code_get_vector_inner()
 {
@@ -60,7 +60,7 @@ PVal* code_get_vector_inner()
 }
 
 //------------------------------------------------
-// vector ‚Ì”ÍˆÍ‚ğæ‚èo‚·
+// vector ã®ç¯„å›²ã‚’å–ã‚Šå‡ºã™
 //------------------------------------------------
 std::pair<size_t, size_t> code_get_vector_range(vector_t const& self)
 {
@@ -74,10 +74,10 @@ std::pair<size_t, size_t> code_get_vector_range(vector_t const& self)
 }
 
 //#########################################################
-//        –½—ß
+//        å‘½ä»¤
 //#########################################################
 //------------------------------------------------
-// ”jŠü
+// ç ´æ£„
 //------------------------------------------------
 void VectorDelete()
 {
@@ -89,7 +89,7 @@ void VectorDelete()
 }
 
 //------------------------------------------------
-// ƒŠƒeƒ‰ƒ‹®¶¬
+// ãƒªãƒ†ãƒ©ãƒ«å¼ç”Ÿæˆ
 //------------------------------------------------
 int VectorMake(PDAT** ppResult)
 {
@@ -104,14 +104,14 @@ int VectorMake(PDAT** ppResult)
 			PVal* const pvInner = self->at(i).getVar();
 			PVal_assign(pvInner, mpval->pt, mpval->flag);
 		}
-		// else: ‰Šú’l‚Ì‚Ü‚Ü
+		// else: åˆæœŸå€¤ã®ã¾ã¾
 	}
 
 	return SetReffuncResult(ppResult, std::move(self.beTmpObj()));
 }
 
 //------------------------------------------------
-// ƒXƒ‰ƒCƒX
+// ã‚¹ãƒ©ã‚¤ã‚¹
 //------------------------------------------------
 int VectorSlice(PDAT** ppResult)
 {
@@ -124,7 +124,7 @@ int VectorSlice(PDAT** ppResult)
 }
 
 //------------------------------------------------
-// ƒXƒ‰ƒCƒXEƒAƒEƒg
+// ã‚¹ãƒ©ã‚¤ã‚¹ãƒ»ã‚¢ã‚¦ãƒˆ
 //------------------------------------------------
 int VectorSliceOut(PDAT** ppResult)
 {
@@ -144,14 +144,14 @@ int VectorSliceOut(PDAT** ppResult)
 }
 
 //------------------------------------------------
-// •¡»
+// è¤‡è£½
 //------------------------------------------------
 int VectorDup(PDAT** ppResult)
 {
 	auto&& src = code_get_vector();
 	auto&& range = code_get_vector_range(src);
 
-	// PVal ‚Ì’l‚ğ•¡»‚µ‚Ä vector ‚ğ‚à‚¤ˆê‚Âì‚é
+	// PVal ã®å€¤ã‚’è¤‡è£½ã—ã¦ vector ã‚’ã‚‚ã†ä¸€ã¤ä½œã‚‹
 	auto&& self = vector_t::make();
 
 	chainDeep(self, src, range);
@@ -159,7 +159,7 @@ int VectorDup(PDAT** ppResult)
 }
 
 //------------------------------------------------
-// vector ‚Ìî•ñ
+// vector ã®æƒ…å ±
 //------------------------------------------------
 int VectorIsNull(PDAT** ppResult)
 {
@@ -176,7 +176,7 @@ int VectorSize(PDAT** ppResult)
 }
 
 //------------------------------------------------
-// “à•”•Ï”‚Ö‚Ì‚ ‚ê‚±‚ê
+// å†…éƒ¨å¤‰æ•°ã¸ã®ã‚ã‚Œã“ã‚Œ
 //------------------------------------------------
 void VectorDimtype()
 {
@@ -201,10 +201,10 @@ int VectorVarinfo(PDAT** ppResult)
 }
 
 //#########################################################
-//        ƒRƒ“ƒeƒi‘€ì
+//        ã‚³ãƒ³ãƒ†ãƒŠæ“ä½œ
 //#########################################################
 //------------------------------------------------
-// ˜AŒ‹
+// é€£çµ
 //------------------------------------------------
 void VectorChain(bool bClear)
 {
@@ -221,12 +221,12 @@ void VectorChain(bool bClear)
 #if 0
 
 //------------------------------------------------
-// ƒRƒ“ƒeƒi‘€ìˆ—ƒeƒ“ƒvƒŒ[ƒg
+// ã‚³ãƒ³ãƒ†ãƒŠæ“ä½œå‡¦ç†ãƒ†ãƒ³ãƒ—ãƒ¬ãƒ¼ãƒˆ
 //------------------------------------------------
-// “ï‚µ‚¢
+// é›£ã—ã„
 
 //------------------------------------------------
-// —v‘f‡˜
+// è¦ç´ é †åº
 //------------------------------------------------
 void VectorMoving( int cmd )
 {
@@ -286,7 +286,7 @@ int VectorMovingFunc( PDAT** ppResult, int cmd )
 	auto&& src = code_get_vector();
 	if ( !src.isNull() ) puterror( HSPERR_ILLEGAL_FUNCTION );
 
-	// ‘S‹æŠÔƒXƒ‰ƒCƒX
+	// å…¨åŒºé–“ã‚¹ãƒ©ã‚¤ã‚¹
 	auto self = vector_t::make();
 	CVector* const self = CVector::NewTemp();
 	{
@@ -298,9 +298,9 @@ int VectorMovingFunc( PDAT** ppResult, int cmd )
 }
 
 //------------------------------------------------
-// —v‘f: ’Ç‰Á, œ‹
+// è¦ç´ : è¿½åŠ , é™¤å»
 // 
-// @t-prm idProc: ‚±‚±‚Åg‚¤‚Ì‚İB
+// @t-prm idProc: ã“ã“ã§ä½¿ã†ã®ã¿ã€‚
 // @	0: Insert
 // @	1: Insert1
 // @	2: PushFront
@@ -315,7 +315,7 @@ template<int idProc>
 static void VectorElemProcImpl( CVector* self )
 {
 	switch ( idProc ) {
-		// ‹æŠÔƒAƒNƒZƒX => ‹æŠÔ‚ª•K—v; “Á‚É insert => ‰Šú’lƒŠƒXƒg‚ğæ‚é (È—ª‰Â)
+		// åŒºé–“ã‚¢ã‚¯ã‚»ã‚¹ => åŒºé–“ãŒå¿…è¦; ç‰¹ã« insert => åˆæœŸå€¤ãƒªã‚¹ãƒˆã‚’å–ã‚‹ (çœç•¥å¯)
 		case 0:
 		case 4:
 		{
@@ -326,7 +326,7 @@ static void VectorElemProcImpl( CVector* self )
 			if ( idProc == 0 ) {
 				self->Insert( iBgn, iEnd );
 
-				// ‰Šú’lƒŠƒXƒg (È—ª‰Â)
+				// åˆæœŸå€¤ãƒªã‚¹ãƒˆ (çœç•¥å¯)
 				bool   const bReversed = (iBgn > iEnd);
 				size_t const cntElems  = ( !bReversed ? iEnd - iBgn : iBgn - iEnd );
 				for ( size_t i = 0; i < cntElems; ++ i ) {
@@ -342,7 +342,7 @@ static void VectorElemProcImpl( CVector* self )
 			}
 			break;
 		}
-		// ’PˆêƒAƒNƒZƒX => “Yš‚ª•K—v; “Á‚É insert1 => ‰Šú’l‚ğæ‚é (È—ª‰Â)
+		// å˜ä¸€ã‚¢ã‚¯ã‚»ã‚¹ => æ·»å­—ãŒå¿…è¦; ç‰¹ã« insert1 => åˆæœŸå€¤ã‚’å–ã‚‹ (çœç•¥å¯)
 		case 1:
 		case 5:
 		{
@@ -351,7 +351,7 @@ static void VectorElemProcImpl( CVector* self )
 			if ( idProc == 1 ) {
 				PVal* const pvdat = self->Insert( idx );
 
-				// ‰Šú’l
+				// åˆæœŸå€¤
 				if ( code_getprm() > PARAM_END ) {
 					PVal_assign( pvdat, mpval->pt, mpval->flag );
 				}
@@ -361,7 +361,7 @@ static void VectorElemProcImpl( CVector* self )
 			}
 			break;
 		}
-		// push => ‰Šú’l‚ğæ‚é (È—ª‰Â)
+		// push => åˆæœŸå€¤ã‚’å–ã‚‹ (çœç•¥å¯)
 		case 2:
 		case 3:
 		{
@@ -385,7 +385,7 @@ static void VectorElemProcImpl( CVector* self )
 	return;
 }
 
-// –½—ß
+// å‘½ä»¤
 template<int idProc>
 static void VectorElemProc()
 {
@@ -405,14 +405,14 @@ void VectorRemove1()   { VectorElemProc<5>(); }
 void VectorPopFront()  { VectorElemProc<6>(); }
 void VectorPopBack()   { VectorElemProc<7>(); }
 
-// ŠÖ”
+// é–¢æ•°
 template<int idProc>
 static int VectorElemProc( PDAT** ppResult )
 {
 	auto&& src = code_get_vector();
 	if ( isNull( src ) ) puterror( HSPERR_ILLEGAL_FUNCTION );
 
-	CVector* const self = CVector::NewTemp();		// “¯’l‚ÈˆêƒIƒuƒWƒFƒNƒg‚ğ¶¬
+	CVector* const self = CVector::NewTemp();		// åŒå€¤ãªä¸€æ™‚ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ç”Ÿæˆ
 	self->Chain( *src );
 
 	VectorElemProcImpl<idProc>( self );
@@ -430,9 +430,9 @@ int VectorPopFront ( PDAT** ppResult ) { return VectorElemProc<6>( ppResult ); }
 int VectorPopBack  ( PDAT** ppResult ) { return VectorElemProc<7>( ppResult ); }
 
 //------------------------------------------------
-// —v‘f’uŠ·
+// è¦ç´ ç½®æ›
 //------------------------------------------------
-// –½—ß
+// å‘½ä»¤
 void VectorReplace()
 {
 	PVal* const pval = code_get_var();
@@ -451,7 +451,7 @@ void VectorReplace()
 	return;
 }
 
-// ŠÖ”
+// é–¢æ•°
 int VectorReplace( PDAT** ppResult )
 {
 	auto&& self = code_get_vector();
@@ -467,7 +467,7 @@ int VectorReplace( PDAT** ppResult )
 		return SetReffuncResult( ppResult, CVector::Null );
 
 	} else {
-		// “¯’l‚ÈˆêƒIƒuƒWƒFƒNƒg‚ğ¶¬‚·‚é
+		// åŒå€¤ãªä¸€æ™‚ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ç”Ÿæˆã™ã‚‹
 		CVector* const result = CVector::NewTemp();
 		{
 			result->Chain(*self);
@@ -479,13 +479,13 @@ int VectorReplace( PDAT** ppResult )
 #endif
 
 //#########################################################
-//        ŠÖ”
+//        é–¢æ•°
 //#########################################################
 //------------------------------------------------
-// “à•”•Ï”‚Ìî•ñ‚ğ“¾‚é
+// å†…éƒ¨å¤‰æ•°ã®æƒ…å ±ã‚’å¾—ã‚‹
 //------------------------------------------------
 //------------------------------------------------
-// vector •Ô‹pŠÖ”
+// vector è¿”å´é–¢æ•°
 //------------------------------------------------
 static int const VectorResultExprMagicNumber = 0x31EC100A;
 
@@ -498,7 +498,7 @@ int VectorResult( PDAT** ppResult )
 
 int VectorExpr( PDAT** ppResult )
 {
-	// ‚±‚±‚Å VectorResult() ‚ªÀs‚³‚ê‚é‚Í‚¸
+	// ã“ã“ã§ VectorResult() ãŒå®Ÿè¡Œã•ã‚Œã‚‹ã¯ãš
 	if ( code_geti() != VectorResultExprMagicNumber ) puterror(HSPERR_ILLEGAL_FUNCTION);
 
 	return (g_pResultVector.isTmpObj()
@@ -507,7 +507,7 @@ int VectorExpr( PDAT** ppResult )
 }
 
 //------------------------------------------------
-// •¶š—ñŒ‹‡(Join)
+// æ–‡å­—åˆ—çµåˆ(Join)
 //------------------------------------------------
 int VectorJoin( PDAT** ppResult )
 {
@@ -530,7 +530,7 @@ int VectorJoin( PDAT** ppResult )
 	strcpy_s(rightBracket, _rightBracket);
 	size_t const lenRightBracket = std::strlen(rightBracket);
 
-	// •¶š—ñ‰»ˆ—
+	// æ–‡å­—åˆ—åŒ–å‡¦ç†
 	std::function<void(vector_t&, char*, int, size_t&)> impl
 		= [&](vector_t const& self, char* buf, int bufsize, size_t& idx)
 	{
@@ -539,7 +539,7 @@ int VectorJoin( PDAT** ppResult )
 		// foreach
 		for ( size_t i = 0; i < self->size(); ++ i ) {
 			if ( i != 0 ) {
-				// ‹æØ‚è•¶š
+				// åŒºåˆ‡ã‚Šæ–‡å­—
 				strcpy_s( &buf[idx], bufsize - idx, splitter ); idx += lenSplitter;
 			}
 
@@ -549,7 +549,7 @@ int VectorJoin( PDAT** ppResult )
 				impl( VtTraits::getMaster<vtVector>(pvdat), buf, bufsize, idx );
 
 			} else {
-				// •¶š—ñ‰»‚µ‚Ä˜AŒ‹
+				// æ–‡å­—åˆ—åŒ–ã—ã¦é€£çµ
 				char const* const pStr = (char const*)Valptr_cnvTo(PVal_getptr(pvdat), pvdat->flag, HSPVAR_FLAG_STR);
 				size_t const lenStr = std::strlen( pStr );
 				strcpy_s( &buf[idx], bufsize - idx, pStr ); idx += lenStr;
@@ -560,7 +560,7 @@ int VectorJoin( PDAT** ppResult )
 	};
 
 	auto const lambda = [&self, &impl](char* buf, int bufsize) {
-		size_t idx = 0;				// Œ‹‡Œã‚Ì•¶š—ñ‚Ì’·‚³
+		size_t idx = 0;				// çµåˆå¾Œã®æ–‡å­—åˆ—ã®é•·ã•
 		impl( self, buf, bufsize, idx );
 		buf[idx ++] = '\0';
 	};
@@ -569,7 +569,7 @@ int VectorJoin( PDAT** ppResult )
 }
 
 //------------------------------------------------
-// “YšŠÖ”
+// æ·»å­—é–¢æ•°
 //------------------------------------------------
 int VectorAt( PDAT** ppResult )
 {
@@ -586,7 +586,7 @@ int VectorAt( PDAT** ppResult )
 
 
 //------------------------------------------------
-// I—¹
+// çµ‚äº†æ™‚
 //------------------------------------------------
 void VectorCmdTerminate()
 {

@@ -1,4 +1,4 @@
-// ‰¼ˆø”î•ñƒNƒ‰ƒX
+ï»¿// ä»®å¼•æ•°æƒ…å ±ã‚¯ãƒ©ã‚¹
 
 #include "mod_makepval.h"
 
@@ -10,10 +10,10 @@ CPrmInfo const CPrmInfo::undeclaredFunc(CPrmInfo::prmlist_t { PrmType::Flex });
 CPrmInfo const CPrmInfo::noprmFunc( nullptr );
 
 //##############################################################################
-//                ’è‹`•” : CPrmInfo
+//                å®šç¾©éƒ¨ : CPrmInfo
 //##############################################################################
 //------------------------------------------------
-// •W€\’z
+// æ¨™æº–æ§‹ç¯‰
 //------------------------------------------------
 CPrmInfo::CPrmInfo(prmlist_t const* pPrmlist)
 	: cntPrms_ { 0 }
@@ -27,7 +27,7 @@ CPrmInfo::CPrmInfo(prmlist_t const* pPrmlist)
 }
 
 //------------------------------------------------
-// ƒIƒtƒZƒbƒg’l‚ÌŒvZ‚ğƒLƒƒƒbƒVƒ…‚·‚é
+// ã‚ªãƒ•ã‚»ãƒƒãƒˆå€¤ã®è¨ˆç®—ã‚’ã‚­ãƒ£ãƒƒã‚·ãƒ¥ã™ã‚‹
 //------------------------------------------------
 void CPrmInfo::calcOffsets()
 {
@@ -54,10 +54,10 @@ void CPrmInfo::calcOffsets()
 }
 
 //###############################################
-//    İ’èŒn
+//    è¨­å®šç³»
 //###############################################
 //------------------------------------------------
-// prmlist ‚Ì•¡Ê
+// prmlist ã®è¤‡å†™
 //------------------------------------------------
 void CPrmInfo::setPrmlist( prmlist_t const& prmlist )
 {
@@ -89,11 +89,11 @@ void CPrmInfo::setPrmlist( prmlist_t const& prmlist )
 }
 
 //###############################################
-//    æ“¾Œn
+//    å–å¾—ç³»
 //###############################################
 
 //-----------------------------------------------
-// ‰¼ˆø”ƒ^ƒCƒv (failure: PrmType::None)
+// ä»®å¼•æ•°ã‚¿ã‚¤ãƒ— (failure: PrmType::None)
 //-----------------------------------------------
 int CPrmInfo::getPrmType( size_t idx ) const
 {
@@ -103,7 +103,7 @@ int CPrmInfo::getPrmType( size_t idx ) const
 }
 
 //-----------------------------------------------
-// ƒXƒ^ƒbƒN‚ÌƒIƒtƒZƒbƒg‚ğ“¾‚é
+// ã‚¹ã‚¿ãƒƒã‚¯ã®ã‚ªãƒ•ã‚»ãƒƒãƒˆã‚’å¾—ã‚‹
 //-----------------------------------------------
 size_t CPrmInfo::getStackOffset(size_t idx) const
 {
@@ -132,7 +132,7 @@ size_t CPrmInfo::getStackOffsetParam(size_t idx) const
 
 size_t CPrmInfo::getStackOffsetCapture(size_t idx) const
 {
-	// idx: Å‰‚Ì capture ˆø”‚ğ 0 ‚Æ‚·‚éB
+	// idx: æœ€åˆã® capture å¼•æ•°ã‚’ 0 ã¨ã™ã‚‹ã€‚
 	assert(idx < cntCaptures());
 
 	return stkOffsetCapture_ + idx * PrmType::sizeOf(PrmType::Capture);
@@ -146,16 +146,16 @@ size_t CPrmInfo::getStackOffsetLocal(size_t idx) const
 }
 
 //-----------------------------------------------
-// ³‚µ‚¢ˆø”‚©”Û‚©
+// æ­£ã—ã„å¼•æ•°ã‹å¦ã‹
 //-----------------------------------------------
 void CPrmInfo::checkCorrectArg( PVal const* pvArg, size_t iArg, bool bByRef ) const
 {
 	int const prmtype = getPrmType(iArg);
 
-	// ‰Â•Ï’·ˆø”
+	// å¯å¤‰é•·å¼•æ•°
 	if ( iArg >= cntPrms() ) {
 		if ( isFlex() ) {
-			// •K‚¸³‚µ‚¢‚±‚Æ‚É‚·‚é
+			// å¿…ãšæ­£ã—ã„ã“ã¨ã«ã™ã‚‹
 		} else {
 			puterror( HSPERR_TOO_MANY_PARAMETERS );
 		}
@@ -164,13 +164,13 @@ void CPrmInfo::checkCorrectArg( PVal const* pvArg, size_t iArg, bool bByRef ) co
 	} else if ( prmtype == PrmType::Any ) {
 		// OK
 
-	// QÆ“n‚µ—v‹
+	// å‚ç…§æ¸¡ã—è¦æ±‚
 	} else if ( prmtype == PrmType::Var || prmtype == PrmType::Array ) {
 		if ( !bByRef ) {
 			puterror( HSPERR_VARIABLE_REQUIRED );
 		}
 
-	// Œ^•sˆê’v
+	// å‹ä¸ä¸€è‡´
 	} else if ( prmtype != pvArg->flag ) {
 		puterror( HSPERR_TYPE_MISMATCH );
 	}
@@ -179,13 +179,13 @@ void CPrmInfo::checkCorrectArg( PVal const* pvArg, size_t iArg, bool bByRef ) co
 }
 
 //-----------------------------------------------
-// È—ª’l‚ğæ“¾
+// çœç•¥å€¤ã‚’å–å¾—
 // 
-// @ È—ª‚Å‚«‚È‚¢ => ƒGƒ‰[
+// @ çœç•¥ã§ããªã„ => ã‚¨ãƒ©ãƒ¼
 //-----------------------------------------------
 PVal* CPrmInfo::getDefaultArg( size_t iArg ) const
 {
-	// ‰Â•Ï’·ˆø”
+	// å¯å¤‰é•·å¼•æ•°
 	if ( iArg >= cntPrms() ) {
 		if ( isFlex() ) {
 			return PVal_getDefault();
@@ -197,13 +197,13 @@ PVal* CPrmInfo::getDefaultArg( size_t iArg ) const
 	int const prmtype = getPrmType(iArg);
 
 	switch ( prmtype ) {
-		// ’Êí‰¼ˆø”‚ÅAŠù’è’l‚Ì‚ ‚éŒ^
+		// é€šå¸¸ä»®å¼•æ•°ã§ã€æ—¢å®šå€¤ã®ã‚ã‚‹å‹
 		case HSPVAR_FLAG_STR:
 		case HSPVAR_FLAG_DOUBLE:
 		case HSPVAR_FLAG_INT:
 			return PVal_getDefault( prmtype );
 
-		// ’Êí‰¼ˆø”‚ÅAÈ—ª•s‰Â
+		// é€šå¸¸ä»®å¼•æ•°ã§ã€çœç•¥ä¸å¯
 		case HSPVAR_FLAG_LABEL:  puterror( HSPERR_LABEL_REQUIRED );
 		case HSPVAR_FLAG_STRUCT: puterror( HSPERR_STRUCT_REQUIRED );
 
@@ -212,7 +212,7 @@ PVal* CPrmInfo::getDefaultArg( size_t iArg ) const
 			return PVal_getDefault();
 
 		default:
-			// QÆ“n‚µ—v‹
+			// å‚ç…§æ¸¡ã—è¦æ±‚
 			if ( PrmType::isRef(prmtype) ) puterror( HSPERR_VARIABLE_REQUIRED );
 
 			puterror( HSPERR_NO_DEFAULT );
@@ -220,10 +220,10 @@ PVal* CPrmInfo::getDefaultArg( size_t iArg ) const
 }
 
 //------------------------------------------------
-// ”äŠr
+// æ¯”è¼ƒ
 //
-// @ “™‚µ‚¢uÀˆø”‚ğó‚¯æ‚é‰¼ˆø”ƒ^ƒCƒv‚ÆƒLƒƒƒvƒ`ƒƒˆø”‚Ì”‚ª‚·‚×‚Ä“™‚µ‚¢v
-// @ ‘å¬‚Í‚æ‚­•ª‚©‚ç‚È‚¢Š´‚¶B
+// @ ç­‰ã—ã„ï¼ã€Œå®Ÿå¼•æ•°ã‚’å—ã‘å–ã‚‹ä»®å¼•æ•°ã‚¿ã‚¤ãƒ—ã¨ã‚­ãƒ£ãƒ—ãƒãƒ£å¼•æ•°ã®æ•°ãŒã™ã¹ã¦ç­‰ã—ã„ã€
+// @ å¤§å°ã¯ã‚ˆãåˆ†ã‹ã‚‰ãªã„æ„Ÿã˜ã€‚
 //------------------------------------------------
 int CPrmInfo::compare( CPrmInfo const& rhs ) const
 {

@@ -1,4 +1,4 @@
-// call - command.cpp
+ï»¿// call - command.cpp
 
 #include <stack>
 #include <set>
@@ -8,9 +8,6 @@
 #include "mod_argGetter.h"
 #include "mod_varutil.h"
 #include "axcmd.h"
-
-#include "CCall.h"
-#include "CCaller.h"
 
 #include "Functor.h"
 #include "Invoker.h"
@@ -28,7 +25,7 @@
 using namespace hpimod;
 
 //------------------------------------------------
-// ƒ‰ƒxƒ‹–½—ßEŠÖ”‚ÌŒÄ‚Ño‚µ
+// ãƒ©ãƒ™ãƒ«å‘½ä»¤ãƒ»é–¢æ•°ã®å‘¼ã³å‡ºã—
 //------------------------------------------------
 int CallCmd::call( PDAT** ppResult )
 {
@@ -48,16 +45,16 @@ int CallCmd::call( PDAT** ppResult )
 }
 
 //------------------------------------------------
-// ƒ‰ƒxƒ‹–½—ßEŠÖ”‚Ì‰¼ˆø”éŒ¾
+// ãƒ©ãƒ™ãƒ«å‘½ä»¤ãƒ»é–¢æ•°ã®ä»®å¼•æ•°å®£è¨€
 //------------------------------------------------
 static label_t declareImpl()
 {
 	label_t const lb = code_getlb();
 	if ( !lb ) puterror( HSPERR_ILLEGAL_FUNCTION );
 
-	CPrmInfo::prmlist_t&& prmlist = code_get_prmlist();		// ‰¼ˆø”—ñ
+	CPrmInfo::prmlist_t&& prmlist = code_get_prmlist();		// ä»®å¼•æ•°åˆ—
 
-	// “o˜^
+	// ç™»éŒ²
 	DeclarePrmInfo( lb, CPrmInfo(&prmlist) );
 	return lb;
 }
@@ -73,7 +70,7 @@ int CallCmd::declare(PDAT** ppResult)
 }
 
 //------------------------------------------------
-// ƒ‰ƒxƒ‹ŠÖ”‚Ì•Ô’l‚ğİ’è‚·‚é
+// ãƒ©ãƒ™ãƒ«é–¢æ•°ã®è¿”å€¤ã‚’è¨­å®šã™ã‚‹
 //------------------------------------------------
 void CallCmd::call_setResult_()
 {
@@ -85,9 +82,9 @@ void CallCmd::call_setResult_()
 }
 
 //------------------------------------------------
-// ƒ‰ƒxƒ‹ŠÖ”‚Ì•Ô’l‚Æ‚È‚Á‚½’l‚ğæ‚èo‚·
+// ãƒ©ãƒ™ãƒ«é–¢æ•°ã®è¿”å€¤ã¨ãªã£ãŸå€¤ã‚’å–ã‚Šå‡ºã™
 // 
-// @ call I—¹Œã‚É‚¾‚¯ŒÄ‚Ño‚³‚ê‚éB
+// @ call çµ‚äº†å¾Œã«ã ã‘å‘¼ã³å‡ºã•ã‚Œã‚‹ã€‚
 //------------------------------------------------
 int CallCmd::call_getResult_(PDAT** ppResult)
 {
@@ -102,7 +99,7 @@ int CallCmd::call_getResult_(PDAT** ppResult)
 }
 
 //##########################################################
-//        ˆø”î•ñæ“¾
+//        å¼•æ•°æƒ…å ±å–å¾—
 //##########################################################
 //------------------------------------------------
 // arginfo
@@ -139,13 +136,13 @@ static int getArgInfo(Invoker const& inv, int id, size_t idxArg)
 }
 
 //------------------------------------------------
-// ŒÄ‚Ño‚µˆø”î•ñ‚ğæ“¾‚·‚éŠÖ”
+// å‘¼ã³å‡ºã—å¼•æ•°æƒ…å ±ã‚’å–å¾—ã™ã‚‹é–¢æ•°
 //------------------------------------------------
 int CallCmd::arginfo(PDAT** ppResult)
 {
 	auto& inv = Invoker::top();
 
-	auto const id = code_geti();	// ƒf[ƒ^‚Ìí—Ş
+	auto const id = code_geti();	// ãƒ‡ãƒ¼ã‚¿ã®ç¨®é¡
 	int const idxArg = code_geti();
 	if ( !(0 <= idxArg && static_cast<size_t>(idxArg) < inv.getArgs().cntArgs()) ) puterror(HSPERR_ILLEGAL_FUNCTION);
 
@@ -153,9 +150,9 @@ int CallCmd::arginfo(PDAT** ppResult)
 }
 
 //------------------------------------------------
-// ˆø”‚Ì’l‚ğæ“¾‚·‚é
+// å¼•æ•°ã®å€¤ã‚’å–å¾—ã™ã‚‹
 //
-// @ QÆ“n‚µˆø”‚Ì’l‚Íæ‚èo‚¹‚È‚¢B
+// @ å‚ç…§æ¸¡ã—å¼•æ•°ã®å€¤ã¯å–ã‚Šå‡ºã›ãªã„ã€‚
 //------------------------------------------------
 int CallCmd::argVal(PDAT** ppResult)
 {
@@ -165,14 +162,14 @@ int CallCmd::argVal(PDAT** ppResult)
 	int const idxArg = code_getdi(0);
 	if ( !(0 <= idxArg && static_cast<size_t>(idxArg) < args.cntArgs()) ) puterror(HSPERR_ILLEGAL_FUNCTION);
 
-	// •Ô’l‚ğİ’è‚·‚é
+	// è¿”å€¤ã‚’è¨­å®šã™ã‚‹
 	vartype_t vtype;
 	*ppResult = args.peekValArgAt(idxArg, vtype);
 	return vtype;
 }
 
 //------------------------------------------------
-// QÆˆø”‚ÌƒNƒ[ƒ“‚ğì‚é
+// å‚ç…§å¼•æ•°ã®ã‚¯ãƒ­ãƒ¼ãƒ³ã‚’ä½œã‚‹
 //------------------------------------------------
 void CallCmd::argClone()
 {
@@ -189,7 +186,7 @@ void CallCmd::argClone()
 }
 
 //------------------------------------------------
-// Àˆø”‚ğ•Ï”‚Åó‚¯æ‚é
+// å®Ÿå¼•æ•°ã‚’å¤‰æ•°ã§å—ã‘å–ã‚‹
 //------------------------------------------------
 void CallCmd::argPeekAll()
 {
@@ -221,9 +218,9 @@ void CallCmd::argPeekAll()
 }
 
 //------------------------------------------------
-// local •Ï”‚Ì’l‚ğæ“¾‚·‚é
+// local å¤‰æ•°ã®å€¤ã‚’å–å¾—ã™ã‚‹
 //
-// @ Å‰‚Ìƒ[ƒJƒ‹•Ï”‚ğ 0 ‚Æ‚·‚éB
+// @ æœ€åˆã®ãƒ­ãƒ¼ã‚«ãƒ«å¤‰æ•°ã‚’ 0 ã¨ã™ã‚‹ã€‚
 //------------------------------------------------
 int CallCmd::localVal( PDAT** ppResult )
 {
@@ -266,7 +263,7 @@ int CallCmd::localVector(PDAT** ppResult)
 }
 
 //------------------------------------------------
-// ‰Â•Ï’·ˆø”‚Ì’l
+// å¯å¤‰é•·å¼•æ•°ã®å€¤
 //------------------------------------------------
 int CallCmd::flexVal(PDAT** ppResult)
 {
@@ -287,7 +284,7 @@ int CallCmd::flexVal(PDAT** ppResult)
 }
 
 //------------------------------------------------
-// ‰Â•Ï’·ˆø”‚ÌƒNƒ[ƒ“
+// å¯å¤‰é•·å¼•æ•°ã®ã‚¯ãƒ­ãƒ¼ãƒ³
 //------------------------------------------------
 void CallCmd::flexClone()
 {
@@ -310,7 +307,7 @@ void CallCmd::flexClone()
 }
 
 //------------------------------------------------
-// ‰Â•Ï’·ˆø”‚Ì vector
+// å¯å¤‰é•·å¼•æ•°ã® vector
 //------------------------------------------------
 int CallCmd::flexVector(PDAT** ppResult)
 {
@@ -324,7 +321,7 @@ int CallCmd::flexVector(PDAT** ppResult)
 }
 
 //------------------------------------------------
-// ŒÄ‚Ño‚³‚ê‚½ƒ‰ƒxƒ‹
+// å‘¼ã³å‡ºã•ã‚ŒãŸãƒ©ãƒ™ãƒ«
 //------------------------------------------------
 int CallCmd::thislb(PDAT** ppResult)
 {
@@ -338,20 +335,20 @@ int CallCmd::thisfunc(PDAT** ppResult)
 
 #if 0
 //##########################################################
-//        ˆø”ƒXƒgƒŠ[ƒ€ŒÄ‚Ño‚µ
+//        å¼•æ•°ã‚¹ãƒˆãƒªãƒ¼ãƒ å‘¼ã³å‡ºã—
 //##########################################################
 static std::stack<CCaller*> g_stkStream;
 
 //------------------------------------------------
-// ˆø”ƒXƒgƒŠ[ƒ€ŒÄ‚Ño‚µ::ŠJn
+// å¼•æ•°ã‚¹ãƒˆãƒªãƒ¼ãƒ å‘¼ã³å‡ºã—::é–‹å§‹
 //------------------------------------------------
 void CallCmd::streamBegin()
 {
-	// ŒÄ‚Ño‚µ‘O‚Ìˆ—
+	// å‘¼ã³å‡ºã—å‰ã®å‡¦ç†
 	g_stkStream.push( new CCaller() );
 	CCaller* const pCaller = g_stkStream.top();
 
-	// ƒ‰ƒxƒ‹‚Ìİ’è
+	// ãƒ©ãƒ™ãƒ«ã®è¨­å®š
 	if ( code_isNextArg() ) {
 		CallCmd::streamLabel();
 	}
@@ -360,7 +357,7 @@ void CallCmd::streamBegin()
 
 
 //------------------------------------------------
-// ˆø”ƒXƒgƒŠ[ƒ€ŒÄ‚Ño‚µ::ƒ‰ƒxƒ‹İ’è
+// å¼•æ•°ã‚¹ãƒˆãƒªãƒ¼ãƒ å‘¼ã³å‡ºã—::ãƒ©ãƒ™ãƒ«è¨­å®š
 //------------------------------------------------
 void CallCmd::streamLabel()
 {
@@ -368,14 +365,14 @@ void CallCmd::streamLabel()
 
 	CCaller* const pCaller = g_stkStream.top();
 
-	// ƒWƒƒƒ“ƒvæ‚ÌŒˆ’è
+	// ã‚¸ãƒ£ãƒ³ãƒ—å…ˆã®æ±ºå®š
 	pCaller->setFunctor();
 	return;
 }
 
 
 //------------------------------------------------
-// ˆø”ƒXƒgƒŠ[ƒ€ŒÄ‚Ño‚µ::’Ç‰Á
+// å¼•æ•°ã‚¹ãƒˆãƒªãƒ¼ãƒ å‘¼ã³å‡ºã—::è¿½åŠ 
 //------------------------------------------------
 void CallCmd::streamAdd()
 {
@@ -383,7 +380,7 @@ void CallCmd::streamAdd()
 
 	CCaller* const pCaller = g_stkStream.top();
 
-	// ˆø”‚ğ’Ç‰Á‚·‚é
+	// å¼•æ•°ã‚’è¿½åŠ ã™ã‚‹
 	pCaller->setArgAll();
 
 	return;
@@ -391,9 +388,9 @@ void CallCmd::streamAdd()
 
 
 //------------------------------------------------
-// ˆø”ƒXƒgƒŠ[ƒ€ŒÄ‚Ño‚µ::Š®—¹
+// å¼•æ•°ã‚¹ãƒˆãƒªãƒ¼ãƒ å‘¼ã³å‡ºã—::å®Œäº†
 // 
-// @ –½—ßŒ`®‚Ìê‡‚Í ppResult == nullptr B
+// @ å‘½ä»¤å½¢å¼ã®å ´åˆã¯ ppResult == nullptr ã€‚
 //------------------------------------------------
 int CallCmd::streamEnd(PDAT** ppResult)
 {
@@ -401,10 +398,10 @@ int CallCmd::streamEnd(PDAT** ppResult)
 
 	CCaller* const pCaller = g_stkStream.top();
 
-	// ŒÄ‚Ño‚µ
+	// å‘¼ã³å‡ºã—
 	pCaller->call();
 
-	// Œãˆ—
+	// å¾Œå‡¦ç†
 	g_stkStream.pop();
 
 	vartype_t const restype = pCaller->getCallResult( ppResult );
@@ -415,38 +412,38 @@ int CallCmd::streamEnd(PDAT** ppResult)
 
 
 //------------------------------------------------
-// ƒXƒgƒŠ[ƒ€ŒÄ‚Ño‚µƒIƒuƒWƒFƒNƒg::¶¬
+// ã‚¹ãƒˆãƒªãƒ¼ãƒ å‘¼ã³å‡ºã—ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ::ç”Ÿæˆ
 //------------------------------------------------
 int CallCmd::streamCallerNew( PDAT** ppResult )
 {
 	stream_t const stream = CStreamCaller::New();
 
-	// ˆø”ˆ—
+	// å¼•æ•°å‡¦ç†
 	CCaller* const caller = stream->getCaller();
 	{
 		caller->setFunctor();
 	}
 
-	// functor Œ^‚Æ‚µ‚Ä•Ô‹p‚·‚é
+	// functor å‹ã¨ã—ã¦è¿”å´ã™ã‚‹
 	return SetReffuncResult( ppResult, functor_t::make(stream) );
 }
 
 
 //------------------------------------------------
-// ƒXƒgƒŠ[ƒ€ŒÄ‚Ño‚µƒIƒuƒWƒFƒNƒg::’Ç‰Á
+// ã‚¹ãƒˆãƒªãƒ¼ãƒ å‘¼ã³å‡ºã—ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ::è¿½åŠ 
 //------------------------------------------------
 void CallCmd::streamCallerAdd()
 {
 	functor_t&& functor = code_get_functor();
 	stream_t const stream = functor->safeCastTo<stream_t>();
 
-	stream->getCaller()->setArgAll();		// ‘S‚Ä‚Ìˆø”‚ğ’Ç‰Á‚·‚é
+	stream->getCaller()->setArgAll();		// å…¨ã¦ã®å¼•æ•°ã‚’è¿½åŠ ã™ã‚‹
 	return;
 }
 #endif
 
 //##########################################################
-//    functor Œ^ŠÖŒW
+//    functor å‹é–¢ä¿‚
 //##########################################################
 //------------------------------------------------
 // functor
@@ -454,12 +451,12 @@ void CallCmd::streamCallerAdd()
 int FunctorCmd::functor(PDAT** ppResult, bool bSysvar)
 {
 	if ( ppResult && bSysvar ) {
-		// Œ^ƒ^ƒCƒv’l
+		// å‹ã‚¿ã‚¤ãƒ—å€¤
 
 		return SetReffuncResult(ppResult, g_vtFunctor);
 
 	} else if ( ppResult && !bSysvar ) {
-		// Œ^•ÏŠ·
+		// å‹å¤‰æ›
 
 		int const chk = code_getprm();
 		if ( chk <= PARAM_END ) puterror(HSPERR_NO_DEFAULT);
@@ -469,7 +466,7 @@ int FunctorCmd::functor(PDAT** ppResult, bool bSysvar)
 		return g_vtFunctor;
 
 	} else {
-		// •Ï”‰Šú‰»
+		// å¤‰æ•°åˆæœŸåŒ–
 		
 		code_dimtypeEx(g_vtFunctor);
 		return HSPVAR_FLAG_NONE;
@@ -477,14 +474,14 @@ int FunctorCmd::functor(PDAT** ppResult, bool bSysvar)
 }
 
 //------------------------------------------------
-// ‰¼ˆø”î•ñ
+// ä»®å¼•æ•°æƒ…å ±
 //------------------------------------------------
 namespace PrmInfoId
 {
 	static int const
 		PrmTypeOf = 0,
 
-		CntPrms = 2,	// ‚±‚±‚©‚ç‰¼ˆø”ƒŠƒXƒg‘S‘Ì‚ÉŠÖ‚·‚éî•ñ
+		CntPrms = 2,	// ã“ã“ã‹ã‚‰ä»®å¼•æ•°ãƒªã‚¹ãƒˆå…¨ä½“ã«é–¢ã™ã‚‹æƒ…å ±
 		CntLocals = 3,
 		IsFlex = 4
 	;
@@ -512,30 +509,30 @@ int FunctorCmd::prminfo(PDAT** ppResult)
 }
 
 //##########################################################
-//    ‚»‚Ì‘¼
+//    ãã®ä»–
 //##########################################################
 #if 0
 //------------------------------------------------
-// ˆø”‘©”›
+// å¼•æ•°æŸç¸›
 //------------------------------------------------
 int CallCmd::argBind( PDAT** ppResult )
 {
 	bound_t const bound = CBound::New();
 
-	// ˆø”ˆ—
+	// å¼•æ•°å‡¦ç†
 	CCaller* const caller = bound->getCaller();
 	{
-		caller->setFunctor();	// ƒXƒNƒŠƒvƒg‚©‚ç”í‘©”›ŠÖ”‚ğæ‚èo‚·
-		caller->setArgAll();	// ƒXƒNƒŠƒvƒg‚©‚ç—^‚¦‚ç‚ê‚½ˆø”‚ğ‘S‚Äó‚¯æ‚é (•s‘©”›ˆø”‚àó‚¯•t‚¯‚é)
+		caller->setFunctor();	// ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‹ã‚‰è¢«æŸç¸›é–¢æ•°ã‚’å–ã‚Šå‡ºã™
+		caller->setArgAll();	// ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‹ã‚‰ä¸ãˆã‚‰ã‚ŒãŸå¼•æ•°ã‚’å…¨ã¦å—ã‘å–ã‚‹ (ä¸æŸç¸›å¼•æ•°ã‚‚å—ã‘ä»˜ã‘ã‚‹)
 	}
 	bound->bind();
 
-	// functor Œ^‚Æ‚µ‚Ä•Ô‹p‚·‚é
+	// functor å‹ã¨ã—ã¦è¿”å´ã™ã‚‹
 	return SetReffuncResult( ppResult, functor_t::make(bound) );
 }
 
 //------------------------------------------------
-// ‘©”›‰ğœ
+// æŸç¸›è§£é™¤
 //------------------------------------------------
 int CallCmd::unBind( PDAT** ppResult )
 {
@@ -549,9 +546,9 @@ int CallCmd::unBind( PDAT** ppResult )
 }
 
 //------------------------------------------------
-// ƒ‰ƒ€ƒ_®
+// ãƒ©ãƒ ãƒ€å¼
 // 
-// @ funcexpr(args...) ¨ function() { lambdaBody args... : return }
+// @ funcexpr(args...) â†’ function() { lambdaBody args... : return }
 //------------------------------------------------
 int CallCmd::lambda( PDAT** ppResult )
 {
@@ -563,14 +560,14 @@ int CallCmd::lambda( PDAT** ppResult )
 }
 
 //------------------------------------------------
-// lambda ‚ª“à•”‚Å—p‚¢‚éƒRƒ}ƒ“ƒh
+// lambda ãŒå†…éƒ¨ã§ç”¨ã„ã‚‹ã‚³ãƒãƒ³ãƒ‰
 // 
 // @ LambdaBody:
-// @	ˆø”‚ğ‡‚Éæ‚èo‚µA‚»‚ê‚¼‚ê‚ğ local •Ï”‚É‘ã“ü‚µ‚Ä‚¢‚­B
-// @	ÅŒã‚Ìˆø”‚Í•Ô’l‚Æ‚µ‚Äó‚¯æ‚éB
-// @	‚ä‚¦‚ÉA‚±‚Ì–½—ß‚Ìˆø”‚Í•K‚¸ (local •Ï”‚Ì” + 1) ‘¶İ‚·‚éB
+// @	å¼•æ•°ã‚’é †ã«å–ã‚Šå‡ºã—ã€ãã‚Œãã‚Œã‚’ local å¤‰æ•°ã«ä»£å…¥ã—ã¦ã„ãã€‚
+// @	æœ€å¾Œã®å¼•æ•°ã¯è¿”å€¤ã¨ã—ã¦å—ã‘å–ã‚‹ã€‚
+// @	ã‚†ãˆã«ã€ã“ã®å‘½ä»¤ã®å¼•æ•°ã¯å¿…ãš (local å¤‰æ•°ã®æ•° + 1) å­˜åœ¨ã™ã‚‹ã€‚
 // @ LambdaValue:
-// @	idx ”Ô–Ú‚Ì local •Ï”‚ğæ‚èo‚·B
+// @	idx ç•ªç›®ã® local å¤‰æ•°ã‚’å–ã‚Šå‡ºã™ã€‚
 //------------------------------------------------
 void CallCmd::lambdaBody()
 {
@@ -589,39 +586,39 @@ void CallCmd::lambdaBody()
 }
 
 //------------------------------------------------
-// ƒRƒ‹[ƒ`ƒ“::¶¬
+// ã‚³ãƒ«ãƒ¼ãƒãƒ³::ç”Ÿæˆ
 //------------------------------------------------
 int CallCmd::coCreate( PDAT** ppResult )
 {
 	auto coroutine = CCoRoutine::New();
 
 	CCaller* const caller = coroutine->getCaller();
-	caller->setFunctor();		// functor ‚ğó‚¯‚é
+	caller->setFunctor();		// functor ã‚’å—ã‘ã‚‹
 	caller->setArgAll();
 
 	return SetReffuncResult( ppResult, functor_t::make(coroutine) );
 }
 
 //------------------------------------------------
-// ƒRƒ‹[ƒ`ƒ“::’†’fÀ‘•
+// ã‚³ãƒ«ãƒ¼ãƒãƒ³::ä¸­æ–­å®Ÿè£…
 //------------------------------------------------
 void CallCmd::coYieldImpl()
 {
-	CallCmd::retval();		// •Ô’l‚ğó‚¯æ‚é
+	CallCmd::retval();		// è¿”å€¤ã‚’å—ã‘å–ã‚‹
 
-	// newlab ‚³‚ê‚é•Ï”‚ğƒRƒ‹[ƒ`ƒ“‚É“n‚·
+	// newlab ã•ã‚Œã‚‹å¤‰æ•°ã‚’ã‚³ãƒ«ãƒ¼ãƒãƒ³ã«æ¸¡ã™
 	PVal* const pvNextLab = code_get_var();
-	CCoRoutine::setNextVar( pvNextLab );	// static •Ï”‚ÉŠi”[‚·‚é
+	CCoRoutine::setNextVar( pvNextLab );	// static å¤‰æ•°ã«æ ¼ç´ã™ã‚‹
 
 	return;
 }
 #endif
 
 //##########################################################
-//        ˆê”Ê«‚Ì‚ ‚éƒRƒ}ƒ“ƒh
+//        ä¸€èˆ¬æ€§ã®ã‚ã‚‹ã‚³ãƒãƒ³ãƒ‰
 //##########################################################
 //------------------------------------------------
-// ƒRƒ}ƒ“ƒh‚ğ”’l‰»‚µ‚Äæ“¾‚·‚é
+// ã‚³ãƒãƒ³ãƒ‰ã‚’æ•°å€¤åŒ–ã—ã¦å–å¾—ã™ã‚‹
 //------------------------------------------------
 int CallCmd::axcmdOf(PDAT** ppResult)
 {
@@ -631,7 +628,7 @@ int CallCmd::axcmdOf(PDAT** ppResult)
 }
 
 //------------------------------------------------
-// ƒ†[ƒU’è‹`–½—ßEŠÖ”‚È‚Ç‚©‚çƒ‰ƒxƒ‹‚ğæ“¾‚·‚é
+// ãƒ¦ãƒ¼ã‚¶å®šç¾©å‘½ä»¤ãƒ»é–¢æ•°ãªã©ã‹ã‚‰ãƒ©ãƒ™ãƒ«ã‚’å–å¾—ã™ã‚‹
 //------------------------------------------------
 static label_t code_labelOfImpl(int axcmd)
 {
@@ -653,11 +650,11 @@ static label_t code_labelOfImpl(int axcmd)
 
 static label_t code_labelOf()
 {
-	// ƒ†[ƒU’è‹`ƒRƒ}ƒ“ƒh
+	// ãƒ¦ãƒ¼ã‚¶å®šç¾©ã‚³ãƒãƒ³ãƒ‰
 	if ( *type == TYPE_MODCMD ) {
 		return code_labelOfImpl(code_get_axcmd());
 
-		// ‚»‚Ì‘¼
+		// ãã®ä»–
 	} else {
 		if ( code_getprm() <= PARAM_END ) puterror(HSPERR_NO_DEFAULT);
 
@@ -683,7 +680,7 @@ int CallCmd::labelOf(PDAT** ppResult)
 }
 
 //------------------------------------------------
-// ƒRƒ}ƒ“ƒh‚ÌŒÄ‚Ño‚µ
+// ã‚³ãƒãƒ³ãƒ‰ã®å‘¼ã³å‡ºã—
 //------------------------------------------------
 int CallCmd::forwardCmd_( PDAT** ppResult )
 {
@@ -691,7 +688,7 @@ int CallCmd::forwardCmd_( PDAT** ppResult )
 	if ( !AxCmd::isOk(id) ) puterror(HSPERR_ILLEGAL_FUNCTION);
 
 	if ( ppResult ) {
-		// ŠÖ”‚ğŒÄ‚Ño‚· (‚»‚Ì•Ô’l‚ğ‚±‚ê©‘Ì‚Ì•Ô’l‚Æ‚·‚é)
+		// é–¢æ•°ã‚’å‘¼ã³å‡ºã™ (ãã®è¿”å€¤ã‚’ã“ã‚Œè‡ªä½“ã®è¿”å€¤ã¨ã™ã‚‹)
 		{
 			*type = AxCmd::getType(id);
 			*val = AxCmd::getCode(id);
@@ -703,7 +700,7 @@ int CallCmd::forwardCmd_( PDAT** ppResult )
 		return mpval->flag;
 
 	} else {
-		// w’è‚µ‚½–½—ßƒRƒ}ƒ“ƒh‚ª‚ ‚é‚±‚Æ‚É‚·‚é (‚±‚ê‚É‚æ‚è1‚Â‚ÌƒR[ƒh’×‚ê‚é‚Ì‚ÅAƒ_ƒ~[‚ğ”z’u‚·‚×‚µ)
+		// æŒ‡å®šã—ãŸå‘½ä»¤ã‚³ãƒãƒ³ãƒ‰ãŒã‚ã‚‹ã“ã¨ã«ã™ã‚‹ (ã“ã‚Œã«ã‚ˆã‚Š1ã¤ã®ã‚³ãƒ¼ãƒ‰æ½°ã‚Œã‚‹ã®ã§ã€ãƒ€ãƒŸãƒ¼ã‚’é…ç½®ã™ã¹ã—)
 		{
 			*type = AxCmd::getType(id);
 			*val = AxCmd::getCode(id);
@@ -714,7 +711,7 @@ int CallCmd::forwardCmd_( PDAT** ppResult )
 }
 
 //##########################################################
-//    ƒeƒXƒgƒR[ƒh
+//    ãƒ†ã‚¹ãƒˆã‚³ãƒ¼ãƒ‰
 //##########################################################
 #ifdef _DEBUG
 

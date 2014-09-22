@@ -1,6 +1,6 @@
-// ƒRƒ‹[ƒ`ƒ“ƒNƒ‰ƒX
+ï»¿// ã‚³ãƒ«ãƒ¼ãƒãƒ³ã‚¯ãƒ©ã‚¹
 #if 0
-// IFunctor ‚ğŒp³‚·‚é•K—v‚ª‚ ‚éB
+// IFunctor ã‚’ç¶™æ‰¿ã™ã‚‹å¿…è¦ãŒã‚ã‚‹ã€‚
 
 #ifndef IG_CLASS_CO_ROUTINE_H
 #define IG_CLASS_CO_ROUTINE_H
@@ -11,7 +11,7 @@
 #include "IFunctor.h"
 #include "Functor.h"
 
-//	#define DBGOUT_CO_ROUTINE_ADDREF_OR_RELEASE	// AddRef, Release ‚ğ dbgout ‚Å•ñ‚·‚é
+//	#define DBGOUT_CO_ROUTINE_ADDREF_OR_RELEASE	// AddRef, Release ã‚’ dbgout ã§å ±å‘Šã™ã‚‹
 
 class CCoRoutine;
 class CCaller;
@@ -21,16 +21,16 @@ using coroutine_t = CCoRoutine*;
 class CCoRoutine
 	: public IFunctor
 {
-	// ƒƒ“ƒo•Ï”
+	// ãƒ¡ãƒ³ãƒå¤‰æ•°
 private:
-	CCaller* mpCaller;		// Œp‘±‚µ‚Ä‚¢‚éŒÄ‚Ño‚µ
-	functor_t mNext;			// Ÿ‚ÉŒÄ‚Ño‚·ƒ‰ƒxƒ‹
+	CCaller* mpCaller;		// ç¶™ç¶šã—ã¦ã„ã‚‹å‘¼ã³å‡ºã—
+	functor_t mNext;			// æ¬¡ã«å‘¼ã³å‡ºã™ãƒ©ãƒ™ãƒ«
 
-	CCaller const* mpCallerGiven;	// ÀÛ‚ÌŒÄ‚Ño‚µ‚Ö‚ÌQÆ
+	CCaller const* mpCallerGiven;	// å®Ÿéš›ã®å‘¼ã³å‡ºã—ã¸ã®å‚ç…§
 
-	static PVal const* stt_pvNextVar;	// next ‚ğó‚¯æ‚é•Ï”‚Ö‚ÌQÆ
+	static PVal const* stt_pvNextVar;	// next ã‚’å—ã‘å–ã‚‹å¤‰æ•°ã¸ã®å‚ç…§
 
-	// \’z
+	// æ§‹ç¯‰
 private:
 	CCoRoutine();
 	~CCoRoutine();
@@ -39,18 +39,18 @@ public:
 	CCaller* getCaller()  const { return mpCaller; }
 	CPrmInfo const& getPrmInfo() const;
 
-	// Œp³
+	// ç¶™æ‰¿
 	label_t getLabel() const { return mNext.getLabel(); }
 	int     getAxCmd() const { return mNext.getAxCmd(); }
 	int     getUsing() const { return 1; }
 
-	// “®ì
-	void call( CCaller& callerGiven );		// ’Ç‰Áˆø”
+	// å‹•ä½œ
+	void call( CCaller& callerGiven );		// è¿½åŠ å¼•æ•°
 
-	// ƒ‰ƒbƒp[
+	// ãƒ©ãƒƒãƒ‘ãƒ¼
 	static coroutine_t New();
 
-	static void setNextVar( PVal const* pv )	// co_yield_impl Às‚ÉƒRƒ‹[ƒ`ƒ“‚ğQÆ‚·‚é•û–@‚Í‚È‚¢ (ÀÛ‚ÉŒÄ‚Î‚ê‚Ä‚¢‚é‚Ì‚ÍÀ‘Ì‚È‚í‚¯‚¾‚µ)
+	static void setNextVar( PVal const* pv )	// co_yield_impl å®Ÿè¡Œæ™‚ã«ã‚³ãƒ«ãƒ¼ãƒãƒ³ã‚’å‚ç…§ã™ã‚‹æ–¹æ³•ã¯ãªã„ (å®Ÿéš›ã«å‘¼ã°ã‚Œã¦ã„ã‚‹ã®ã¯å®Ÿä½“ãªã‚ã‘ã ã—)
 	{ stt_pvNextVar = pv; }
 };
 

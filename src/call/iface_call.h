@@ -1,9 +1,9 @@
-// call - main.h
+Ôªø// call - main.h
 
 #ifndef IG_INTERFACE_CALL_H
 #define IG_INTERFACE_CALL_H
 
-//#define WIN32_LEAN_AND_MEAN		// <commdlg.h> Ç include ÇµÇ»Ç¢
+//#define WIN32_LEAN_AND_MEAN		// <commdlg.h> „Çí include „Åó„Å™„ÅÑ
 //#include <windows.h>
 
 //#include <cstdio>

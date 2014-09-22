@@ -1,4 +1,4 @@
-// Call(ModCls) - Command header
+Ôªø// Call(ModCls) - Command header
 
 #ifndef IG_CALL_MODCLS_COMMAND_H
 #define IG_CALL_MODCLS_COMMAND_H
@@ -18,7 +18,7 @@ enum OpFlag
 	OpFlag_CnvTo = 0x0100,
 	OpFlag_Sp    = 0x0200,
 
-	// ÇªÇÃëº
+	// „Åù„ÅÆ‰ªñ
 	OpId_Dup    = OpFlag_Sp | 0,
 	OpId_Cmp    = OpFlag_Sp | 1,
 	OpId_Method = OpFlag_Sp | 2,

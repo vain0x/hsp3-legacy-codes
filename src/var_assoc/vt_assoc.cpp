@@ -1,4 +1,4 @@
-// assoc - VarProc code
+ï»¿// assoc - VarProc code
 
 #include "CAssoc.h"
 #include "vt_assoc.h"
@@ -12,11 +12,11 @@
 
 using namespace hpimod;
 
-// •Ï”‚Ì’è‹`
+// å¤‰æ•°ã®å®šç¾©
 int g_vtAssoc;
 HspVarProc* g_hvpAssoc;
 
-// ŠÖ”‚ÌéŒ¾
+// é–¢æ•°ã®å®£è¨€
 extern PDAT* HspVarAssoc_GetPtr         ( PVal* pval) ;
 extern int   HspVarAssoc_GetSize        ( PDAT const* pdat );
 extern int   HspVarAssoc_GetUsing       ( PDAT const* pdat );
@@ -48,28 +48,28 @@ static int HspVarAssoc_GetUsing( PDAT const* pdat )
 }
 
 //------------------------------------------------
-// PVal‚Ì•Ï”ƒƒ‚ƒŠ‚ğŠm•Û‚·‚é
+// PValã®å¤‰æ•°ãƒ¡ãƒ¢ãƒªã‚’ç¢ºä¿ã™ã‚‹
 //
-// @ pval ‚Í–¢Šm•Û or ‰ğ•úÏ‚İ‚Ìó‘ÔB
-// @ pval2 != nullptr => pval2‚Ì“à—e‚ğŒp³‚·‚éB
+// @ pval ã¯æœªç¢ºä¿ or è§£æ”¾æ¸ˆã¿ã®çŠ¶æ…‹ã€‚
+// @ pval2 != nullptr => pval2ã®å†…å®¹ã‚’ç¶™æ‰¿ã™ã‚‹ã€‚
 //------------------------------------------------
 static void HspVarAssoc_Alloc( PVal* pval, PVal const* pval2 )
 {
-	if ( pval->len[1] < 1 ) pval->len[1] = 1;		// Å’á1—v‘f‚ÍŠm•Û‚·‚é
+	if ( pval->len[1] < 1 ) pval->len[1] = 1;		// æœ€ä½1è¦ç´ ã¯ç¢ºä¿ã™ã‚‹
 	size_t const cntElems = PVal_cntElems( pval );
 	size_t const     size = cntElems * sizeof(CAssoc*);
 
-	// ƒoƒbƒtƒ@Šm•Û
+	// ãƒãƒƒãƒ•ã‚¡ç¢ºä¿
 	auto const pt = reinterpret_cast<CAssoc**>(hspmalloc(size));
 	std::memset(pt, 0, size);
 
-	// Œp³
+	// ç¶™æ‰¿
 	if ( pval2 ) {
 		std::memcpy( pt, pval2->pt, pval2->size );
 		hspfree( pval2->pt );
 	}
 
-	// ‰Šú‰»
+	// åˆæœŸåŒ–
 	for ( size_t i = 0; i < cntElems; ++ i ) {
 		if ( !pt[i] ) {
 			pt[i] = CAssoc::New();
@@ -77,22 +77,22 @@ static void HspVarAssoc_Alloc( PVal* pval, PVal const* pval2 )
 		}
 	}
 
-	// pval ‚Öİ’è
-	pval->flag   = g_vtAssoc;	// assoc ‚ÌŒ^ƒ^ƒCƒv’l
+	// pval ã¸è¨­å®š
+	pval->flag   = g_vtAssoc;	// assoc ã®å‹ã‚¿ã‚¤ãƒ—å€¤
 	pval->mode   = HSPVAR_MODE_MALLOC;
 	pval->size   = size;
 	pval->pt     = VtTraits::asPDAT<vtAssoc>(pt);
-	pval->master = nullptr;		// Œã‚Åg‚¤
+	pval->master = nullptr;		// å¾Œã§ä½¿ã†
 	return;
 }
 
 //------------------------------------------------
-// PVal‚Ì•Ï”ƒƒ‚ƒŠ‚ğ‰ğ•ú‚·‚é
+// PValã®å¤‰æ•°ãƒ¡ãƒ¢ãƒªã‚’è§£æ”¾ã™ã‚‹
 //------------------------------------------------
 static void HspVarAssoc_Free( PVal* pval )
 {
 	if ( pval->mode == HSPVAR_MODE_MALLOC ) {
-		// ‘S‚Ä‚Ì—v‘f‚ğ Release
+		// å…¨ã¦ã®è¦ç´ ã‚’ Release
 		auto const pt = reinterpret_cast<CAssoc**>(pval->pt);
 		size_t const cntElems = PVal_cntElems( pval );
 
@@ -100,7 +100,7 @@ static void HspVarAssoc_Free( PVal* pval )
 			CAssoc::Release( pt[i] );
 		}
 
-		// ƒoƒbƒtƒ@‚ğ‰ğ•ú
+		// ãƒãƒƒãƒ•ã‚¡ã‚’è§£æ”¾
 		hspfree( pval->pt );
 	}
 
@@ -110,9 +110,9 @@ static void HspVarAssoc_Free( PVal* pval )
 }
 
 //------------------------------------------------
-// ‘ã“ü (=)
+// ä»£å…¥ (=)
 // 
-// @ QÆ‹¤—L
+// @ å‚ç…§å…±æœ‰
 //------------------------------------------------
 static void HspVarAssoc_Set( PVal* pval, PDAT* pdat, PDAT const* in )
 {
@@ -131,9 +131,9 @@ static void HspVarAssoc_Set( PVal* pval, PDAT* pdat, PDAT const* in )
 
 /*
 //------------------------------------------------
-// ƒ}[ƒW (+)
+// ãƒãƒ¼ã‚¸ (+)
 // 
-// @ ¶‰E‚Ì‚ÂƒL[‚ğ•¹‚¹‚Â Assoc ‚ğ¶¬‚µA•Ô‚·B
+// @ å·¦å³ã®æŒã¤ã‚­ãƒ¼ã‚’ä½µã›æŒã¤ Assoc ã‚’ç”Ÿæˆã—ã€è¿”ã™ã€‚
 //------------------------------------------------
 static void HspVarAssoc_AddI( PDAT* pdat, void const* val )
 {
@@ -143,11 +143,11 @@ static void HspVarAssoc_AddI( PDAT* pdat, void const* val )
 
 /*
 //------------------------------------------------
-// ”äŠrŠÖ” (QÆ“¯’l«”äŠr)
+// æ¯”è¼ƒé–¢æ•° (å‚ç…§åŒå€¤æ€§æ¯”è¼ƒ)
 // 
-// @ pdat ‚Í Assoc ‚Ìƒeƒ“ƒ|ƒ‰ƒŠ•Ï”‚Ì mpval->pt ‚È‚Ì‚ÅA
-// @	’l‚ğ‘ã“ü‚·‚é‚ÆA¶•Ó‚ÌQÆ‚ª1‚ÂŸè‚ÉÁ‚¦‚é‚±‚Æ‚É‚È‚éB
-// @	‚»‚Ì‚½‚ßA—\‚ß¶•Ó‚ÌQÆ‚ğ Release ‚µ‚Ä‚¨‚­B
+// @ pdat ã¯ Assoc ã®ãƒ†ãƒ³ãƒãƒ©ãƒªå¤‰æ•°ã® mpval->pt ãªã®ã§ã€
+// @	å€¤ã‚’ä»£å…¥ã™ã‚‹ã¨ã€å·¦è¾ºã®å‚ç…§ãŒ1ã¤å‹æ‰‹ã«æ¶ˆãˆã‚‹ã“ã¨ã«ãªã‚‹ã€‚
+// @	ãã®ãŸã‚ã€äºˆã‚å·¦è¾ºã®å‚ç…§ã‚’ Release ã—ã¦ãŠãã€‚
 //------------------------------------------------
 static void HspVarAssoc_EqI( PDAT* pdat, void const* val )
 {
@@ -175,14 +175,14 @@ static void HspVarAssoc_NeI( PDAT* pdat, void const* val )
 //*/
 
 //------------------------------------------------
-// Assoc “o˜^ŠÖ”
+// Assoc ç™»éŒ²é–¢æ•°
 //------------------------------------------------
 void HspVarAssoc_Init( HspVarProc* p )
 {
 	g_hvpAssoc      = p;
 	g_vtAssoc       = p->flag;
 
-	// ŠÖ”ƒ|ƒCƒ“ƒ^‚ğ“o˜^
+	// é–¢æ•°ãƒã‚¤ãƒ³ã‚¿ã‚’ç™»éŒ²
 	p->GetUsing = HspVarAssoc_GetUsing;
 
 	p->Alloc = HspVarAssoc_Alloc;
@@ -193,65 +193,65 @@ void HspVarAssoc_Init( HspVarProc* p )
 	p->GetBlockSize = HspVarTemplate_GetBlockSize<vtAssoc>;
 	p->AllocBlock   = HspVarTemplate_AllocBlock<vtAssoc>;
 
-	// ‰‰ZŠÖ”
+	// æ¼”ç®—é–¢æ•°
 	p->Set  = HspVarAssoc_Set;
 //	p->AddI = HspVarAssoc_AddI;
 //	p->EqI  = HspVarAssoc_EqI;
 //	p->NeI  = HspVarAssoc_NeI;
 
-	// ˜A‘z”z—ñ—p
-	p->ArrayObjectRead = HspVarAssoc_ArrayObjectRead;	// QÆ(‰E)
-	p->ArrayObject     = HspVarAssoc_ArrayObject;		// QÆ(¶)
-	p->ObjectWrite     = HspVarAssoc_ObjectWrite;		// Ši”[
-	p->ObjectMethod    = HspVarAssoc_ObjectMethod;		// ƒƒ\ƒbƒh
+	// é€£æƒ³é…åˆ—ç”¨
+	p->ArrayObjectRead = HspVarAssoc_ArrayObjectRead;	// å‚ç…§(å³)
+	p->ArrayObject     = HspVarAssoc_ArrayObject;		// å‚ç…§(å·¦)
+	p->ObjectWrite     = HspVarAssoc_ObjectWrite;		// æ ¼ç´
+	p->ObjectMethod    = HspVarAssoc_ObjectMethod;		// ãƒ¡ã‚½ãƒƒãƒ‰
 
-	// Šg’£ƒf[ƒ^
+	// æ‹¡å¼µãƒ‡ãƒ¼ã‚¿
 	p->user = reinterpret_cast<char*>(HspVarAssoc_GetMapList);
 
-	// ‚»‚Ì‘¼İ’è
-	p->vartype_name = "assoc_k";		// ƒ^ƒCƒv–¼ (Õ“Ë‚µ‚È‚¢‚æ‚¤‚É•Ï‚È–¼‘O‚É‚·‚é)
+	// ãã®ä»–è¨­å®š
+	p->vartype_name = "assoc_k";		// ã‚¿ã‚¤ãƒ—å (è¡çªã—ãªã„ã‚ˆã†ã«å¤‰ãªåå‰ã«ã™ã‚‹)
 	p->version      = 0x001;			// runtime ver(0x100 = 1.0)
 
-	p->support							// ƒTƒ|[ƒgó‹µƒtƒ‰ƒO(HSPVAR_SUPPORT_*)
-		= HSPVAR_SUPPORT_STORAGE		// ŒÅ’è’·ƒXƒgƒŒ[ƒW
-		| HSPVAR_SUPPORT_FLEXARRAY		// ‰Â•Ï’·”z—ñ
-	    | HSPVAR_SUPPORT_ARRAYOBJ		// ˜A‘z”z—ñƒTƒ|[ƒg
-	    | HSPVAR_SUPPORT_NOCONVERT		// ObjectWrite‚ÅŠi”[
-	    | HSPVAR_SUPPORT_VARUSE			// varuseŠÖ”‚ğ“K—p
+	p->support							// ã‚µãƒãƒ¼ãƒˆçŠ¶æ³ãƒ•ãƒ©ã‚°(HSPVAR_SUPPORT_*)
+		= HSPVAR_SUPPORT_STORAGE		// å›ºå®šé•·ã‚¹ãƒˆãƒ¬ãƒ¼ã‚¸
+		| HSPVAR_SUPPORT_FLEXARRAY		// å¯å¤‰é•·é…åˆ—
+	    | HSPVAR_SUPPORT_ARRAYOBJ		// é€£æƒ³é…åˆ—ã‚µãƒãƒ¼ãƒˆ
+	    | HSPVAR_SUPPORT_NOCONVERT		// ObjectWriteã§æ ¼ç´
+	    | HSPVAR_SUPPORT_VARUSE			// varuseé–¢æ•°ã‚’é©ç”¨
 	    ;
-	p->basesize = VtTraits::basesize<vtAssoc>::value;	// size / —v‘f (byte)
+	p->basesize = VtTraits::basesize<vtAssoc>::value;	// size / è¦ç´  (byte)
 	return;
 }
 
 //#########################################################
-//        ˜A‘z”z—ñ—p‚ÌŠÖ”ŒQ
+//        é€£æƒ³é…åˆ—ç”¨ã®é–¢æ•°ç¾¤
 //#########################################################
 //------------------------------------------------
-// ˜A‘z”z—ñ::“Yšˆ—
+// é€£æƒ³é…åˆ—::æ·»å­—å‡¦ç†
 // 
-// @ ( (idx...(0`4ŒÂ), "ƒL[", (idx...(“à•”•Ï”)) )
-// @ “à•”•Ï”‚Ì“Yš‚Ìˆ—‚ÍAŒÄ‚Ño‚µŒ³‚ªs‚¤B
-// @result: “à•”•Ï” or nullptr(assoc©‘Ì‚ªQÆ‚³‚ê‚½)
+// @ ( (idx...(0ï½4å€‹), "ã‚­ãƒ¼", (idx...(å†…éƒ¨å¤‰æ•°)) )
+// @ å†…éƒ¨å¤‰æ•°ã®æ·»å­—ã®å‡¦ç†ã¯ã€å‘¼ã³å‡ºã—å…ƒãŒè¡Œã†ã€‚
+// @result: å†…éƒ¨å¤‰æ•° or nullptr(assocè‡ªä½“ãŒå‚ç…§ã•ã‚ŒãŸ)
 //------------------------------------------------
 template<bool bAsRhs>
 static PVal* HspVarAssoc_IndexImpl( PVal* pval )
 {
-	if ( *type == TYPE_MARK && *val == ')' ) return nullptr;	// “Yšó‘Ô‚ğXV‚µ‚È‚¢
+	if ( *type == TYPE_MARK && *val == ')' ) return nullptr;	// æ·»å­—çŠ¶æ…‹ã‚’æ›´æ–°ã—ãªã„
 
-	bool bKey = false;		// ƒL[‚ª‚ ‚Á‚½‚©
+	bool bKey = false;		// ã‚­ãƒ¼ãŒã‚ã£ãŸã‹
 
-	// [1] assoc ©‘Ì‚Ì“Yš‚ÆAƒL[‚ğæ“¾
+	// [1] assoc è‡ªä½“ã®æ·»å­—ã¨ã€ã‚­ãƒ¼ã‚’å–å¾—
 
-	HspVarCoreReset( pval );		// “Yšİ’è‚Ì‰Šú‰»
+	HspVarCoreReset( pval );		// æ·»å­—è¨­å®šã®åˆæœŸåŒ–
 	for ( int i = 0; i < (ArrayDimMax + 1) && code_isNextArg(); ++ i )
 	{
 		PVal pvalTemp;
-		HspVarCoreCopyArrayInfo( &pvalTemp, pval );		// “Yšó‘Ô‚ğ•Û‘¶
+		HspVarCoreCopyArrayInfo( &pvalTemp, pval );		// æ·»å­—çŠ¶æ…‹ã‚’ä¿å­˜
 		int const chk = code_getprm();
 		HspVarCoreCopyArrayInfo( pval, &pvalTemp );
 
 		if ( chk == PARAM_DEFAULT ) {
-			// •Ï”©‘Ì‚ÌQÆ ( (, idxFullSlice) )
+			// å¤‰æ•°è‡ªä½“ã®å‚ç…§ ( (, idxFullSlice) )
 			if ( i == 0 && code_getdi(0) == assocIndexFullslice ) {
 				pval->master = nullptr; return nullptr;
 			}
@@ -259,13 +259,13 @@ static PVal* HspVarAssoc_IndexImpl( PVal* pval )
 		}
 		if ( chk <= PARAM_END ) break;
 
-		// int (Å‘å4˜A‘±)
+		// int (æœ€å¤§4é€£ç¶š)
 		if ( mpval->flag == HSPVAR_FLAG_INT ) {
 			if ( pval->len[i + 1] <= 0 || i == 4 ) puterror( HSPERR_ARRAY_OVERFLOW );
 
 			code_index_int( pval, VtTraits::derefValptr<vtInt>(mpval->pt), !bAsRhs );
 
-		// str (ƒL[)
+		// str (ã‚­ãƒ¼)
 		} else if ( mpval->flag == HSPVAR_FLAG_STR ) {
 			bKey = true;
 			++ pval->arraycnt;
@@ -273,16 +273,16 @@ static PVal* HspVarAssoc_IndexImpl( PVal* pval )
 		}
 	}
 
-	// [2] QÆæ (assoc or “à•”•Ï”) ‚ğŒˆ’è
+	// [2] å‚ç…§å…ˆ (assoc or å†…éƒ¨å¤‰æ•°) ã‚’æ±ºå®š
 
-	if ( !bKey ) {		// ƒL[‚È‚µ => assoc ©‘Ì‚Ö‚ÌQÆ
+	if ( !bKey ) {		// ã‚­ãƒ¼ãªã— => assoc è‡ªä½“ã¸ã®å‚ç…§
 		pval->master = nullptr;
 		return nullptr;
 	}
 
 	assert(mpval->flag == HSPVAR_FLAG_STR);
 	static CAssoc::Key_t stt_key;
-	stt_key = (char*)mpval->pt;		// Šù»‚Ì•Ï”‚ÉŠi”[‚µ‚½•û‚ª‚‘¬ (ˆêƒIƒuƒWƒFƒNƒg‚ğì‚ç‚È‚¢‚½‚ß)
+	stt_key = (char*)mpval->pt;		// æ—¢è£½ã®å¤‰æ•°ã«æ ¼ç´ã—ãŸæ–¹ãŒé«˜é€Ÿ (ä¸€æ™‚ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ä½œã‚‰ãªã„ãŸã‚)
 
 	auto const pAssoc = VtTraits::getValptr<vtAssoc>(pval);
 	if ( !*pAssoc ) {
@@ -291,8 +291,8 @@ static PVal* HspVarAssoc_IndexImpl( PVal* pval )
 	}
 
 	PVal* const pvInner = (!bAsRhs
-		? (*pAssoc)->At( stt_key )		// ¶•Ó’l => ©“®Šg’£‚ ‚è
-		: (*pAssoc)->AtSafe( stt_key )	// ‰E•Ó’l => ©“®Šg’£‚È‚µ
+		? (*pAssoc)->At( stt_key )		// å·¦è¾ºå€¤ => è‡ªå‹•æ‹¡å¼µã‚ã‚Š
+		: (*pAssoc)->AtSafe( stt_key )	// å³è¾ºå€¤ => è‡ªå‹•æ‹¡å¼µãªã—
 	);
 
 	if ( bAsRhs && !pvInner ) puterror( HSPERR_ARRAY_OVERFLOW );
@@ -302,19 +302,19 @@ static PVal* HspVarAssoc_IndexImpl( PVal* pval )
 }
 
 //------------------------------------------------
-// ˜A‘z”z—ñ::QÆ (¶•Ó’l)
+// é€£æƒ³é…åˆ—::å‚ç…§ (å·¦è¾ºå€¤)
 //------------------------------------------------
 static void HspVarAssoc_ArrayObject( PVal* pval )
 {
 	PVal* const pvInner = HspVarAssoc_IndexImpl<false>( pval );
 	if ( !pvInner ) return;
 
-	// [3] “à•”•Ï”‚Ì“Yš‚ğˆ—
-	if ( code_isNextArg() ) {			// “Yš‚ª‘±‚­ê‡
+	// [3] å†…éƒ¨å¤‰æ•°ã®æ·»å­—ã‚’å‡¦ç†
+	if ( code_isNextArg() ) {			// æ·»å­—ãŒç¶šãå ´åˆ
 		code_expand_index_lhs( pvInner );
 	} else {
-		if ( PVal_supportArray(pvInner) && !(pvInner->support & HSPVAR_SUPPORT_ARRAYOBJ) ) {	// •W€”z—ñƒTƒ|[ƒg
-			HspVarCoreReset( pvInner );		// “Yšó‘Ô‚Ì‰Šú‰»‚¾‚¯‚µ‚Ä‚¨‚­
+		if ( PVal_supportArray(pvInner) && !(pvInner->support & HSPVAR_SUPPORT_ARRAYOBJ) ) {	// æ¨™æº–é…åˆ—ã‚µãƒãƒ¼ãƒˆ
+			HspVarCoreReset( pvInner );		// æ·»å­—çŠ¶æ…‹ã®åˆæœŸåŒ–ã ã‘ã—ã¦ãŠã
 		}
 	}
 
@@ -322,24 +322,24 @@ static void HspVarAssoc_ArrayObject( PVal* pval )
 }
 
 //------------------------------------------------
-// ˜A‘z”z—ñ::QÆ (‰E•Ó’l)
+// é€£æƒ³é…åˆ—::å‚ç…§ (å³è¾ºå€¤)
 //------------------------------------------------
 static PDAT* HspVarAssoc_ArrayObjectRead( PVal* pval, int* mptype )
 {
 	PVal* const pvInner = HspVarAssoc_IndexImpl<true>( pval );
 
-	// assoc ©‘Ì‚ÌQÆ
+	// assoc è‡ªä½“ã®å‚ç…§
 	if ( !pvInner ) {
 		*mptype = g_vtAssoc;
 		return VtTraits::asPDAT<vtAssoc>(VtTraits::getValptr<vtAssoc>( pval ));
 	}
 
-	// [3] “à•”•Ï”‚Ì“Yš‚ğˆ—
-	if ( code_isNextArg() ) {			// “Yš‚ª‘±‚­ê‡
+	// [3] å†…éƒ¨å¤‰æ•°ã®æ·»å­—ã‚’å‡¦ç†
+	if ( code_isNextArg() ) {			// æ·»å­—ãŒç¶šãå ´åˆ
 		return code_expand_index_rhs( pvInner, *mptype );
 	} else {
-		if ( PVal_supportArray(pvInner) && !(pvInner->support & HSPVAR_SUPPORT_ARRAYOBJ) ) {	// •W€”z—ñƒTƒ|[ƒg
-			HspVarCoreReset( pvInner );		// “Yšó‘Ô‚Ì‰Šú‰»‚¾‚¯‚µ‚Ä‚¨‚­
+		if ( PVal_supportArray(pvInner) && !(pvInner->support & HSPVAR_SUPPORT_ARRAYOBJ) ) {	// æ¨™æº–é…åˆ—ã‚µãƒãƒ¼ãƒˆ
+			HspVarCoreReset( pvInner );		// æ·»å­—çŠ¶æ…‹ã®åˆæœŸåŒ–ã ã‘ã—ã¦ãŠã
 		}
 
 		*mptype = pvInner->flag;
@@ -348,24 +348,24 @@ static PDAT* HspVarAssoc_ArrayObjectRead( PVal* pval, int* mptype )
 }
 
 //------------------------------------------------
-// ˜A‘z”z—ñ::Ši”[
+// é€£æƒ³é…åˆ—::æ ¼ç´
 //------------------------------------------------
 static void HspVarAssoc_ObjectWrite( PVal* pval, PDAT const* data, int vflag )
 {
 	PVal* const pvInner = VtTraits::getMaster<vtAssoc>(pval);
 
-	// assoc ‚Ö‚Ì‘ã“ü
+	// assoc ã¸ã®ä»£å…¥
 	if ( !pvInner ) {
-		if ( vflag != g_vtAssoc ) puterror( HSPERR_INVALID_ARRAYSTORE );	// ‰E•Ó‚ÌŒ^‚ª•sˆê’v
+		if ( vflag != g_vtAssoc ) puterror( HSPERR_INVALID_ARRAYSTORE );	// å³è¾ºã®å‹ãŒä¸ä¸€è‡´
 
 		HspVarAssoc_Set( pval, HspVarAssoc_GetPtr(pval), data );
-		code_assign_multi( pval );				// ˜A‘±‘ã“ü‚Ìˆ—
+		code_assign_multi( pval );				// é€£ç¶šä»£å…¥ã®å‡¦ç†
 
-	// “à•”•Ï”‚ğQÆ‚µ‚Ä‚¢‚éê‡
+	// å†…éƒ¨å¤‰æ•°ã‚’å‚ç…§ã—ã¦ã„ã‚‹å ´åˆ
 	} else {
 		int const fUserElem = pvInner->support & CAssoc::HSPVAR_SUPPORT_USER_ELEM;
 
-		PVal_assign( pvInner, data, vflag );	// “à•”•Ï”‚Ö‚Ì‘ã“üˆ—
+		PVal_assign( pvInner, data, vflag );	// å†…éƒ¨å¤‰æ•°ã¸ã®ä»£å…¥å‡¦ç†
 		code_assign_multi( pvInner );
 
 		pvInner->support |= fUserElem;
@@ -375,25 +375,25 @@ static void HspVarAssoc_ObjectWrite( PVal* pval, PDAT const* data, int vflag )
 }
 
 //------------------------------------------------
-// ƒƒ\ƒbƒhŒÄ‚Ño‚µ
+// ãƒ¡ã‚½ãƒƒãƒ‰å‘¼ã³å‡ºã—
 // 
-// @ “à•”•Ï”‚ÌŒ^‚Å’ñ‹Ÿ‚³‚ê‚Ä‚¢‚éƒƒ\ƒbƒh‚ğg‚¤
+// @ å†…éƒ¨å¤‰æ•°ã®å‹ã§æä¾›ã•ã‚Œã¦ã„ã‚‹ãƒ¡ã‚½ãƒƒãƒ‰ã‚’ä½¿ã†
 //------------------------------------------------
 static void HspVarAssoc_ObjectMethod(PVal* pval)
 {
 	PVal* const pvInner = VtTraits::getMaster<vtAssoc>(pval);
 	if ( !pvInner ) puterror( HSPERR_UNSUPPORTED_FUNCTION );
 
-	// “à•”•Ï”‚Ìˆ—‚É“]‘—
+	// å†…éƒ¨å¤‰æ•°ã®å‡¦ç†ã«è»¢é€
 	getHvp(pvInner->flag)->ObjectMethod( pvInner );
 	return;
 }
 
 //------------------------------------------------
-// ‚·‚×‚Ä‚ÌƒL[‚ğ—ñ‹“‚·‚é
+// ã™ã¹ã¦ã®ã‚­ãƒ¼ã‚’åˆ—æŒ™ã™ã‚‹
 // 
 // @ for knowbug
-// @ ƒŠƒXƒg‚ÌíœŒ ŒÀ‚ÍŒÄ‚Ño‚µŒ³‚É‚ ‚éB
+// @ ãƒªã‚¹ãƒˆã®å‰Šé™¤æ¨©é™ã¯å‘¼ã³å‡ºã—å…ƒã«ã‚ã‚‹ã€‚
 //------------------------------------------------
 // [[deprecated]]
 static StAssocMapList* HspVarAssoc_GetMapList( CAssoc* src )
@@ -409,7 +409,7 @@ static StAssocMapList* HspVarAssoc_GetMapList( CAssoc* src )
 		lstrcpy( list->key, iter.first.c_str() );
 		list->pval = iter.second;
 
-		// ˜AŒ‹
+		// é€£çµ
 		if ( !head ) {
 			head = list;
 		} else {
@@ -423,7 +423,7 @@ static StAssocMapList* HspVarAssoc_GetMapList( CAssoc* src )
 }
 
 //------------------------------------------------
-// knowbug ‚Å‚ÌŠg’£Œ^•\¦‚É‘Î‰‚·‚é
+// knowbug ã§ã®æ‹¡å¼µå‹è¡¨ç¤ºã«å¯¾å¿œã™ã‚‹
 //------------------------------------------------
 #include "knowbug/knowbugForHPI.h"
 
@@ -439,7 +439,7 @@ EXPORT void WINAPI knowbugVsw_addValueAssoc(vswriter_t _w, char const* name, PDA
 		kvswm->catLeafExtra(_w, name, "null_assoc");
 	}
 
-	// —v‘f‚È‚µ
+	// è¦ç´ ãªã—
 	if ( src->Empty() ) {
 		kvswm->catLeafExtra(_w, name, "empty_assoc");
 		return;
@@ -450,7 +450,7 @@ EXPORT void WINAPI knowbugVsw_addValueAssoc(vswriter_t _w, char const* name, PDA
 		auto const pval = iter.second;
 
 		if ( kvswm->isLineformWriter(_w) ) {
-			// pair: ukey: value...v
+			// pair: ã€Œkey: value...ã€
 			kvswm->catNodeBegin(_w, nullptr, (key + ": ").c_str());
 			kvswm->addVar(_w, nullptr, pval);
 			kvswm->catNodeEnd(_w, "");
@@ -470,19 +470,19 @@ EXPORT void WINAPI knowbugVsw_addValueAssoc(vswriter_t _w, char const* name, PDA
 	auto const hvp = hpimod::seekHvp(assoc_vartype_name);
 	StAssocMapList* const head = (reinterpret_cast<GetMapList_t>(hvp->user))(src);
 
-	// —v‘f‚È‚µ
+	// è¦ç´ ãªã—
 	if ( !head ) {
 		knowbugVsw_catLeafExtra(_w, name, "empty_assoc");
 		return;
 	}
 
-	// ‘SƒL[‚ÌƒŠƒXƒg
+	// å…¨ã‚­ãƒ¼ã®ãƒªã‚¹ãƒˆ
 	knowbugVsw_catNodeBegin(_w, name, "[");
 	{
-		// —ñ‹“
+		// åˆ—æŒ™
 		for ( StAssocMapList* list = head; list != nullptr; list = list->next ) {
 			if ( knowbugVsw_isLineformWriter(_w) ) {
-				// pair: ukey: value...v
+				// pair: ã€Œkey: value...ã€
 				knowbugVsw_catNodeBegin(_w, CStructedStrWriter::stc_strUnused,
 					strf("%s: ", list->key).c_str());
 				knowbugVsw_addVar(_w, CStructedStrWriter::stc_strUnused, list->pval);
@@ -493,7 +493,7 @@ EXPORT void WINAPI knowbugVsw_addValueAssoc(vswriter_t _w, char const* name, PDA
 			//	dbgout("%p: key = %s, pval = %p, next = %p", list, list->key, list->pval, list->next );
 		}
 
-		// ƒŠƒXƒg‚Ì‰ğ•ú
+		// ãƒªã‚¹ãƒˆã®è§£æ”¾
 		for ( StAssocMapList* list = head; list != nullptr; ) {
 			StAssocMapList* const next = list->next;
 			exinfo->HspFunc_free(list);

@@ -1,9 +1,9 @@
-// Call(ModCls) - FlexValue
+﻿// Call(ModCls) - FlexValue
 
-// modcls �ɂ�������ꂽ struct �^�̎���
-// �݊����̂��߁A�\���̎��̂� hsp3struct.h �ɂ���Ē�`����Ă�����̂𗬗p����B
+// modcls により乗っ取られた struct 型の実体
+// 互換性のため、構造体自体は hsp3struct.h によって定義されているものを流用する。
 
-// ���܂���S�Ȑ݌v�ł͂Ȃ��̂ŁA���L�֌W�ɒ��ӂ��Ďg���悤�Ɂc�c�B
+// あまり安全な設計ではないので、所有関係に注意して使うように……。
 
 #ifndef IG_MODCLS_FLEX_VALUE_H
 #define IG_MODCLS_FLEX_VALUE_H
@@ -16,7 +16,7 @@ extern FlexValue* code_get_modinst();
 extern FlexValue* code_get_modinst( FlexValue* def );
 
 extern void FlexValue_AddRef   ( FlexValue const& self );
-extern void FlexValue_Release  ( FlexValue const& self );		// �f�X�g���N�^���ĂԂ�������Ȃ����Ƃɒ���
+extern void FlexValue_Release  ( FlexValue const& self );		// デストラクタを呼ぶかもしれないことに注意
 extern void FlexValue_DelRef   ( FlexValue& self );
 extern void FlexValue_NullClear( FlexValue& self );
 
@@ -48,10 +48,10 @@ namespace ModCls
 	}
 }
 
-int const FLEXVAL_COUNTER_DTORING = (-1);	// �f�X�g���N�^�N����
+int const FLEXVAL_COUNTER_DTORING = (-1);	// デストラクタ起動中
 
 //------------------------------------------------
-// FlexValue �z���_�[
+// FlexValue ホルダー
 //------------------------------------------------
 class FlexValueHolder
 {

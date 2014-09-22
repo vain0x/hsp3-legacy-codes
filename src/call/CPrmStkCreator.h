@@ -1,11 +1,11 @@
-// prmstack ¶¬ƒNƒ‰ƒX
+ï»¿// prmstack ç”Ÿæˆã‚¯ãƒ©ã‚¹
 
 #ifndef IG_CLASS_PARAMETER_STACK_CREATOR_H
 #define IG_CLASS_PARAMETER_STACK_CREATOR_H
 
 /**
 @summary:
-	prmstk ‚Æ“¯‚¶Œ`®‚Åƒf[ƒ^‚ğŠi”[‚·‚éˆ—‚ÌƒCƒ“ƒ^[ƒtƒF[ƒX‚Æ‚È‚éƒNƒ‰ƒXB
+	prmstk ã¨åŒã˜å½¢å¼ã§ãƒ‡ãƒ¼ã‚¿ã‚’æ ¼ç´ã™ã‚‹å‡¦ç†ã®ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ã¨ãªã‚‹ã‚¯ãƒ©ã‚¹ã€‚
 **/
 
 #include "hsp3plugin.h"
@@ -13,9 +13,9 @@
 class CPrmStkCreator
 {
 private:
-	char*  ptr_;		// ƒXƒ^ƒbƒN‚Ìæ“ª‚Ö‚Ìƒ|ƒCƒ“ƒ^
-	size_t usingSize_;	// g—p‚³‚ê‚½ƒTƒCƒY
-	size_t bufSize_;	// Šm•ÛÏ‚İ‚ÌƒTƒCƒY
+	char*  ptr_;		// ã‚¹ã‚¿ãƒƒã‚¯ã®å…ˆé ­ã¸ã®ãƒã‚¤ãƒ³ã‚¿
+	size_t usingSize_;	// ä½¿ç”¨ã•ã‚ŒãŸã‚µã‚¤ã‚º
+	size_t bufSize_;	// ç¢ºä¿æ¸ˆã¿ã®ã‚µã‚¤ã‚º
 
 public:
 	CPrmStkCreator( void* buf, size_t bufSize )
@@ -25,13 +25,13 @@ public:
 	{ }
 	~CPrmStkCreator() { }
 
-	// æ“¾
+	// å–å¾—
 	void*  getptr()   const { return ptr_; }
 	size_t capacity() const { return bufSize_; }
 	size_t size()     const { return usingSize_; }
 
-	// Ši”[
-	template<typename T> T* allocValue();		// —Ìˆæ‚¾‚¯Šm•ÛA‰Šú‰»‚Í‚µ‚È‚¢
+	// æ ¼ç´
+	template<typename T> T* allocValue();		// é ˜åŸŸã ã‘ç¢ºä¿ã€åˆæœŸåŒ–ã¯ã—ãªã„
 	template<typename T> void pushValue( T&& value );
 
 	void pushPVal( PVal* pval, APTR aptr ) {
@@ -50,7 +50,7 @@ public:
 	}
 
 private:
-	void needAdditionalSize( size_t sizeAdditional ) {		// g—p‚·‚éƒTƒCƒY‚ÌéŒ¾
+	void needAdditionalSize( size_t sizeAdditional ) {		// ä½¿ç”¨ã™ã‚‹ã‚µã‚¤ã‚ºã®å®£è¨€
 		if ( bufSize_ < (usingSize_ + sizeAdditional) ) {
 			puterror( HSPERR_OUT_OF_MEMORY );
 		}
@@ -74,7 +74,7 @@ private:
 };
 
 //------------------------------------------------
-// ’Pƒ‚É’l‚ğƒvƒbƒVƒ…‚·‚é
+// å˜ç´”ã«å€¤ã‚’ãƒ—ãƒƒã‚·ãƒ¥ã™ã‚‹
 //------------------------------------------------
 template<typename T>
 void CPrmStkCreator::pushValue(T&& value)

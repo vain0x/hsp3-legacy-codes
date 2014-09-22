@@ -1,4 +1,4 @@
-// header for knowbug
+﻿// header for knowbug
 
 #ifndef IG_VECTOR_FOR_KNOWBUG_H
 #define IG_VECTOR_FOR_KNOWBUG_H

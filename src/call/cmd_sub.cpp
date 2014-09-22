@@ -1,4 +1,4 @@
-// call - SubCommand
+ï»¿// call - SubCommand
 
 #include <stack>
 #include <map>
@@ -9,8 +9,6 @@
 
 #include "cmd_sub.h"
 
-#include "CCaller.h"
-#include "CCall.h"
 #include "CPrmInfo.h"
 #include "Functor.h"
 
@@ -21,25 +19,25 @@
 using namespace hpimod;
 
 //##########################################################
-//       ‰¼ˆø”ƒŠƒXƒg
+//       ä»®å¼•æ•°ãƒªã‚¹ãƒˆ
 //##########################################################
-// ‰¼ˆø”éŒ¾ƒf[ƒ^
+// ä»®å¼•æ•°å®£è¨€ãƒ‡ãƒ¼ã‚¿
 static std::map<label_t, CPrmInfo> g_prmlistLabel;
 
 //------------------------------------------------
-// ‰¼ˆø”ƒŠƒXƒg‚ÌéŒ¾
+// ä»®å¼•æ•°ãƒªã‚¹ãƒˆã®å®£è¨€
 //------------------------------------------------
 CPrmInfo const& DeclarePrmInfo(label_t lb, CPrmInfo&& prminfo)
 {
 	if ( &GetPrmInfo(lb) != &CPrmInfo::undeclaredFunc ) {
-		dbgout("‘½d’è‹`‚Å‚·B");
+		dbgout("å¤šé‡å®šç¾©ã§ã™ã€‚");
 		puterror(HSPERR_ILLEGAL_FUNCTION);
 	}
 	return g_prmlistLabel.insert({ lb, std::move(prminfo) }).first->second;
 }
 
 //------------------------------------------------
-// ‰¼ˆø”‚Ìæ“¾ (ƒ‰ƒxƒ‹)
+// ä»®å¼•æ•°ã®å–å¾— (ãƒ©ãƒ™ãƒ«)
 //------------------------------------------------
 CPrmInfo const& GetPrmInfo(label_t lb)
 {
@@ -64,7 +62,7 @@ CPrmInfo const& GetPrmInfo(stdat_t stdat)
 
 #if 0
 //------------------------------------------------
-// CPrmInfo <- ’†ŠÔƒR[ƒh
+// CPrmInfo <- ä¸­é–“ã‚³ãƒ¼ãƒ‰
 // 
 // @prm: [ label, (prmlist) ]
 //------------------------------------------------
@@ -99,13 +97,13 @@ CPrmInfo const& code_get_prminfo()
 #endif
 
 //------------------------------------------------
-// ‰¼ˆø”—ñ‚ğæ“¾‚·‚é
+// ä»®å¼•æ•°åˆ—ã‚’å–å¾—ã™ã‚‹
 //------------------------------------------------
 CPrmInfo::prmlist_t code_get_prmlist()
 {
 	CPrmInfo::prmlist_t prmlist;
 
-	// ‰¼ˆø”ƒŠƒXƒg
+	// ä»®å¼•æ•°ãƒªã‚¹ãƒˆ
 	while ( code_isNextArg() ) {
 		auto const prmtype = code_get_prmtype(PrmType::None);
 		if ( prmtype == PrmType::None ) puterror(HSPERR_ILLEGAL_FUNCTION);

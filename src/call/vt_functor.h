@@ -1,4 +1,4 @@
-// vartype - functor
+ï»¿// vartype - functor
 
 #ifndef IG_VARTYPE_FUNCTOR_H
 #define IG_VARTYPE_FUNCTOR_H
@@ -11,11 +11,11 @@
 
 #include "Functor.h"
 
-// •Ï”
+// å¤‰æ•°
 extern vartype_t g_vtFunctor;
 extern HspVarProc* g_hvpFunctor;
 
-// ŠÖ”
+// é–¢æ•°
 extern void HspVarFunctor_init(HspVarProc* vp);
 
 // vartype traits
@@ -30,12 +30,12 @@ namespace hpimod {
 	}
 }
 
-// •Ô’lİ’èŠÖ”
+// è¿”å€¤è¨­å®šé–¢æ•°
 extern functor_t g_resFunctor;
 extern int SetReffuncResult(PDAT** ppResult, functor_t const& src);
 extern int SetReffuncResult(PDAT** ppResult, functor_t&& src);
 
-// ‚»‚Ì‘¼
+// ãã®ä»–
 extern vector_t code_get_vectorFromSequence();		// Invoker.cpp
 extern functor_t code_get_functor();
 

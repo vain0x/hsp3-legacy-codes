@@ -1,4 +1,4 @@
-// ƒ‰ƒ€ƒ_ŠÖ”ƒNƒ‰ƒX
+ï»¿// ãƒ©ãƒ ãƒ€é–¢æ•°ã‚¯ãƒ©ã‚¹
 #if 0
 #ifndef IG_CLASS_LAMBDA_FUNC_H
 #define IG_CLASS_LAMBDA_FUNC_H
@@ -18,16 +18,16 @@ using myfunc_t = CLambda*;
 class CLambda
 	: public IFunctor
 {
-	// ƒƒ“ƒo•Ï”
+	// ãƒ¡ãƒ³ãƒå¤‰æ•°
 private:
-	// ©ìŠÖ”‚Ì–{‘ÌƒR[ƒhA‰¼ˆø”
+	// è‡ªä½œé–¢æ•°ã®æœ¬ä½“ã‚³ãƒ¼ãƒ‰ã€ä»®å¼•æ•°
 	std::unique_ptr<CHspCode> mpBody;		
 	std::unique_ptr<CPrmInfo> mpPrmInfo;
 
-	// ¶¬ŠÂ‹«‚ÌÀˆø”‚ğ•Û‘¶‚·‚é‚à‚Ì
+	// ç”Ÿæˆç’°å¢ƒã®å®Ÿå¼•æ•°ã‚’ä¿å­˜ã™ã‚‹ã‚‚ã®
 	std::unique_ptr<CCaller> mpArgCloser;
 
-	// \’z
+	// æ§‹ç¯‰
 private:
 	CLambda();
 
@@ -44,7 +44,7 @@ public:
 
 	int getUsing() const { return 1; }
 
-	// ƒ‰ƒbƒp[
+	// ãƒ©ãƒƒãƒ‘ãƒ¼
 	static myfunc_t New();
 };
 

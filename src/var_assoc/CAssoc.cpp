@@ -1,4 +1,4 @@
-// CAssoc À‘•
+ï»¿// CAssoc å®Ÿè£…
 
 #include "CAssoc.h"
 #include "mod_makepval.h"
@@ -6,7 +6,7 @@
 using namespace hpimod;
 
 //------------------------------------------------
-// ¶¬
+// ç”Ÿæˆ
 //------------------------------------------------
 CAssoc::CAssoc()
 	: map_()
@@ -26,7 +26,7 @@ CAssoc* CAssoc::New()
 }
 
 //------------------------------------------------
-// ”jŠü
+// ç ´æ£„
 //------------------------------------------------
 CAssoc::~CAssoc()
 {
@@ -41,7 +41,7 @@ void CAssoc::Delete( CAssoc* self )
 }
 
 //------------------------------------------------
-// —v‘fƒAƒNƒZƒX
+// è¦ç´ ã‚¢ã‚¯ã‚»ã‚¹
 //------------------------------------------------
 PVal* CAssoc::AtSafe( Key_t const& key ) const
 {
@@ -51,14 +51,14 @@ PVal* CAssoc::AtSafe( Key_t const& key ) const
 		: nullptr;
 }
 
-// ‘¶İ‚µ‚È‚¯‚ê‚ÎV‹K—v‘f‚ğ‘}“ü‚·‚é
+// å­˜åœ¨ã—ãªã‘ã‚Œã°æ–°è¦è¦ç´ ã‚’æŒ¿å…¥ã™ã‚‹
 PVal* CAssoc::At( Key_t const& key )
 {
 	return Insert( key );
 }
 
 //------------------------------------------------
-// —v‘f‚Ì‘¶İ
+// è¦ç´ ã®å­˜åœ¨
 //------------------------------------------------
 bool CAssoc::Exists( Key_t const& key ) const
 {
@@ -66,12 +66,12 @@ bool CAssoc::Exists( Key_t const& key ) const
 }
 
 //------------------------------------------------
-// —v‘f‚Ì¶¬Eíœ
+// è¦ç´ ã®ç”Ÿæˆãƒ»å‰Šé™¤
 //------------------------------------------------
 PVal* CAssoc::NewElem()
 {
 	PVal* pval = (PVal*)hspmalloc( sizeof(PVal) );
-	// HSPVAR_SUPPORT_USER_ELEM ‚Ì•t‰Á‚ª‹`–±
+	// HSPVAR_SUPPORT_USER_ELEM ã®ä»˜åŠ ãŒç¾©å‹™
 	return pval;
 }
 
@@ -98,7 +98,7 @@ void CAssoc::DeleteElem( PVal* pval )
 }
 
 //------------------------------------------------
-// —v‘f‚Ì‘}“üEœ‹
+// è¦ç´ ã®æŒ¿å…¥ãƒ»é™¤å»
 //------------------------------------------------
 PVal* CAssoc::Insert( Key_t const& key )
 {
@@ -127,9 +127,9 @@ void CAssoc::Remove( Key_t const& key )
 }
 
 //------------------------------------------------
-// assoc ˜AŒ‹
+// assoc é€£çµ
 //
-// @ d•¡—v‘f‚Íã‘‚«‚·‚é
+// @ é‡è¤‡è¦ç´ ã¯ä¸Šæ›¸ãã™ã‚‹
 //------------------------------------------------
 void CAssoc::Chain( CAssoc const* src )
 {
@@ -138,23 +138,23 @@ void CAssoc::Chain( CAssoc const* src )
 	for ( auto iter : map_ ) {
 		if ( !iter.second ) continue;
 
-		// d•¡ => Šù‘¶—v‘f‚ğœ‹‚·‚é
+		// é‡è¤‡ => æ—¢å­˜è¦ç´ ã‚’é™¤å»ã™ã‚‹
 		auto elem = map_.find( iter.first );
 		if ( elem != map_.end() ) {
 			Remove( iter.first );
 		}
 
-		// “à•”•Ï”‚Ì•¡»‚ğì‚é
+		// å†…éƒ¨å¤‰æ•°ã®è¤‡è£½ã‚’ä½œã‚‹
 		PVal* pvElem;
 		if ( iter.second->support & HSPVAR_SUPPORT_USER_ELEM ) {
-			pvElem = NewElem( HSPVAR_FLAG_INT );		// Œy—Ê‰Šú‰»
-			PVal_copy( pvElem, iter.second );			// •Ï”‚ÍÄŠm•Û‚³‚ê‚é
+			pvElem = NewElem( HSPVAR_FLAG_INT );		// è»½é‡åˆæœŸåŒ–
+			PVal_copy( pvElem, iter.second );			// å¤‰æ•°ã¯å†ç¢ºä¿ã•ã‚Œã‚‹
 			pvElem->support |= HSPVAR_SUPPORT_USER_ELEM;
 		} else {
-			pvElem = iter.second;		// ‹¤—L
+			pvElem = iter.second;		// å…±æœ‰
 		}
 
-		// ƒL[‚Ì“¯‚¶—v‘f‚ğ¶¬‚·‚é
+		// ã‚­ãƒ¼ã®åŒã˜è¦ç´ ã‚’ç”Ÿæˆã™ã‚‹
 		Insert( iter.first, pvElem );
 	}
 
@@ -162,9 +162,9 @@ void CAssoc::Chain( CAssoc const* src )
 }
 
 //------------------------------------------------
-// assoc Á‹
+// assoc æ¶ˆå»
 //
-// @ ‘S‚Ä‚Ì—v‘f‚ğæ‚èœ‚­B
+// @ å…¨ã¦ã®è¦ç´ ã‚’å–ã‚Šé™¤ãã€‚
 //------------------------------------------------
 void CAssoc::Clear()
 {

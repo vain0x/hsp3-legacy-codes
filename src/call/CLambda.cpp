@@ -1,4 +1,4 @@
-// ƒ‰ƒ€ƒ_ŠÖ”ƒNƒ‰ƒX
+ï»¿// ãƒ©ãƒ ãƒ€é–¢æ•°ã‚¯ãƒ©ã‚¹
 #if 0
 #include <map>
 #include <vector>
@@ -19,11 +19,11 @@ using namespace hpimod;
 
 static void* GetReferedPrmstk(stprm_t pStPrm);
 
-// Ã“I•Ï”
-//static std::vector<lambda_t> g_allLambdas;	// ‘©”›ŠÖ”‚ÌÀ‘ÌŒQ
+// é™çš„å¤‰æ•°
+//static std::vector<lambda_t> g_allLambdas;	// æŸç¸›é–¢æ•°ã®å®Ÿä½“ç¾¤
 
 //------------------------------------------------
-// \’z (ƒ‰ƒbƒp[)
+// æ§‹ç¯‰ (ãƒ©ãƒƒãƒ‘ãƒ¼)
 //------------------------------------------------
 myfunc_t CLambda::New()
 {
@@ -31,7 +31,7 @@ myfunc_t CLambda::New()
 }
 
 //------------------------------------------------
-// \’z
+// æ§‹ç¯‰
 //------------------------------------------------
 CLambda::CLambda()
 	: IFunctor()
@@ -45,7 +45,7 @@ CLambda::CLambda()
 }
 
 //------------------------------------------------
-// Àˆø”•Û‘¶ƒIƒuƒWƒFƒNƒg‚Ìæ“¾
+// å®Ÿå¼•æ•°ä¿å­˜ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®å–å¾—
 //------------------------------------------------
 CCaller* CLambda::argCloser()
 {
@@ -54,7 +54,7 @@ CCaller* CLambda::argCloser()
 }
 
 //------------------------------------------------
-// ‰¼ˆø”ƒŠƒXƒg‚ğæ“¾‚·‚é
+// ä»®å¼•æ•°ãƒªã‚¹ãƒˆã‚’å–å¾—ã™ã‚‹
 //------------------------------------------------
 CPrmInfo const& CLambda::getPrmInfo() const
 {
@@ -62,9 +62,9 @@ CPrmInfo const& CLambda::getPrmInfo() const
 }
 
 //------------------------------------------------
-// ƒ‰ƒxƒ‹‚ğæ“¾‚·‚é
+// ãƒ©ãƒ™ãƒ«ã‚’å–å¾—ã™ã‚‹
 // 
-// @ ƒR[ƒh‚ğ’Ç‰Á‚·‚é‚ÆAƒ‰ƒxƒ‹‚ª•ÏX‚³‚ê‚é‚©‚à‚µ‚ê‚È‚¢B
+// @ ã‚³ãƒ¼ãƒ‰ã‚’è¿½åŠ ã™ã‚‹ã¨ã€ãƒ©ãƒ™ãƒ«ãŒå¤‰æ›´ã•ã‚Œã‚‹ã‹ã‚‚ã—ã‚Œãªã„ã€‚
 //------------------------------------------------
 label_t CLambda::getLabel() const
 {
@@ -72,9 +72,9 @@ label_t CLambda::getLabel() const
 }
 
 //------------------------------------------------
-// ŒÄ‚Ño‚µˆ—
+// å‘¼ã³å‡ºã—å‡¦ç†
 // 
-// @ ŠÖ”‚ğŒÄ‚Ño‚· or Às‚ğÄŠJ‚·‚éB
+// @ é–¢æ•°ã‚’å‘¼ã³å‡ºã™ or å®Ÿè¡Œã‚’å†é–‹ã™ã‚‹ã€‚
 //------------------------------------------------
 void CLambda::call( CCaller& callerGiven )
 {
@@ -82,7 +82,7 @@ void CLambda::call( CCaller& callerGiven )
 //	CPrmInfo const& prminfo = getPrmInfo();
 
 #if 0
-	{// –{‘ÌƒR[ƒh‚Ì—ñ‹“
+	{// æœ¬ä½“ã‚³ãƒ¼ãƒ‰ã®åˆ—æŒ™
 		label_t mcs = lbDst;
 		int _t, _v, _e;
 
@@ -109,7 +109,7 @@ void CLambda::call( CCaller& callerGiven )
 
 	callerGiven.setFunctor( lbDst );
 
-	// •Û‘¶‚³‚ê‚½ˆø”—ñ‚ğ’Ç‰Á‚·‚é
+	// ä¿å­˜ã•ã‚ŒãŸå¼•æ•°åˆ—ã‚’è¿½åŠ ã™ã‚‹
 	if ( mpArgCloser ) {
 		auto& callCloser = mpArgCloser->getCall();
 		for ( size_t i = 0; i < callCloser.getCntArg(); ++ i ) {
@@ -117,42 +117,42 @@ void CLambda::call( CCaller& callerGiven )
 		}
 	}
 
-	// ŒÄ‚Ño‚·
+	// å‘¼ã³å‡ºã™
 	callerGiven.call();
 	return;
 }
 
 //------------------------------------------------
-// ƒXƒNƒŠƒvƒg‚©‚ç myfunc ‚ğ‰Šú‰»
+// ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‹ã‚‰ myfunc ã‚’åˆæœŸåŒ–
 // 
-// @ ˆø”®‚Ì’†ŠÔƒR[ƒh‚ğ•¡ÊB
-// @ ˆø”ƒGƒCƒŠƒAƒX‚ÍQÆ‚Å‚«‚é‚æ‚¤‚É‚·‚éB
-// @ ( ‰Šú‰»ˆ—‚È‚Ì‚Åƒƒ“ƒoŠÖ”‚É‚µ‚½‚ªA‚±‚±‚Å‚¢‚¢‚Ì‚©‚Æ )
-// @ Às‚³‚ê‚é“½–¼ŠÖ”‚Ì prmstk ‚Í
-// @	(lambdaŠÖ”‚Ìˆø”—ñ), (ƒLƒƒƒvƒ`ƒƒ‚³‚ê‚½•Ï”‚Ì—ñ), (’†ŠÔŒvZ’l‚ğ‚Âƒ[ƒJƒ‹•Ï”—ñ)
-// @ ‚Æ‚¢‚¤—ñ‚É‚È‚éB
+// @ å¼•æ•°å¼ã®ä¸­é–“ã‚³ãƒ¼ãƒ‰ã‚’è¤‡å†™ã€‚
+// @ å¼•æ•°ã‚¨ã‚¤ãƒªã‚¢ã‚¹ã¯å‚ç…§ã§ãã‚‹ã‚ˆã†ã«ã™ã‚‹ã€‚
+// @ ( åˆæœŸåŒ–å‡¦ç†ãªã®ã§ãƒ¡ãƒ³ãƒé–¢æ•°ã«ã—ãŸãŒã€ã“ã“ã§ã„ã„ã®ã‹ã¨ )
+// @ å®Ÿè¡Œã•ã‚Œã‚‹åŒ¿åé–¢æ•°ã® prmstk ã¯
+// @	(lambdaé–¢æ•°ã®å¼•æ•°åˆ—), (ã‚­ãƒ£ãƒ—ãƒãƒ£ã•ã‚ŒãŸå¤‰æ•°ã®åˆ—), (ä¸­é–“è¨ˆç®—å€¤ã‚’æŒã¤ãƒ­ãƒ¼ã‚«ãƒ«å¤‰æ•°åˆ—)
+// @ ã¨ã„ã†åˆ—ã«ãªã‚‹ã€‚
 //------------------------------------------------
 void CLambda::code_get()
 {
 	{
-		// •¡”‰ñ‚Ì‰Šú‰»‚Í‹–‚³‚ê‚È‚¢
+		// è¤‡æ•°å›ã®åˆæœŸåŒ–ã¯è¨±ã•ã‚Œãªã„
 		assert(!mpBody);
 		mpBody.swap(std::make_unique<CHspCode>());
 	}
 	CHspCode& body  = *mpBody;
 	int&      exflg = *exinfo->npexflg;
 
-	// ‰¼ˆø”Aƒ[ƒJƒ‹•Ï”‚ÌŒÂ”
+	// ä»®å¼•æ•°ã€ãƒ­ãƒ¼ã‚«ãƒ«å¤‰æ•°ã®å€‹æ•°
 	size_t cntPrms   = 0;		
 	size_t cntLocals = 0;
 	
-	// uƒLƒƒƒvƒ`ƒƒ‚³‚ê‚½•Ï”v‚ğQÆ‚·‚éƒR[ƒh‚ÌˆÊ’u (Œã‚ÅC®‚·‚é‚½‚ß‚ÉˆÊ’u‚ğ‹L‰¯‚·‚é)
+	// ã€Œã‚­ãƒ£ãƒ—ãƒãƒ£ã•ã‚ŒãŸå¤‰æ•°ã€ã‚’å‚ç…§ã™ã‚‹ã‚³ãƒ¼ãƒ‰ã®ä½ç½® (å¾Œã§ä¿®æ•´ã™ã‚‹ãŸã‚ã«ä½ç½®ã‚’è¨˜æ†¶ã™ã‚‹)
 	std::vector<std::pair<stprm_t, label_t>> outerArgs;
 
-	// ê—p‚Ì–½—ßƒRƒ}ƒ“ƒh‚ğ”z’u
+	// å°‚ç”¨ã®å‘½ä»¤ã‚³ãƒãƒ³ãƒ‰ã‚’é…ç½®
 	body.put( g_pluginType_call, CallCmd::Id::lambdaBody_, EXFLG_1 );
 	
-	// ®‚ğƒRƒs[‚·‚é
+	// å¼ã‚’ã‚³ãƒ”ãƒ¼ã™ã‚‹
 	for ( int lvBracket = 0; ; ) {		
 		if ( *type == TYPE_MARK ) {
 			if ( *val == '(' ) lvBracket ++;
@@ -160,18 +160,18 @@ void CLambda::code_get()
 			if ( lvBracket < 0 ) break;
 		}
 
-		// ŠÖ”–{‘Ì‚Ì®‚É’Ç‰Á‚·‚é
+		// é–¢æ•°æœ¬ä½“ã®å¼ã«è¿½åŠ ã™ã‚‹
 		if ( lvBracket == 0 && exflg & EXFLG_2 ) {
-			cntLocals++;	// Ÿ‚àˆø”‚ª‚ ‚éA‚Â‚Ü‚è‚±‚Ìˆø”®‚Í’†ŠÔŒvZ’l
+			cntLocals++;	// æ¬¡ã‚‚å¼•æ•°ãŒã‚ã‚‹ã€ã¤ã¾ã‚Šã“ã®å¼•æ•°å¼ã¯ä¸­é–“è¨ˆç®—å€¤
 		}
 	//	dbgout("put (%d, %d, %X)", *type, *val, exflg );
 
 		if ( *type == TYPE_STRUCT ) {
-			// \‘¢‘Ìƒpƒ‰ƒ[ƒ^‚ªÀÛ‚Éw‚µ‚Ä‚¢‚é’l‚ğƒR[ƒh‚É’Ç‰Á‚·‚é
+			// æ§‹é€ ä½“ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãŒå®Ÿéš›ã«æŒ‡ã—ã¦ã„ã‚‹å€¤ã‚’ã‚³ãƒ¼ãƒ‰ã«è¿½åŠ ã™ã‚‹
 			auto const pStPrm = getSTRUCTPRM(*val);
 			char* const prmstk = (char*)GetReferedPrmstk(pStPrm);
 
-			// ˆø”‚ğ“WŠJ
+			// å¼•æ•°ã‚’å±•é–‹
 			{
 				char* const ptr    = prmstk + pStPrm->offset;
 				int   const mptype = pStPrm->mptype;
@@ -191,22 +191,22 @@ void CLambda::code_get()
 					{
 						auto const capturer = argCloser();
 
-						// •Ï”—v‘f‚ÍAƒŠƒeƒ‰ƒ‹’l‚Å‹Lq‚Å‚«‚È‚¢‚Ì‚ÅAlambdaŠÖ”‚Ì prmstk ‚Éæ‚¹‚é‚½‚ß‚É•Û‘¶‚·‚é
+						// å¤‰æ•°è¦ç´ ã¯ã€ãƒªãƒ†ãƒ©ãƒ«å€¤ã§è¨˜è¿°ã§ããªã„ã®ã§ã€lambdaé–¢æ•°ã® prmstk ã«ä¹—ã›ã‚‹ãŸã‚ã«ä¿å­˜ã™ã‚‹
 						if ( mptype == MPTYPE_SINGLEVAR ) {
 							auto const vardata = reinterpret_cast<MPVarData*>(ptr);
 							capturer->addArgByRef( vardata->pval, vardata->aptr );
 
-						// ƒ[ƒJƒ‹•Ï”‚ÍAÀs’†‚ÉÁ–Å‚·‚é‚©‚à‚È‚Ì‚ÅƒRƒs[‚ğæ‚é
+						// ãƒ­ãƒ¼ã‚«ãƒ«å¤‰æ•°ã¯ã€å®Ÿè¡Œä¸­ã«æ¶ˆæ»…ã™ã‚‹ã‹ã‚‚ãªã®ã§ã‚³ãƒ”ãƒ¼ã‚’å–ã‚‹
 						} else {
 							auto const pval = reinterpret_cast<PVal*>(ptr);
 							capturer->addArgByVarCopy( pval );
 						}
 
-						// ƒLƒƒƒvƒ`ƒƒ‚µ‚½‚à‚Ì‚ğ‹L˜^‚µ‚Ä‚¨‚­
+						// ã‚­ãƒ£ãƒ—ãƒãƒ£ã—ãŸã‚‚ã®ã‚’è¨˜éŒ²ã—ã¦ãŠã
 						outerArgs.push_back({ pStPrm, body.getlbNow() });
 						body.put( TYPE_STRUCT, -1, exflg );
-						// @ ‚±‚ê‚ª lamda ŠÖ”‚Ì‰½”Ô–Ú‚ÌÀˆø”‚É‚È‚é‚©‚ÍA‰¼ˆø”‚Ì”‚ªŠm’è‚·‚é‚Ü‚Å•ª‚©‚ç‚È‚¢
-						// @ short ‚Å‚Íû‚Ü‚ç‚È‚¢’l‚©‚à‚È‚Ì‚ÅA(-1 ‚É‚µ‚Ä) int ƒTƒCƒY‚ğg—p‚·‚é
+						// @ ã“ã‚ŒãŒ lamda é–¢æ•°ã®ä½•ç•ªç›®ã®å®Ÿå¼•æ•°ã«ãªã‚‹ã‹ã¯ã€ä»®å¼•æ•°ã®æ•°ãŒç¢ºå®šã™ã‚‹ã¾ã§åˆ†ã‹ã‚‰ãªã„
+						// @ short ã§ã¯åã¾ã‚‰ãªã„å€¤ã‹ã‚‚ãªã®ã§ã€(-1 ã«ã—ã¦) int ã‚µã‚¤ã‚ºã‚’ä½¿ç”¨ã™ã‚‹
 						break;
 					}
 					default: dbgout("mptype = %d", mptype );
@@ -216,7 +216,7 @@ void CLambda::code_get()
 			code_next();
 
 		} else if ( *type == g_pluginType_call && *val == CallCmd::Id::call_prmOf_ ) {
-			// ‰¼ˆø”ƒvƒŒ[ƒXƒzƒ‹ƒ_ [ call_prmof ( (ˆø””Ô†) ) ]
+			// ä»®å¼•æ•°ãƒ—ãƒ¬ãƒ¼ã‚¹ãƒ›ãƒ«ãƒ€ [ call_prmof ( (å¼•æ•°ç•ªå·) ) ]
 			int const exflg_here = exflg;
 			code_next();
 			 
@@ -227,23 +227,23 @@ void CLambda::code_get()
 
 			if ( !code_next_expect( TYPE_MARK, ')' ) ) puterror( HSPERR_SYNTAX );
 
-			// ‰¼ˆø”‚Ì”‚ğŠm•Û
+			// ä»®å¼•æ•°ã®æ•°ã‚’ç¢ºä¿
 			cntPrms = std::max<size_t>(cntPrms, iPrm + 1);
 
-			// ‘Î‰‚·‚éÀˆø”‚ğæ‚èo‚·ƒR[ƒhuargv(n)v‚ğo—Í
+			// å¯¾å¿œã™ã‚‹å®Ÿå¼•æ•°ã‚’å–ã‚Šå‡ºã™ã‚³ãƒ¼ãƒ‰ã€Œargv(n)ã€ã‚’å‡ºåŠ›
 			body.put( g_pluginType_call, CallCmd::Id::argVal, exflg_here );
 			body.put( TYPE_MARK, '(', 0 );
 			body.putVal( iPrm );
 			body.put( TYPE_MARK, ')', 0 );
 
 		} else if ( *type == g_pluginType_call && *val == CallCmd::Id::lambda ) {
-			// lambda ŠÖ”
-			// @ ‚±‚ê‚Ì“à‘¤‚É‚ ‚é\‘¢‘Ìƒpƒ‰ƒ[ƒ^‚â‰¼ˆø”ƒvƒŒ[ƒXƒzƒ‹ƒ_‚ğ¡‚Í–³‹‚·‚é‚½‚ß‚ÉAˆø”®‚ğ’Pƒ•¡Ê‚·‚é
+			// lambda é–¢æ•°
+			// @ ã“ã‚Œã®å†…å´ã«ã‚ã‚‹æ§‹é€ ä½“ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚„ä»®å¼•æ•°ãƒ—ãƒ¬ãƒ¼ã‚¹ãƒ›ãƒ«ãƒ€ã‚’ä»Šã¯ç„¡è¦–ã™ã‚‹ãŸã‚ã«ã€å¼•æ•°å¼ã‚’å˜ç´”è¤‡å†™ã™ã‚‹
 			body.put( *type, *val, exflg );
 			code_next();
 
 			if ( *type == TYPE_MARK && *val == '(' ) {
-				for ( int lvBracket = 0; ; ) {		// –³ŒÀƒ‹[ƒv
+				for ( int lvBracket = 0; ; ) {		// ç„¡é™ãƒ«ãƒ¼ãƒ—
 					if ( *type == TYPE_MARK ) {
 						if ( *val == '(' ) lvBracket ++;
 						if ( *val == ')' ) lvBracket --;
@@ -255,7 +255,7 @@ void CLambda::code_get()
 			}
 
 		} else {
-			// (‚»‚Ì‘¼)
+			// (ãã®ä»–)
 			body.put( *type, *val, exflg );
 			code_next();
 		}
@@ -263,12 +263,12 @@ void CLambda::code_get()
 
 //	if ( exflg & EXFLG_2 ) puterror( HSPERR_TOO_MANY_PARAMETERS );
 
-	// ƒR[ƒh‚Ìæ“Ç‚İ‚É‚æ‚éƒI[ƒo[ƒ‰ƒ“‚ğ–h‚®‚½‚ß‚Ì”Ô•º
+	// ã‚³ãƒ¼ãƒ‰ã®å…ˆèª­ã¿ã«ã‚ˆã‚‹ã‚ªãƒ¼ãƒãƒ¼ãƒ©ãƒ³ã‚’é˜²ããŸã‚ã®ç•ªå…µ
 	body.putReturn();	
 	body.putReturn();
 
-	// lambda ŠÖ”‚ğŒÄ‚Ô‚½‚ß‚Ì‰¼ˆø”ƒŠƒXƒg‚Ì\’z
-	// Ÿ‚Ì prmlist ‚Æ‚Í‹¤—p‚µ‚È‚¢ (ƒLƒƒƒvƒ`ƒƒ•Ï”‚È‚Ç‚ğˆø”‚Éw’è‚Å‚«‚Ä‚µ‚Ü‚¤‚½‚ß)B
+	// lambda é–¢æ•°ã‚’å‘¼ã¶ãŸã‚ã®ä»®å¼•æ•°ãƒªã‚¹ãƒˆã®æ§‹ç¯‰
+	// æ¬¡ã® prmlist ã¨ã¯å…±ç”¨ã—ãªã„ (ã‚­ãƒ£ãƒ—ãƒãƒ£å¤‰æ•°ãªã©ã‚’å¼•æ•°ã«æŒ‡å®šã§ãã¦ã—ã¾ã†ãŸã‚)ã€‚
 	{
 		CPrmInfo::prmlist_t prmlistBase(cntPrms, PrmType::Any);
 
@@ -276,18 +276,18 @@ void CLambda::code_get()
 		mpPrmInfo.swap(std::make_unique<CPrmInfo>(&prmlistBase));
 	}
 
-	// “à•”‚©‚ç lamda ‚Ì–{‘Ì call ‚·‚é‚Æ‚«‚Ì‰¼ˆø”ƒŠƒXƒg‚Ì\’z
+	// å†…éƒ¨ã‹ã‚‰ lamda ã®æœ¬ä½“ call ã™ã‚‹ã¨ãã®ä»®å¼•æ•°ãƒªã‚¹ãƒˆã®æ§‹ç¯‰
 	{
-		// ‰¼ˆø”Œ`®Fulambdaˆø”(_pN) + ƒLƒƒƒvƒ`ƒƒ•Ï” + ƒ[ƒJƒ‹•Ï”(_vN)v
-		// @ ‚·‚×‚Ä‰Â•Ï’·ˆø”‚Åˆ—‚µ‚½‚¢‚Æ‚±‚ë‚¾‚ªAprmstack ‚ÉÏ‚Ü‚È‚«‚á‚¢‚¯‚È‚¢‚Ì‚Å (ƒ[ƒJƒ‹•Ï”‚ğÏ‚Ş‚È‚ç‰Â•Ï’·•”•ª‚ÍÏ‚ß‚È‚¢AÏ‚ñ‚Å‚µ‚Ü‚¤‚Æ local ‚ÉƒGƒCƒŠƒAƒX‚ÅƒAƒNƒZƒX‚Å‚«‚È‚¢)
+		// ä»®å¼•æ•°å½¢å¼ï¼šã€Œlambdaå¼•æ•°(_pN) + ã‚­ãƒ£ãƒ—ãƒãƒ£å¤‰æ•° + ãƒ­ãƒ¼ã‚«ãƒ«å¤‰æ•°(_vN)ã€
+		// @ ã™ã¹ã¦å¯å¤‰é•·å¼•æ•°ã§å‡¦ç†ã—ãŸã„ã¨ã“ã‚ã ãŒã€prmstack ã«ç©ã¾ãªãã‚ƒã„ã‘ãªã„ã®ã§ (ãƒ­ãƒ¼ã‚«ãƒ«å¤‰æ•°ã‚’ç©ã‚€ãªã‚‰å¯å¤‰é•·éƒ¨åˆ†ã¯ç©ã‚ãªã„ã€ç©ã‚“ã§ã—ã¾ã†ã¨ local ã«ã‚¨ã‚¤ãƒªã‚¢ã‚¹ã§ã‚¢ã‚¯ã‚»ã‚¹ã§ããªã„)
 
 		CPrmInfo::prmlist_t prmlist;
 		prmlist.resize(cntPrms + outerArgs.size() + cntLocals);
 
-		// lamda ˆø”
+		// lamda å¼•æ•°
 		std::fill(prmlist.begin(), prmlist.begin() + cntPrms, PrmType::Any);
 
-		// ƒLƒƒƒvƒ`ƒƒ’l
+		// ã‚­ãƒ£ãƒ—ãƒãƒ£å€¤
 		for ( size_t i = 0; i < outerArgs.size(); ++i ) {
 			prmlist.push_back(
 				(outerArgs[cntPrms + i].first->mptype == MPTYPE_SINGLEVAR)
@@ -296,15 +296,15 @@ void CLambda::code_get()
 			);
 		}
 
-		// ƒ[ƒJƒ‹•Ï”
+		// ãƒ­ãƒ¼ã‚«ãƒ«å¤‰æ•°
 		std::fill(prmlist.end() - cntLocals, prmlist.end(), PrmType::Local);
 
 		DeclarePrmInfo(body.getlb(), CPrmInfo(&prmlist, true));
 	}
 
-	// ƒ‰ƒ€ƒ_®’†‚ÉŠÜ‚Ü‚ê‚éAuƒLƒƒƒvƒ`ƒƒ•Ï”‚ğQÆ‚µ‚Ä‚¢‚é TYPE_STRUCT ƒR[ƒhv‚Ì code ’l‚ğ•âŠ®‚·‚é
+	// ãƒ©ãƒ ãƒ€å¼ä¸­ã«å«ã¾ã‚Œã‚‹ã€ã€Œã‚­ãƒ£ãƒ—ãƒãƒ£å¤‰æ•°ã‚’å‚ç…§ã—ã¦ã„ã‚‹ TYPE_STRUCT ã‚³ãƒ¼ãƒ‰ã€ã® code å€¤ã‚’è£œå®Œã™ã‚‹
 	{
-		// lamda ˆø”‚ÌŒã‚ë
+		// lamda å¼•æ•°ã®å¾Œã‚
 		int offset = sizeof(MPVarData) * cntPrms;
 
 		for ( size_t i = 0; i < outerArgs.size(); ++ i ) {
@@ -320,19 +320,19 @@ void CLambda::code_get()
 }
 
 //------------------------------------------------
-// \‘¢‘Ìƒpƒ‰ƒ[ƒ^‚ªQÆ‚µ‚Ä‚¢‚é prmstk ‚ğ(Œ»İ‚Ìî•ñ‚©‚ç)æ“¾‚·‚é
+// æ§‹é€ ä½“ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãŒå‚ç…§ã—ã¦ã„ã‚‹ prmstk ã‚’(ç¾åœ¨ã®æƒ…å ±ã‹ã‚‰)å–å¾—ã™ã‚‹
 // 
-// @result: prmstk —Ìˆæ‚Ö‚Ìƒ|ƒCƒ“ƒ^ (¸”s => nullptr)
+// @result: prmstk é ˜åŸŸã¸ã®ãƒã‚¤ãƒ³ã‚¿ (å¤±æ•— => nullptr)
 //------------------------------------------------
 void* GetReferedPrmstk(stprm_t stprm)
 {
 	void* const cur_prmstk = ctx->prmstack;
 	if ( !cur_prmstk ) return nullptr;
 
-	if ( stprm->subid == STRUCTPRM_SUBID_STACK ) {		// Àˆø”
+	if ( stprm->subid == STRUCTPRM_SUBID_STACK ) {		// å®Ÿå¼•æ•°
 		return cur_prmstk;
 
-	} else if ( stprm->subid >= 0 ) {	// ƒƒ“ƒo•Ï”
+	} else if ( stprm->subid >= 0 ) {	// ãƒ¡ãƒ³ãƒå¤‰æ•°
 		auto const thismod = reinterpret_cast<MPModVarData*>(cur_prmstk);
 		return reinterpret_cast<FlexValue*>(PVal_getptr(thismod->pval, thismod->aptr))->ptr;
 	}

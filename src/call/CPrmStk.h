@@ -1,22 +1,22 @@
-// prmstk ƒNƒ‰ƒX
+ï»¿// prmstk ã‚¯ãƒ©ã‚¹
 
 /**
-HSP ‚Ì prmstk ‚Æ“¯‚¶Œ`®‚Åƒf[ƒ^‚ğŠi”[‚·‚éƒRƒ“ƒeƒiB
+HSP ã® prmstk ã¨åŒã˜å½¢å¼ã§ãƒ‡ãƒ¼ã‚¿ã‚’æ ¼ç´ã™ã‚‹ã‚³ãƒ³ãƒ†ãƒŠã€‚
 
-prmstk ‚Ì“à•”Œ`®‚ğQÆ‚·‚é‚·‚×‚Ä‚Ì‹@”\‚ğ‚±‚±‚É•Â‚¶‚ß‚éB
-prmstk ƒoƒbƒtƒ@Astr ˆø”A’l“n‚µ‚³‚ê‚½ any ˆø”—p‚Ì PValAflex —p‚Ì vectorAlocal •Ï”‚ğŠÇ—‚·‚é‹@”\‚ğ‚ÂB
-“®“I‚È’l(prmtype)‚É‚æ‚Á‚ÄŒ^‚ªŒˆ‚Ü‚é‚Æ‚¢‚¤A‚©‚È‚èƒiƒC[ƒu‚Èd—l‚È‚Ì‚ÅAˆµ‚¢‚É’ˆÓ‚·‚éB
+prmstk ã®å†…éƒ¨å½¢å¼ã‚’å‚ç…§ã™ã‚‹ã™ã¹ã¦ã®æ©Ÿèƒ½ã‚’ã“ã“ã«é–‰ã˜è¾¼ã‚ã‚‹ã€‚
+prmstk ãƒãƒƒãƒ•ã‚¡ã€str å¼•æ•°ã€å€¤æ¸¡ã—ã•ã‚ŒãŸ any å¼•æ•°ç”¨ã® PValã€flex ç”¨ã® vectorã€local å¤‰æ•°ã‚’ç®¡ç†ã™ã‚‹æ©Ÿèƒ½ã‚’æŒã¤ã€‚
+å‹•çš„ãªå€¤(prmtype)ã«ã‚ˆã£ã¦å‹ãŒæ±ºã¾ã‚‹ã¨ã„ã†ã€ã‹ãªã‚ŠãƒŠã‚¤ãƒ¼ãƒ–ãªä»•æ§˜ãªã®ã§ã€æ‰±ã„ã«æ³¨æ„ã™ã‚‹ã€‚
 
-ƒoƒbƒtƒ@‚Íuˆø”•”vuI’[•”v‚Ì2‚Â‚©‚ç¬‚éB
-uˆø”•”v‚Í—^‚¦‚ç‚ê‚½Àˆø”‚ğÏ‚ñ‚Å‚¢‚­•”•ªB
-uI’[•”v‚ÍA‚·‚×‚Ä‚ÌÀˆø”‚ÌŒã‚ÉAƒR[ƒh‚©‚çÀˆø”‚ğó‚¯æ‚ç‚È‚­‚Ä‚¢‚¢‰¼ˆø”ƒ^ƒCƒv‚É‘Î‰‚·‚é—Ìˆæ‚ğÏ‚ñ‚Å‚¢‚­•”•ªB
-	‹ï‘Ì“I‚É‚ÍAPrmType::Capture, PrmType::Local, PrmType::Flex ‚Ì‚½‚ß‚Ì—Ìˆæ‚ª(‚±‚Ì‡‚Å)Ï‚Ü‚ê‚éB
-‚È‚¨ƒoƒbƒtƒ@‚ÍŒÅ’è’·‚Å‚ ‚èA‰¼ˆø”‚Ì“_‚ÅƒTƒCƒY‚ªŠm’è‚µ‚Ä‚¢‚éB
+ãƒãƒƒãƒ•ã‚¡ã¯ã€Œå¼•æ•°éƒ¨ã€ã€Œçµ‚ç«¯éƒ¨ã€ã®2ã¤ã‹ã‚‰æˆã‚‹ã€‚
+ã€Œå¼•æ•°éƒ¨ã€ã¯ä¸ãˆã‚‰ã‚ŒãŸå®Ÿå¼•æ•°ã‚’ç©ã‚“ã§ã„ãéƒ¨åˆ†ã€‚
+ã€Œçµ‚ç«¯éƒ¨ã€ã¯ã€ã™ã¹ã¦ã®å®Ÿå¼•æ•°ã®å¾Œã«ã€ã‚³ãƒ¼ãƒ‰ã‹ã‚‰å®Ÿå¼•æ•°ã‚’å—ã‘å–ã‚‰ãªãã¦ã„ã„ä»®å¼•æ•°ã‚¿ã‚¤ãƒ—ã«å¯¾å¿œã™ã‚‹é ˜åŸŸã‚’ç©ã‚“ã§ã„ãéƒ¨åˆ†ã€‚
+	å…·ä½“çš„ã«ã¯ã€PrmType::Capture, PrmType::Local, PrmType::Flex ã®ãŸã‚ã®é ˜åŸŸãŒ(ã“ã®é †ã§)ç©ã¾ã‚Œã‚‹ã€‚
+ãªãŠãƒãƒƒãƒ•ã‚¡ã¯å›ºå®šé•·ã§ã‚ã‚Šã€ä»®å¼•æ•°ã®æ™‚ç‚¹ã§ã‚µã‚¤ã‚ºãŒç¢ºå®šã—ã¦ã„ã‚‹ã€‚
 
-idx ‚Í flex ‚ğŠÜ‚Ü‚È‚¢B
-todo: —^‚¦‚ç‚ê‚½ MPVarData (Managed ‚©‚à‚µ‚ê‚È‚¢) ‚ğŠ—L‚·‚é‚×‚«
-todo: ManagedBuffer (strbuf ƒ|ƒCƒ“ƒ^‚ğQÆƒJƒEƒ“ƒ^•û®‚ÅŠÇ—)
-todo: ˆø”æ‚èo‚µ•”•ª(Invoker)‚Æ2d‚Å prmtype ‚ğQÆ‚·‚é‚Ì‚ª‚à‚Á‚½‚¢‚È‚¢Š´‚¶B
+idx ã¯ flex ã‚’å«ã¾ãªã„ã€‚
+todo: ä¸ãˆã‚‰ã‚ŒãŸ MPVarData (Managed ã‹ã‚‚ã—ã‚Œãªã„) ã‚’æ‰€æœ‰ã™ã‚‹ã¹ã
+todo: ManagedBuffer (strbuf ãƒã‚¤ãƒ³ã‚¿ã‚’å‚ç…§ã‚«ã‚¦ãƒ³ã‚¿æ–¹å¼ã§ç®¡ç†)
+todo: å¼•æ•°å–ã‚Šå‡ºã—éƒ¨åˆ†(Invoker)ã¨2é‡ã§ prmtype ã‚’å‚ç…§ã™ã‚‹ã®ãŒã‚‚ã£ãŸã„ãªã„æ„Ÿã˜ã€‚
 //*/
 
 #ifndef IG_CLASS_PARAMETER_STACK_CREATOR_MANAGED_H
@@ -45,7 +45,7 @@ class CPrmStk;
 using arguments_t = CPrmStk;
 
 //------------------------------------------------
-// ‚‹‰‚È prmstk 
+// é«˜ç´šãª prmstk 
 //------------------------------------------------
 class CPrmStk
 	: private CPrmStkCreator
@@ -53,15 +53,15 @@ class CPrmStk
 private:
 	CPrmInfo const& prminfo_;
 
-	// Œ»İA’Ç‰Á‚³‚ê‚½Àˆø”‚ÌŒÂ” (flex ‚Íœ‚­)
+	// ç¾åœ¨ã€è¿½åŠ ã•ã‚ŒãŸå®Ÿå¼•æ•°ã®å€‹æ•° (flex ã¯é™¤ã)
 	size_t cntArgs_;
 
-	// I’[•”‚ª’Ç‰Á‚³‚ê‚½‚©”Û‚©
+	// çµ‚ç«¯éƒ¨ãŒè¿½åŠ ã•ã‚ŒãŸã‹å¦ã‹
 	bool finalized_;
 
 	using super_t = CPrmStkCreator;
 
-	// ƒwƒbƒ_
+	// ãƒ˜ãƒƒãƒ€
 	struct header_t {
 		unsigned short magicCode;
 	};
@@ -104,9 +104,9 @@ private:
 
 public:
 	//------------------------------------------------
-	// Àˆø”’l‚Ì push Šeí
+	// å®Ÿå¼•æ•°å€¤ã® push å„ç¨®
 	//------------------------------------------------
-	// ’Pƒ‚È’l
+	// å˜ç´”ãªå€¤
 	template<typename VartypeTag>
 	void pushValue(PDAT const* pdat)
 	{
@@ -119,7 +119,7 @@ public:
 	}
 	template<> void pushValue<vtStr>(PDAT const* pdat);
 
-	// •¶š—ñ (prmstk —p‚ÉƒRƒs[‚ğæ‚é)
+	// æ–‡å­—åˆ— (prmstk ç”¨ã«ã‚³ãƒ”ãƒ¼ã‚’å–ã‚‹)
 	void pushString(char const* src)
 	{
 		assert(!hasFinalized());
@@ -134,7 +134,7 @@ public:
 		return;
 	}
 
-	// ’l“n‚µ‚Ì any (PVal* ‚É•Û‘¶‚·‚é)
+	// å€¤æ¸¡ã—ã® any (PVal* ã«ä¿å­˜ã™ã‚‹)
 	void pushAnyByVal(PDAT const* pdat, hpimod::vartype_t vtype)
 	{
 		assert(!hasFinalized());
@@ -146,11 +146,11 @@ public:
 		hpimod::ManagedPVal pval;
 		hpimod::PVal_assign(pval.valuePtr(), pdat, vtype);
 		pushPVal(pval.valuePtr(), 0);
-		pval.incRef();	// prmstk ‚É‚æ‚éŠ—L
+		pval.incRef();	// prmstk ã«ã‚ˆã‚‹æ‰€æœ‰
 		return;
 	}
 
-	// QÆ“n‚µ‚Ì any (ŠÇ—‚Ì•K—v‚Í‚È‚¢)
+	// å‚ç…§æ¸¡ã—ã® any (ç®¡ç†ã®å¿…è¦ã¯ãªã„)
 	void pushAnyByRef(PVal* pval, APTR aptr)
 	{
 		assert(!hasFinalized());
@@ -161,7 +161,7 @@ public:
 		return;
 	}
 
-	// •Ï”QÆ
+	// å¤‰æ•°å‚ç…§
 	void pushPVal(PVal* pval, APTR aptr)
 	{
 		assert(!hasFinalized());
@@ -193,8 +193,8 @@ public:
 		return;
 	}
 
-	// ƒ‰ƒ€ƒ_ŠÖ”‚ª“à•”“I‚É‚ÂƒLƒƒƒvƒ`ƒƒƒŠƒXƒg‚ğ—¬‚µ‚Ş
-	// prmstk ‚Í‚±‚ê‚ç‚Ì ManagedVarData ‚ğŠ—L‚µ‚È‚¢
+	// ãƒ©ãƒ ãƒ€é–¢æ•°ãŒå†…éƒ¨çš„ã«æŒã¤ã‚­ãƒ£ãƒ—ãƒãƒ£ãƒªã‚¹ãƒˆã‚’æµã—è¾¼ã‚€
+	// prmstk ã¯ã“ã‚Œã‚‰ã® ManagedVarData ã‚’æ‰€æœ‰ã—ãªã„
 	void importCaptures(vector_t const& captured)
 	{
 		assert(hasFinalized());
@@ -215,7 +215,7 @@ public:
 	{
 		assert(!hasFinalized());
 		
-		// c‚è‚Ì”‚¾‚¯Šù’èˆø”‚ğÏ‚Ş
+		// æ®‹ã‚Šã®æ•°ã ã‘æ—¢å®šå¼•æ•°ã‚’ç©ã‚€
 		for ( size_t i = cntArgs(); i < prminfo_.cntPrms(); ++i ) {
 			pushArgByDefault();
 		}
@@ -242,7 +242,7 @@ public:
 	}
 
 	//------------------------------------------------
-	// Àˆø”’l‚Ì“®“I‚È push
+	// å®Ÿå¼•æ•°å€¤ã®å‹•çš„ãª push
 	//------------------------------------------------
 
 	// push (prmtype) byVal
@@ -265,7 +265,7 @@ public:
 			return pushAnyByVal(pdat, vtype);
 
 		} else {
-			// Šg’£Œ^ => Œ^ƒ`ƒFƒbƒN•t‚« any
+			// æ‹¡å¼µå‹ => å‹ãƒã‚§ãƒƒã‚¯ä»˜ã any
 			if ( PrmType::isExtendedVartype(prmtype) ) {
 				if ( vtype != prmtype ) puterror(HSPERR_TYPE_MISMATCH);
 				return pushAnyByVal(pdat, vtype);
@@ -306,7 +306,7 @@ public:
 			}
 			default:
 #if 0
-				// Œ^ƒ^ƒCƒv’l‚Ìˆø” => ‚»‚ÌŒ^‚ÌŠù’è’l
+				// å‹ã‚¿ã‚¤ãƒ—å€¤ã®å¼•æ•° => ãã®å‹ã®æ—¢å®šå€¤
 				if ( PrmType::isVartype(prmtype) ) {
 					PVal* const pvalDefault = hpimod::PVal_getDefault(prmtype);
 					pushArgByVal(pvalDefault->pt, pvalDefault->flag);
@@ -317,7 +317,7 @@ public:
 		}
 	}
 
-	// •s‘©”›ˆø”
+	// ä¸æŸç¸›å¼•æ•°
 	void allocArgNoBind(unsigned short magiccode, unsigned short priority)
 	{
 		int const prmtype = getNextPrmType();
@@ -330,11 +330,11 @@ public:
 	}
 
 	//------------------------------------------------
-	// Àˆø”’l‚Ì peek Šeí
+	// å®Ÿå¼•æ•°å€¤ã® peek å„ç¨®
 	//------------------------------------------------
 	
-	// ’l or any(byVal)
-	// local ‚âQÆ“n‚µˆø”‚Ì’l‚Íæ‚èo‚³‚È‚¢B
+	// å€¤ or any(byVal)
+	// local ã‚„å‚ç…§æ¸¡ã—å¼•æ•°ã®å€¤ã¯å–ã‚Šå‡ºã•ãªã„ã€‚
 	PDAT* peekValArgAt(size_t idx, vartype_t& vtype) const
 	{
 		int const prmtype = prminfo_.getPrmType(idx);
@@ -356,7 +356,7 @@ public:
 		}
 	}
 
-	// •Ï”
+	// å¤‰æ•°
 	PVal* peekRefArgAt(size_t idx) const
 	{
 		int const prmtype = prminfo_.getPrmType(idx);
@@ -410,7 +410,7 @@ public:
 
 private:
 	//------------------------------------------------
-	// prmstk ã‚Ö‚Ìƒ|ƒCƒ“ƒ^
+	// prmstk ä¸Šã¸ã®ãƒã‚¤ãƒ³ã‚¿
 	//------------------------------------------------
 	void* getOffsetPtr(size_t offset) const {
 		assert(offset <= size());
@@ -423,16 +423,16 @@ private:
 	}
 
 	//------------------------------------------------
-	// ‰ğ‘Ì
+	// è§£ä½“
 	//
-	// @ Àˆø”‚Ìæ‚èo‚µ‚Ì“r’†‚Å€–S‚·‚é‚±‚Æ‚à‚ ‚é‚Ì‚Å’ˆÓ‚µ‚½‚¢B
+	// @ å®Ÿå¼•æ•°ã®å–ã‚Šå‡ºã—ã®é€”ä¸­ã§æ­»äº¡ã™ã‚‹ã“ã¨ã‚‚ã‚ã‚‹ã®ã§æ³¨æ„ã—ãŸã„ã€‚
 	//------------------------------------------------
 	void free()
 	{
 		void* const prmstk = getPrmStkPtr();
 		assert(!!prmstk);
 
-		// ƒXƒ^ƒbƒNã‚ÌŠÇ—‚³‚ê‚½ƒIƒuƒWƒFƒNƒg‚ğ‰ğ•ú‚·‚é
+		// ã‚¹ã‚¿ãƒƒã‚¯ä¸Šã®ç®¡ç†ã•ã‚ŒãŸã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’è§£æ”¾ã™ã‚‹
 		for ( size_t i = 0; i < cntArgs(); ++i ) {
 			int const prmtype = prminfo_.getPrmType(i);
 

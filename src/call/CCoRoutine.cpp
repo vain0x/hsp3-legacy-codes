@@ -1,4 +1,4 @@
-// ÉRÉãÅ[É`ÉìÉNÉâÉX
+Ôªø// „Ç≥„É´„Éº„ÉÅ„É≥„ÇØ„É©„Çπ
 #if 0
 #include "CCoRoutine.h"
 
@@ -12,7 +12,7 @@ using namespace hpimod;
 PVal const* CCoRoutine::stt_pvNextVar = nullptr;
 
 //------------------------------------------------
-// ç\íz (ÉâÉbÉpÅ[)
+// ÊßãÁØâ („É©„ÉÉ„Éë„Éº)
 //------------------------------------------------
 coroutine_t CCoRoutine::New()
 {
@@ -20,14 +20,14 @@ coroutine_t CCoRoutine::New()
 }
 
 //------------------------------------------------
-// ç\íz
+// ÊßãÁØâ
 //------------------------------------------------
 CCoRoutine::CCoRoutine()
 	: mpCaller( new CCaller )
 { }
 
 //------------------------------------------------
-// îjä¸
+// Á†¥Ê£Ñ
 //------------------------------------------------
 CCoRoutine::~CCoRoutine()
 {
@@ -36,35 +36,35 @@ CCoRoutine::~CCoRoutine()
 }
 
 //------------------------------------------------
-// åƒÇ—èoÇµèàóù
+// Âëº„Å≥Âá∫„ÅóÂá¶ÁêÜ
 // 
-// @ ä÷êîÇåƒÇ—èoÇ∑ or é¿çsÇçƒäJÇ∑ÇÈÅB
+// @ Èñ¢Êï∞„ÇíÂëº„Å≥Âá∫„Åô or ÂÆüË°å„ÇíÂÜçÈñã„Åô„Çã„ÄÇ
 //------------------------------------------------
 void CCoRoutine::call( CCaller& callerGiven )
 {
 	mpCallerGiven = &callerGiven;
 
 	{
-		// åƒÇ—èoÇ∑
+		// Âëº„Å≥Âá∫„Åô
 		mpCaller->call();
 
-		// éüÇÃåƒÇ—èoÇµêÊÇçƒê›íËÇ∑ÇÈ
+		// Ê¨°„ÅÆÂëº„Å≥Âá∫„ÅóÂÖà„ÇíÂÜçË®≠ÂÆö„Åô„Çã
 		if ( stt_pvNextVar ) {
 			if ( stt_pvNextVar->flag != HSPVAR_FLAG_LABEL ) puterror( HSPERR_TYPE_MISMATCH );
 			label_t const lb = VtTraits::derefValptr<vtLabel>(stt_pvNextVar->pt);
 
-			mpCaller->setFunctor(Functor::New(lb));		// éüÇÃåƒÇ—èoÇµêÊÇämíË
+			mpCaller->setFunctor(Functor::New(lb));		// Ê¨°„ÅÆÂëº„Å≥Âá∫„ÅóÂÖà„ÇíÁ¢∫ÂÆö
 			stt_pvNextVar = nullptr;
 		}
 
-		// ï‘ílÇ callerGiven Ç…ì]ëóÇ∑ÇÈ
+		// ËøîÂÄ§„Çí callerGiven „Å´Ëª¢ÈÄÅ„Åô„Çã
 		callerGiven.getCall().setRetValTransmit( mpCaller->getCall() );
 	}
 	return;
 }
 
 //------------------------------------------------
-// âºà¯êî
+// ‰ªÆÂºïÊï∞
 //------------------------------------------------
 CPrmInfo const& CCoRoutine::getPrmInfo() const
 {

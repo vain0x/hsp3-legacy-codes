@@ -1,4 +1,4 @@
-// �֐��q�I�u�W�F�N�g
+﻿// 関数子オブジェクト
 
 #ifndef IG_CLASS_FUNCTOR_H
 #define IG_CLASS_FUNCTOR_H

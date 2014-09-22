@@ -1,6 +1,6 @@
-// Call - SubCommand header
+ï»¿// Call - SubCommand header
 
-// todo: ‚±‚Ìƒtƒ@ƒCƒ‹‚Ì‹@”\‚ğ‚·‚×‚Ä“KØ‚ÈêŠ‚ÉˆÚ“®‚·‚éB
+// todo: ã“ã®ãƒ•ã‚¡ã‚¤ãƒ«ã®æ©Ÿèƒ½ã‚’ã™ã¹ã¦é©åˆ‡ãªå ´æ‰€ã«ç§»å‹•ã™ã‚‹ã€‚
 
 #ifndef IG_CALL_SUB_COMMAND_H
 #define IG_CALL_SUB_COMMAND_H
@@ -10,7 +10,7 @@
 
 using namespace hpimod;
 
-// ‰¼ˆø”ƒŠƒXƒgŠÖ˜A
+// ä»®å¼•æ•°ãƒªã‚¹ãƒˆé–¢é€£
 extern CPrmInfo const& DeclarePrmInfo(label_t lb, CPrmInfo&& prminfo);
 extern CPrmInfo const& GetPrmInfo(stdat_t stdat);
 extern CPrmInfo const& GetPrmInfo(label_t);

@@ -1,4 +1,4 @@
-// ‘©”›ŠÖ”ƒNƒ‰ƒX
+ï»¿// æŸç¸›é–¢æ•°ã‚¯ãƒ©ã‚¹
 #if 0
 #ifndef IG_CLASS_BOUND_H
 #define IG_CLASS_BOUND_H
@@ -9,7 +9,7 @@
 #include "Functor.h"
 #include "IFunctor.h"
 
-//	#define DBGOUT_BOUND_ADDREF_OR_RELEASE	// AddRef, Release ‚ğ dbgout ‚Å•ñ‚·‚é
+//	#define DBGOUT_BOUND_ADDREF_OR_RELEASE	// AddRef, Release ã‚’ dbgout ã§å ±å‘Šã™ã‚‹
 
 class CCaller;
 class CPrmInfo;
@@ -22,14 +22,14 @@ class CBound
 {
 	using prmidxAssoc_t = std::vector<int>;
 
-	// ƒƒ“ƒo•Ï”
+	// ãƒ¡ãƒ³ãƒå¤‰æ•°
 private:
-	CCaller*  mpCaller;				// ‘©”›ˆø”‚ğ•Û‚·‚é
-	CPrmInfo* mpRemains;			// cˆø” (CBound ‚ª¶¬‚·‚é)
+	CCaller*  mpCaller;				// æŸç¸›å¼•æ•°ã‚’ä¿æŒã™ã‚‹
+	CPrmInfo* mpRemains;			// æ®‹å¼•æ•° (CBound ãŒç”Ÿæˆã™ã‚‹)
 
-	prmidxAssoc_t* mpPrmIdxAssoc;	// cˆø”‚ÆŒ³ˆø”‚Ìˆø””Ô†‚Ì‘Î‰‚ğæ‚é (Še—v‘f: Œ³ˆø”‚Ìˆø””Ô†)
+	prmidxAssoc_t* mpPrmIdxAssoc;	// æ®‹å¼•æ•°ã¨å…ƒå¼•æ•°ã®å¼•æ•°ç•ªå·ã®å¯¾å¿œã‚’å–ã‚‹ (å„è¦ç´ : å…ƒå¼•æ•°ã®å¼•æ•°ç•ªå·)
 
-	// \’z
+	// æ§‹ç¯‰
 private:
 	CBound();
 	~CBound();
@@ -41,22 +41,22 @@ public:
 	CCaller*  getCaller()  const { return mpCaller; }
 	CPrmInfo& getPrmInfo() const { return *mpRemains; }
 
-	// Œp³
+	// ç¶™æ‰¿
 	label_t getLabel() const { return getBound()->getLabel(); }
 	int     getAxCmd() const { return getBound()->getAxCmd(); }
 	int     getUsing() const { return 1; }
 
 	functor_t const& unbind() const;
 
-	// “®ì
-	void bind();							// ‘©”›ˆ—
-	void call( CCaller& callerRemain );		// (‘©”›ˆø”‰ğŒˆˆ— + ŒÄ‚Ño‚µ)
+	// å‹•ä½œ
+	void bind();							// æŸç¸›å‡¦ç†
+	void call( CCaller& callerRemain );		// (æŸç¸›å¼•æ•°è§£æ±ºå‡¦ç† + å‘¼ã³å‡ºã—)
 
-	// ƒ‰ƒbƒp[
+	// ãƒ©ãƒƒãƒ‘ãƒ¼
 	static bound_t New();
 
 private:
-	functor_t const& getBound() const;		// ”í‘©”›ŠÖ”
+	functor_t const& getBound() const;		// è¢«æŸç¸›é–¢æ•°
 
 };
 

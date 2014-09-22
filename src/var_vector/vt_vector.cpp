@@ -1,4 +1,4 @@
-// vector - VarProc code
+ï»¿// vector - VarProc code
 
 #include <functional>
 
@@ -19,7 +19,7 @@ static void HspVarVector_AddI(PDAT* pdat, void const* src);
 static PVal** HspVarVector_GetVectorList( PDAT const* src, int* );	// void* user
 
 //------------------------------------------------
-// À‘Ìƒ|ƒCƒ“ƒ^
+// å®Ÿä½“ãƒã‚¤ãƒ³ã‚¿
 //------------------------------------------------
 static PDAT* HspVarVector_GetPtr(PVal* pval)
 {
@@ -35,10 +35,10 @@ static int HspVarVector_GetUsing(PDAT const* pdat)
 }
 
 //------------------------------------------------
-// PVal‚Ì•Ï”ƒƒ‚ƒŠ‚ğŠm•Û‚·‚é
+// PValã®å¤‰æ•°ãƒ¡ãƒ¢ãƒªã‚’ç¢ºä¿ã™ã‚‹
 //
-// @ pval ‚Í–¢Šm•Û or ‰ğ•úÏ‚İ‚Ìó‘ÔB
-// @ pval2 != nullptr => pval2‚Ì“à—e‚ğŒp³‚·‚éB
+// @ pval ã¯æœªç¢ºä¿ or è§£æ”¾æ¸ˆã¿ã®çŠ¶æ…‹ã€‚
+// @ pval2 != nullptr => pval2ã®å†…å®¹ã‚’ç¶™æ‰¿ã™ã‚‹ã€‚
 //------------------------------------------------
 static void HspVarVector_Alloc(PVal* pval, PVal const* pval2)
 {
@@ -48,8 +48,8 @@ static void HspVarVector_Alloc(PVal* pval, PVal const* pval2)
 
 	//dbgout("pval = %08X, pval2 = %08X, pval->pt = %08X, cntElems = %d", pval, pval2, pval->pt, cntElems );
 
-	// Œp³
-	// len[1] = 1 ‚È‚Ì‚Å‰½“x‚àŒÄ‚Î‚ê‚Ä‚µ‚Ü‚¤
+	// ç¶™æ‰¿
+	// len[1] = 1 ãªã®ã§ä½•åº¦ã‚‚å‘¼ã°ã‚Œã¦ã—ã¾ã†
 	if ( pval2 ) {
 		assert(pval == pval2);
 		auto& vec = VtTraits::derefValptr<vtVector>(pval2->pt);
@@ -59,14 +59,14 @@ static void HspVarVector_Alloc(PVal* pval, PVal const* pval2)
 		}
 
 	} else {
-		// pval->master ‚ªÀ‘Ì‚É‚È‚é
+		// pval->master ãŒå®Ÿä½“ã«ãªã‚‹
 		auto const p = &VtTraits::getMaster<vtVector>(pval);
 
-		// mpval ‚È‚ç inst = nullptr ‚Å‰Šú‰»
+		// mpval ãªã‚‰ inst = nullptr ã§åˆæœŸåŒ–
 		if ( pval->support & HSPVAR_SUPPORT_TEMPVAR ) {
 			new(p) vector_t { nullptr };
 
-		// ’·‚³ cntElems ‚Å‰Šú‰»AŠe—v‘f‚ÍŠù’è’l
+		// é•·ã• cntElems ã§åˆæœŸåŒ–ã€å„è¦ç´ ã¯æ—¢å®šå€¤
 		} else {
 			new(p) vector_t { vector_t::make(cntElems) };
 		}
@@ -80,7 +80,7 @@ static void HspVarVector_Alloc(PVal* pval, PVal const* pval2)
 }
 
 //------------------------------------------------
-// PVALƒ|ƒCƒ“ƒ^‚Ì•Ï”ƒƒ‚ƒŠ‚ğ‰ğ•ú‚·‚é
+// PVALãƒã‚¤ãƒ³ã‚¿ã®å¤‰æ•°ãƒ¡ãƒ¢ãƒªã‚’è§£æ”¾ã™ã‚‹
 //------------------------------------------------
 static void HspVarVector_Free(PVal* pval)
 {
@@ -95,16 +95,16 @@ static void HspVarVector_Free(PVal* pval)
 }
 
 //------------------------------------------------
-// Œ^•ÏŠ·Fflag ¨ this
+// å‹å¤‰æ›ï¼šflag â†’ this
 // 
-// @ •ÏŠ·‘O‚Ì’l‚ğ [0] ‚É‚Â vector ‚ğ¶¬‚·‚éB(‚¨‚¹‚Á‚©‚¢‚·‚¬‚é‚Ì‚Å‚â‚ß‚½)
+// @ å¤‰æ›å‰ã®å€¤ã‚’ [0] ã«æŒã¤ vector ã‚’ç”Ÿæˆã™ã‚‹ã€‚(ãŠã›ã£ã‹ã„ã™ãã‚‹ã®ã§ã‚„ã‚ãŸ)
 //------------------------------------------------
 #if 0
 static void* HspVarVector_Cnv( const void *buffer, int flag )
 {
 	static CVector* result = nullptr;
 
-	result = CVector::NewTemp();		// ˆêƒIƒuƒWƒFƒNƒg
+	result = CVector::NewTemp();		// ä¸€æ™‚ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
 
 	result->Alloc( 1 );
 	PVal_assign( result->at(0), (void*)buffer, flag );
@@ -114,7 +114,7 @@ static void* HspVarVector_Cnv( const void *buffer, int flag )
 #endif
 
 //------------------------------------------------
-// Œ^•ÏŠ·Fthis ¨ flag
+// å‹å¤‰æ›ï¼šthis â†’ flag
 //------------------------------------------------
 #if 0
 static void* HspVarVector_CnvCustom( const void *buffer, int flag )
@@ -127,7 +127,7 @@ static void* HspVarVector_CnvCustom( const void *buffer, int flag )
 #endif
 
 //------------------------------------------------
-// ‘ã“ü (=)
+// ä»£å…¥ (=)
 //------------------------------------------------
 static void HspVarVector_Set(PVal* pval, PDAT* pdat, PDAT const* in)
 {
@@ -136,27 +136,27 @@ static void HspVarVector_Set(PVal* pval, PDAT* pdat, PDAT const* in)
 	auto& dst = VtTraits::derefValptr<vtVector>(pdat);
 	auto& src = VtTraits::derefValptr<vtVector>(in);
 
-	// ƒeƒ“ƒ|ƒ‰ƒŠ•Ï” => QÆ‹¤—L
+	// ãƒ†ãƒ³ãƒãƒ©ãƒªå¤‰æ•° => å‚ç…§å…±æœ‰
 	if ( pval->support & HSPVAR_SUPPORT_TEMPVAR ) {
 		dst = src;
 
-	// ‰E•Ó‚ªˆêƒIƒuƒWƒFƒNƒg‚È‚ç move
+	// å³è¾ºãŒä¸€æ™‚ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆãªã‚‰ move
 	} else if ( src.isTmpObj() ) {
 		dst = std::move(src);
 		
-	// ‚·‚×‚Ä‚Ì—v‘f‚ğ‹¤—L‚·‚é—ñ‚É‚·‚é
+	// ã™ã¹ã¦ã®è¦ç´ ã‚’å…±æœ‰ã™ã‚‹åˆ—ã«ã™ã‚‹
 	} else {
 		dst.reset();
 		chainShallow(dst, src, { 0, src->size() });
 	}
 	
-	// ƒXƒ^ƒbƒN‚ğ~‚è‚é
+	// ã‚¹ã‚¿ãƒƒã‚¯ã‚’é™ã‚Šã‚‹
 	src.beNonTmpObj();
 	return;
 }
 
 //------------------------------------------------
-// ˜AŒ‹ (Add)
+// é€£çµ (Add)
 //------------------------------------------------
 void HspVarVector_AddI( PDAT* pdat, PDAT const* val )
 {
@@ -171,19 +171,19 @@ void HspVarVector_AddI( PDAT* pdat, PDAT const* val )
 	result->insert(result->end(), lhs->begin(), lhs->end());
 	result->insert(result->end(), rhs->begin(), rhs->end());
 
-	lhs = std::move(result);	// •Ô’l
-	rhs.beNonTmpObj();			// ƒXƒ^ƒbƒN‚©‚ç~‚è‚é
+	lhs = std::move(result);	// è¿”å€¤
+	rhs.beNonTmpObj();			// ã‚¹ã‚¿ãƒƒã‚¯ã‹ã‚‰é™ã‚Šã‚‹
 
 	g_pHvpVector->aftertype = g_vtVector;
 	return;
 }
 
 //------------------------------------------------
-// ”äŠr
+// æ¯”è¼ƒ
 // 
-// @ Œ`®“I‚É”äŠr‚·‚éB“à•”•Ï”‚ÌŒÂ”‚ÆA‚»‚ê‚¼‚ê‚ÌQÆ‚ÆA‡”Ô‚ª‘S‚Ä“™‚µ‚¯‚ê‚ÎA“™‚µ‚¢‚Æ‚·‚éB
-// @ pdat ‚Í vector ‚Ì PVal::pt ‚È‚Ì‚ÅA•Ô’l( true or false )‚ğ‘ã“ü‚·‚é‚ÆA
-// @	¶•Ó‚ÌQÆ‚ª1‚ÂŸè‚ÉÁ‚¦‚é‚±‚Æ‚É‚È‚éB‚»‚Ì‚½‚ßA¶•Ó‚ÌQÆ‚ğ Release ‚µ‚Ä‚¨‚­B
+// @ å½¢å¼çš„ã«æ¯”è¼ƒã™ã‚‹ã€‚å†…éƒ¨å¤‰æ•°ã®å€‹æ•°ã¨ã€ãã‚Œãã‚Œã®å‚ç…§ã¨ã€é †ç•ªãŒå…¨ã¦ç­‰ã—ã‘ã‚Œã°ã€ç­‰ã—ã„ã¨ã™ã‚‹ã€‚
+// @ pdat ã¯ vector ã® PVal::pt ãªã®ã§ã€è¿”å€¤( true or false )ã‚’ä»£å…¥ã™ã‚‹ã¨ã€
+// @	å·¦è¾ºã®å‚ç…§ãŒ1ã¤å‹æ‰‹ã«æ¶ˆãˆã‚‹ã“ã¨ã«ãªã‚‹ã€‚ãã®ãŸã‚ã€å·¦è¾ºã®å‚ç…§ã‚’ Release ã—ã¦ãŠãã€‚
 //------------------------------------------------
 static int Compare(vector_t const& lhs, vector_t const& rhs) 
 {
@@ -201,7 +201,7 @@ static int Compare(vector_t const& lhs, vector_t const& rhs)
 		if ( lenLhs != lenRhs ) return (lenLhs < lenRhs ? -1 : 1);
 
 		for ( size_t i = 0; i < lenLhs; ++i ) {
-			if ( lhs->at(i).getPVal() != rhs->at(i).getPVal() ) return -1;	// ˆá‚Á‚½‚ç‚Æ‚è‚ ‚¦‚¸¶‚Ì‚ª¬‚³‚¢‚±‚Æ‚É‚·‚é
+			if ( lhs->at(i).getPVal() != rhs->at(i).getPVal() ) return -1;	// é•ã£ãŸã‚‰ã¨ã‚Šã‚ãˆãšå·¦ã®ãŒå°ã•ã„ã“ã¨ã«ã™ã‚‹
 		}
 		return 0;
 	}
@@ -214,17 +214,17 @@ static int Compare(vector_t const& lhs, vector_t const& rhs)
 
 	int const cmp = Compare( lhs, rhs );
 
-	lhs.nullify();		// ”j‰ó‚³‚ê‚é
-	rhs.beNonTmpObj();	// ƒXƒ^ƒbƒN‚©‚ç~‚è‚é
+	lhs.nullify();		// ç ´å£Šã•ã‚Œã‚‹
+	rhs.beNonTmpObj();	// ã‚¹ã‚¿ãƒƒã‚¯ã‹ã‚‰é™ã‚Šã‚‹
 
 	g_pHvpVector->aftertype = HSPVAR_FLAG_INT;
 	return cmp;
 }
 
 //------------------------------------------------
-// ƒƒ\ƒbƒhŒÄ‚Ño‚µ
+// ãƒ¡ã‚½ãƒƒãƒ‰å‘¼ã³å‡ºã—
 //
-// @ “à•”•Ï”‚Ö‚Ìƒƒ\ƒbƒh‚Æ‚µ‚Äˆµ‚¤B
+// @ å†…éƒ¨å¤‰æ•°ã¸ã®ãƒ¡ã‚½ãƒƒãƒ‰ã¨ã—ã¦æ‰±ã†ã€‚
 //------------------------------------------------
 static void HspVarVector_ObjectMethod( PVal* pval )
 {
@@ -236,18 +236,18 @@ static void HspVarVector_ObjectMethod( PVal* pval )
 }
 
 //#########################################################
-//        ˜A‘z”z—ñ—p‚ÌŠÖ”ŒQ
+//        é€£æƒ³é…åˆ—ç”¨ã®é–¢æ•°ç¾¤
 //#########################################################
 //------------------------------------------------
-// ˜A‘z”z—ñ::“Yšˆ—
+// é€£æƒ³é…åˆ—::æ·»å­—å‡¦ç†
 // 
 // @ ( idx, inner-var's-idxes... )
-// @ “à•”•Ï”‚Ì“Yš‚ğˆ—‚·‚é•”•ª‚ÍA‰E•Ó’l‚©¶•Ó’l‚©‚É‚æ‚Á‚Ä•Ï‚í‚Á‚Ä‚­‚é‚½‚ß
-// @	‚±‚±‚Å‚Íˆ—‚¹‚¸AŒÄ‚Ño‚µŒ³‚ÉˆÏ‚Ë‚éB
-// @ *_ArrayObjectImpl ‚Å vector ‚Ì•ª‚Ì“Yš(1‚Â–Ú)‚ğˆ—‚µA
-// @	‚»‚ÌŒã‚Ì“à•”•Ï”‚Ì“Yš‚ÍAŒÄ‚Ño‚µŒ³‚Ì *_ArrayObject, *_ArrayObjectRead ‚É”C‚¹‚éB
+// @ å†…éƒ¨å¤‰æ•°ã®æ·»å­—ã‚’å‡¦ç†ã™ã‚‹éƒ¨åˆ†ã¯ã€å³è¾ºå€¤ã‹å·¦è¾ºå€¤ã‹ã«ã‚ˆã£ã¦å¤‰ã‚ã£ã¦ãã‚‹ãŸã‚
+// @	ã“ã“ã§ã¯å‡¦ç†ã›ãšã€å‘¼ã³å‡ºã—å…ƒã«å§”ã­ã‚‹ã€‚
+// @ *_ArrayObjectImpl ã§ vector ã®åˆ†ã®æ·»å­—(1ã¤ç›®)ã‚’å‡¦ç†ã—ã€
+// @	ãã®å¾Œã®å†…éƒ¨å¤‰æ•°ã®æ·»å­—ã¯ã€å‘¼ã³å‡ºã—å…ƒã® *_ArrayObject, *_ArrayObjectRead ã«ä»»ã›ã‚‹ã€‚
 //------------------------------------------------
-// vector ©g‚Ö‚Ì“Yš‚ğó‚¯æ‚é
+// vector è‡ªèº«ã¸ã®æ·»å­—ã‚’å—ã‘å–ã‚‹
 static int code_vectorIndex(vector_t const& self)
 {
 	int const idx = code_getdi(-1);
@@ -265,14 +265,14 @@ static int code_vectorIndex(vector_t const& self)
 	}
 }
 
-// “à•”•Ï”‚ğæ“¾
-// getVar ŠÖ”‚ª“à•”•Ï”‚Ì“Yšó‘Ô‚Í array->cnt ‚É‚æ‚éB
+// å†…éƒ¨å¤‰æ•°ã‚’å–å¾—
+// getVar é–¢æ•°ãŒå†…éƒ¨å¤‰æ•°ã®æ·»å­—çŠ¶æ…‹ã¯ array->cnt ã«ã‚ˆã‚‹ã€‚
 template<bool bAsLhs>
 static PVal* HspVarVector_ArrayObjectImplInner(vector_t const& self, size_t idx)
 {
 	if ( self->size() <= idx ) {
 		if ( bAsLhs ) {
-			// ©“®Šg’£
+			// è‡ªå‹•æ‹¡å¼µ
 			self->resize(idx + 1);
 		} else {
 			puterror(HSPERR_ARRAY_OVERFLOW);
@@ -281,7 +281,7 @@ static PVal* HspVarVector_ArrayObjectImplInner(vector_t const& self, size_t idx)
 	return self->at(idx).getVar();
 }
 
-// vector ‚Ì“Yš‚ğˆ—‚µA‚»‚Ì“à•”•Ï”‚© nullptr(vector©‘Ì‚ªQÆ‚³‚ê‚é) ‚ğ•Ô‹p‚·‚é
+// vector ã®æ·»å­—ã‚’å‡¦ç†ã—ã€ãã®å†…éƒ¨å¤‰æ•°ã‹ nullptr(vectorè‡ªä½“ãŒå‚ç…§ã•ã‚Œã‚‹) ã‚’è¿”å´ã™ã‚‹
 template<bool bAsLhs>
 static PVal* HspVarVector_ArrayObjectImpl( PVal* pval )
 {
@@ -290,7 +290,7 @@ static PVal* HspVarVector_ArrayObjectImpl( PVal* pval )
 	HspVarCoreReset( pval );
 	int const idx = code_vectorIndex( vec );
 	if ( idx < 0 ) {
-		return nullptr;			// vector ©‘Ì‚Ö‚Ìƒ|ƒCƒ“ƒ^
+		return nullptr;			// vector è‡ªä½“ã¸ã®ãƒã‚¤ãƒ³ã‚¿
 
 	} else {
 		pval->offset   = idx;
@@ -300,7 +300,7 @@ static PVal* HspVarVector_ArrayObjectImpl( PVal* pval )
 }
 
 //------------------------------------------------
-// ˜A‘z”z—ñ::QÆ (¶)
+// é€£æƒ³é…åˆ—::å‚ç…§ (å·¦)
 //------------------------------------------------
 void HspVarVector_ArrayObject( PVal* pval )
 {
@@ -316,9 +316,9 @@ void HspVarVector_ArrayObject( PVal* pval )
 }
 
 //------------------------------------------------
-// ˜A‘z”z—ñ::QÆ (‰E)
+// é€£æƒ³é…åˆ—::å‚ç…§ (å³)
 //------------------------------------------------
-// “à•”•Ï”‚Ì“Yš‚Ìˆ—
+// å†…éƒ¨å¤‰æ•°ã®æ·»å­—ã®å‡¦ç†
 static PDAT* HspVarVector_ArrayObjectReadImpl( PVal* pvInner, int* mptype )
 {
 	if ( code_isNextArg() ) {
@@ -339,7 +339,7 @@ PDAT* HspVarVector_ArrayObjectRead( PVal* pval, int* mptype )
 	if ( pvInner ) {
 		return HspVarVector_ArrayObjectReadImpl(pvInner, mptype);
 
-	// vector ©‘Ì‚ÌQÆ
+	// vector è‡ªä½“ã®å‚ç…§
 	} else {
 		*mptype = g_vtVector;
 		return pval->pt;
@@ -347,15 +347,15 @@ PDAT* HspVarVector_ArrayObjectRead( PVal* pval, int* mptype )
 }
 
 //------------------------------------------------
-// ˜A‘z”z—ñ::QÆ (‰E; from ŠÖ”)
+// é€£æƒ³é…åˆ—::å‚ç…§ (å³; from é–¢æ•°)
 //------------------------------------------------
 PDAT* Vector_indexRhs( vector_t self, int* mptype )
 {
 	int const idx = code_vectorIndex( self );
 	if ( idx < 0 ) {
 		*mptype = g_vtVector;
-		// vector ©‘Ì‚ÌQÆ‚Ì‚Æ‚«‚Í nullptr ‚ğ•Ô‚·B
-		// pSelf ‚Í‚à‚µ‚©‚µ‚½‚ç (C++‚Ì) ƒ[ƒJƒ‹•Ï”‚ğw‚µ‚Ä‚¢‚é‚©‚à‚µ‚ê‚È‚¢‚Ì‚Å’ˆÓ‚ğ‘£‚µ‚½‚¢B
+		// vector è‡ªä½“ã®å‚ç…§ã®ã¨ãã¯ nullptr ã‚’è¿”ã™ã€‚
+		// pSelf ã¯ã‚‚ã—ã‹ã—ãŸã‚‰ (C++ã®) ãƒ­ãƒ¼ã‚«ãƒ«å¤‰æ•°ã‚’æŒ‡ã—ã¦ã„ã‚‹ã‹ã‚‚ã—ã‚Œãªã„ã®ã§æ³¨æ„ã‚’ä¿ƒã—ãŸã„ã€‚
 		return nullptr;
 
 	} else {
@@ -365,7 +365,7 @@ PDAT* Vector_indexRhs( vector_t self, int* mptype )
 }
 
 //------------------------------------------------
-// ˜A‘z”z—ñ::Ši”[ˆ—
+// é€£æƒ³é…åˆ—::æ ¼ç´å‡¦ç†
 //------------------------------------------------
 static void HspVarVector_ObjectWrite( PVal* pval, PDAT const* data, int vflag )
 {
@@ -376,24 +376,24 @@ static void HspVarVector_ObjectWrite( PVal* pval, PDAT const* data, int vflag )
 	//	dbgout("ow pval=%p, data=%p, vflag=%d; len = %d, offset=%d", pval, data, vflag, self->size(), pval->offset);
 	}
 
-	// QÆ‚È‚µ (vector ©‘Ì‚Ö‚Ì‘ã“ü)
+	// å‚ç…§ãªã— (vector è‡ªä½“ã¸ã®ä»£å…¥)
 	if ( !pvInner ) {
-		if ( vflag != g_vtVector ) puterror( HSPERR_INVALID_ARRAYSTORE );	// ‰E•Ó‚ÌŒ^‚ª•sˆê’v
+		if ( vflag != g_vtVector ) puterror( HSPERR_INVALID_ARRAYSTORE );	// å³è¾ºã®å‹ãŒä¸ä¸€è‡´
 
 		HspVarVector_Set( pval, VtTraits::asPDAT<vtVector>(&VtTraits::getMaster<vtVector>(pval)), data );
 
-	// “à•”•Ï”‚ğQÆ‚µ‚Ä‚¢‚éê‡
+	// å†…éƒ¨å¤‰æ•°ã‚’å‚ç…§ã—ã¦ã„ã‚‹å ´åˆ
 	} else {
 	//	if ( code_isNextArg() && !(pvInner->support & HSPVAR_SUPPORT_ARRAYOBJ) && pvInner->flag != vflag ) {
-	//		puterror( HSPERR_INVALID_ARRAYSTORE );	// ˜A‘±‘ã“ü‚ÍŒ^•ÏŠ·•s‰Â
+	//		puterror( HSPERR_INVALID_ARRAYSTORE );	// é€£ç¶šä»£å…¥æ™‚ã¯å‹å¤‰æ›ä¸å¯
 	//	}
 
-		bool const bToVector = ( pvInner->arraycnt == 0 );		// (“à•”•Ï”‚É“Yš‚ª‚Â‚¢‚Ä‚¢‚È‚¢)
+		bool const bToVector = ( pvInner->arraycnt == 0 );		// (å†…éƒ¨å¤‰æ•°ã«æ·»å­—ãŒã¤ã„ã¦ã„ãªã„)
 		
-		// “à•”•Ï”‚Ö‚Ì‘ã“üˆ—‚ÖˆÚ“® (‚±‚±‚Å pvInner ‚Ì“Yšó‘Ô‚ª•Ï‰»)
+		// å†…éƒ¨å¤‰æ•°ã¸ã®ä»£å…¥å‡¦ç†ã¸ç§»å‹• (ã“ã“ã§ pvInner ã®æ·»å­—çŠ¶æ…‹ãŒå¤‰åŒ–)
 		PVal_assign( pvInner, data, vflag );
 
-		// ˜A‘±‘ã“ü
+		// é€£ç¶šä»£å…¥
 		if ( bToVector ) {
 			auto& vec = VtTraits::getMaster<vtVector>(pval);
 			while ( code_isNextArg() ) {
@@ -402,7 +402,7 @@ static void HspVarVector_ObjectWrite( PVal* pval, PDAT const* data, int vflag )
 				if ( chk == PARAM_DEFAULT ) continue;
 
 				++pval->offset;
-				// ©“®Šg’£
+				// è‡ªå‹•æ‹¡å¼µ
 				if ( static_cast<size_t>(pval->offset) >= vec->size() ) {
 					vec->resize(pval->offset + 1);
 				}
@@ -416,14 +416,14 @@ static void HspVarVector_ObjectWrite( PVal* pval, PDAT const* data, int vflag )
 }
 
 //------------------------------------------------
-// vector “o˜^ŠÖ”
+// vector ç™»éŒ²é–¢æ•°
 //------------------------------------------------
 void HspVarVector_Init(HspVarProc* p)
 {
 	g_pHvpVector = p;
 	g_vtVector = p->flag;
 
-	// ŠÖ”ƒ|ƒCƒ“ƒ^‚ğ“o˜^
+	// é–¢æ•°ãƒã‚¤ãƒ³ã‚¿ã‚’ç™»éŒ²
 	p->GetPtr       = HspVarVector_GetPtr;
 	p->GetSize      = HspVarTemplate_GetSize<vtVector>;
 	p->GetUsing     = HspVarVector_GetUsing;
@@ -436,42 +436,42 @@ void HspVarVector_Init(HspVarProc* p)
 	//	p->Cnv          = HspVarVector_Cnv;
 	//	p->CnvCustom    = HspVarVector_CnvCustom;
 
-	// ‰‰ZŠÖ”
+	// æ¼”ç®—é–¢æ•°
 	p->Set = HspVarVector_Set;
 	p->AddI = HspVarProcOperatorCast(HspVarVector_AddI);
 
 	HspVarTemplate_InitCmpI_Full< HspVarVector_CmpI >(p);
 
-	// ˜A‘z”z—ñ—p
-	p->ArrayObject     = HspVarVector_ArrayObject;		// QÆ(¶)
-	p->ArrayObjectRead = HspVarVector_ArrayObjectRead;	// QÆ(‰E)
-	p->ObjectWrite     = HspVarVector_ObjectWrite;		// Ši”[ˆ—
-	p->ObjectMethod    = HspVarVector_ObjectMethod;		// ƒƒ\ƒbƒhˆ—
+	// é€£æƒ³é…åˆ—ç”¨
+	p->ArrayObject     = HspVarVector_ArrayObject;		// å‚ç…§(å·¦)
+	p->ArrayObjectRead = HspVarVector_ArrayObjectRead;	// å‚ç…§(å³)
+	p->ObjectWrite     = HspVarVector_ObjectWrite;		// æ ¼ç´å‡¦ç†
+	p->ObjectMethod    = HspVarVector_ObjectMethod;		// ãƒ¡ã‚½ãƒƒãƒ‰å‡¦ç†
 
-	// Šg’£ƒf[ƒ^
+	// æ‹¡å¼µãƒ‡ãƒ¼ã‚¿
 	p->user = reinterpret_cast<char*>(HspVarVector_GetVectorList);
 
-	// ‚»‚Ì‘¼İ’è
-	p->vartype_name = "vector_k";		// ƒ^ƒCƒv–¼
-	p->version = 0x001;			// Œ^type runtime ver(0x100 = 1.0)
+	// ãã®ä»–è¨­å®š
+	p->vartype_name = "vector_k";		// ã‚¿ã‚¤ãƒ—å
+	p->version = 0x001;			// å‹type runtime ver(0x100 = 1.0)
 
-	p->support							// ƒTƒ|[ƒgó‹µƒtƒ‰ƒO(HSPVAR_SUPPORT_*)
-		= HSPVAR_SUPPORT_STORAGE		// ŒÅ’è’·ƒXƒgƒŒ[ƒW
-		| HSPVAR_SUPPORT_FLEXARRAY		// ‰Â•Ï’·”z—ñ
-		| HSPVAR_SUPPORT_ARRAYOBJ		// ˜A‘z”z—ñƒTƒ|[ƒg
-		| HSPVAR_SUPPORT_NOCONVERT		// ObjectWrite‚ÅŠi”[
-		| HSPVAR_SUPPORT_VARUSE			// varuseŠÖ”‚ğ“K—p
+	p->support							// ã‚µãƒãƒ¼ãƒˆçŠ¶æ³ãƒ•ãƒ©ã‚°(HSPVAR_SUPPORT_*)
+		= HSPVAR_SUPPORT_STORAGE		// å›ºå®šé•·ã‚¹ãƒˆãƒ¬ãƒ¼ã‚¸
+		| HSPVAR_SUPPORT_FLEXARRAY		// å¯å¤‰é•·é…åˆ—
+		| HSPVAR_SUPPORT_ARRAYOBJ		// é€£æƒ³é…åˆ—ã‚µãƒãƒ¼ãƒˆ
+		| HSPVAR_SUPPORT_NOCONVERT		// ObjectWriteã§æ ¼ç´
+		| HSPVAR_SUPPORT_VARUSE			// varuseé–¢æ•°ã‚’é©ç”¨
 		;
-	p->basesize = VtTraits::basesize<vtVector>::value;	// size / —v‘f (byte)
+	p->basesize = VtTraits::basesize<vtVector>::value;	// size / è¦ç´  (byte)
 	return;
 }
 
 //------------------------------------------------
-// knowbug ‚É“à•”•Ï”—ñ‚ğ“n‚·
+// knowbug ã«å†…éƒ¨å¤‰æ•°åˆ—ã‚’æ¸¡ã™
 // 
-// @ ƒŠƒXƒg‚ğíœ‚µ‚Ä‚Í‚¢‚¯‚È‚¢B
-// @ Œã•ûŒİŠ·«‚Ì‚½‚ß‚Éc‚·B
-// @ “à•”ƒŠ[ƒN‚·‚é‚ª‹C‚É‚µ‚È‚¢B
+// @ ãƒªã‚¹ãƒˆã‚’å‰Šé™¤ã—ã¦ã¯ã„ã‘ãªã„ã€‚
+// @ å¾Œæ–¹äº’æ›æ€§ã®ãŸã‚ã«æ®‹ã™ã€‚
+// @ å†…éƒ¨ãƒªãƒ¼ã‚¯ã™ã‚‹ãŒæ°—ã«ã—ãªã„ã€‚
 //------------------------------------------------
 // [[deprecated]]
 static PVal** HspVarVector_GetVectorList( PDAT const* _src, int* pSize )
@@ -496,7 +496,7 @@ static PVal** HspVarVector_GetVectorList( PDAT const* _src, int* pSize )
 }
 
 //------------------------------------------------
-// knowbug ‚ÌŠg’£•\¦‚É‘Î‰‚·‚é
+// knowbug ã®æ‹¡å¼µè¡¨ç¤ºã«å¯¾å¿œã™ã‚‹
 //------------------------------------------------
 #include "knowbug/knowbugForHPI.h"
 
@@ -504,7 +504,7 @@ EXPORT void WINAPI knowbugVsw_addVarVector(vswriter_t _w, char const* name, PVal
 {
 	auto const kvswm = knowbug_getVswMethods();
 
-	// •K‚¸’P‘Ìˆµ‚¢‚·‚é
+	// å¿…ãšå˜ä½“æ‰±ã„ã™ã‚‹
 	kvswm->addVarScalar(_w, name, pval, 0);
 	return;
 }

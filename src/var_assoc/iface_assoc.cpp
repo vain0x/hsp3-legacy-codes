@@ -1,4 +1,4 @@
-/*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+ï»¿/*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
  |
  *		hsp plugin interface (assoc)
  |
@@ -23,23 +23,23 @@ static int   ProcFuncCmd( int cmd, PDAT** ppResult );
 static int ProcSysvarCmd( int cmd, PDAT** ppResult );
 
 //------------------------------------------------
-// HPI“o˜^ŠÖ”
+// HPIç™»éŒ²é–¢æ•°
 //------------------------------------------------
 EXPORT void WINAPI hpi_assoc( HSP3TYPEINFO* info )
 {
-	hsp3sdk_init( info );			// SDK‚Ì‰Šú‰»(Å‰‚És‚È‚Á‚Ä‰º‚³‚¢)
+	hsp3sdk_init( info );			// SDKã®åˆæœŸåŒ–(æœ€åˆã«è¡Œãªã£ã¦ä¸‹ã•ã„)
 
 	info->cmdfunc  = hpimod::cmdfunc<ProcSttmCmd>;
 	info->reffunc  = hpimod::reffunc<ProcFuncCmd, ProcSysvarCmd>;
 	info->termfunc = termfunc;
 
-	// V‹KŒ^‚ğ’Ç‰Á
+	// æ–°è¦å‹ã‚’è¿½åŠ 
 	registvar(-1, HspVarAssoc_Init);
 	return;
 }
 
 //------------------------------------------------
-// I—¹
+// çµ‚äº†æ™‚
 //------------------------------------------------
 static int termfunc(int option)
 {
@@ -49,7 +49,7 @@ static int termfunc(int option)
 }
 
 //------------------------------------------------
-// –½—ß
+// å‘½ä»¤
 //------------------------------------------------
 static int ProcSttmCmd( int cmd )
 {
@@ -75,7 +75,7 @@ static int ProcSttmCmd( int cmd )
 }
 
 //------------------------------------------------
-// ŠÖ”
+// é–¢æ•°
 //------------------------------------------------
 static int ProcFuncCmd( int cmd, PDAT** ppResult )
 {
@@ -85,7 +85,7 @@ static int ProcFuncCmd( int cmd, PDAT** ppResult )
 
 		case 0x021:
 			AssocClone();
-			return SetReffuncResult( ppResult, 0 );		// “Yš 0 ‚ğ•Ô‚·
+			return SetReffuncResult( ppResult, 0 );		// æ·»å­— 0 ã‚’è¿”ã™
 
 		case 0x100:	return AssocVarinfo(ppResult);
 		case 0x101: return AssocSize(ppResult);
@@ -103,7 +103,7 @@ static int ProcFuncCmd( int cmd, PDAT** ppResult )
 }
 
 //------------------------------------------------
-// ƒVƒXƒeƒ€•Ï”
+// ã‚·ã‚¹ãƒ†ãƒ å¤‰æ•°
 //------------------------------------------------
 static int ProcSysvarCmd( int cmd, PDAT** ppResult )
 {

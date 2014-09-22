@@ -1,4 +1,4 @@
-// ƒ‰ƒxƒ‹ŠÖ”
+ï»¿// ãƒ©ãƒ™ãƒ«é–¢æ•°
 
 #ifndef IG_CLASS_LABEL_FUNC_H
 #define IG_CLASS_LABEL_FUNC_H
@@ -7,7 +7,6 @@
 
 #include "axcmd.h"
 #include "IFunctor.h"
-#include "CCaller.h"
 #include "CPrmStk.h"
 #include "Invoker.h"
 
@@ -23,16 +22,16 @@ class CLabelFunc
 public:
 	CLabelFunc(label_t lb) : lb_ { lb } {}
 
-	// Žæ“¾
+	// å–å¾—
 	label_t getLabel() const override { return lb_; }
 	int getAxCmd() const override { return AxCmd::make(TYPE_LABEL, hpimod::getOTPtr(lb_)); }
 
-	int getUsing() const override { return HspBool(lb_ != nullptr); }			// Žg—pó‹µ (0: –³Œø, 1: —LŒø, 2: ƒNƒ[ƒ“)
+	int getUsing() const override { return HspBool(lb_ != nullptr); }			// ä½¿ç”¨çŠ¶æ³ (0: ç„¡åŠ¹, 1: æœ‰åŠ¹, 2: ã‚¯ãƒ­ãƒ¼ãƒ³)
 	CPrmInfo const& getPrmInfo() const override {
 		return GetPrmInfo(lb_);
 	}
 
-	// “®ì
+	// å‹•ä½œ
 	void invoke(Invoker& inv) override
 	{
 		auto const prmstk_bak = ctx->prmstack;
@@ -41,7 +40,7 @@ public:
 
 		code_call(getLabel());
 
-		// return ‚©‚ç•Ô’l‚ðŽó‚¯Žæ‚é (‚â‚â•–‚pH)
+		// return ã‹ã‚‰è¿”å€¤ã‚’å—ã‘å–ã‚‹ (ã‚„ã‚„é»’é­”è¡“ï¼Ÿ)
 		if ( ctx->retval_level == (ctx->sublev + 1) ) {
 			inv.setResult(*exinfo->mpval);
 			ctx->retval_level = 0;

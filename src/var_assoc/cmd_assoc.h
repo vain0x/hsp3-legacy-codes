@@ -1,4 +1,4 @@
-// assoc - Command header
+ï»¿// assoc - Command header
 
 #ifndef IG_ASSOC_COMMAND_H
 #define IG_ASSOC_COMMAND_H
@@ -9,21 +9,21 @@ extern void AssocTerm();
 
 extern int SetReffuncResult( PDAT** ppResult, CAssoc* const& pAssoc );
 
-// –½—ß
-extern void AssocNew();		// \’z
-extern void AssocDelete();	// ”jŠü
-extern void AssocClear();	// Á‹
-extern void AssocChain();	// ˜AŒ‹
-extern void AssocCopy();	// •¡Ê
+// å‘½ä»¤
+extern void AssocNew();		// æ§‹ç¯‰
+extern void AssocDelete();	// ç ´æ£„
+extern void AssocClear();	// æ¶ˆå»
+extern void AssocChain();	// é€£çµ
+extern void AssocCopy();	// è¤‡å†™
 
-extern void AssocImport();	// ŠO•”•Ï”‚ÌƒCƒ“ƒ|[ƒg
-extern void AssocInsert();	// ƒL[‚ğ‘}“ü‚·‚é
-extern void AssocRemove();	// ƒL[‚ğœ‹‚·‚é
+extern void AssocImport();	// å¤–éƒ¨å¤‰æ•°ã®ã‚¤ãƒ³ãƒãƒ¼ãƒˆ
+extern void AssocInsert();	// ã‚­ãƒ¼ã‚’æŒ¿å…¥ã™ã‚‹
+extern void AssocRemove();	// ã‚­ãƒ¼ã‚’é™¤å»ã™ã‚‹
 
-extern void AssocDim();		// “à•”•Ï”‚ğ”z—ñ‚É‚·‚é
-extern void AssocClone();	// “à•”•Ï”‚ÌƒNƒ[ƒ“‚ğì‚é
+extern void AssocDim();		// å†…éƒ¨å¤‰æ•°ã‚’é…åˆ—ã«ã™ã‚‹
+extern void AssocClone();	// å†…éƒ¨å¤‰æ•°ã®ã‚¯ãƒ­ãƒ¼ãƒ³ã‚’ä½œã‚‹
 
-// ŠÖ”
+// é–¢æ•°
 extern int AssocNewTemp(PDAT** ppResult);
 extern int AssocNewTempDup(PDAT** ppResult);
 
@@ -33,12 +33,12 @@ extern int AssocExists(PDAT** ppResult);
 extern int AssocIsNull(PDAT** ppResult);
 extern int AssocForeachNext(PDAT** ppResult);
 
-extern int AssocResult( PDAT** ppResult );	// assoc •Ô‹p
-extern int AssocExpr( PDAT** ppResult );	// assoc ®
+extern int AssocResult( PDAT** ppResult );	// assoc è¿”å´
+extern int AssocExpr( PDAT** ppResult );	// assoc å¼
 
-// ƒVƒXƒeƒ€•Ï”
+// ã‚·ã‚¹ãƒ†ãƒ å¤‰æ•°
 
-// ’è”
+// å®šæ•°
 enum VARINFO {
 	VARINFO_NONE = 0,
 	VARINFO_FLAG = VARINFO_NONE,

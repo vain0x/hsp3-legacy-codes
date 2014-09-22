@@ -1,4 +1,4 @@
-// Call(ModCls) - FlexValue
+ï»¿// Call(ModCls) - FlexValue
 #if 0
 #include "hsp3plugin_custom.h"
 #include "mod_makePVal.h"
@@ -10,9 +10,9 @@
 #include "modcls_FlexValue.h"
 #include "vt_structWrap.h"
 
-static int const FLEXVAL_TYPE_ALLOC_EX = 9;		// FLEXVAL_TYPE_ALLOC ‚Æ‚ÍˆÙ‚È‚é’l
+static int const FLEXVAL_TYPE_ALLOC_EX = 9;		// FLEXVAL_TYPE_ALLOC ã¨ã¯ç•°ãªã‚‹å€¤
 
-// “Áê‚Èƒƒ“ƒo‚Ö‚ÌQÆ (self.ptr ‚Ì––”ö)
+// ç‰¹æ®Šãªãƒ¡ãƒ³ãƒã¸ã®å‚ç…§ (self.ptr ã®æœ«å°¾)
 static int& FlexValueEx_Counter( FlexValue const& self );
 static int& FlexValueEx_TmpFlag( FlexValue const& self );
 
@@ -22,13 +22,13 @@ void FlexValue_Dbgout( FlexValue& self )
 }
 
 //------------------------------------------------
-// FlexValue \’z
+// FlexValue æ§‹ç¯‰
 // 
-// @ ƒR[ƒh‚©‚ç ctor ‚Ìˆø”‚ªæ‚èo‚¹‚éó‘ÔB
-// @ ctor ‚Ìˆø”‚Í thismod ‚Ì PVal ‚ğQÆ“n‚µ‚µ‚½•û‚ªŒø—¦‚ª‚æ‚¢‚Ì‚ÅA
-// @	Šï–­‚Å‚Í‚ ‚é‚ª thismod ‚Ì pval, aptr ‚ğ‚à‚ç‚Á‚Ä‚¨‚­B
-// @	‚à‚ç‚¦‚È‚©‚Á‚½ê‡‚Í•’Ê‚É’l“n‚µ‚·‚éB
-// @ ƒRƒ“ƒXƒgƒ‰ƒNƒ^‚Ì•Ô’l‚Í–³‹‚·‚éB
+// @ ã‚³ãƒ¼ãƒ‰ã‹ã‚‰ ctor ã®å¼•æ•°ãŒå–ã‚Šå‡ºã›ã‚‹çŠ¶æ…‹ã€‚
+// @ ctor ã®å¼•æ•°ã¯ thismod ã® PVal ã‚’å‚ç…§æ¸¡ã—ã—ãŸæ–¹ãŒåŠ¹ç‡ãŒã‚ˆã„ã®ã§ã€
+// @	å¥‡å¦™ã§ã¯ã‚ã‚‹ãŒ thismod ã® pval, aptr ã‚’ã‚‚ã‚‰ã£ã¦ãŠãã€‚
+// @	ã‚‚ã‚‰ãˆãªã‹ã£ãŸå ´åˆã¯æ™®é€šã«å€¤æ¸¡ã—ã™ã‚‹ã€‚
+// @ ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ã®è¿”å€¤ã¯ç„¡è¦–ã™ã‚‹ã€‚
 //------------------------------------------------
 void FlexValue_Ctor( FlexValue& self, stdat_t modcls )
 {
@@ -41,7 +41,7 @@ void FlexValue_Ctor( FlexValue& self, stdat_t modcls, PVal* pval, APTR aptr )
 
 	FlexValue_CtorWoCtorCalling( self, modcls );
 
-	// ctor Às
+	// ctor å®Ÿè¡Œ
 	if ( pStPrm->offset != -1 ) {
 		CCaller caller;
 		caller.setFunctor( AxCmd::make(TYPE_MODCMD, pStPrm->offset) );	// (#modinit)
@@ -62,9 +62,9 @@ void FlexValue_CtorWoCtorCalling( FlexValue& self, stdat_t modcls )
 	stprm_t const pStPrm = STRUCTDAT_getStPrm(modcls);
 	if ( pStPrm->mptype != MPTYPE_STRUCTTAG ) puterror( HSPERR_STRUCT_REQUIRED );
 
-	// V—v‘f‰Šú‰»
+	// æ–°è¦ç´ åˆæœŸåŒ–
 	{
-		// QÆƒJƒEƒ“ƒ^Aƒeƒ“ƒ|ƒ‰ƒŠƒtƒ‰ƒO‚Ì•ª‚¾‚¯‘å‚«‚­Šm•Û‚·‚é
+		// å‚ç…§ã‚«ã‚¦ãƒ³ã‚¿ã€ãƒ†ãƒ³ãƒãƒ©ãƒªãƒ•ãƒ©ã‚°ã®åˆ†ã ã‘å¤§ããç¢ºä¿ã™ã‚‹
 		size_t const size = modcls->size + sizeof(int) * 2;	
 
 		self.type      = FLEXVAL_TYPE_ALLOC_EX;
@@ -78,7 +78,7 @@ void FlexValue_CtorWoCtorCalling( FlexValue& self, stdat_t modcls )
 		FlexValueEx_Counter( self ) = 1;
 	}
 
-	// ƒƒ“ƒo•Ï”‚Ì‰Šú‰»
+	// ãƒ¡ãƒ³ãƒå¤‰æ•°ã®åˆæœŸåŒ–
 	for ( int i = 0; i < modcls->prmmax; ++ i ) {
 		void* const out = Prmstack_getMemberPtr(self.ptr, &pStPrm[i]);
 		switch ( pStPrm[i].mptype ) {
@@ -94,30 +94,30 @@ void FlexValue_CtorWoCtorCalling( FlexValue& self, stdat_t modcls )
 }
 
 //------------------------------------------------
-// FlexValue ‰ğ‘Ì
+// FlexValue è§£ä½“
 // 
 // @ code_delstruct
-// @ ƒfƒXƒgƒ‰ƒNƒ^‚Ì•Ô’l‚Í–³‹‚·‚éB
-// @ ƒfƒXƒgƒ‰ƒNƒ^‚ğŒÄ‚Ôê‡A‚»‚Ì‘OŒã‚Å mpval ‚ª•Ï‰»‚µ‚È‚¢‚æ‚¤‚É
-// @	mpval ‚Ìƒ|ƒCƒ“ƒ^‚Æ‚»‚Ì’l‚ğ•Û‘¶‚·‚éB
+// @ ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ã®è¿”å€¤ã¯ç„¡è¦–ã™ã‚‹ã€‚
+// @ ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ã‚’å‘¼ã¶å ´åˆã€ãã®å‰å¾Œã§ mpval ãŒå¤‰åŒ–ã—ãªã„ã‚ˆã†ã«
+// @	mpval ã®ãƒã‚¤ãƒ³ã‚¿ã¨ãã®å€¤ã‚’ä¿å­˜ã™ã‚‹ã€‚
 //------------------------------------------------
 void FlexValue_Dtor( FlexValue& self )
 {
 	if ( !FlexValueEx_Valid(self) ) return;
 
-	DbgArea { if ( FlexValueEx_Counter(self) != 0 ) dbgout("QÆƒJƒEƒ“ƒ^‚ª 0 ‚Å‚È‚¢‚Ì‚É Dtor ‚ªŒÄ‚Î‚ê‚½B"); }
+	DbgArea { if ( FlexValueEx_Counter(self) != 0 ) dbgout("å‚ç…§ã‚«ã‚¦ãƒ³ã‚¿ãŒ 0 ã§ãªã„ã®ã« Dtor ãŒå‘¼ã°ã‚ŒãŸã€‚"); }
 
-	// ƒfƒXƒgƒ‰ƒNƒ^‚ªŒÄ‚Ñ’¼‚³‚ê‚È‚¢‚æ‚¤‚ÉAQÆƒJƒEƒ“ƒ^‚ğ‘‚«Š·‚¦‚Ä‚¨‚­B
+	// ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ãŒå‘¼ã³ç›´ã•ã‚Œãªã„ã‚ˆã†ã«ã€å‚ç…§ã‚«ã‚¦ãƒ³ã‚¿ã‚’æ›¸ãæ›ãˆã¦ãŠãã€‚
 	FlexValueEx_Counter(self) = FLEXVAL_COUNTER_DTORING;
 
 	stdat_t const modcls = FlexValue_ModCls(self);
 
-	// dtor Às
+	// dtor å®Ÿè¡Œ
 	if ( modcls->otindex != 0 ) {
-		// mpval ‚Ì’l‚ğ•Û‘¶‚µ‚Ä‚¨‚­
+		// mpval ã®å€¤ã‚’ä¿å­˜ã—ã¦ãŠã
 		PVal* const mpval_bak = mpval;
 
-		// thismod —p‚Ì•Ï”
+		// thismod ç”¨ã®å¤‰æ•°
 		PVal _pvTmp { };
 		PVal* const pvTmp = &_pvTmp;
 			pvTmp->flag   = HSPVAR_FLAG_STRUCT;
@@ -128,16 +128,16 @@ void FlexValue_Dtor( FlexValue& self )
 		CCaller caller;
 		caller.setFunctor(AxCmd::make(TYPE_MODCMD, modcls->otindex));			// (#modterm)
 		caller.addArgByRef( pvTmp );
-		caller.addArgByVal( mpval->pt, mpval->flag );	// •Û‘¶‚·‚é‚½‚ß‚Éˆø”‚É“ü‚ê‚Ä‚¨‚­ (‚±‚Ì‚½‚ß‚ÉAƒfƒXƒgƒ‰ƒNƒ^‚Í‰Â•Ï’·ˆø”ˆµ‚¢‚É‚µ‚Ä‚ ‚é)
+		caller.addArgByVal( mpval->pt, mpval->flag );	// ä¿å­˜ã™ã‚‹ãŸã‚ã«å¼•æ•°ã«å…¥ã‚Œã¦ãŠã (ã“ã®ãŸã‚ã«ã€ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ã¯å¯å¤‰é•·å¼•æ•°æ‰±ã„ã«ã—ã¦ã‚ã‚‹)
 		caller.call();
 
-		mpval = mpval_bak;		// mpval ‚ğ restore
+		mpval = mpval_bak;		// mpval ã‚’ restore
 
 		PVal* const pvArg1 = caller.getCall().getArgPVal(1);
 		PVal_assign(mpval, pvArg1->pt, pvArg1->flag);
 	}
 
-	// member ‰ğ•ú
+	// member è§£æ”¾
 	{
 		void* const members = self.ptr;
 
@@ -163,7 +163,7 @@ void FlexValue_Dtor( FlexValue& self )
 }
 
 //------------------------------------------------
-// FlexValue •¡Ê
+// FlexValue è¤‡å†™
 //------------------------------------------------
 void FlexValue_Copy( FlexValue& dst, FlexValue const& src )
 {
@@ -176,7 +176,7 @@ void FlexValue_Copy( FlexValue& dst, FlexValue const& src )
 }
 
 //------------------------------------------------
-// FlexValue ˆÚ“®
+// FlexValue ç§»å‹•
 //------------------------------------------------
 void FlexValue_Move( FlexValue& dst, FlexValue& src )
 {
@@ -187,7 +187,7 @@ void FlexValue_Move( FlexValue& dst, FlexValue& src )
 }
 
 //------------------------------------------------
-// FlexValue QÆƒJƒEƒ“ƒ^‘Œ¸
+// FlexValue å‚ç…§ã‚«ã‚¦ãƒ³ã‚¿å¢—æ¸›
 //------------------------------------------------
 void FlexValue_AddRef( FlexValue const& self )
 {
@@ -210,7 +210,7 @@ void FlexValue_Release( FlexValue const& self )
 	dbgout("%08X release(--); %d -> %d", (int)self.ptr, cnt, cnt - 1);
 	
 	if ( cnt != FLEXVAL_COUNTER_DTORING ) {
-		if ( (--cnt) == 0 ) {		// (cnt < 0) => dtor ŒÄ‚Î‚È‚¢
+		if ( (--cnt) == 0 ) {		// (cnt < 0) => dtor å‘¼ã°ãªã„
 			FlexValue_Dtor(const_cast<FlexValue&>(self));
 		}
 	}
@@ -225,9 +225,9 @@ void FlexValue_DelRef( FlexValue& self )
 }
 
 //------------------------------------------------
-// FlexValue 0 ƒNƒŠƒA
+// FlexValue 0 ã‚¯ãƒªã‚¢
 // 
-// @ QÆƒJƒEƒ“ƒ^‚ğ–³‹‚·‚é‚Ì‚ÅŠëŒ¯B
+// @ å‚ç…§ã‚«ã‚¦ãƒ³ã‚¿ã‚’ç„¡è¦–ã™ã‚‹ã®ã§å±é™ºã€‚
 //------------------------------------------------
 void FlexValue_NullClear( FlexValue& self )
 {
@@ -235,14 +235,14 @@ void FlexValue_NullClear( FlexValue& self )
 }
 
 //------------------------------------------------
-// FlexValue ƒƒ“ƒoæ“¾
+// FlexValue ãƒ¡ãƒ³ãƒå–å¾—
 //------------------------------------------------
 bool FlexValue_IsNull( FlexValue const& self )
 {
 	return ( self.ptr == nullptr );
 }
 
-// ModCls ‚ª¶¬‚µ‚½ nullmod ‚Å‚È‚¢ FlexValue ‚Å‚ ‚é‚©
+// ModCls ãŒç”Ÿæˆã—ãŸ nullmod ã§ãªã„ FlexValue ã§ã‚ã‚‹ã‹
 bool FlexValueEx_Valid( FlexValue const& self )
 {
 	return (self.type == FLEXVAL_TYPE_ALLOC_EX);
@@ -263,8 +263,8 @@ char const* FlexValue_ClsName( FlexValue const& self )
 	return ModCls::Name( FlexValue_ModCls( self ) );
 }
 
-// Šg’£ƒƒ“ƒo (‚Ç‚¿‚ç‚à mutable ˆµ‚¢)
-int& FlexValueEx_Counter( FlexValue const& self )	// QÆƒJƒEƒ“ƒ^‚Ö‚Ìƒ|ƒCƒ“ƒ^ (ƒoƒbƒtƒ@––”ö)
+// æ‹¡å¼µãƒ¡ãƒ³ãƒ (ã©ã¡ã‚‰ã‚‚ mutable æ‰±ã„)
+int& FlexValueEx_Counter( FlexValue const& self )	// å‚ç…§ã‚«ã‚¦ãƒ³ã‚¿ã¸ã®ãƒã‚¤ãƒ³ã‚¿ (ãƒãƒƒãƒ•ã‚¡æœ«å°¾)
 {
 	return *reinterpret_cast<int*>( &static_cast<char*>(self.ptr)[self.size - sizeof(int) * 1] );
 }
@@ -276,11 +276,11 @@ int& FlexValueEx_TmpFlag( FlexValue const& self )
 }
 
 //------------------------------------------------
-// modinst Œ^‚Ì’l‚ğæ‚èo‚·
+// modinst å‹ã®å€¤ã‚’å–ã‚Šå‡ºã™
 // 
-// @ code_gets ‚È‚Ç‚Æ“¯—l‚ÉAŸ‚ÌŒÄ‚Ño‚µ‚É
-// @	ƒ|ƒCƒ“ƒ^‚Ìæ‚Ì’l‚ª•Ï‚í‚é‚Ì‚Å’ˆÓB
-// @ nullptr ‚Í•Ô‹p‚µ‚È‚¢B
+// @ code_gets ãªã©ã¨åŒæ§˜ã«ã€æ¬¡ã®å‘¼ã³å‡ºã—æ™‚ã«
+// @	ãƒã‚¤ãƒ³ã‚¿ã®å…ˆã®å€¤ãŒå¤‰ã‚ã‚‹ã®ã§æ³¨æ„ã€‚
+// @ nullptr ã¯è¿”å´ã—ãªã„ã€‚
 //------------------------------------------------
 FlexValue* code_get_modinst_impl( FlexValue* def, bool const bDefault )
 {
@@ -304,10 +304,10 @@ FlexValue* code_get_modinst( FlexValue* def )
 }
 
 //------------------------------------------------
-// ˆêƒIƒuƒWƒFƒNƒg‚ÌƒƒbƒN
+// ä¸€æ™‚ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ãƒ­ãƒƒã‚¯
 // 
-// @ mpval ‚¾‚¯‚ªŠ—L‚·‚é‚æ‚¤‚ÈƒCƒ“ƒXƒ^ƒ“ƒX‚Í
-// @	®‚ÌÀs’†‚É€–S‚µ‚¤‚é‚Ì‚ÅAƒƒbƒN‚·‚éB
+// @ mpval ã ã‘ãŒæ‰€æœ‰ã™ã‚‹ã‚ˆã†ãªã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã¯
+// @	å¼ã®å®Ÿè¡Œä¸­ã«æ­»äº¡ã—ã†ã‚‹ã®ã§ã€ãƒ­ãƒƒã‚¯ã™ã‚‹ã€‚
 //------------------------------------------------
 /*
 #include <deque>
@@ -330,12 +330,12 @@ void FlexValue_LockRelease()
 //*/
 
 //------------------------------------------------
-// ˆêƒIƒuƒWƒFƒNƒg‚Ìƒtƒ‰ƒO
+// ä¸€æ™‚ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ãƒ•ãƒ©ã‚°
 // 
-// @ HSP ‚ÌŒvZƒXƒ^ƒbƒN‚ÉA•Ï”‚Å‚Í‚È‚­ FlexValue (‰E•Ó’l)©‘Ì‚ªÏ‚Ü‚ê‚éê‡A
-// @	‚»‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ªƒXƒ^ƒbƒN‚ÉŠ—L‚³‚ê‚Ä‚¢‚é‚Æl‚¦‚ÄAQÆƒJƒEƒ“ƒ^‚ğ‘‚â‚·B
-// @	‚³‚ç‚ÉATmp ƒtƒ‰ƒO‚ğ—§‚Ä‚Ä‚¨‚­‚±‚Æ‚ÅAƒXƒ^ƒbƒN‚©‚ç~‚ë‚³‚ê‚é‚Æ‚«‚ÉA
-// @	‚»‚ê‚ªƒXƒ^ƒbƒN‚ÉŠ—L‚³‚ê‚Ä‚¢‚½‚©”Û‚©‚ª”»’f‚Å‚«AˆÀ‘S‚É”jŠü‚Å‚«‚éB
+// @ HSP ã®è¨ˆç®—ã‚¹ã‚¿ãƒƒã‚¯ã«ã€å¤‰æ•°ã§ã¯ãªã FlexValue (å³è¾ºå€¤)è‡ªä½“ãŒç©ã¾ã‚Œã‚‹å ´åˆã€
+// @	ãã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ãŒã‚¹ã‚¿ãƒƒã‚¯ã«æ‰€æœ‰ã•ã‚Œã¦ã„ã‚‹ã¨è€ƒãˆã¦ã€å‚ç…§ã‚«ã‚¦ãƒ³ã‚¿ã‚’å¢—ã‚„ã™ã€‚
+// @	ã•ã‚‰ã«ã€Tmp ãƒ•ãƒ©ã‚°ã‚’ç«‹ã¦ã¦ãŠãã“ã¨ã§ã€ã‚¹ã‚¿ãƒƒã‚¯ã‹ã‚‰é™ã‚ã•ã‚Œã‚‹ã¨ãã«ã€
+// @	ãã‚ŒãŒã‚¹ã‚¿ãƒƒã‚¯ã«æ‰€æœ‰ã•ã‚Œã¦ã„ãŸã‹å¦ã‹ãŒåˆ¤æ–­ã§ãã€å®‰å…¨ã«ç ´æ£„ã§ãã‚‹ã€‚
 //------------------------------------------------
 void FlexValue_AddRefTmp( FlexValue const& self )
 {
@@ -346,7 +346,7 @@ void FlexValue_AddRefTmp( FlexValue const& self )
 	return;
 }
 
-// ˆêƒIƒuƒWƒFƒNƒg‚È‚ç‰ğ•ú‚·‚é
+// ä¸€æ™‚ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆãªã‚‰è§£æ”¾ã™ã‚‹
 void FlexValue_ReleaseTmp( FlexValue const& self )
 {
 	if ( FlexValueEx_Valid(self) && FlexValueEx_TmpFlag(self) > 0 ) {

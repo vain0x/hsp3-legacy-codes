@@ -1,4 +1,4 @@
-// opex - iface
+﻿// opex - iface
 
 #ifndef IG_OPEX_IFACE_H
 #define IG_OPEX_IFACE_H

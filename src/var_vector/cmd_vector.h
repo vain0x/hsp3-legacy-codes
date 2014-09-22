@@ -1,4 +1,4 @@
-// vector - Command header
+ï»¿// vector - Command header
 
 #ifndef IG_VECTOR_COMMAND_H
 #define IG_VECTOR_COMMAND_H
@@ -10,8 +10,8 @@ using namespace hpimod;
 
 extern vector_t code_get_vector();
 
-// ƒRƒ}ƒ“ƒh—pŠÖ”‚Ìƒvƒƒgƒ^ƒCƒvéŒ¾
-extern void VectorDelete();				// ”jŠü
+// ã‚³ãƒãƒ³ãƒ‰ç”¨é–¢æ•°ã®ãƒ—ãƒ­ãƒˆã‚¿ã‚¤ãƒ—å®£è¨€
+extern void VectorDelete();				// ç ´æ£„
 
 extern int VectorMake( PDAT** ppResult );			// as literal
 extern int VectorSlice( PDAT** ppResult );
@@ -25,16 +25,16 @@ extern int VectorSize( PDAT** ppResult );
 extern void VectorDimtype();
 extern void VectorClone();
 
-extern void VectorChain(bool bClear);	// ˜AŒ‹ (or •¡Ê)
+extern void VectorChain(bool bClear);	// é€£çµ (or è¤‡å†™)
 #if 0
-extern void VectorMoving( int cmd );	// —v‘f‡˜‘€ìŒn
+extern void VectorMoving( int cmd );	// è¦ç´ é †åºæ“ä½œç³»
 extern int  VectorMovingFunc( PDAT** ppResult, int cmd );
 
-extern void VectorInsert();				// —v‘f’Ç‰Á
+extern void VectorInsert();				// è¦ç´ è¿½åŠ 
 extern void VectorInsert1();
 extern void VectorPushFront();
 extern void VectorPushBack();
-extern void VectorRemove();				// —v‘fíœ
+extern void VectorRemove();				// è¦ç´ å‰Šé™¤
 extern void VectorRemove1();
 extern void VectorPopFront();
 extern void VectorPopBack();
@@ -55,12 +55,12 @@ extern int VectorExpr( PDAT** ppResult );
 extern int VectorJoin( PDAT** ppResult );
 extern int VectorAt( PDAT** ppResult );
 
-// I—¹
+// çµ‚äº†æ™‚
 extern void VectorCmdTerminate();
 
-// ƒVƒXƒeƒ€•Ï”
+// ã‚·ã‚¹ãƒ†ãƒ å¤‰æ•°
 
-// ’è”
+// å®šæ•°
 namespace VectorCmdId {
 	int const
 		Move    = 0x20,

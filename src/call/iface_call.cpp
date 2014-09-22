@@ -1,4 +1,4 @@
-// call.hpi interface
+ï»¿// call.hpi interface
 
 #include "hsp3plugin_custom.h"
 
@@ -14,7 +14,7 @@ using namespace hpimod;
 int g_pluginType_call = -1;
 
 //------------------------------------------------
-// –½—ß
+// å‘½ä»¤
 //------------------------------------------------
 static int ProcSttmCmd( int cmd )
 {
@@ -27,7 +27,7 @@ static int ProcSttmCmd( int cmd )
 }
 
 //------------------------------------------------
-// ŠÖ”
+// é–¢æ•°
 //------------------------------------------------
 static int ProcFuncCmd( int cmd, PDAT** ppResult )
 {
@@ -40,7 +40,7 @@ static int ProcFuncCmd( int cmd, PDAT** ppResult )
 }
 
 //------------------------------------------------
-// ƒVƒXƒeƒ€•Ï”
+// ã‚·ã‚¹ãƒ†ãƒ å¤‰æ•°
 //------------------------------------------------
 static int ProcSysvarCmd( int cmd, PDAT** ppResult )
 {
@@ -53,7 +53,7 @@ static int ProcSysvarCmd( int cmd, PDAT** ppResult )
 }
 
 //------------------------------------------------
-// I—¹
+// çµ‚äº†æ™‚
 //------------------------------------------------
 static int termfunc(int option)
 {
@@ -67,10 +67,10 @@ static int termfunc(int option)
 }
 
 //------------------------------------------------
-// str, double, int ‚ğƒVƒXƒeƒ€•Ï”‚Æ‚µ‚Äg‚¦‚é‚æ‚¤‚É‚·‚é
+// str, double, int ã‚’ã‚·ã‚¹ãƒ†ãƒ å¤‰æ•°ã¨ã—ã¦ä½¿ãˆã‚‹ã‚ˆã†ã«ã™ã‚‹
 // 
-// @ ‚»‚ê‚¼‚ê‘Î‰‚·‚éŒ^ƒ^ƒCƒv’l‚ğ•Ô‹p‚·‚éB
-// @ ‚©‚È‚è’x‚­‚È‚é‚Ì‚Å‚â‚ç‚È‚¢B
+// @ ãã‚Œãã‚Œå¯¾å¿œã™ã‚‹å‹ã‚¿ã‚¤ãƒ—å€¤ã‚’è¿”å´ã™ã‚‹ã€‚
+// @ ã‹ãªã‚Šé…ããªã‚‹ã®ã§ã‚„ã‚‰ãªã„ã€‚
 //------------------------------------------------
 static void*(*reffunc_intfunc_impl)(int*, int);
 
@@ -82,7 +82,7 @@ int reffunc_intfunc_procSysvar( int cmd, PDAT** ppResult )
 		case 0x185: return SetReffuncResult( ppResult, HSPVAR_FLAG_DOUBLE );	// double()
 		default:    puterror( HSPERR_UNSUPPORTED_FUNCTION );
 	}
-	return 0;	// Œx—}§
+	return 0;	// è­¦å‘ŠæŠ‘åˆ¶
 }
 
 void* reffunc_intfunc_wrap( int* type_res, int cmd )
@@ -106,22 +106,22 @@ void wrap_reffunc_intfunc(HSP3TYPEINFO* info)
 }
 
 //------------------------------------------------
-// HPI“o˜^ŠÖ”
+// HPIç™»éŒ²é–¢æ•°
 //------------------------------------------------
 EXPORT void WINAPI hsp3typeinfo_call(HSP3TYPEINFO* info)
 {
 	g_pluginType_call = info->type;
 
-	hsp3sdk_init(info);			// SDK‚Ì‰Šú‰»(Å‰‚És‚È‚Á‚Ä‰º‚³‚¢)
+	hsp3sdk_init(info);			// SDKã®åˆæœŸåŒ–(æœ€åˆã«è¡Œãªã£ã¦ä¸‹ã•ã„)
 
 	info->cmdfunc = cmdfunc<&ProcSttmCmd>;
 	info->reffunc = reffunc<&ProcFuncCmd, &ProcSysvarCmd>;
 	info->termfunc = termfunc;
 
-	// functor Œ^‚ğ“o˜^
+	// functor å‹ã‚’ç™»éŒ²
 	registvar(-1, reinterpret_cast<HSPVAR_COREFUNC>(HspVarFunctor_init));
 
-	// TYPE_INTFUNC ‚Ìƒ‰ƒbƒsƒ“ƒO
-//	wrap_reffunc_intfunc( &(info - g_pluginType_call)[TYPE_INTFUNC] );	// info ‚ª HSP3TYPEINFO[] ‚Å‚ ‚é‚±‚Æ‚ª‘O’ñ
+	// TYPE_INTFUNC ã®ãƒ©ãƒƒãƒ”ãƒ³ã‚°
+//	wrap_reffunc_intfunc( &(info - g_pluginType_call)[TYPE_INTFUNC] );	// info ãŒ HSP3TYPEINFO[] ã§ã‚ã‚‹ã“ã¨ãŒå‰æ
 	return;
 }

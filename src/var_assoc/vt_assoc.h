@@ -1,4 +1,4 @@
-// assoc - VarProc header
+﻿// assoc - VarProc header
 
 #ifndef IG_ASSOC_VARPROC_H
 #define IG_ASSOC_VARPROC_H
@@ -26,7 +26,7 @@ namespace hpimod
 	}
 };
 
-// �֐�
+// 関数
 extern void HspVarAssoc_Init( HspVarProc* );
 extern CAssoc* code_get_assoc();
 extern PVal*   code_get_assoc_pval();

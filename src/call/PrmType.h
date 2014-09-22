@@ -1,4 +1,4 @@
-#ifndef IG_PARAMETER_TYPE_H
+ï»¿#ifndef IG_PARAMETER_TYPE_H
 #define IG_PARAMETER_TYPE_H
 
 #include "hsp3plugin_custom.h"
@@ -10,23 +10,23 @@ extern prmtype_t code_get_prmtype(prmtype_t _default);
 namespace PrmType {
 
 //------------------------------------------------
-// ‰¼ˆø”ƒ^ƒCƒv (call.hpi —p)
+// ä»®å¼•æ•°ã‚¿ã‚¤ãƒ— (call.hpi ç”¨)
 // 
-// @ HSPVAR_FLAG_* ‚Æ•¹—pB
-// @ None ‚ğœ‚«•‰’lB
+// @ HSPVAR_FLAG_* ã¨ä½µç”¨ã€‚
+// @ None ã‚’é™¤ãè² å€¤ã€‚
 //------------------------------------------------
 static prmtype_t const
-	Var     = (-2),		// var   w’è (QÆ“n‚µ—v‹)
-	Array   = (-3),		// array w’è (QÆ“n‚µ—v‹)
-	Modvar  = (-4),		// modvarw’è (QÆ“n‚µ—v‹)
-	Any     = (-5),		// any   w’è (Šù’è‚Å’l“n‚µ—v‹Abyref ‚ÅQÆ“n‚µ‚à‰Â”\)
-	Capture = (-6),		// (lambda ‚ª“à•”“I‚É—p‚¢‚éAÀˆø”•s—v)
-	Local   = (-7),		// local w’è (Àˆø”•s—v)
-	Flex    = (-1),		// ‰Â•Ï’·ˆø”
-	None    = 0;		// –³Œø
+	Var     = (-2),		// var   æŒ‡å®š (å‚ç…§æ¸¡ã—è¦æ±‚)
+	Array   = (-3),		// array æŒ‡å®š (å‚ç…§æ¸¡ã—è¦æ±‚)
+	Modvar  = (-4),		// modvaræŒ‡å®š (å‚ç…§æ¸¡ã—è¦æ±‚)
+	Any     = (-5),		// any   æŒ‡å®š (æ—¢å®šã§å€¤æ¸¡ã—è¦æ±‚ã€byref ã§å‚ç…§æ¸¡ã—ã‚‚å¯èƒ½)
+	Capture = (-6),		// (lambda ãŒå†…éƒ¨çš„ã«ç”¨ã„ã‚‹ã€å®Ÿå¼•æ•°ä¸è¦)
+	Local   = (-7),		// local æŒ‡å®š (å®Ÿå¼•æ•°ä¸è¦)
+	Flex    = (-1),		// å¯å¤‰é•·å¼•æ•°
+	None    = 0;		// ç„¡åŠ¹
 
 //------------------------------------------------
-// •Ï”Œ^‚Ì‰¼ˆø”ƒ^ƒCƒv‚©
+// å¤‰æ•°å‹ã®ä»®å¼•æ•°ã‚¿ã‚¤ãƒ—ã‹
 //------------------------------------------------
 static inline bool isNativeVartype(prmtype_t prmtype)
 {
@@ -44,9 +44,9 @@ static inline bool isVartype(prmtype_t prmtype)
 }
 
 //------------------------------------------------
-// QÆ“n‚µ‚Ì‰¼ˆø”ƒ^ƒCƒv‚©
+// å‚ç…§æ¸¡ã—ã®ä»®å¼•æ•°ã‚¿ã‚¤ãƒ—ã‹
 //
-// @ Any ‚ÍQÆ“n‚µˆø”‚Å‚Í‚È‚¢‚Æ‚·‚éB
+// @ Any ã¯å‚ç…§æ¸¡ã—å¼•æ•°ã§ã¯ãªã„ã¨ã™ã‚‹ã€‚
 //------------------------------------------------
 static bool isRef(prmtype_t prmtype)
 {
@@ -57,7 +57,7 @@ static bool isRef(prmtype_t prmtype)
 }
 
 //------------------------------------------------
-// ‰¼ˆø”ƒ^ƒCƒv‚ª prmstack ‚É—v‹‚·‚éƒTƒCƒY
+// ä»®å¼•æ•°ã‚¿ã‚¤ãƒ—ãŒ prmstack ã«è¦æ±‚ã™ã‚‹ã‚µã‚¤ã‚º
 //------------------------------------------------
 static size_t sizeOf(prmtype_t prmtype)
 {
@@ -75,7 +75,7 @@ static size_t sizeOf(prmtype_t prmtype)
 		case PrmType::Capture: return sizeof(MPVarData);
 		case PrmType::Flex:    return sizeof(void*);
 		default:
-			// ‚»‚Ì‘¼‚ÌŒ^ƒ^ƒCƒv’l
+			// ãã®ä»–ã®å‹ã‚¿ã‚¤ãƒ—å€¤
 			if ( HSPVAR_FLAG_INT < prmtype && prmtype < (HSPVAR_FLAG_USERDEF + ctx->hsphed->max_varhpi) ) {
 				return sizeof(MPVarData);
 			}
@@ -99,7 +99,7 @@ static prmtype_t fromMPType(prmtype_t mptype)
 		case MPTYPE_MODULEVAR:   return PrmType::Modvar;
 		case MPTYPE_LOCALVAR:    return PrmType::Local;
 
-		// (dtor ‚Í mpval ‚Ì’l‚ğ•Û‘¶‚·‚é—Ìˆæ‚Æ‚µ‚ÄAany ‚ğ1‚Â‚Â‚±‚Æ‚É‚µ‚Ä‚¨‚­)
+		// (dtor ã¯ mpval ã®å€¤ã‚’ä¿å­˜ã™ã‚‹é ˜åŸŸã¨ã—ã¦ã€any ã‚’1ã¤æŒã¤ã“ã¨ã«ã—ã¦ãŠã)
 		case MPTYPE_TMODULEVAR:  return PrmType::Any;
 
 		default:

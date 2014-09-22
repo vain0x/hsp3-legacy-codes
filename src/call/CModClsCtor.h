@@ -1,4 +1,4 @@
-// call - ModCls, functor
+ï»¿// call - ModCls, functor
 #if 0
 #ifndef IG_CLASS_MODCLS_CONSTRUCTOR_H
 #define IG_CLASS_MODCLS_CONSTRUCTOR_H
@@ -14,12 +14,12 @@ struct STRUCTPRM;
 class CModClsCtor
 	: public IFunctor
 {
-	// ƒƒ“ƒo•Ï”
+	// ãƒ¡ãƒ³ãƒå¤‰æ•°
 private:
-	stdat_t mpStDat;	// nullptr ‚Ì‚Æ‚« nullmod ƒNƒ‰ƒX
+	stdat_t mpStDat;	// nullptr ã®ã¨ã nullmod ã‚¯ãƒ©ã‚¹
 	CPrmInfo* mpPrmInfo;
 
-	// \’z
+	// æ§‹ç¯‰
 private:
 	CModClsCtor();
 	explicit CModClsCtor( stdat_t pStDat );
@@ -30,7 +30,7 @@ public:
 
 	CPrmInfo const& getPrmInfo() const;
 
-	// æ“¾
+	// å–å¾—
 	label_t getLabel() const;
 	int     getAxCmd() const;
 	int     getUsing() const { return 1; }
@@ -38,12 +38,12 @@ public:
 	stdat_t getCtor() const;
 	int getCtorId() const;
 
-	bool isBottom() const { return mpStDat == nullptr; }	// nullmod ‚ÌŒ^‚Å‚ ‚é
+	bool isBottom() const { return mpStDat == nullptr; }	// nullmod ã®å‹ã§ã‚ã‚‹
 
-	// “®ì
+	// å‹•ä½œ
 	void call( CCaller& caller );
 
-	// ƒ‰ƒbƒp[
+	// ãƒ©ãƒƒãƒ‘ãƒ¼
 	static modctor_t New();
 	static modctor_t New( stdat_t pStDat );
 	static modctor_t New( int modcls );

@@ -1,12 +1,5 @@
-/*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
- |
- *		hsp plugin interface (vector)
- |
- *				author uedai (from 2011 07/18(Mon))
- |
-.*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
+ï»¿// vector
 
-#include "iface_vector.h"
 #include "vt_vector.h"
 #include "cmd_vector.h"
 #include "sub_vector.h"
@@ -25,23 +18,23 @@ static int   ProcFuncCmd( int cmd, PDAT** ppResult );
 static int ProcSysvarCmd( int cmd, PDAT** ppResult );
 
 //------------------------------------------------
-// HPI“o˜^ŠÖ”
+// HPIç™»éŒ²é–¢æ•°
 //------------------------------------------------
 EXPORT void WINAPI hpi_vector( HSP3TYPEINFO* info )
 {
-	hsp3sdk_init( info );			// SDK‚Ì‰Šú‰»(Å‰‚És‚È‚Á‚Ä‰º‚³‚¢)
+	hsp3sdk_init( info );			// SDKã®åˆæœŸåŒ–(æœ€åˆã«è¡Œãªã£ã¦ä¸‹ã•ã„)
 
 	info->cmdfunc  = hpimod::cmdfunc<ProcSttmCmd>;
 	info->reffunc  = hpimod::reffunc<ProcFuncCmd, ProcSysvarCmd>;
 	info->termfunc = hpi_termfunc;
 
-	// V‹KŒ^‚ğ’Ç‰Á
+	// æ–°è¦å‹ã‚’è¿½åŠ 
 	registvar(-1, HspVarVector_Init);
 	return;
 }
 
 //------------------------------------------------
-// I—¹
+// çµ‚äº†æ™‚
 //------------------------------------------------
 static int hpi_termfunc( int option )
 {
@@ -52,7 +45,7 @@ static int hpi_termfunc( int option )
 }
 
 //------------------------------------------------
-// –½—ß
+// å‘½ä»¤
 //------------------------------------------------
 static int ProcSttmCmd( int cmd )
 {
@@ -90,7 +83,7 @@ static int ProcSttmCmd( int cmd )
 }
 
 //------------------------------------------------
-// ŠÖ”
+// é–¢æ•°
 //------------------------------------------------
 static int ProcFuncCmd( int cmd, PDAT** ppResult )
 {
@@ -136,7 +129,7 @@ static int ProcFuncCmd( int cmd, PDAT** ppResult )
 }
 
 //------------------------------------------------
-// ƒVƒXƒeƒ€•Ï”
+// ã‚·ã‚¹ãƒ†ãƒ å¤‰æ•°
 //------------------------------------------------
 static int ProcSysvarCmd( int cmd, PDAT** ppResult )
 {

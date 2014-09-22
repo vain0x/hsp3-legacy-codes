@@ -1,4 +1,4 @@
-
+ï»¿
 #include <stack>
 #include "mod_argGetter.h"
 
@@ -10,7 +10,7 @@ using namespace hpimod;
 ManagedPVal Invoker::lastResult { nullptr };
 
 //------------------------------------------------
-// my_code_getarg ‚Ì•Ô’l
+// my_code_getarg ã®è¿”å€¤
 //
 // type CodeGetArgResult =
 //	| ByVal * ((PDAT*) * vartype_t)
@@ -66,7 +66,7 @@ CodeGetArgResult const CodeGetArgResult::Default { Style::Default };
 CodeGetArgResult const CodeGetArgResult::End { Style::End };
 
 //------------------------------------------------
-// Ÿ‚Ì’l‚ğæ‚èo‚· (oode_getprm ‚Ì call.hpi ”Å)
+// æ¬¡ã®å€¤ã‚’å–ã‚Šå‡ºã™ (oode_getprm ã® call.hpi ç‰ˆ)
 //------------------------------------------------
 CodeGetArgResult my_code_getarg(int prmtype)
 {
@@ -77,25 +77,25 @@ CodeGetArgResult my_code_getarg(int prmtype)
 		default:
 		{
 			if ( *type == g_pluginType_call && *val == CallCmd::Id::noBind ) {
-				// •s‘©”›ˆø” (nobind)
+				// ä¸æŸç¸›å¼•æ•° (nobind)
 
 				code_next();
 				int priority = 0;
 
 				if ( *type == TYPE_MARK && *val == '(' ) {
-					// ( ) ‚ ‚è => —Dæ“x”‚ğæ‚èo‚·
+					// ( ) ã‚ã‚Š => å„ªå…ˆåº¦æ•°ã‚’å–ã‚Šå‡ºã™
 					code_next();
 					priority = code_getdi(0);
 					if ( !code_next_expect(TYPE_MARK, ')') ) puterror(HSPERR_TOO_MANY_PARAMETERS);
 				} else {
-					*exinfo->npexflg &= ~EXFLG_2;	// ˆø”æ‚èo‚µŒã‚É•K—v‚Èˆ—
+					*exinfo->npexflg &= ~EXFLG_2;	// å¼•æ•°å–ã‚Šå‡ºã—å¾Œã«å¿…è¦ãªå‡¦ç†
 				}
 				return CodeGetArgResult::noBind(priority);
 
 			} else if ( *type == g_pluginType_call
 				&& (*val == CallCmd::Id::call_byRef_ || *val == CallCmd::Id::call_byThismod_) ) {
-				// –¾¦“IQÆ“n‚µ (byRef, byThismod)
-				// ’†ŠÔƒR[ƒh‚Í [ keyword var || ] ‚Æ‚È‚Á‚Ä‚¢‚éB
+				// æ˜ç¤ºçš„å‚ç…§æ¸¡ã— (byRef, byThismod)
+				// ä¸­é–“ã‚³ãƒ¼ãƒ‰ã¯ [ keyword var || ] ã¨ãªã£ã¦ã„ã‚‹ã€‚
 
 				bool const bByRef = (*val == CallCmd::Id::call_byRef_);
 				code_next();
@@ -108,8 +108,8 @@ CodeGetArgResult my_code_getarg(int prmtype)
 
 #if 0
 			} else if ( *type == g_pluginType_call && *val == CallCmd::Id::call_byFlex_ ) {
-				// –¾¦“I‰Â•Ï’·ˆø”“n‚µ (byFlex)
-				// ’†ŠÔƒR[ƒh‚Í [ byFlex, flex-vector ] ‚Æ‚È‚Á‚Ä‚¢‚éB
+				// æ˜ç¤ºçš„å¯å¤‰é•·å¼•æ•°æ¸¡ã— (byFlex)
+				// ä¸­é–“ã‚³ãƒ¼ãƒ‰ã¯ [ byFlex, flex-vector ] ã¨ãªã£ã¦ã„ã‚‹ã€‚
 
 				code_get_singleToken();
 
@@ -117,7 +117,7 @@ CodeGetArgResult my_code_getarg(int prmtype)
 				return CodeGetArgResult::byFlex(vec);
 #endif
 			} else if ( *type == g_pluginType_call && *val == CallCmd::Id::byDef ) {
-				// –¾¦“Iˆø”È—ª (bydef)
+				// æ˜ç¤ºçš„å¼•æ•°çœç•¥ (bydef)
 
 				code_get_singleToken();
 				return CodeGetArgResult::Default;
@@ -137,7 +137,7 @@ CodeGetArgResult my_code_getarg(int prmtype)
 					case PARAM_SPLIT:
 					{
 						if ( prmtype == HSPVAR_FLAG_DOUBLE && mpval->flag == HSPVAR_FLAG_INT ) {
-							// double ¨ int ‚ÌˆÃ–Ù•ÏŠ·‚ğ‹–‰Â‚·‚é
+							// double â†’ int ã®æš—é»™å¤‰æ›ã‚’è¨±å¯ã™ã‚‹
 							return CodeGetArgResult::byVal(Valptr_cnvTo(mpval->pt, mpval->flag, prmtype), prmtype);
 						} else {
 							return CodeGetArgResult::byVal(mpval->pt, mpval->flag);
@@ -154,7 +154,7 @@ CodeGetArgResult my_code_getarg(int prmtype)
 }
 
 //------------------------------------------------
-// ˆø”—ñ‚ğ vector ‚ÌƒŠƒeƒ‰ƒ‹‚Æ‚µ‚Äæ‚èo‚·
+// å¼•æ•°åˆ—ã‚’ vector ã®ãƒªãƒ†ãƒ©ãƒ«ã¨ã—ã¦å–ã‚Šå‡ºã™
 //------------------------------------------------
 vector_t code_get_vectorFromSequence()
 {
@@ -169,7 +169,7 @@ vector_t code_get_vectorFromSequence()
 
 			case Sty::ByVal: vec->push_back(ManagedVarData(result.getValptr(), result.getVartype())); break;
 			case Sty::ByRef: vec->push_back(ManagedVarData(result.getPVal(), result.getPVal()->offset)); break;
-			case Sty::ByFlex: dbgout("–¢À‘•"); puterror(HSPERR_UNSUPPORTED_FUNCTION);
+			case Sty::ByFlex: dbgout("æœªå®Ÿè£…"); puterror(HSPERR_UNSUPPORTED_FUNCTION);
 
 			case Sty::NoBind: //
 			case Sty::ByThismod: puterror(HSPERR_UNSUPPORTED_FUNCTION);
@@ -180,7 +180,7 @@ vector_t code_get_vectorFromSequence()
 }
 
 //------------------------------------------------
-// ‚·‚×‚Ä‚Ìˆø”‚ğæ‚èo‚·
+// ã™ã¹ã¦ã®å¼•æ•°ã‚’å–ã‚Šå‡ºã™
 //------------------------------------------------
 void Invoker::code_get_arguments()
 {
@@ -189,7 +189,7 @@ void Invoker::code_get_arguments()
 	}
 	args_.finalize();
 
-	// c‚è‚ğ flex ˆø”‚Æ‚µ‚Äæ‚èo‚·
+	// æ®‹ã‚Šã‚’ flex å¼•æ•°ã¨ã—ã¦å–ã‚Šå‡ºã™
 	if ( code_isNextArg() ) {
 		if ( vector_t* const vec = args_.peekFlex() ) {
 			*vec = code_get_vectorFromSequence();
@@ -201,9 +201,9 @@ void Invoker::code_get_arguments()
 }
 
 //------------------------------------------------
-// Ÿ‚ÌÀˆø”‚ğæ‚èo‚·
+// æ¬¡ã®å®Ÿå¼•æ•°ã‚’å–ã‚Šå‡ºã™
 // 
-// @result: ˆø”‚ğæ‚èo‚µ‚½‚©H
+// @result: å¼•æ•°ã‚’å–ã‚Šå‡ºã—ãŸã‹ï¼Ÿ
 //------------------------------------------------
 bool Invoker::code_get_nextArgument()
 {
@@ -217,7 +217,7 @@ bool Invoker::code_get_nextArgument()
 		case Sty::ByVal:     args_.pushArgByVal(result.getValptr(), result.getVartype()); break;
 		case Sty::ByRef:     args_.pushArgByRef(result.getPVal(), result.getPVal()->offset); break;
 		case Sty::ByThismod: args_.pushThismod(result.getPVal(), result.getPVal()->offset); break;
-		case Sty::ByFlex: dbgout("–¢À‘•"); puterror(HSPERR_UNSUPPORTED_FUNCTION); break;
+		case Sty::ByFlex: dbgout("æœªå®Ÿè£…"); puterror(HSPERR_UNSUPPORTED_FUNCTION); break;
 		case Sty::NoBind:    args_.allocArgNoBind(CallCmd::Id::noBind, result.getPriority()); break;
 		case Sty::End: //
 		default: assert(false);
@@ -226,7 +226,7 @@ bool Invoker::code_get_nextArgument()
 
 #if 0
 	if ( *type == g_pluginType_call && *val == CallCmd::Id::noBind ) {
-		// •s‘©”›ˆø” (nobind)
+		// ä¸æŸç¸›å¼•æ•° (nobind)
 
 		if ( invmode_ != InvokeMode::Bind ) puterror(HSPERR_ILLEGAL_FUNCTION);
 		code_next();
@@ -234,18 +234,18 @@ bool Invoker::code_get_nextArgument()
 		int priority = 0;
 
 		if ( *type == TYPE_MARK && *val == '(' ) {
-			// ( ) ‚ ‚è => —Dæ“x”‚ğæ‚èo‚·
+			// ( ) ã‚ã‚Š => å„ªå…ˆåº¦æ•°ã‚’å–ã‚Šå‡ºã™
 			code_next();
 			priority = code_getdi(0);
 			if ( !code_next_expect(TYPE_MARK, ')') ) puterror(HSPERR_TOO_MANY_PARAMETERS);
 
 		} else {
-			// () ‚È‚µ => ˆø”‚Ìæ‚èo‚µ‚ÌŠ®—¹ˆ—‚ğ‚·‚é
+			// () ãªã— => å¼•æ•°ã®å–ã‚Šå‡ºã—ã®å®Œäº†å‡¦ç†ã‚’ã™ã‚‹
 			if ( *exinfo->npexflg & EXFLG_2 ) {
-				*exinfo->npexflg &= ~EXFLG_2;	// ˆø”‚ğæ‚èo‚µ‚½
+				*exinfo->npexflg &= ~EXFLG_2;	// å¼•æ•°ã‚’å–ã‚Šå‡ºã—ãŸ
 
 			} else {
-				// «H
+				// â†“ï¼Ÿ
 				if ( code_isNextArg() ) puterror(HSPERR_SYNTAX);
 			}
 		}
@@ -254,8 +254,8 @@ bool Invoker::code_get_nextArgument()
 		return true;
 
 	} else if ( *type == g_pluginType_call && (*val == CallCmd;;Id::call_byRef_ || *val == CallCmd::Id::call_byThismod_) ) {
-		// –¾¦“IQÆ“n‚µ (byref, bythismod)
-		// ’†ŠÔƒR[ƒh‚Í [ keyword var || ] ‚Æ‚È‚Á‚Ä‚¢‚éB
+		// æ˜ç¤ºçš„å‚ç…§æ¸¡ã— (byref, bythismod)
+		// ä¸­é–“ã‚³ãƒ¼ãƒ‰ã¯ [ keyword var || ] ã¨ãªã£ã¦ã„ã‚‹ã€‚
 
 		code_next();
 		PVal* const pval = code_get_var();
@@ -281,7 +281,7 @@ bool Invoker::code_get_nextArgument()
 			int chk;
 
 			if ( *type == g_pluginType_call && *val == CallCmd::Id::byDef ) {
-				// –¾¦“Iˆø”È—ª (bydef)
+				// æ˜ç¤ºçš„å¼•æ•°çœç•¥ (bydef)
 				code_get_singleToken();
 				chk = PARAM_DEFAULT;
 
@@ -302,7 +302,7 @@ bool Invoker::code_get_nextArgument()
 }
 
 //------------------------------------------------
-// ŒÄ‚Ño‚µƒXƒ^ƒbƒN
+// å‘¼ã³å‡ºã—ã‚¹ã‚¿ãƒƒã‚¯
 //------------------------------------------------
 static std::stack<Invoker*> stt_stkInvoker;
 

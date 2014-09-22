@@ -1,4 +1,4 @@
-// vartype - functor
+ï»¿// vartype - functor
 
 #include "vt_functor.h"
 #include "cmd_call.h"
@@ -6,7 +6,6 @@
 #include "iface_call.h"
 
 #include "Invoker.h"
-#include "CCaller.h"
 #include "CBound.h"
 #include "axcmd.h"
 
@@ -35,7 +34,7 @@ static void invokeFunctor(functor_t f, PDAT** ppResult, int* mptype)
 }
 
 //------------------------------------------------
-// g—pó‹µ(varuse)
+// ä½¿ç”¨çŠ¶æ³(varuse)
 //------------------------------------------------
 static int HspVarFunctor_getUsing( PDAT const* pdat )
 {
@@ -44,15 +43,15 @@ static int HspVarFunctor_getUsing( PDAT const* pdat )
 }
 
 //------------------------------------------------
-// PVal‚Ì•Ï”ƒƒ‚ƒŠ‚ğŠm•Û‚·‚é
+// PValã®å¤‰æ•°ãƒ¡ãƒ¢ãƒªã‚’ç¢ºä¿ã™ã‚‹
 // 
-// @ pval ‚Í–¢Šm•Û or ‰ğ•úÏ‚İB
-// @ pval2 != NULL => pval2 ‚ğŒp³B
-// @ ”z—ñ‚ÍˆêŸŒ³‚Ì‚İB
+// @ pval ã¯æœªç¢ºä¿ or è§£æ”¾æ¸ˆã¿ã€‚
+// @ pval2 != NULL => pval2 ã‚’ç¶™æ‰¿ã€‚
+// @ é…åˆ—ã¯ä¸€æ¬¡å…ƒã®ã¿ã€‚
 //------------------------------------------------
 static void HspVarFunctor_alloc(PVal* pval, PVal const* pval2)
 {
-	if ( pval->len[1] < 1 ) pval->len[1] = 1;		// ”z—ñ‚ğÅ’á 1 ‚ÍŠm•Û‚·‚é
+	if ( pval->len[1] < 1 ) pval->len[1] = 1;		// é…åˆ—ã‚’æœ€ä½ 1 ã¯ç¢ºä¿ã™ã‚‹
 	if ( pval->len[2] != 0 ) puterror(HSPERR_ARRAY_OVERFLOW);
 
 	size_t const cntElems = pval->len[1];
@@ -61,14 +60,14 @@ static void HspVarFunctor_alloc(PVal* pval, PVal const* pval2)
 	functor_t* const pt = (functor_t*)hspmalloc( size );
 	size_t offset = 0;
 
-	// Œp³
+	// ç¶™æ‰¿
 	if ( pval2 ) {
 		offset = ( static_cast<size_t>(pval2->size) / sizeof(functor_t) );
-		std::memcpy( pt, pval2->pt, pval2->size );		// ‚Á‚Ä‚¢‚½ƒf[ƒ^‚ğƒRƒs[
-		hspfree( pval2->pt );							// Œ³‚Ìƒoƒbƒtƒ@‚ğ‰ğ•ú
+		std::memcpy( pt, pval2->pt, pval2->size );		// æŒã£ã¦ã„ãŸãƒ‡ãƒ¼ã‚¿ã‚’ã‚³ãƒ”ãƒ¼
+		hspfree( pval2->pt );							// å…ƒã®ãƒãƒƒãƒ•ã‚¡ã‚’è§£æ”¾
 	}
 
-	// pt ‚Ì‰Šú‰» (null ‰Šú‰»)
+	// pt ã®åˆæœŸåŒ– (null åˆæœŸåŒ–)
 	for ( size_t i = offset; i < cntElems; ++ i ) {
 		functor_t const* const p = new( &pt[i] ) functor_t;
 	}
@@ -82,12 +81,12 @@ static void HspVarFunctor_alloc(PVal* pval, PVal const* pval2)
 }
 
 //------------------------------------------------
-// PVal‚Ì•Ï”ƒƒ‚ƒŠ‚ğ‰ğ•ú‚·‚é
+// PValã®å¤‰æ•°ãƒ¡ãƒ¢ãƒªã‚’è§£æ”¾ã™ã‚‹
 //------------------------------------------------
 static void HspVarFunctor_free(PVal* pval)
 {
 	if ( pval->mode == HSPVAR_MODE_MALLOC ) {
-		// ƒfƒXƒgƒ‰ƒNƒ^‹N“®
+		// ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿èµ·å‹•
 		auto const pt = VtTraits::asValptr<vtFunctor>(pval->pt);
 		for ( int i = 0; i < pval->len[1]; ++ i ) {
 			pt[i].~Managed();
@@ -101,10 +100,10 @@ static void HspVarFunctor_free(PVal* pval)
 }
 
 //------------------------------------------------
-// Œ^•ÏŠ·ˆ—
+// å‹å¤‰æ›å‡¦ç†
 // 
-// @ ‘¼ -> functor
-// @ g_resFunctor ‚Í SetReffuncResult ‚Æ‹¤—pB
+// @ ä»– -> functor
+// @ g_resFunctor ã¯ SetReffuncResult ã¨å…±ç”¨ã€‚
 //------------------------------------------------
 static PDAT* HspVarFunctor_cnv(PDAT const* pdat, int flag)
 {
@@ -134,9 +133,9 @@ static PDAT* HspVarFunctor_cnv(PDAT const* pdat, int flag)
 }
 
 //------------------------------------------------
-// Œ^•ÏŠ·ˆ—
+// å‹å¤‰æ›å‡¦ç†
 // 
-// @ functor -> ‘¼
+// @ functor -> ä»–
 //------------------------------------------------
 static PDAT* HspVarFunctor_cnvCustom(PDAT const* pdat, int flag)
 {
@@ -168,7 +167,7 @@ static PDAT* HspVarFunctor_cnvCustom(PDAT const* pdat, int flag)
 			break;
 	}
 
-	functor.beNonTmpObj();	// ƒXƒ^ƒbƒN‚©‚ç~‚è‚é
+	functor.beNonTmpObj();	// ã‚¹ã‚¿ãƒƒã‚¯ã‹ã‚‰é™ã‚Šã‚‹
 
 	if ( pResult ) {
 		return pResult;
@@ -178,14 +177,14 @@ static PDAT* HspVarFunctor_cnvCustom(PDAT const* pdat, int flag)
 }
 
 //------------------------------------------------
-// ˜A‘z”z—ñ : QÆ (‰E)
+// é€£æƒ³é…åˆ— : å‚ç…§ (å³)
 // 
-// @ ’P‘Ì => ŠÖ”Œ`®ŒÄ‚Ño‚µ
-// @ ”z—ñ => —v‘fæ“¾
+// @ å˜ä½“ => é–¢æ•°å½¢å¼å‘¼ã³å‡ºã—
+// @ é…åˆ— => è¦ç´ å–å¾—
 //------------------------------------------------
 static PDAT* HspVarFunctor_arrayObjectRead( PVal* pval, int* mptype )
 {
-	// ”z—ñ => “Yš‚É‘Î‰‚·‚é—v‘f‚Ì functor ’l‚ğæ‚èo‚·
+	// é…åˆ— => æ·»å­—ã«å¯¾å¿œã™ã‚‹è¦ç´ ã® functor å€¤ã‚’å–ã‚Šå‡ºã™
 	if ( pval->len[1] > 1 ) {
 		int const idx = code_geti();
 		code_index_int_rhs( pval, idx );
@@ -194,11 +193,11 @@ static PDAT* HspVarFunctor_arrayObjectRead( PVal* pval, int* mptype )
 		return VtTraits::asPDAT<vtFunctor>(VtTraits::getValptr<vtFunctor>( pval ));
 	}
 
-	// ŒÄ‚Ño‚µ
+	// å‘¼ã³å‡ºã—
 	auto const pf = VtTraits::getValptr<vtFunctor>( pval );
 	functor_t functor = *pf;
 
-	// ”ñŒÄ‚Ño‚µ“Yš (ƒoƒO‚Ö‚Ì‘Îô)
+	// éå‘¼ã³å‡ºã—æ·»å­— (ãƒã‚°ã¸ã®å¯¾ç­–)
 	if ( *type == g_pluginType_call && *val == CallCmd::Id::noCall ) {
 		code_get_singleToken();
 		*mptype = g_vtFunctor;
@@ -206,10 +205,10 @@ static PDAT* HspVarFunctor_arrayObjectRead( PVal* pval, int* mptype )
 	}
 
 	if ( functor->getUsing() == 0 ) {
-		puterror(HSPERR_ILLEGAL_FUNCTION);	// ƒpƒ‰ƒ[ƒ^‚Ì’l‚ªˆÙí
+		puterror(HSPERR_ILLEGAL_FUNCTION);	// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã®å€¤ãŒç•°å¸¸
 	}
 
-	// ŒÄ‚Ño‚µ
+	// å‘¼ã³å‡ºã—
 	PDAT* pResult = nullptr;
 	invokeFunctor(functor, &pResult, mptype);
 	assert(pResult);
@@ -217,7 +216,7 @@ static PDAT* HspVarFunctor_arrayObjectRead( PVal* pval, int* mptype )
 }
 
 //------------------------------------------------
-// ˜A‘z”z—ñ : QÆ (¶)
+// é€£æƒ³é…åˆ— : å‚ç…§ (å·¦)
 //------------------------------------------------
 static void HspVarFunctor_arrayObject( PVal* pval )
 {
@@ -228,21 +227,21 @@ static void HspVarFunctor_arrayObject( PVal* pval )
 
 /*
 //------------------------------------------------
-// Ši”[ˆ—
+// æ ¼ç´å‡¦ç†
 //------------------------------------------------
 static void HspVarFunctor_objectWrite( PVal* pval, void* data, int vtype )
 {
 	functor_t& functor = *VtTraits::getValptr<vtFunctor>( pval );
 	functor = VtTraits::derefValptr<vtFunctor>(HspVarFunctor_cnv(data, vtype));
 
-	// ˜A‘±‘ã“ü
+	// é€£ç¶šä»£å…¥
 	code_assign_multi( pval );
 	return;
 }
 //*/
 
 //------------------------------------------------
-// ƒƒ\ƒbƒhˆ—
+// ãƒ¡ã‚½ãƒƒãƒ‰å‡¦ç†
 //------------------------------------------------
 static void HspVarFunctor_method(PVal* pval)
 {
@@ -258,7 +257,7 @@ static void HspVarFunctor_method(PVal* pval)
 }
 
 //------------------------------------------------
-// ‘ã“üŠÖ”
+// ä»£å…¥é–¢æ•°
 //------------------------------------------------
 static void  HspVarFunctor_set(PVal* pval, PDAT* pdat, PDAT const* in)
 {
@@ -270,7 +269,7 @@ static void  HspVarFunctor_set(PVal* pval, PDAT* pdat, PDAT const* in)
 }
 
 //------------------------------------------------
-// ”äŠrŠÖ”
+// æ¯”è¼ƒé–¢æ•°
 //------------------------------------------------
 //static
 int HspVarFunctor_CmpI(PDAT* pdat, PDAT const* val)
@@ -285,7 +284,7 @@ int HspVarFunctor_CmpI(PDAT* pdat, PDAT const* val)
 }
 
 //------------------------------------------------
-// HspVarProc‰Šú‰»ŠÖ”
+// HspVarProcåˆæœŸåŒ–é–¢æ•°
 //------------------------------------------------
 void HspVarFunctor_init(HspVarProc* p)
 {
@@ -326,23 +325,23 @@ void HspVarFunctor_init(HspVarProc* p)
 //	p->RrI          = HspVarFunctor_rrI;
 //	p->LrI          = HspVarFunctor_lrI;
 
-	p->vartype_name	= "functor_k";			// Œ^–¼
+	p->vartype_name	= "functor_k";			// å‹å
 	p->version      = 0x001;				// VarType RuntimeVersion(0x100 = 1.0)
 	p->support      = HSPVAR_SUPPORT_STORAGE
 					| HSPVAR_SUPPORT_FLEXARRAY
 					| HSPVAR_SUPPORT_ARRAYOBJ
 					//| HSPVAR_SUPPORT_NOCONVERT
 	                | HSPVAR_SUPPORT_VARUSE
-					;						// ƒTƒ|[ƒgó‹µƒtƒ‰ƒO(HSPVAR_SUPPORT_*)
-	p->basesize = VtTraits::basesize<vtFunctor>::value;	// 1‚Â‚Ìƒf[ƒ^‚Ìbytes / ‰Â•Ï’·‚Ì‚Í-1
+					;						// ã‚µãƒãƒ¼ãƒˆçŠ¶æ³ãƒ•ãƒ©ã‚°(HSPVAR_SUPPORT_*)
+	p->basesize = VtTraits::basesize<vtFunctor>::value;	// 1ã¤ã®ãƒ‡ãƒ¼ã‚¿ã®bytes / å¯å¤‰é•·ã®æ™‚ã¯-1
 	return;
 }
 
 //##############################################################################
-//                ‰º¿‚¯ŠÖ”
+//                ä¸‹è«‹ã‘é–¢æ•°
 //##############################################################################
 //------------------------------------------------
-// ŠÖ”q‚ğæ“¾‚·‚é
+// é–¢æ•°å­ã‚’å–å¾—ã™ã‚‹
 //------------------------------------------------
 functor_t code_get_functor()
 {
@@ -373,7 +372,7 @@ functor_t code_get_functor()
 }
 
 //-----------------------------------------------
-// ŠÖ”ƒRƒ}ƒ“ƒh‚Ìİ’è‚·‚é
+// é–¢æ•°ã‚³ãƒãƒ³ãƒ‰ã®è¨­å®šã™ã‚‹
 //------------------------------------------------
 int SetReffuncResult(PDAT** ppResult, functor_t const& src)
 {

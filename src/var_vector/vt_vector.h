@@ -1,4 +1,4 @@
-// vector - VarProc header
+ï»¿// vector - VarProc header
 
 #ifndef IG_VECTOR_VARPROC_H
 #define IG_VECTOR_VARPROC_H
@@ -20,8 +20,8 @@ struct vtVector {
 
 	// special indexes
 	static int const IdxBegin = 0;
-	static int const IdxLast  = (-0x031EC10A);	// ÅŒã‚Ì—v‘f‚ğ•\‚·“YšƒR[ƒh
-	static int const IdxEnd   = (-0x031EC10B);	// (ÅŒã‚Ì—v‘f + 1)‚ğ•\‚·“YšƒR[ƒh
+	static int const IdxLast  = (-0x031EC10A);	// æœ€å¾Œã®è¦ç´ ã‚’è¡¨ã™æ·»å­—ã‚³ãƒ¼ãƒ‰
+	static int const IdxEnd   = (-0x031EC10B);	// (æœ€å¾Œã®è¦ç´  + 1)ã‚’è¡¨ã™æ·»å­—ã‚³ãƒ¼ãƒ‰
 
 };
 
@@ -35,16 +35,16 @@ namespace hpimod
 			template<> struct const_value_type<vtVector> { using type = vector_t const; };
 			template<> struct valptr_type<vtVector> { using type = vector_t*; };
 			template<> struct const_valptr_type<vtVector> { using type = vector_t const*; };
-			template<> struct master_type<vtVector> { using type = vector_t; };	// À‘Ì’l
+			template<> struct master_type<vtVector> { using type = vector_t; };	// å®Ÿä½“å€¤
 			template<> struct basesize<vtVector> { static int const value = sizeof(vector_t); };
 		}
 	}
 }
 
 //------------------------------------------------
-// “à•”•Ï”‚Ìæ“¾
+// å†…éƒ¨å¤‰æ•°ã®å–å¾—
 // 
-// @ –{‘Ì‚ªQÆ‚³‚ê‚Ä‚¢‚é‚Æ‚«‚Í nullptr ‚ğ•Ô‚·B
+// @ æœ¬ä½“ãŒå‚ç…§ã•ã‚Œã¦ã„ã‚‹ã¨ãã¯ nullptr ã‚’è¿”ã™ã€‚
 //------------------------------------------------
 static PVal* getInnerPVal(PVal* pval, APTR aptr)
 {
@@ -57,11 +57,11 @@ static PVal* getInnerPVal(PVal* pval)
 	return getInnerPVal(pval, pval->offset);
 }
 
-// ƒOƒ[ƒoƒ‹•Ï”
+// ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
 extern vartype_t g_vtVector;
 extern HspVarProc* g_pHvpVector;
 
-// ŠÖ”
+// é–¢æ•°
 extern void HspVarVector_Init( HspVarProc* p );
 extern int SetReffuncResult( PDAT** ppResult, vector_t const& self );
 extern int SetReffuncResult( PDAT** ppResult, vector_t&& self );

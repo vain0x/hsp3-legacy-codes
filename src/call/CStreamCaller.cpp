@@ -1,4 +1,4 @@
-// �X�g���[���Ăяo���N���X
+﻿// ストリーム呼び出しクラス
 #if 0
 #include "CStreamCaller.h"
 
@@ -12,7 +12,7 @@ using namespace hpimod;
 static void AddAllArgsByRef( CCaller& caller, CCall const& callStream );
 
 //------------------------------------------------
-// �\�z (���b�p�[)
+// 構築 (ラッパー)
 //------------------------------------------------
 stream_t CStreamCaller::New()
 {
@@ -20,7 +20,7 @@ stream_t CStreamCaller::New()
 }
 
 //------------------------------------------------
-// �\�z
+// 構築
 //------------------------------------------------
 CStreamCaller::CStreamCaller()
 	: IFunctor()
@@ -28,7 +28,7 @@ CStreamCaller::CStreamCaller()
 { }
 
 //------------------------------------------------
-// �j��
+// 破棄
 //------------------------------------------------
 CStreamCaller::~CStreamCaller()
 {
@@ -37,41 +37,41 @@ CStreamCaller::~CStreamCaller()
 }
 
 //------------------------------------------------
-// �Ăяo������
+// 呼び出し処理
 // 
-// @ �����Ȃ� => �X�g���[���̈���(�̎Q��)������p���ČĂяo��
-// @ �������� => �X�g���[���̈����Ɨ^�����̘A��������ČĂяo��
+// @ 引数なし => ストリームの引数(の参照)だけを用いて呼び出す
+// @ 引数あり => ストリームの引数と与引数の連結を作って呼び出す
 //------------------------------------------------
 void CStreamCaller::call( CCaller& callerGiven )
 {
 	CCall& callStream = mpCaller->getCall();
 	CCall& callGiven  = callerGiven.getCall();
 
-	// �����Ȃ� : �ȈՌĂяo�� (callerGiven ���g���܂킹��)
+	// 引数なし : 簡易呼び出し (callerGiven を使いまわせる)
 	if ( callGiven.getCntArg() == 0 ) {
-		callerGiven.setFunctor( callStream.getFunctor() );		// �X�g���[�����Ă�ł���֐�
+		callerGiven.setFunctor( callStream.getFunctor() );		// ストリームが呼んでいる関数
 
 		AddAllArgsByRef( callerGiven, callStream );
 
-		// �Ăяo��
+		// 呼び出す
 		callerGiven.call();
 
-	// ��������
+	// 引数あり
 	} else {
 		CCaller caller;
 
 		caller.setFunctor( callStream.getFunctor() );
 
-		// ������ : �X�g���[���̈����Ɨ^��������ׂ�
+		// 引数列 : ストリームの引数と与引数を並べる
 		{
 			AddAllArgsByRef( caller, callStream );
 			AddAllArgsByRef( caller, callerGiven.getCall() );
 		}
 
-		// �Ăяo��
+		// 呼び出す
 		caller.call();
 
-		// �Ԓl�� callerGiven �ɓ]������
+		// 返値を callerGiven に転送する
 		callGiven.setRetValTransmit( caller.getCall() );
 	}
 
@@ -79,11 +79,11 @@ void CStreamCaller::call( CCaller& callerGiven )
 }
 
 //------------------------------------------------
-// �X�g���[������������ caller �ɒǉ�����
+// ストリームが持つ引数を caller に追加する
 //------------------------------------------------
 static void AddAllArgsByRef( CCaller& caller, CCall const& callStream )
 {
-	// �X�g���[���ɗ^�����Ă��������������̂܂܈����n��
+	// ストリームに与えられていた実引数をそのまま引き渡す
 	for ( size_t i = 0; i < callStream.getCntArg(); ++ i ) {
 		caller.addArgByRef(
 			callStream.getArgPVal(i),
@@ -94,13 +94,13 @@ static void AddAllArgsByRef( CCaller& caller, CCall const& callStream )
 }
 
 #if 0
-	/* �{�c
-		// �^����ꂽ������S�ăX�g���[���ɒǉ����A��菜��
+	/* ボツ
+		// 与えられた引数を全てストリームに追加し、取り除く
 		for ( int i = 0; i < callNow->getCntArg(); ++ i ) {
 			PVal* const pval = callNow->getArgPVal(i);
 			APTR  const aptr = callNow->getArgAptr(i);
 
-			if ( callNow->getArgInfo( ARGINFOID_BYREF, i ) ) {	// �Q�Ɠn��
+			if ( callNow->getArgInfo( ARGINFOID_BYREF, i ) ) {	// 参照渡し
 				mpCaller->addArgByRef( pval, aptr );
 			} else {
 				mpCaller->addArgByVal( PVal_getptr(pval, aptr), pval->flag );
@@ -111,7 +111,7 @@ static void AddAllArgsByRef( CCaller& caller, CCall const& callStream )
 #endif
 
 //------------------------------------------------
-// �擾�n
+// 取得系
 //------------------------------------------------
 label_t         CStreamCaller::getLabel()   const { return getCaller()->getCall().getFunctor().getLabel(); }
 int             CStreamCaller::getAxCmd()   const { return getCaller()->getCall().getFunctor().getAxCmd(); }

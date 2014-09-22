@@ -1,4 +1,4 @@
-// Call(ModCls) - vartype struct
+ï»¿// Call(ModCls) - vartype struct
 #if 0
 #include <map>
 #include <array>
@@ -19,7 +19,7 @@
 using namespace hpimod;
 using namespace ModCls;
 
-// ƒeƒ“ƒ|ƒ‰ƒŠ•Ï”‚Ö‚ÌQÆ (•’Ê‚É‚ÍQÆ‚Å‚«‚È‚¢‚Ì‚ÅA—^‚¦‚ç‚ê‚½‚Æ‚«‚É•Û‘¶‚·‚é)
+// ãƒ†ãƒ³ãƒãƒ©ãƒªå¤‰æ•°ã¸ã®å‚ç…§ (æ™®é€šã«ã¯å‚ç…§ã§ããªã„ã®ã§ã€ä¸ãˆã‚‰ã‚ŒãŸã¨ãã«ä¿å­˜ã™ã‚‹)
 PVal* mpval_struct = nullptr;
 
 PVal* ModCls::getMPValStruct()
@@ -31,10 +31,10 @@ PVal* ModCls::getMPVal(vartype_t type)
 	return (mpval_struct ? (mpval_struct - HSPVAR_FLAG_STRUCT + type) : nullptr);
 }
 
-// Œ³X‚Ì struct Œ^
+// å…ƒã€…ã® struct å‹
 static HspVarProc hvp_struct_impl;
 
-// ‘O•ûéŒ¾
+// å‰æ–¹å®£è¨€
 static void HspVarStructWrap_Alloc( PVal *pval, const PVal *pval2 );
 static void HspVarStructWrap_Free( PVal *pval );
 
@@ -68,7 +68,7 @@ static void HspVarStructWrap_Method( PVal* pval );
 static void HspVarStructWrap_InitCnvWrap();
 
 //------------------------------------------------
-// struct ˆ—ŠÖ”‚ğ’u‚«Š·‚¦‚é
+// struct å‡¦ç†é–¢æ•°ã‚’ç½®ãæ›ãˆã‚‹
 //------------------------------------------------
 void HspVarStructWrap_Init( HspVarProc* vp )
 {
@@ -108,25 +108,25 @@ void HspVarStructWrap_Init( HspVarProc* vp )
 };
 
 //------------------------------------------------
-// Šm•Û
+// ç¢ºä¿
 //
-// @ ‰Šú’l‚Í nullmod ‚Æ‚·‚éB
+// @ åˆæœŸå€¤ã¯ nullmod ã¨ã™ã‚‹ã€‚
 //------------------------------------------------
 void HspVarStructWrap_Alloc( PVal* pval, PVal const* pval2 )
 {
-	if ( pval->len[1] < 1 ) pval->len[1] = 1;		// ”z—ñ‚ğÅ’á1‚ÍŠm•Û‚·‚é
+	if ( pval->len[1] < 1 ) pval->len[1] = 1;		// é…åˆ—ã‚’æœ€ä½1ã¯ç¢ºä¿ã™ã‚‹
 
 	size_t const size = sizeof(FlexValue) * pval->len[1];
 	auto const pt = reinterpret_cast<FlexValue*>(hspmalloc( size ));
 
 	std::memset( pt, 0x00, size );
 
-	// ’l‚ğŒp³(•¡Ê & src‰ğ•ú) or ‰Šú‰»
+	// å€¤ã‚’ç¶™æ‰¿(è¤‡å†™ & srcè§£æ”¾) or åˆæœŸåŒ–
 	if ( pval2 ) {
-		// Š—LŒ ‚²‚ÆŠÛXƒRƒs[
+		// æ‰€æœ‰æ¨©ã”ã¨ä¸¸ã€…ã‚³ãƒ”ãƒ¼
 		std::memmove(pt, pval2->pt, sizeof(FlexValue) * pval2->len[1]);
 
-		// pval ‚Ì•û‚ª’Z‚¢ê‡AŒp³‚Å‚«‚È‚¢•ª‚ğ”jŠü
+		// pval ã®æ–¹ãŒçŸ­ã„å ´åˆã€ç¶™æ‰¿ã§ããªã„åˆ†ã‚’ç ´æ£„
 		auto const iter2 = VtTraits::asValptr<vtStruct>(pval2->pt);
 		for ( int i = pval2->len[1]; i < pval->len[1]; ++i ) {
 			FlexValue_Release(iter2[i]);
@@ -138,12 +138,12 @@ void HspVarStructWrap_Alloc( PVal* pval, PVal const* pval2 )
 	pval->mode   = HSPVAR_MODE_MALLOC;
 	pval->pt     = VtTraits::asPDAT<vtStruct>(pt);
 	pval->size   = size;
-//	pval->master = nullptr;	// •sg—p
+//	pval->master = nullptr;	// ä¸ä½¿ç”¨
 	return;
 }
 
 //------------------------------------------------
-// ‰ğ•ú
+// è§£æ”¾
 //------------------------------------------------
 void HspVarStructWrap_Free( PVal* pval )
 {
@@ -163,7 +163,7 @@ void HspVarStructWrap_Free( PVal* pval )
 }
 
 //------------------------------------------------
-// •¡Ê
+// è¤‡å†™
 //------------------------------------------------
 void HspVarStructWrap_Set( PVal* pval, PDAT* pdat, PDAT const* in )
 {
@@ -172,8 +172,8 @@ void HspVarStructWrap_Set( PVal* pval, PDAT* pdat, PDAT const* in )
 
 	FlexValue_Copy( fv_dst, fv_src );
 
-	// ƒeƒ“ƒ|ƒ‰ƒŠ•Ï”‚Ö‚Ì‘ã“ü(”ñ”j‰ó‰‰Z‚Ì¶•Ó | code_get() ‚Ì•Ô’l)
-	// ƒeƒ“ƒ|ƒ‰ƒŠ•Ï”‚ğ‹L‰¯‚µ‚Ä‚¨‚­
+	// ãƒ†ãƒ³ãƒãƒ©ãƒªå¤‰æ•°ã¸ã®ä»£å…¥(éç ´å£Šæ¼”ç®—ã®å·¦è¾º | code_get() ã®è¿”å€¤)
+	// ãƒ†ãƒ³ãƒãƒ©ãƒªå¤‰æ•°ã‚’è¨˜æ†¶ã—ã¦ãŠã
 	if ( !mpval_struct && (pval->support & HSPVAR_SUPPORT_TEMPVAR) ) {
 		mpval_struct = pval;
 	}
@@ -183,19 +183,19 @@ void HspVarStructWrap_Set( PVal* pval, PDAT* pdat, PDAT const* in )
 }
 
 //------------------------------------------------
-// “o˜^‚³‚ê‚½‰‰ZÀ‘Ì‚ğŒŸõ‚µ‚Äæ“¾‚·‚é
+// ç™»éŒ²ã•ã‚ŒãŸæ¼”ç®—å®Ÿä½“ã‚’æ¤œç´¢ã—ã¦å–å¾—ã™ã‚‹
 // 
-// @result: ŠÖ”q
+// @result: é–¢æ•°å­
 //------------------------------------------------
 static functor_t const& StructWrap_GetMethod( int subid, int opId )
 {
 	CModOperator const* const pModOp = getModOperator();
 
-	// ‰‰ZŠÖ”ƒŠƒXƒg‚ğŒŸõ 
+	// æ¼”ç®—é–¢æ•°ãƒªã‚¹ãƒˆã‚’æ¤œç´¢ 
 	auto const iterCls = pModOp->find( subid );
 	if ( iterCls == pModOp->end() ) { dbgout("no operation defined in %d", subid); puterror( HSPERR_UNSUPPORTED_FUNCTION ); }
 
-	// Àsˆ—‚Ìæ“¾ 
+	// å®Ÿè¡Œå‡¦ç†ã®å–å¾— 
 	auto const iterOp = iterCls->second.find( opId );
 	if ( iterOp == iterCls->second.end() || iterOp->second->getUsing() == 0 ) { dbgout("operation #%d is not defined", opId); puterror( HSPERR_UNSUPPORTED_FUNCTION ); }
 
@@ -205,9 +205,9 @@ static functor_t const& StructWrap_GetMethod( int subid, int opId )
 }
 
 //------------------------------------------------
-// •¡»ŠÖ”ŒÄ‚Ño‚µ
+// è¤‡è£½é–¢æ•°å‘¼ã³å‡ºã—
 // 
-// @result: •¡»‚³‚ê‚½ƒCƒ“ƒXƒ^ƒ“ƒX (QÆƒJƒEƒ“ƒ^: 1) or nullmod
+// @result: è¤‡è£½ã•ã‚ŒãŸã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ (å‚ç…§ã‚«ã‚¦ãƒ³ã‚¿: 1) or nullmod
 //------------------------------------------------
 void HspVarStructWrap_Dup( FlexValue* result, FlexValue* fv )
 {
@@ -216,23 +216,23 @@ void HspVarStructWrap_Dup( FlexValue* result, FlexValue* fv )
 		return;
 	}
 
-	// ˆê•Ï” (‚±‚ê‚É•¡»‚ğì‚Á‚Ä‚à‚ç‚¤)
+	// ä¸€æ™‚å¤‰æ•° (ã“ã‚Œã«è¤‡è£½ã‚’ä½œã£ã¦ã‚‚ã‚‰ã†)
 	PVal _pvTmp { };
 	PVal* const pvTmp = &_pvTmp;
 
 	PVal_init( pvTmp, HSPVAR_FLAG_STRUCT );
 
-	// ŒÄ‚Ño‚µ 
+	// å‘¼ã³å‡ºã— 
 	{
 		CCaller caller;
 		functor_t const& functor = StructWrap_GetMethod( FlexValue_SubId(*fv), OpId_Dup );
 
-		// ŒÄ‚Ño‚µ€”õ 
+		// å‘¼ã³å‡ºã—æº–å‚™ 
 		caller.setFunctor( functor );
 		caller.addArgByVal( fv, HSPVAR_FLAG_STRUCT );
 		caller.addArgByRef( pvTmp );
 
-		// ŒÄ‚Ño‚µ 
+		// å‘¼ã³å‡ºã— 
 		caller.call();
 	}
 
@@ -244,18 +244,18 @@ void HspVarStructWrap_Dup( FlexValue* result, FlexValue* fv )
 }
 
 //------------------------------------------------
-// ƒ‰ƒbƒv‚³‚ê‚½‰‰ZŠÖ”
+// ãƒ©ãƒƒãƒ—ã•ã‚ŒãŸæ¼”ç®—é–¢æ•°
 // 
-// @ ”ñ”j‰ó“ñ€‰‰Z ( += ‚Å‚È‚­A+ ‚È‚Ç‚Ì‚±‚Æ ) ‚Ìê‡A
-// @	ƒR[ƒhÀs’†‚É mpval ƒ|ƒCƒ“ƒ^‚ª•Ï‚í‚Á‚Ä‚µ‚Ü‚¤‚Ì‚ÅA
-// @	§Œä‚ğ–ß‚·‘O‚É mpval ‚ğ mpval_struct ‚É’¼‚µ‚Ä‚¨‚­B
-// @ ”ñ”j‰ó‚È‚çA¶•Ó‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğ”j‰ó‚µ‚Ä‚Í‚¢‚¯‚È‚¢‚Ì‚ÅA
-// @	¶•Ó‚Ì•¡»‚É‘Î‚µ‚Äˆ—‚ğs‚¤ (ˆêƒIƒuƒWƒFƒNƒg‚ğ•Ô‚·)B
-// @ lhs(thismod) ‚ª null ‚È‚çŒ‹‰Ê‚à null AŒÌ‚É‰½‚à‚µ‚È‚¢B
+// @ éç ´å£ŠäºŒé …æ¼”ç®— ( += ã§ãªãã€+ ãªã©ã®ã“ã¨ ) ã®å ´åˆã€
+// @	ã‚³ãƒ¼ãƒ‰å®Ÿè¡Œä¸­ã« mpval ãƒã‚¤ãƒ³ã‚¿ãŒå¤‰ã‚ã£ã¦ã—ã¾ã†ã®ã§ã€
+// @	åˆ¶å¾¡ã‚’æˆ»ã™å‰ã« mpval ã‚’ mpval_struct ã«ç›´ã—ã¦ãŠãã€‚
+// @ éç ´å£Šãªã‚‰ã€å·¦è¾ºã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç ´å£Šã—ã¦ã¯ã„ã‘ãªã„ã®ã§ã€
+// @	å·¦è¾ºã®è¤‡è£½ã«å¯¾ã—ã¦å‡¦ç†ã‚’è¡Œã† (ä¸€æ™‚ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’è¿”ã™)ã€‚
+// @ lhs(thismod) ãŒ null ãªã‚‰çµæœã‚‚ null ã€æ•…ã«ä½•ã‚‚ã—ãªã„ã€‚
 //------------------------------------------------
 static void HspVarStructWrap_CoreI( PDAT* pdat, void const* val, int opId )
 {
-	// ”ñ”j‰ó“ñ€‰‰Z‚Ìê‡ (mpval_struct ‚ÍŠù‚Éæ“¾‚Å‚«‚Ä‚¢‚é‚Í‚¸)
+	// éç ´å£ŠäºŒé …æ¼”ç®—ã®å ´åˆ (mpval_struct ã¯æ—¢ã«å–å¾—ã§ãã¦ã„ã‚‹ã¯ãš)
 	bool const bTempOp =
 		(mpval_struct && (void*)mpval_struct->pt == pdat);
 
@@ -263,38 +263,38 @@ static void HspVarStructWrap_CoreI( PDAT* pdat, void const* val, int opId )
 	auto const rhs = VtTraits::asValptr<vtStruct>(val);
 	assert(!!lhs && !!rhs);
 
-	// ŒÄ‚Ño‚µ
+	// å‘¼ã³å‡ºã—
 	if ( !FlexValue_IsNull(*lhs) ) {
 		CCaller caller;
 
 		functor_t const& functor = StructWrap_GetMethod( FlexValue_SubId(*lhs), opId );
 
-		// •¡»‚ğ¶¬‚·‚é 
+		// è¤‡è£½ã‚’ç”Ÿæˆã™ã‚‹ 
 		if ( bTempOp ) {
 			FlexValue _lhsDup = {0};
 			FlexValue* const lhsDup = &_lhsDup;
 			{
-				FlexValueHolder lhsBak( *lhs );	// dup ’†‚É‰ó‚ê‚Ä‚µ‚Ü‚¢‚¤‚é‚Ì‚ÅAmpval_struct ‚ğ•Û‘¶
+				FlexValueHolder lhsBak( *lhs );	// dup ä¸­ã«å£Šã‚Œã¦ã—ã¾ã„ã†ã‚‹ã®ã§ã€mpval_struct ã‚’ä¿å­˜
 				HspVarStructWrap_Dup( lhsDup, lhs );
-				FlexValue_AddRefTmp( *lhsDup );	// •Ô‹p‚³‚ê‚ÄƒXƒ^ƒbƒN‚Éæ‚é‚Ì‚Å
+				FlexValue_AddRefTmp( *lhsDup );	// è¿”å´ã•ã‚Œã¦ã‚¹ã‚¿ãƒƒã‚¯ã«ä¹—ã‚‹ã®ã§
 			}
 
-			// lhs ‚É lhsDup ‚ğ‘ã“ü‚·‚é (Œ³X‚ ‚Á‚½•û‚ğ lhsDup ‚Å•Û)
+			// lhs ã« lhsDup ã‚’ä»£å…¥ã™ã‚‹ (å…ƒã€…ã‚ã£ãŸæ–¹ã‚’ lhsDup ã§ä¿æŒ)
 			std::swap( *lhs, *lhsDup );
 			
-			// ¶•Ó‚ÉŒ³X‚ ‚Á‚½ƒCƒ“ƒXƒ^ƒ“ƒX‚ğ”jŠü
+			// å·¦è¾ºã«å…ƒã€…ã‚ã£ãŸã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç ´æ£„
 			FlexValue_Release( *lhsDup );
 		}
 
-		// ŒÄ‚Ño‚µ€”õ 
+		// å‘¼ã³å‡ºã—æº–å‚™ 
 		caller.setFunctor( functor );
 		caller.addArgByVal( lhs, HSPVAR_FLAG_STRUCT );
 		caller.addArgByVal( rhs, HSPVAR_FLAG_STRUCT );
 
-		// ŒÄ‚Ño‚µ 
+		// å‘¼ã³å‡ºã— 
 		caller.call();
 
-	// ¶•Ó‚ª nullmod => •Ô’l‚à nullmod
+	// å·¦è¾ºãŒ nullmod => è¿”å€¤ã‚‚ nullmod
 	} else {
 		FlexValue_DelRef(*lhs);
 	}
@@ -303,51 +303,51 @@ static void HspVarStructWrap_CoreI( PDAT* pdat, void const* val, int opId )
 
 	if ( bTempOp ) *(exinfo->mpval) = mpval_struct;	// restore
 
-	// ‰E•Ó‚ªˆêƒIƒuƒWƒFƒNƒg‚È‚çAƒXƒ^ƒbƒN‚©‚ç~‚è‚é
+	// å³è¾ºãŒä¸€æ™‚ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆãªã‚‰ã€ã‚¹ã‚¿ãƒƒã‚¯ã‹ã‚‰é™ã‚Šã‚‹
 	FlexValue_ReleaseTmp( *rhs );
 	return;
 }
 
 //------------------------------------------------
-// ƒ‰ƒbƒv‚³‚ê‚½‰‰ZŠÖ”::”äŠr
+// ãƒ©ãƒƒãƒ—ã•ã‚ŒãŸæ¼”ç®—é–¢æ•°::æ¯”è¼ƒ
 // 
-// @ •¡»‚ğ¶¬‚µ‚È‚¢B
-// @ CmpI ‚ğŒÄ‚ÑA‚»‚Ì•Ô’l‚ğ”äŠr’l‚Æ‚µ‚Ä—˜—p‚·‚éB
-// @ mpval_struct ‚ğ”j‰ó‚·‚é‚Ì‚Å‚È‚­Ampval ‚ğ mpval_int ‚É·‚µ‘Ö‚¦‚ÄA
-// @	‚»‚ê‚É‰‰Z•Ô’l‚ğ‘ã“ü‚·‚éB
+// @ è¤‡è£½ã‚’ç”Ÿæˆã—ãªã„ã€‚
+// @ CmpI ã‚’å‘¼ã³ã€ãã®è¿”å€¤ã‚’æ¯”è¼ƒå€¤ã¨ã—ã¦åˆ©ç”¨ã™ã‚‹ã€‚
+// @ mpval_struct ã‚’ç ´å£Šã™ã‚‹ã®ã§ãªãã€mpval ã‚’ mpval_int ã«å·®ã—æ›¿ãˆã¦ã€
+// @	ãã‚Œã«æ¼”ç®—è¿”å€¤ã‚’ä»£å…¥ã™ã‚‹ã€‚
 //------------------------------------------------
 static void HspVarStructWrap_CmpI( PDAT* pdat, void const* val, int opId )
 {
-	// ”ñ”j‰ó“ñ€‰‰Z‚Ìê‡
+	// éç ´å£ŠäºŒé …æ¼”ç®—ã®å ´åˆ
 	bool const bTempOp = (mpval_struct && (void*)mpval_struct->pt == pdat);	
 
 	if ( !bTempOp ) {
-		// •¡‡‘ã“ü => ¶•Ó•Ï”‚ÌŒ^‚ª•Ï‚í‚é‚ªA‚»‚ê‚ÍƒGƒ‰[‚É‚È‚é‚Ì‚Åæ‚ÉƒGƒ‰[‚ğo‚µ‚Ä‚¨‚­
-		dbgout("int Œ^ˆÈŠO‚Ì•¡‡‘ã“ü”äŠr‰‰Z‚Ís‚¦‚È‚¢B");
+		// è¤‡åˆä»£å…¥ => å·¦è¾ºå¤‰æ•°ã®å‹ãŒå¤‰ã‚ã‚‹ãŒã€ãã‚Œã¯ã‚¨ãƒ©ãƒ¼ã«ãªã‚‹ã®ã§å…ˆã«ã‚¨ãƒ©ãƒ¼ã‚’å‡ºã—ã¦ãŠã
+		dbgout("int å‹ä»¥å¤–ã®è¤‡åˆä»£å…¥æ¯”è¼ƒæ¼”ç®—ã¯è¡Œãˆãªã„ã€‚");
 		puterror( HSPERR_TYPE_MISMATCH );
 	}
 
 	auto const lhs = VtTraits::asValptr<vtStruct>(pdat);
 	auto const rhs = VtTraits::asValptr<vtStruct>(val);
 
-	// ‰‰ZŒ‹‰Ê
+	// æ¼”ç®—çµæœ
 	int cmp;
 
-	// ŒÄ‚Ño‚µ 
+	// å‘¼ã³å‡ºã— 
 	if ( !FlexValue_IsNull(*lhs) && !FlexValue_IsNull(*rhs) ) {
 		CCaller caller;
 		functor_t const& functor = StructWrap_GetMethod( FlexValue_SubId(*lhs), OpId_Cmp );
 
-		// ŒÄ‚Ño‚µ€”õ 
+		// å‘¼ã³å‡ºã—æº–å‚™ 
 		caller.setFunctor( functor );
 		caller.addArgByVal(   lhs, HSPVAR_FLAG_STRUCT );
 		caller.addArgByVal(   rhs, HSPVAR_FLAG_STRUCT );
 		caller.addArgByVal( &opId, HSPVAR_FLAG_INT );
 
-		// ŒÄ‚Ño‚µ 
+		// å‘¼ã³å‡ºã— 
 		caller.call();
 
-		// •Ô’l‚ğæ“¾ 
+		// è¿”å€¤ã‚’å–å¾— 
 		PDAT* result = nullptr;
 		vartype_t const resVt = caller.getCallResult( &result );
 		if ( resVt != HSPVAR_FLAG_INT ) puterror( HSPERR_TYPE_MISMATCH );
@@ -355,11 +355,11 @@ static void HspVarStructWrap_CmpI( PDAT* pdat, void const* val, int opId )
 		cmp = VtTraits::derefValptr<vtInt>(result);
 
 	} else {
-		// ‚Ç‚¿‚ç‚©‚ª nullmod ‚Ì‚Æ‚«Anullmod ‚Å‚È‚¢•û‚ª‘å‚«‚¢‚Æ‚¢‚¤‚±‚Æ‚É‚·‚é
+		// ã©ã¡ã‚‰ã‹ãŒ nullmod ã®ã¨ãã€nullmod ã§ãªã„æ–¹ãŒå¤§ãã„ã¨ã„ã†ã“ã¨ã«ã™ã‚‹
 		cmp = (!FlexValue_IsNull(*lhs) ? 1 : 0) - (!FlexValue_IsNull(*rhs) ? 1 : 0);
 	}
 
-	// ‰‰Z•Ô’l‚ğİ’è‚·‚é
+	// æ¼”ç®—è¿”å€¤ã‚’è¨­å®šã™ã‚‹
 	int const calccode = opId &~ OpFlag_Calc;
 	int const resultValue = HspBool(
 		( calccode == CALCCODE_EQ   ) ? cmp == 0 :
@@ -377,7 +377,7 @@ static void HspVarStructWrap_CmpI( PDAT* pdat, void const* val, int opId )
 
 	getHvp(HSPVAR_FLAG_STRUCT)->aftertype = HSPVAR_FLAG_INT;
 
-	// ‰E•Ó‚ªƒXƒ^ƒbƒN‚©‚ç~‚è‚é‚Ì‚ÅˆêƒIƒuƒWƒFƒNƒg‚È‚ç‰ğ•ú‚·‚é
+	// å³è¾ºãŒã‚¹ã‚¿ãƒƒã‚¯ã‹ã‚‰é™ã‚Šã‚‹ã®ã§ä¸€æ™‚ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆãªã‚‰è§£æ”¾ã™ã‚‹
 	FlexValue_ReleaseTmp( *rhs );
 	return;
 }
@@ -403,19 +403,19 @@ void HspVarStructWrap_RrI  ( PDAT* pdat, void const* val ) { HspVarStructWrap_Co
 void HspVarStructWrap_LrI  ( PDAT* pdat, void const* val ) { HspVarStructWrap_CoreI( pdat, val, OpFlag_Calc | CALCCODE_LR ); }
 
 //------------------------------------------------
-// Œ^•ÏŠ· (from)
+// å‹å¤‰æ› (from)
 //------------------------------------------------
 PDAT* HspVarStructWrap_Cnv( PDAT const* buffer, int flag )
 {
-	// w’èŒ^(flag) ¨ struct
+	// æŒ‡å®šå‹(flag) â†’ struct
 	if ( flag != HSPVAR_FLAG_STRUCT ) puterror( HSPERR_TYPE_MISMATCH );
 	return const_cast<PDAT*>(buffer);
 }
 
 //------------------------------------------------
-// Œ^•ÏŠ· (to)
+// å‹å¤‰æ› (to)
 // 
-// @ CnvCustom: CnvTo ( struct ¨ ‰½‚© )
+// @ CnvCustom: CnvTo ( struct â†’ ä½•ã‹ )
 //------------------------------------------------
 PDAT* HspVarStructWrap_CnvCustom( PDAT const* buffer, int flag )
 {
@@ -426,19 +426,19 @@ PDAT* HspVarStructWrap_CnvCustom( PDAT const* buffer, int flag )
 
 	PDAT* result = nullptr;
 
-	// ŒÄ‚Ño‚µ 
+	// å‘¼ã³å‡ºã— 
 	if ( !FlexValue_IsNull(*fv) ) {
 		PVal*& mpval = *exinfo->mpval;
 
-		PVal _pvTmp = {0};			// mpval ‚Ì’l‚ğ•Û‘¶
+		PVal _pvTmp = {0};			// mpval ã®å€¤ã‚’ä¿å­˜
 		PVal* const pvTmp = &_pvTmp;
-		bool const bInExpr = (mpval->flag == flag);	// ‰‰Z®‚Ì‰E•Ó‚ÌŒ^•ÏŠ·‚©‚à => ƒR[ƒhÀs‚Å mpval ‚ğ”j‰ó‚µ‚Ä‚µ‚Ü‚¤‚Ì‚ÅA•Û‘¶‚·‚é
+		bool const bInExpr = (mpval->flag == flag);	// æ¼”ç®—å¼ã®å³è¾ºã®å‹å¤‰æ›ã‹ã‚‚ => ã‚³ãƒ¼ãƒ‰å®Ÿè¡Œã§ mpval ã‚’ç ´å£Šã—ã¦ã—ã¾ã†ã®ã§ã€ä¿å­˜ã™ã‚‹
 		if ( bInExpr ) {
 			PVal_init( pvTmp, HSPVAR_FLAG_INT );
 			PVal_assign( pvTmp, mpval->pt, mpval->flag );
 		}
 
-		// •ÏŠ·ŠÖ”‚ğŒÄ‚Ño‚·
+		// å¤‰æ›é–¢æ•°ã‚’å‘¼ã³å‡ºã™
 		{
 			CCaller caller;
 			functor_t const& functor = StructWrap_GetMethod(FlexValue_SubId(*fv), opId);
@@ -452,17 +452,17 @@ PDAT* HspVarStructWrap_CnvCustom( PDAT const* buffer, int flag )
 			if ( resVt != flag ) puterror(HSPERR_TYPE_MISMATCH);
 		}
 
-		// Œãn–– 
+		// å¾Œå§‹æœ« 
 		if ( bInExpr ) {
 			mpval = getMPVal(flag);
-			PVal_assign( mpval, pvTmp->pt, pvTmp->flag );	// mpval ‚Ì’l‚ğ restore
+			PVal_assign( mpval, pvTmp->pt, pvTmp->flag );	// mpval ã®å€¤ã‚’ restore
 			PVal_free( pvTmp );
 		}
 		
-		// ƒXƒ^ƒbƒN‚©‚ç~‚è‚é
+		// ã‚¹ã‚¿ãƒƒã‚¯ã‹ã‚‰é™ã‚Šã‚‹
 		FlexValue_ReleaseTmp(*fv);
 
-	} else {	// nullmod ¨ ‘¼
+	} else {	// nullmod â†’ ä»–
 		static PVal* pval;
 		if ( !pval ) {
 			pval = reinterpret_cast<PVal*>(hspmalloc( sizeof(PVal) ));
@@ -495,12 +495,12 @@ PDAT* HspVarStructWrap_CnvCustom( PDAT const* buffer, int flag )
 }
 
 //------------------------------------------------
-// Œ^•ÏŠ·ŠÖ”‚Ìƒ‰ƒbƒv
+// å‹å¤‰æ›é–¢æ•°ã®ãƒ©ãƒƒãƒ—
 // 
-// @ ‘g‚İ‚İŒ^‚Ì Cnv ‚ğAstruct ‚Ì‚Æ‚«‚É“Áêˆ—‚·‚é‚æ‚¤‚Éƒ‰ƒbƒv‚·‚éB
-// @	‘g‚İ‚İŒ^‚Íuint Œ^‚Ö‚Ì•ÏŠ·v‚ÌŠÖ”‚ğ—p‚¢‚é‚Ì‚ÅA
-// @	‚»‚ê‚É struct ‚ª—^‚¦‚ç‚ê‚½‚Æ‚«‚É HspvarStructWrap_CnvCustom ‚ğ—p‚¢‚é‚æ‚¤‚É‚·‚éB
-// @ Œ³X‚ÌŠÖ”‚Í g_cnvfunc_impl ‚É•Û‘¶‚·‚éB
+// @ çµ„ã¿è¾¼ã¿å‹ã® Cnv ã‚’ã€struct ã®ã¨ãã«ç‰¹æ®Šå‡¦ç†ã™ã‚‹ã‚ˆã†ã«ãƒ©ãƒƒãƒ—ã™ã‚‹ã€‚
+// @	çµ„ã¿è¾¼ã¿å‹ã¯ã€Œint å‹ã¸ã®å¤‰æ›ã€ã®é–¢æ•°ã‚’ç”¨ã„ã‚‹ã®ã§ã€
+// @	ãã‚Œã« struct ãŒä¸ãˆã‚‰ã‚ŒãŸã¨ãã« HspvarStructWrap_CnvCustom ã‚’ç”¨ã„ã‚‹ã‚ˆã†ã«ã™ã‚‹ã€‚
+// @ å…ƒã€…ã®é–¢æ•°ã¯ g_cnvfunc_impl ã«ä¿å­˜ã™ã‚‹ã€‚
 //------------------------------------------------
 /*
 #include <functional>
@@ -508,12 +508,12 @@ PDAT* HspVarStructWrap_CnvCustom( PDAT const* buffer, int flag )
 typedef void* (*cnvfunc_t)( void const* buffer, int flag );
 typedef std::function<void*( void const*, int )> cnvfuncLambda_t;
 
-static std::array<cnvfunc_t,       HSPVAR_FLAG_USERDEF> g_cnvfunc_impl;	// Œ³Xİ’è‚³‚ê‚Ä‚¢‚½ Cnv ŠÖ”
-static std::array<cnvfuncLambda_t, HSPVAR_FLAG_USERDEF> g_cnvfunc_wrap;	// ƒ‰ƒbƒv‚µ‚½ Cnv ŠÖ”
+static std::array<cnvfunc_t,       HSPVAR_FLAG_USERDEF> g_cnvfunc_impl;	// å…ƒã€…è¨­å®šã•ã‚Œã¦ã„ãŸ Cnv é–¢æ•°
+static std::array<cnvfuncLambda_t, HSPVAR_FLAG_USERDEF> g_cnvfunc_wrap;	// ãƒ©ãƒƒãƒ—ã—ãŸ Cnv é–¢æ•°
 
 void HspVarStructWrap_InitCnvWrap()
 {
-	// ƒ‰ƒbƒp[ŠÖ”‚ğ¶¬‚·‚éŠÖ”
+	// ãƒ©ãƒƒãƒ‘ãƒ¼é–¢æ•°ã‚’ç”Ÿæˆã™ã‚‹é–¢æ•°
 	auto makeCnvFuncWrapper = []( vartype_t this_type ) {
 		return [this_type]( void const* buffer, int flag ) {
 			return ( flag == HSPVAR_FLAG_STRUCT )
@@ -522,13 +522,13 @@ void HspVarStructWrap_InitCnvWrap()
 		};
 	};
 
-	// Še‘g‚İ‚İŒ^‚Ì Cnv ‚ğƒ‰ƒbƒv‚·‚é
+	// å„çµ„ã¿è¾¼ã¿å‹ã® Cnv ã‚’ãƒ©ãƒƒãƒ—ã™ã‚‹
 	for ( int i = 1; i <= HSPVAR_FLAG_STRUCT; ++ i ) {
 		HspVarProc* vp = getHvp(i);
 
 		g_cnvfunc_wrap[i] = makeCnvFuncWrapper( i );
 		g_cnvfunc_impl[i] = vp->Cnv;
-		vp->Cnv = g_cnvfunc_wrap[i];		// function<> ‚ÍŠÖ”ƒ|ƒCƒ“ƒ^‚É‚Å‚«‚È‚¢
+		vp->Cnv = g_cnvfunc_wrap[i];		// function<> ã¯é–¢æ•°ãƒã‚¤ãƒ³ã‚¿ã«ã§ããªã„
 	}
 
 	return;
@@ -536,8 +536,8 @@ void HspVarStructWrap_InitCnvWrap()
 
 /*/
 typedef PDAT* (*cnvfunc_t)( PDAT const* buffer, int flag );
-static std::array<cnvfunc_t, HSPVAR_FLAG_USERDEF> g_cnvfunc_impl;	// Œ³Xİ’è‚³‚ê‚Ä‚¢‚½ Cnv ŠÖ”
-static std::array<cnvfunc_t, HSPVAR_FLAG_USERDEF> g_cnvfunc_wrap;	// ƒ‰ƒbƒv‚·‚é Cnv ŠÖ”
+static std::array<cnvfunc_t, HSPVAR_FLAG_USERDEF> g_cnvfunc_impl;	// å…ƒã€…è¨­å®šã•ã‚Œã¦ã„ãŸ Cnv é–¢æ•°
+static std::array<cnvfunc_t, HSPVAR_FLAG_USERDEF> g_cnvfunc_wrap;	// ãƒ©ãƒƒãƒ—ã™ã‚‹ Cnv é–¢æ•°
 
 #if 0
 #define FTM_HspVarStructWrap_CnvWrap(Name, Type) \
@@ -572,7 +572,7 @@ void HspVarStructWrap_InitCnvWrap()
 	g_cnvfunc_wrap[ HSPVAR_FLAG_DOUBLE ] = HspVarStructWrap_CnvWrap<HSPVAR_FLAG_DOUBLE>;
 	g_cnvfunc_wrap[ HSPVAR_FLAG_INT    ] = HspVarStructWrap_CnvWrap<HSPVAR_FLAG_INT>;
 
-	// Še‘g‚İ‚İŒ^‚Ì Cnv ‚ğƒ‰ƒbƒv‚·‚é
+	// å„çµ„ã¿è¾¼ã¿å‹ã® Cnv ã‚’ãƒ©ãƒƒãƒ—ã™ã‚‹
 	for ( int i = 1; i < HSPVAR_FLAG_STRUCT; ++ i ) {
 		auto const vp = getHvp(i);
 
@@ -585,10 +585,10 @@ void HspVarStructWrap_InitCnvWrap()
 //*/
 
 //------------------------------------------------
-// ƒƒ\ƒbƒh
+// ãƒ¡ã‚½ãƒƒãƒ‰
 // 
-// @ OpId_Method ‚É“o˜^‚³‚ê‚½–½—ß‚ğŒÄ‚ÑA
-// @	‚»‚±‚Å•Ô‹p‚³‚ê‚½ functor ‚ğŒÄ‚Ño‚·B
+// @ OpId_Method ã«ç™»éŒ²ã•ã‚ŒãŸå‘½ä»¤ã‚’å‘¼ã³ã€
+// @	ãã“ã§è¿”å´ã•ã‚ŒãŸ functor ã‚’å‘¼ã³å‡ºã™ã€‚
 //------------------------------------------------
 void HspVarStructWrap_Method( PVal* pval )
 {
@@ -599,10 +599,10 @@ void HspVarStructWrap_Method( PVal* pval )
 
 	if ( FlexValue_IsNull(self) ) return;
 
-	functor_t functorImpl;		// ÀÛ‚Ìƒƒ\ƒbƒh
-	int const exflg_bak = *exinfo->npexflg;	// •Û‘¶
+	functor_t functorImpl;		// å®Ÿéš›ã®ãƒ¡ã‚½ãƒƒãƒ‰
+	int const exflg_bak = *exinfo->npexflg;	// ä¿å­˜
 
-	// •ªUŠÖ”‚ÌŒÄ‚Ño‚µ 
+	// åˆ†æ•£é–¢æ•°ã®å‘¼ã³å‡ºã— 
 	{
 		CCaller caller;
 		functor_t const& functorMethod = StructWrap_GetMethod( FlexValue_SubId(self), OpId_Method );
@@ -621,24 +621,24 @@ void HspVarStructWrap_Method( PVal* pval )
 
 	*exinfo->npexflg = exflg_bak;	// restore
 
-	// ƒƒ\ƒbƒhÀ‘Ì‚ÌŒÄ‚Ño‚µ 
+	// ãƒ¡ã‚½ãƒƒãƒ‰å®Ÿä½“ã®å‘¼ã³å‡ºã— 
 	{
 		CCaller caller;
 
-		// ŒÄ‚Ño‚µ€”õ 
+		// å‘¼ã³å‡ºã—æº–å‚™ 
 		caller.setFunctor( functorImpl );
 
 		int const prmtype = functorImpl->getPrmInfo().getPrmType(0);
 		if ( prmtype == PrmType::Modvar || prmtype == PrmType::Var
 		  || prmtype == HSPVAR_FLAG_STRUCT || prmtype == PrmType::Any
-		 ) {		// ‘æˆêˆø”‚É modvar ‚ğ“n‚¹‚éê‡ thismod ‚ğ“n‚·
+		 ) {		// ç¬¬ä¸€å¼•æ•°ã« modvar ã‚’æ¸¡ã›ã‚‹å ´åˆ thismod ã‚’æ¸¡ã™
 			caller.addArgByVal( &self, HSPVAR_FLAG_STRUCT );
 		}
 		
-		// ƒXƒNƒŠƒvƒg‚©‚çˆø”‚ğæ‚èo‚·
+		// ã‚¹ã‚¯ãƒªãƒ—ãƒˆã‹ã‚‰å¼•æ•°ã‚’å–ã‚Šå‡ºã™
 		caller.setArgAll();
 
-		// ŒÄ‚Ño‚µ 
+		// å‘¼ã³å‡ºã— 
 		caller.call();
 	}
 

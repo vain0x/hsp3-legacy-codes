@@ -1,4 +1,4 @@
-// Assoc À‘Ìƒf[ƒ^ƒNƒ‰ƒX
+ï»¿// Assoc å®Ÿä½“ãƒ‡ãƒ¼ã‚¿ã‚¯ãƒ©ã‚¹
 
 #ifndef IG_CLASS_ASSOC_H
 #define IG_CLASS_ASSOC_H
@@ -8,10 +8,10 @@
 
 #include "hsp3plugin_custom.h"
 
-//	#define DBGOUT_ASSOC_ADDREF_OR_RELEASE	// AddRef, Release ‚ğ dbgout ‚Å•ñ‚·‚é
+//	#define DBGOUT_ASSOC_ADDREF_OR_RELEASE	// AddRef, Release ã‚’ dbgout ã§å ±å‘Šã™ã‚‹
 
 //------------------------------------------------
-// assoc ‚ÌÀ‘Ìƒf[ƒ^‚ÌƒNƒ‰ƒX
+// assoc ã®å®Ÿä½“ãƒ‡ãƒ¼ã‚¿ã®ã‚¯ãƒ©ã‚¹
 //------------------------------------------------
 class CAssoc
 {
@@ -19,17 +19,17 @@ public:
 	using Key_t = std::string;
 	using Map_t = std::map<Key_t, PVal*>;
 
-	static int const HSPVAR_SUPPORT_USER_ELEM = HSPVAR_SUPPORT_USER1;	// —v‘f‚Æ‚µ‚Ä¶¬‚³‚ê‚½ PVal*
+	static int const HSPVAR_SUPPORT_USER_ELEM = HSPVAR_SUPPORT_USER1;	// è¦ç´ ã¨ã—ã¦ç”Ÿæˆã•ã‚ŒãŸ PVal*
 
 	//--------------------------------------------
-	// ƒƒ“ƒo•Ï”
+	// ãƒ¡ãƒ³ãƒå¤‰æ•°
 	//--------------------------------------------
 private:
-	Map_t map_;		// Àƒf[ƒ^
-	int cnt_;		// QÆƒJƒEƒ“ƒ^ (0ˆÈ‰º‚Å€–S)
+	Map_t map_;		// å®Ÿãƒ‡ãƒ¼ã‚¿
+	int cnt_;		// å‚ç…§ã‚«ã‚¦ãƒ³ã‚¿ (0ä»¥ä¸‹ã§æ­»äº¡)
 
 	//--------------------------------------------
-	// ƒƒ“ƒoŠÖ”
+	// ãƒ¡ãƒ³ãƒé–¢æ•°
 	//--------------------------------------------
 public:
 	static CAssoc* New();
@@ -64,8 +64,8 @@ private:
 private:
 	int id_;
 public:
-	void AddRef()  { cnt_ ++; dbgout("[%d] ++ ¨ %d", id_, cnt_); }
-	void Release() { cnt_ --; dbgout("[%d] -- ¨ %d", id_, cnt_); if ( cnt_ == 0 ) { Delete(this); } }
+	void AddRef()  { cnt_ ++; dbgout("[%d] ++ â†’ %d", id_, cnt_); }
+	void Release() { cnt_ --; dbgout("[%d] -- â†’ %d", id_, cnt_); if ( cnt_ == 0 ) { Delete(this); } }
 #else
 public:
 	void AddRef()  { cnt_ ++; }
@@ -85,11 +85,11 @@ private:
 
 //*
 //------------------------------------------------
-// ˆø”‚Æ‚µ‚Äó‚¯æ‚Á‚½ CAssoc* ‚ğŠ—L‚·‚éƒNƒ‰ƒX
+// å¼•æ•°ã¨ã—ã¦å—ã‘å–ã£ãŸ CAssoc* ã‚’æ‰€æœ‰ã™ã‚‹ã‚¯ãƒ©ã‚¹
 // 
-// @ ˆê•Ï”‚É¶¬‚³‚ê‚½ assoc ‚ÌŸ‚Éˆø”‚ª‚ ‚éê‡A
-// @	mpval ‚ªŠ—LŒ ‚ğ¸‚Á‚Ä assoc ‚ªÁ–Å‚·‚é‚½‚ßA
-// @	mpval ‚É‘ã‚í‚Á‚Äƒ[ƒJƒ‹‚Å assoc ‚ğŠ—L‚·‚éB
+// @ ä¸€æ™‚å¤‰æ•°ã«ç”Ÿæˆã•ã‚ŒãŸ assoc ã®æ¬¡ã«å¼•æ•°ãŒã‚ã‚‹å ´åˆã€
+// @	mpval ãŒæ‰€æœ‰æ¨©ã‚’å¤±ã£ã¦ assoc ãŒæ¶ˆæ»…ã™ã‚‹ãŸã‚ã€
+// @	mpval ã«ä»£ã‚ã£ã¦ãƒ­ãƒ¼ã‚«ãƒ«ã§ assoc ã‚’æ‰€æœ‰ã™ã‚‹ã€‚
 // @ex: AssocForeachNext
 //------------------------------------------------
 class CAssocHolder

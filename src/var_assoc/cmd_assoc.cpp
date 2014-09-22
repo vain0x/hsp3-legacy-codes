@@ -1,4 +1,4 @@
-// assoc - Command code
+ï»¿// assoc - Command code
 
 #include "vt_assoc.h"
 #include "cmd_assoc.h"
@@ -10,12 +10,12 @@
 
 using namespace hpimod;
 
-static CAssoc* g_pAssocResult = nullptr;	// •Ô‹p’l‚ğŠ—L‚·‚é
+static CAssoc* g_pAssocResult = nullptr;	// è¿”å´å€¤ã‚’æ‰€æœ‰ã™ã‚‹
 
 //------------------------------------------------
-// assoc Œ^‚Ì’l‚ğó‚¯æ‚é
+// assoc å‹ã®å€¤ã‚’å—ã‘å–ã‚‹
 // 
-// @ mpval ‚Í assoc Œ^‚Æ‚È‚éB
+// @ mpval ã¯ assoc å‹ã¨ãªã‚‹ã€‚
 //------------------------------------------------
 CAssoc* code_get_assoc()
 {
@@ -25,9 +25,9 @@ CAssoc* code_get_assoc()
 }
 
 //------------------------------------------------
-// assoc ‚Ì“à•”•Ï”‚ğó‚¯æ‚é
+// assoc ã®å†…éƒ¨å¤‰æ•°ã‚’å—ã‘å–ã‚‹
 //
-// @ “à•”•Ï”‚ğw‚·“Yš‚ª‚Â‚¢‚Ä‚¢‚È‚¯‚ê‚ÎAnullptrB
+// @ å†…éƒ¨å¤‰æ•°ã‚’æŒ‡ã™æ·»å­—ãŒã¤ã„ã¦ã„ãªã‘ã‚Œã°ã€nullptrã€‚
 //------------------------------------------------
 PVal* code_get_assoc_pval()
 {
@@ -36,7 +36,7 @@ PVal* code_get_assoc_pval()
 }
 
 //------------------------------------------------
-// assoc Œ^‚Ì’l‚ğ•Ô‹p‚·‚é
+// assoc å‹ã®å€¤ã‚’è¿”å´ã™ã‚‹
 //------------------------------------------------
 int SetReffuncResult( PDAT** ppResult, CAssoc* const& pAssoc )
 {
@@ -49,10 +49,10 @@ int SetReffuncResult( PDAT** ppResult, CAssoc* const& pAssoc )
 }
 
 //#########################################################
-//        –½—ß
+//        å‘½ä»¤
 //#########################################################
 //------------------------------------------------
-// \’z (dim)
+// æ§‹ç¯‰ (dim)
 //------------------------------------------------
 void AssocNew()
 {
@@ -67,7 +67,7 @@ void AssocNew()
 }
 
 //------------------------------------------------
-// ”jŠü
+// ç ´æ£„
 //------------------------------------------------
 void AssocDelete()
 {
@@ -83,7 +83,7 @@ void AssocDelete()
 }
 
 //------------------------------------------------
-// ŠO•”•Ï”‚ÌƒCƒ“ƒ|[ƒg
+// å¤–éƒ¨å¤‰æ•°ã®ã‚¤ãƒ³ãƒãƒ¼ãƒˆ
 //------------------------------------------------
 static void AssocImportImpl( CAssoc* self, char const* src );
 
@@ -101,26 +101,26 @@ void AssocImport()
 
 static void AssocImportImpl( CAssoc* const self, char const* const src )
 {
-	// ƒ‚ƒWƒ…[ƒ‹–¼
+	// ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«å
 	if ( src[0] == '@' ) {
 		puterror( HSPERR_UNSUPPORTED_FUNCTION );
 		/*
 		bool bGlobal = ( src[1] == '\0' );
 
-		// ‚·‚×‚Ä‚ÌÃ“I•Ï”‚©‚çi‚è‚İŒŸõ
+		// ã™ã¹ã¦ã®é™çš„å¤‰æ•°ã‹ã‚‰çµã‚Šè¾¼ã¿æ¤œç´¢
 		for ( int i = 0; i < ctx->hsphed->max_val; ++ i ) {
 			char const* const name   = exinfo->HspFunc_varname( i );
 			char const* const nameAt = strchr(name, '@');
 
-			if (   ( bGlobal && nameAt == NULL )			// ƒOƒ[ƒoƒ‹•Ï”
-				|| (!bGlobal && nameAt != NULL && !strcmp(nameAt + 1, src + 1) )	// ƒ‚ƒWƒ…[ƒ‹“à•Ï” (ƒ‚ƒWƒ…[ƒ‹–¼ˆê’v)
+			if (   ( bGlobal && nameAt == NULL )			// ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
+				|| (!bGlobal && nameAt != NULL && !strcmp(nameAt + 1, src + 1) )	// ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«å†…å¤‰æ•° (ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«åä¸€è‡´)
 			) {
 				self->Insert( name, &ctx->mem_var[i] );
 			}
 		}
 		//*/
 
-	// •Ï”–¼
+	// å¤‰æ•°å
 	} else {
 		PVal* const pval = hpimod::seekSttVar(src);
 		if ( pval ) {
@@ -132,10 +132,10 @@ static void AssocImportImpl( CAssoc* const self, char const* const src )
 }
 
 //------------------------------------------------
-// ƒL[‚ğ‘}“üEœ‹‚·‚é
+// ã‚­ãƒ¼ã‚’æŒ¿å…¥ãƒ»é™¤å»ã™ã‚‹
 // 
-// @ ƒL[‚Íˆê‚Â‚Ìˆø”‚Æ‚µ‚Äó‚¯æ‚éB
-// @ ‘}“ü‚Í‚Ù‚Ú–³ˆÓ–¡B
+// @ ã‚­ãƒ¼ã¯ä¸€ã¤ã®å¼•æ•°ã¨ã—ã¦å—ã‘å–ã‚‹ã€‚
+// @ æŒ¿å…¥ã¯ã»ã¼ç„¡æ„å‘³ã€‚
 //------------------------------------------------
 void AssocInsert()
 {
@@ -144,10 +144,10 @@ void AssocInsert()
 
 	if ( !self ) puterror( HSPERR_ILLEGAL_FUNCTION );
 
-	// QÆ‚³‚ê‚½“à•”•Ï”
+	// å‚ç…§ã•ã‚ŒãŸå†…éƒ¨å¤‰æ•°
 	PVal* const pvInner = self->At( key );
 
-	// ‰Šú’l (È—ª‰Â”\)
+	// åˆæœŸå€¤ (çœç•¥å¯èƒ½)
 	if ( code_getprm() > PARAM_END ) {
 		int const fUserElem = pvInner->support & CAssoc::HSPVAR_SUPPORT_USER_ELEM;
 
@@ -171,7 +171,7 @@ void AssocRemove()
 }
 
 //------------------------------------------------
-// “à•”•Ï”‚Ì dim
+// å†…éƒ¨å¤‰æ•°ã® dim
 // 
 // @prm: [ assoc("key"), vartype, len1..4 ]
 //------------------------------------------------
@@ -182,13 +182,13 @@ void AssocDim()
 
 	int const fUserElem = pvInner->support & CAssoc::HSPVAR_SUPPORT_USER_ELEM;
 
-	int const vflag = code_getdi( pvInner->flag );	// Œ^ƒ^ƒCƒv’l
+	int const vflag = code_getdi( pvInner->flag );	// å‹ã‚¿ã‚¤ãƒ—å€¤
 	int len[4];
 	for ( int i = 0; i < hpimod::ArrayDimMax; ++ i ) {
-		len[i] = code_getdi(0);		// —v‘f”
+		len[i] = code_getdi(0);		// è¦ç´ æ•°
 	}
 
-	// ”z—ñ‚Æ‚µ‚Ä‰Šú‰»‚·‚é
+	// é…åˆ—ã¨ã—ã¦åˆæœŸåŒ–ã™ã‚‹
 	exinfo->HspFunc_dim( pvInner, vflag, 0, len[0], len[1], len[2], len[3] );
 
 	pvInner->support |= fUserElem;
@@ -196,12 +196,12 @@ void AssocDim()
 }
 
 //------------------------------------------------
-// “à•”•Ï”‚ÌƒNƒ[ƒ“‚ğì‚é
+// å†…éƒ¨å¤‰æ•°ã®ã‚¯ãƒ­ãƒ¼ãƒ³ã‚’ä½œã‚‹
 //------------------------------------------------
 void AssocClone()
 {
-	PVal* const pvInner = code_get_assoc_pval();	// ƒNƒ[ƒ“Œ³
-	PVal* const pval    = code_getpval();			// ƒNƒ[ƒ“æ
+	PVal* const pvInner = code_get_assoc_pval();	// ã‚¯ãƒ­ãƒ¼ãƒ³å…ƒ
+	PVal* const pval    = code_getpval();			// ã‚¯ãƒ­ãƒ¼ãƒ³å…ˆ
 
 	if ( !pvInner || !pval ) puterror( HSPERR_ILLEGAL_FUNCTION );
 
@@ -210,7 +210,7 @@ void AssocClone()
 }
 
 //------------------------------------------------
-// assoc ˜AŒ‹ | •¡»
+// assoc é€£çµ | è¤‡è£½
 //------------------------------------------------
 static void AssocChainOrCopy( bool bCopy )
 {
@@ -230,7 +230,7 @@ void AssocCopy()  { AssocChainOrCopy( true  ); }
 void AssocChain() { AssocChainOrCopy( false ); }
 
 //------------------------------------------------
-// assoc Á‹
+// assoc æ¶ˆå»
 //------------------------------------------------
 void AssocClear()
 {
@@ -242,18 +242,18 @@ void AssocClear()
 }
 
 //#########################################################
-//        ŠÖ”
+//        é–¢æ•°
 //#########################################################
 //------------------------------------------------
-// \’z (ˆê•Ï”)
+// æ§‹ç¯‰ (ä¸€æ™‚å¤‰æ•°)
 //------------------------------------------------
 int AssocNewTemp(PDAT** ppResult)
 {
-	return SetReffuncResult( ppResult, CAssoc::New() );	// ’¼Œã‚É mpval ‚ÉŠ—L‚³‚ê‚é
+	return SetReffuncResult( ppResult, CAssoc::New() );	// ç›´å¾Œã« mpval ã«æ‰€æœ‰ã•ã‚Œã‚‹
 }
 
 //------------------------------------------------
-// \’z (•¡»)
+// æ§‹ç¯‰ (è¤‡è£½)
 //------------------------------------------------
 int AssocNewTempDup(PDAT** ppResult)
 {
@@ -262,11 +262,11 @@ int AssocNewTempDup(PDAT** ppResult)
 
 	CAssoc* const newOne = CAssoc::New();
 	newOne->Chain( src );
-	return SetReffuncResult( ppResult, newOne );	// ’¼Œã‚É mpval ‚ÉŠ—L‚³‚ê‚é
+	return SetReffuncResult( ppResult, newOne );	// ç›´å¾Œã« mpval ã«æ‰€æœ‰ã•ã‚Œã‚‹
 }
 
 //------------------------------------------------
-// null ‚©
+// null ã‹
 //------------------------------------------------
 int AssocIsNull(PDAT** ppResult)
 {
@@ -275,7 +275,7 @@ int AssocIsNull(PDAT** ppResult)
 }
 
 //------------------------------------------------
-// “à•”•Ï”‚Ìî•ñ‚ğ“¾‚é
+// å†…éƒ¨å¤‰æ•°ã®æƒ…å ±ã‚’å¾—ã‚‹
 //------------------------------------------------
 int AssocVarinfo(PDAT** ppResult)
 {
@@ -299,7 +299,7 @@ int AssocVarinfo(PDAT** ppResult)
 }
 
 //------------------------------------------------
-// —v‘f”
+// è¦ç´ æ•°
 //------------------------------------------------
 int AssocSize(PDAT** ppResult)
 {
@@ -309,7 +309,7 @@ int AssocSize(PDAT** ppResult)
 }
 
 //------------------------------------------------
-// w’èƒL[‚ª‘¶İ‚·‚é‚©
+// æŒ‡å®šã‚­ãƒ¼ãŒå­˜åœ¨ã™ã‚‹ã‹
 //------------------------------------------------
 int AssocExists(PDAT** ppResult)
 {
@@ -320,7 +320,7 @@ int AssocExists(PDAT** ppResult)
 }
 
 //------------------------------------------------
-// AssocForeach XVˆ—
+// AssocForeach æ›´æ–°å‡¦ç†
 //------------------------------------------------
 int AssocForeachNext(PDAT** ppResult)
 {
@@ -328,16 +328,16 @@ int AssocForeachNext(PDAT** ppResult)
 	PVal* const pval = code_get_var();		// iter (key)
 	int const idx  = code_geti();
 
-	bool bContinue =			// ‘±‚¯‚é‚©”Û‚©
+	bool bContinue =			// ç¶šã‘ã‚‹ã‹å¦ã‹
 		( !!self && idx >= 0
 		&& static_cast<size_t>(idx) < self->Size()
 		);
 
 	if ( bContinue ) {
 		auto iter = self->begin();
-		std::advance(iter, idx);	// —v‘f [idx] ‚Ö‚Ì”½•œq‚ğæ“¾‚·‚é
+		std::advance(iter, idx);	// è¦ç´  [idx] ã¸ã®åå¾©å­ã‚’å–å¾—ã™ã‚‹
 
-		// ƒL[‚Ì•¶š—ñ‚ğ‘ã“ü‚·‚é
+		// ã‚­ãƒ¼ã®æ–‡å­—åˆ—ã‚’ä»£å…¥ã™ã‚‹
 		code_setva( pval, pval->offset, HSPVAR_FLAG_STR, iter->first.c_str() );
 	}
 
@@ -345,13 +345,13 @@ int AssocForeachNext(PDAT** ppResult)
 }
 
 //------------------------------------------------
-// assoc ®
+// assoc å¼
 //------------------------------------------------
 static int const AssocResultExprMagicNumber = 0xA550C;
 
 int AssocResult( PDAT** ppResult )
 {
-	if ( g_pAssocResult ) {			// ‘O‚Ì‚ğ‰ğ•ú‚·‚é
+	if ( g_pAssocResult ) {			// å‰ã®ã‚’è§£æ”¾ã™ã‚‹
 		CAssoc::Release( g_pAssocResult );
 		g_pAssocResult = nullptr;
 	}
@@ -364,7 +364,7 @@ int AssocResult( PDAT** ppResult )
 
 int AssocExpr( PDAT** ppResult )
 {
-	// AssocResult ‚ªŒÄ‚Î‚ê‚é‚Í‚¸
+	// AssocResult ãŒå‘¼ã°ã‚Œã‚‹ã¯ãš
 	if ( code_geti() != AssocResultExprMagicNumber ) puterror(HSPERR_ILLEGAL_FUNCTION);
 
 	*ppResult = VtTraits::asPDAT<vtAssoc>(&g_pAssocResult);
@@ -372,7 +372,7 @@ int AssocExpr( PDAT** ppResult )
 }
 
 //------------------------------------------------
-// I—¹ŠÖ”
+// çµ‚äº†æ™‚é–¢æ•°
 //------------------------------------------------
 void AssocTerm()
 {

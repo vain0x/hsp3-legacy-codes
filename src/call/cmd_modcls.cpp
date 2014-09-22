@@ -1,4 +1,4 @@
-// Call(ModCls) - Command
+ï»¿// Call(ModCls) - Command
 #if 0
 #include <array>
 #include <map>
@@ -24,26 +24,26 @@ using namespace hpimod;
 using namespace ModCls;
 
 //------------------------------------------------
-// ƒOƒ[ƒoƒ‹•Ï”
+// ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
 //------------------------------------------------
 
-// null ƒIƒuƒWƒFƒNƒg‚ğ—L‚·‚é•Ï”
+// null ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’æœ‰ã™ã‚‹å¤‰æ•°
 static PVal* g_nullmod;
 const  PVal* ModCls::getNullmod() { return g_nullmod; }
 
-// ‰‰ZŠÖ”‚Ì“o˜^ƒŠƒXƒg
+// æ¼”ç®—é–¢æ•°ã®ç™»éŒ²ãƒªã‚¹ãƒˆ
 static CModOperator* g_pModOp;
 const  CModOperator* ModCls::getModOperator() { return g_pModOp; }
 
-// ŒÅ—LƒIƒuƒWƒFƒNƒg‚ÌƒŠƒXƒg
+// å›ºæœ‰ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ãƒªã‚¹ãƒˆ
 static std::map<stdat_t, functor_t>* g_pModClsIdentity;
 functor_t const& getModClsCtor( stdat_t modcls );
 
-// •Ô’l•Ô‹p—p
+// è¿”å€¤è¿”å´ç”¨
 static FlexValue stt_resfv;
 
 //------------------------------------------------
-// struct Œ^‚Ì’l‚ğæ‚èo‚·
+// struct å‹ã®å€¤ã‚’å–ã‚Šå‡ºã™
 //------------------------------------------------
 static FlexValue* code_get_fv()
 {
@@ -54,7 +54,7 @@ static FlexValue* code_get_fv()
 }
 
 //------------------------------------------------
-// struct Œ^‚Ì’l‚ğ•Ô‹p‚·‚é
+// struct å‹ã®å€¤ã‚’è¿”å´ã™ã‚‹
 //------------------------------------------------
 int SetReffuncResult(PDAT** ppResult, FlexValue const& fv)
 {
@@ -63,7 +63,7 @@ int SetReffuncResult(PDAT** ppResult, FlexValue const& fv)
 	FlexValue_Copy(stt_resfv, fv);
 	*ppResult = &stt_resfv;
 
-	FlexValue_AddRefTmp(stt_resfv);		// ƒXƒ^ƒbƒN‚ÉÏ‚Ü‚ê‚é‚Ì‚Å
+	FlexValue_AddRefTmp(stt_resfv);		// ã‚¹ã‚¿ãƒƒã‚¯ã«ç©ã¾ã‚Œã‚‹ã®ã§
 	return HSPVAR_FLAG_STRUCT;
 }
 
@@ -76,12 +76,12 @@ static int SetReffuncResult(PDAT** ppResult, FlexValue&& fv)
 	FlexValue_Move(stt_resfv, fv);
 	*ppResult = &stt_resfv;
 
-	FlexValue_AddRefTmp(stt_resfv);		// ƒXƒ^ƒbƒN‚ÉÏ‚Ü‚ê‚é‚Ì‚Å
+	FlexValue_AddRefTmp(stt_resfv);		// ã‚¹ã‚¿ãƒƒã‚¯ã«ç©ã¾ã‚Œã‚‹ã®ã§
 	return HSPVAR_FLAG_STRUCT;
 }
 
 //------------------------------------------------
-// ƒ‚ƒWƒ…[ƒ‹ƒNƒ‰ƒX‹@”\‚ª—LŒø‚©‚Ç‚¤‚©
+// ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã‚¯ãƒ©ã‚¹æ©Ÿèƒ½ãŒæœ‰åŠ¹ã‹ã©ã†ã‹
 //------------------------------------------------
 bool ModCls::isWorking()
 {
@@ -89,13 +89,13 @@ bool ModCls::isWorking()
 }
 
 //------------------------------------------------
-// ƒ‚ƒWƒ…[ƒ‹ƒNƒ‰ƒX‹@”\‚ÌŠJn
+// ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã‚¯ãƒ©ã‚¹æ©Ÿèƒ½ã®é–‹å§‹
 // 
-// @ struct Œ^‚ğæ‚Áæ‚éB
+// @ struct å‹ã‚’ä¹—ã£å–ã‚‹ã€‚
 //------------------------------------------------
 void ModCls::init()
 {
-	if ( ModCls::IsWorking() ) return;		// ‰Šú‰»Ï‚İ
+	if ( ModCls::IsWorking() ) return;		// åˆæœŸåŒ–æ¸ˆã¿
 
 	HspVarStructWrap_Init( getHvp(HSPVAR_FLAG_STRUCT) );
 
@@ -108,18 +108,18 @@ void ModCls::init()
 }
 
 //------------------------------------------------
-// I—¹
+// çµ‚äº†æ™‚
 //------------------------------------------------
 void ModCls::term()
 {
-	if ( !ModCls::isWorking() ) return;		// –¢‰Šú‰» or ‰ğ•úÏ‚İ
+	if ( !ModCls::isWorking() ) return;		// æœªåˆæœŸåŒ– or è§£æ”¾æ¸ˆã¿
 
-	// ƒeƒ“ƒ|ƒ‰ƒŠ•Ï”‚ª‚ÂQÆ‚ğœ‹‚·‚é
+	// ãƒ†ãƒ³ãƒãƒ©ãƒªå¤‰æ•°ãŒæŒã¤å‚ç…§ã‚’é™¤å»ã™ã‚‹
 	if ( getMPValStruct() ) {
 		FlexValue_DelRef( *VtTraits::asValptr<vtStruct>(getMPValStruct()->pt) );
 	}
 
-	// ‘S‚Ä‚ÌÃ“I•Ï”‚ª‚ÂQÆ‚ğœ‹‚·‚é
+	// å…¨ã¦ã®é™çš„å¤‰æ•°ãŒæŒã¤å‚ç…§ã‚’é™¤å»ã™ã‚‹
 	for ( int i = 0; i < ctx->hsphed->max_val; ++ i ) {
 		PVal* const it = &ctx->mem_var[i];
 
@@ -140,30 +140,30 @@ void ModCls::term()
 }
 
 //------------------------------------------------
-// ‰‰ZŠÖ”‚ğ“o˜^‚·‚é
+// æ¼”ç®—é–¢æ•°ã‚’ç™»éŒ²ã™ã‚‹
 // 
-// @prm p1 = modcls  : ƒ‚ƒWƒ…[ƒ‹ƒNƒ‰ƒX
+// @prm p1 = modcls  : ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã‚¯ãƒ©ã‚¹
 // @prm p2 = OpId    : OpId_*
-// @prm p3 = functor : ˆ—
+// @prm p3 = functor : å‡¦ç†
 //------------------------------------------------
 void ModClsCmd::Register()
 {
-	// Àˆø”
+	// å®Ÿå¼•æ•°
 	stdat_t const pStDat  = code_get_modcls();
 	int const     opId    = code_geti();
 	functor_t&&   functor = code_get_functor();
 
-	// ƒ‚ƒWƒ…[ƒ‹ƒNƒ‰ƒX‚ğŒŸõ
+	// ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã‚¯ãƒ©ã‚¹ã‚’æ¤œç´¢
 	auto iter = g_pModOp->find( pStDat->subid );
 
 	if ( iter == g_pModOp->end() ) {
-		// –¢“o˜^ => “o˜^‚·‚é
+		// æœªç™»éŒ² => ç™»éŒ²ã™ã‚‹
 		iter = g_pModOp->insert({ pStDat->subid, OpFuncDefs() }).first;
 	}
 
 	OpFuncDefs& defs = iter->second;
 
-	// ‰‰ZŠÖ”‚ğ“o˜^
+	// æ¼”ç®—é–¢æ•°ã‚’ç™»éŒ²
 	defs[opId] = functor;
 
 	return;
@@ -172,30 +172,30 @@ void ModClsCmd::Register()
 //------------------------------------------------
 // newmod (override)
 // 
-// @ V‚µ‚¢ƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚·‚éB
+// @ æ–°ã—ã„ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆã™ã‚‹ã€‚
 //------------------------------------------------
 static APTR       code_newstruct( PVal *pval );
 static FlexValue* code_reserve_modinst( PVal* pval, APTR aptr );
 
-// –½—ßŒ`®
+// å‘½ä»¤å½¢å¼
 void ModClsCmd::Newmod()
 {
 	PVal* const pval = code_get_var();
 	stdat_t const modcls = code_get_modcls();
 
-	// ”z—ñ‚ÌV‹K—v‘f‚ğ¶¬‚·‚é
+	// é…åˆ—ã®æ–°è¦è¦ç´ ã‚’ç”Ÿæˆã™ã‚‹
 	APTR const aptr = code_newstruct( pval );
 	FlexValue* const fv = code_reserve_modinst( pval, aptr );
 
-	// ƒRƒ“ƒXƒgƒ‰ƒNƒ^Às (c‚è‚Ìˆø”‚Í‚±‚±‚Åˆ—‚³‚ê‚é)
+	// ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿å®Ÿè¡Œ (æ®‹ã‚Šã®å¼•æ•°ã¯ã“ã“ã§å‡¦ç†ã•ã‚Œã‚‹)
 	FlexValue_Ctor( *fv, modcls, pval, aptr );
 
-	// QÆƒJƒEƒ“ƒ^ 1 ‚Å¶¬‚³‚ê‚é‚ªA‚±‚ê‚Í•Ï”‚É‚æ‚Á‚ÄŠ—L‚³‚ê‚é•ª‚Æ‚İ‚È‚·B
+	// å‚ç…§ã‚«ã‚¦ãƒ³ã‚¿ 1 ã§ç”Ÿæˆã•ã‚Œã‚‹ãŒã€ã“ã‚Œã¯å¤‰æ•°ã«ã‚ˆã£ã¦æ‰€æœ‰ã•ã‚Œã‚‹åˆ†ã¨ã¿ãªã™ã€‚
 	dbgout("<%08X> new: %d", fv, FlexValue_Counter(*fv));
 	return;
 }
 
-// ŠÖ”Œ`®
+// é–¢æ•°å½¢å¼
 int ModClsCmd::Newmod( PDAT** ppResult, bool bSysvarForm )
 {
 	FlexValue self { };
@@ -206,13 +206,13 @@ int ModClsCmd::Newmod( PDAT** ppResult, bool bSysvarForm )
 		// [ modnew Modcls ( ... ) - ]
 		if ( *type == TYPE_MARK && *val == '(' ) {
 			code_next();
-			FlexValue_Ctor( self, kls );			// c‚è‚Ìˆø”‚Í‚±‚±‚Åˆ—‚³‚ê‚é
+			FlexValue_Ctor( self, kls );			// æ®‹ã‚Šã®å¼•æ•°ã¯ã“ã“ã§å‡¦ç†ã•ã‚Œã‚‹
 			if ( !code_next_expect( TYPE_MARK, ')') ) puterror( HSPERR_INVALID_FUNCPARAM );
 
 		// [ modnew Modcls - ]
-		// ˆø”‚È‚µƒRƒ“ƒXƒgƒ‰ƒNƒ^‚ğŒÄ‚Ô
+		// å¼•æ•°ãªã—ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ã‚’å‘¼ã¶
 		} else {
-			*exinfo->npexflg |= EXFLG_1;		// Ÿ‚Ìˆø”‚Í‚È‚¢‚Æ‚µ‚Äˆ—‚³‚¹‚é
+			*exinfo->npexflg |= EXFLG_1;		// æ¬¡ã®å¼•æ•°ã¯ãªã„ã¨ã—ã¦å‡¦ç†ã•ã›ã‚‹
 			FlexValue_Ctor( self, kls );
 			*exinfo->npexflg &= ~EXFLG_1;
 		}
@@ -220,16 +220,16 @@ int ModClsCmd::Newmod( PDAT** ppResult, bool bSysvarForm )
 
 	} else {
 		// newmod( Modcls, ... )
-		FlexValue_Ctor( self, kls );			// c‚è‚Ìˆø”‚Í‚±‚±‚Åˆ—‚³‚ê‚é
+		FlexValue_Ctor( self, kls );			// æ®‹ã‚Šã®å¼•æ•°ã¯ã“ã“ã§å‡¦ç†ã•ã‚Œã‚‹
 	}
 
 	return SetReffuncResult(ppResult, std::move(self));
 }
 
-// Ÿ‚É—v‘f‚ğ¶¬‚·‚×‚«“Yš‚ğæ“¾‚·‚é
+// æ¬¡ã«è¦ç´ ã‚’ç”Ÿæˆã™ã¹ãæ·»å­—ã‚’å–å¾—ã™ã‚‹
 APTR code_newstruct( PVal* pval )
 {
-	if ( pval->flag != HSPVAR_FLAG_STRUCT ) return 0;	// ([0] ‚Ö‚Ì•Ê‚ÌŒ^‚Ì‘ã“ü ¨ Œ^•ÏŠ·‚³‚ê‚é)
+	if ( pval->flag != HSPVAR_FLAG_STRUCT ) return 0;	// ([0] ã¸ã®åˆ¥ã®å‹ã®ä»£å…¥ â†’ å‹å¤‰æ›ã•ã‚Œã‚‹)
 
 	size_t const last = pval->len[1];
 	auto const fv = VtTraits::asValptr<vtStruct>(mpval->pt);
@@ -238,15 +238,15 @@ APTR code_newstruct( PVal* pval )
 		if ( fv[i].type == FLEXVAL_TYPE_NONE ) return i;
 	}
 
-	exinfo->HspFunc_redim(pval, 1, last + 1);		// ”z—ñ‚ğŠg’£‚·‚é
+	exinfo->HspFunc_redim(pval, 1, last + 1);		// é…åˆ—ã‚’æ‹¡å¼µã™ã‚‹
 	return last;
 }
 
-// struct Œ^‚Ì•Ï”‚Ìƒf[ƒ^—Ìˆæ‚ğŠm•Û‚·‚é
-// @ –¢Šm•Ûó‘Ô‚É‚·‚é
+// struct å‹ã®å¤‰æ•°ã®ãƒ‡ãƒ¼ã‚¿é ˜åŸŸã‚’ç¢ºä¿ã™ã‚‹
+// @ æœªç¢ºä¿çŠ¶æ…‹ã«ã™ã‚‹
 FlexValue* code_reserve_modinst( PVal* pval, APTR aptr )
 {
-	// ”z—ñ‚ğ©“®Šg’£‚³‚¹‚é
+	// é…åˆ—ã‚’è‡ªå‹•æ‹¡å¼µã•ã›ã‚‹
 	code_setva( pval, aptr, HSPVAR_FLAG_STRUCT, g_nullmod->pt );
 
 	auto const fv = VtTraits::asValptr<vtStruct>(PVal_getptr( pval, aptr ));
@@ -258,8 +258,8 @@ FlexValue* code_reserve_modinst( PVal* pval, APTR aptr )
 //------------------------------------------------
 // delmod (override)
 // 
-// @ •Ï”—v‘f‚ğ nullmod ‚É‚·‚éB
-// @ ‚³‚ç‚ÉAmpval ‚È‚Ç‚ªŠ—L‚µ‚Ä‚¢‚éê‡‚à”jŠü‚µ‚ÄA‚Å‚«‚é‚¾‚¯ dtor ‚ªÀs‚³‚ê‚é‚æ‚¤‚É‚·‚éB
+// @ å¤‰æ•°è¦ç´ ã‚’ nullmod ã«ã™ã‚‹ã€‚
+// @ ã•ã‚‰ã«ã€mpval ãªã©ãŒæ‰€æœ‰ã—ã¦ã„ã‚‹å ´åˆã‚‚ç ´æ£„ã—ã¦ã€ã§ãã‚‹ã ã‘ dtor ãŒå®Ÿè¡Œã•ã‚Œã‚‹ã‚ˆã†ã«ã™ã‚‹ã€‚
 //------------------------------------------------
 void ModClsCmd::Delmod()
 {
@@ -284,7 +284,7 @@ void ModClsCmd::Delmod()
 //------------------------------------------------
 // nullmod
 // 
-// @ ‹ó‚Ì FlexValue ‚ğ•Ô‹p‚·‚é
+// @ ç©ºã® FlexValue ã‚’è¿”å´ã™ã‚‹
 //------------------------------------------------
 int ModClsCmd::Nullmod( PDAT** ppResult )
 {
@@ -295,13 +295,13 @@ int ModClsCmd::Nullmod( PDAT** ppResult )
 //------------------------------------------------
 // dupmod
 // 
-// @ •¡» Factory
+// @ è¤‡è£½ Factory
 //------------------------------------------------
-// –½—ßŒ`®
+// å‘½ä»¤å½¢å¼
 void ModClsCmd::Dupmod()
 {
 	PVal* const pvSrc = code_get_var();
-	PVal* const pvDst = code_get_var();		// •¡»æ
+	PVal* const pvDst = code_get_var();		// è¤‡è£½å…ˆ
 
 	if ( pvSrc->flag != HSPVAR_FLAG_STRUCT ) puterror( HSPERR_TYPE_MISMATCH );
 
@@ -312,7 +312,7 @@ void ModClsCmd::Dupmod()
 	return;
 }
 
-// ŠÖ”Œ`®
+// é–¢æ•°å½¢å¼
 int ModClsCmd::Dupmod( PDAT** ppResult )
 {
 	FlexValue* const pSrc = code_get_fv();
@@ -332,7 +332,7 @@ int ModClsCmd::Dupmod( PDAT** ppResult )
 }
 
 //------------------------------------------------
-// ƒ‚ƒWƒ…[ƒ‹ƒNƒ‰ƒX‚Ì–¼‘O
+// ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã‚¯ãƒ©ã‚¹ã®åå‰
 //------------------------------------------------
 int ModClsCmd::Name( PDAT** ppResult )
 {
@@ -342,7 +342,7 @@ int ModClsCmd::Name( PDAT** ppResult )
 }
 
 //------------------------------------------------
-// ŒÅ—LƒIƒuƒWƒFƒNƒg‚ğ“¾‚é
+// å›ºæœ‰ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’å¾—ã‚‹
 //------------------------------------------------
 int ModClsCmd::Identity( PDAT** ppResult )
 {
@@ -354,7 +354,7 @@ int ModClsCmd::Identity( PDAT** ppResult )
 functor_t const& getModClsCtor( stdat_t modcls )
 {
 	auto const iter = g_pModClsIdentity->find( modcls );
-	if ( iter != g_pModClsIdentity->end() ) {	// ƒLƒƒƒbƒVƒ…Ï‚İ
+	if ( iter != g_pModClsIdentity->end() ) {	// ã‚­ãƒ£ãƒƒã‚·ãƒ¥æ¸ˆã¿
 		return iter->second;
 
 	} else {
@@ -364,7 +364,7 @@ functor_t const& getModClsCtor( stdat_t modcls )
 }
 
 //------------------------------------------------
-// ƒNƒ‰ƒX‚ğ“¾‚é
+// ã‚¯ãƒ©ã‚¹ã‚’å¾—ã‚‹
 //------------------------------------------------
 int ModInst_Cls( PDAT** ppResult )
 {
@@ -374,7 +374,7 @@ int ModInst_Cls( PDAT** ppResult )
 }
 
 //------------------------------------------------
-// ƒNƒ‰ƒX–¼‚ğ“¾‚é
+// ã‚¯ãƒ©ã‚¹åã‚’å¾—ã‚‹
 //------------------------------------------------
 int ModInst_ClsName( PDAT** ppResult )
 {
@@ -383,7 +383,7 @@ int ModInst_ClsName( PDAT** ppResult )
 }
 
 //------------------------------------------------
-// “¯ˆê«”äŠr
+// åŒä¸€æ€§æ¯”è¼ƒ
 //------------------------------------------------
 int ModInst_Identify( PDAT** ppResult )
 {
@@ -395,8 +395,8 @@ int ModInst_Identify( PDAT** ppResult )
 //------------------------------------------------
 // thismod
 // 
-// @ thismod@hsp ‚àg—p‚Å‚«‚éB
-// @ ‚±‚ÌƒRƒ}ƒ“ƒh‚ÍA’l‚Æ‚µ‚Äg‚¦‚éB
+// @ thismod@hsp ã‚‚ä½¿ç”¨ã§ãã‚‹ã€‚
+// @ ã“ã®ã‚³ãƒãƒ³ãƒ‰ã¯ã€å€¤ã¨ã—ã¦ä½¿ãˆã‚‹ã€‚
 //------------------------------------------------
 int ModClsCmd::This( PDAT** ppResult )
 {

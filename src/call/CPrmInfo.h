@@ -1,4 +1,4 @@
-// ‰¼ˆø”î•ñƒNƒ‰ƒX
+ï»¿// ä»®å¼•æ•°æƒ…å ±ã‚¯ãƒ©ã‚¹
 
 #ifndef IG_CLASS_PARAMETER_INFORMATION_H
 #define IG_CLASS_PARAMETER_INFORMATION_H
@@ -9,12 +9,12 @@
 
 /**
 @summary:
-	‰¼ˆø”î•ñ‚ğŠÇ—‚·‚éB
-	‰½‚ğŒÄ‚Ño‚·‚©‚Í’m‚ç‚È‚¢BCCall ‚ÉŠEg—p‚³‚ê‚éB
-	cmd_sub.cpp, CBound ‚È‚Ç‚ªAŒÄ‚Ño‚µæ‚Æ‘Î‚É‚µ‚Ä¶¬EŠÇ—‚·‚éB
-	‘S‘Ì“I‚É constexpr ‚ª‘½‚¢‚Í‚¸‚È‚Ì‚ÉB
+	ä»®å¼•æ•°æƒ…å ±ã‚’ç®¡ç†ã™ã‚‹ã€‚
+	ä½•ã‚’å‘¼ã³å‡ºã™ã‹ã¯çŸ¥ã‚‰ãªã„ã€‚CCall ã«æ‰€æŒãƒ»ä½¿ç”¨ã•ã‚Œã‚‹ã€‚
+	cmd_sub.cpp, CBound ãªã©ãŒã€å‘¼ã³å‡ºã—å…ˆã¨å¯¾ã«ã—ã¦ç”Ÿæˆãƒ»ç®¡ç†ã™ã‚‹ã€‚
+	å…¨ä½“çš„ã« constexpr ãŒå¤šã„ã¯ãšãªã®ã«ã€‚
 
-	‰ğ‘Ìˆ—‚Ì•K—v‚ª‚È‚¢’l‚¾‚¯‚ğ‚Á‚Ä‚¢‚éB
+	è§£ä½“å‡¦ç†ã®å¿…è¦ãŒãªã„å€¤ã ã‘ã‚’æŒã£ã¦ã„ã‚‹ã€‚
 **/
 class CPrmInfo
 {
@@ -23,15 +23,15 @@ public:
 	using offset_t  = std::vector<size_t>;
 
 private:
-	size_t cntPrms_;		// ó‚¯æ‚éÀˆø”‚Ì”
-	size_t cntCaptures_;	// ƒLƒƒƒvƒ`ƒƒ’l‚Ì”
-	size_t cntLocals_;		// ƒ[ƒJƒ‹•Ï”‚Ì”
-	bool bFlex_;			// ‰Â•Ï’·ˆø”‚©”Û‚©
+	size_t cntPrms_;		// å—ã‘å–ã‚‹å®Ÿå¼•æ•°ã®æ•°
+	size_t cntCaptures_;	// ã‚­ãƒ£ãƒ—ãƒãƒ£å€¤ã®æ•°
+	size_t cntLocals_;		// ãƒ­ãƒ¼ã‚«ãƒ«å¤‰æ•°ã®æ•°
+	bool bFlex_;			// å¯å¤‰é•·å¼•æ•°ã‹å¦ã‹
 
-	// ‰¼ˆø”ƒŠƒXƒg
+	// ä»®å¼•æ•°ãƒªã‚¹ãƒˆ
 	prmlist_t prmlist_;
 
-	// ƒIƒtƒZƒbƒg’l‚ÌƒLƒƒƒbƒVƒ… (PrmStk ‚ğQÆ‚·‚é‚½‚Ñ‚É•K—v‚È‚Ì‚ÅA¶¬‚É‚·‚×‚ÄŒvZ‚µ‚Ä‚¨‚­)
+	// ã‚ªãƒ•ã‚»ãƒƒãƒˆå€¤ã®ã‚­ãƒ£ãƒƒã‚·ãƒ¥ (PrmStk ã‚’å‚ç…§ã™ã‚‹ãŸã³ã«å¿…è¦ãªã®ã§ã€ç”Ÿæˆæ™‚ã«ã™ã¹ã¦è¨ˆç®—ã—ã¦ãŠã)
 	offset_t offsetlist_;
 	size_t stkOffsetCapture_;
 	size_t stkOffsetLocal_;
@@ -40,7 +40,7 @@ private:
 
 public:
 	//--------------------------------------------
-	// \’z
+	// æ§‹ç¯‰
 	//--------------------------------------------
 	CPrmInfo() : CPrmInfo(nullptr) { }
 	CPrmInfo(prmlist_t const* pPrmlist);
@@ -72,7 +72,7 @@ private:
 
 public:
 	//--------------------------------------------
-	// æ“¾Œn
+	// å–å¾—ç³»
 	//--------------------------------------------
 	size_t cntPrms()     const { return cntPrms_; }
 	size_t cntCaptures() const { return cntCaptures_; }
@@ -89,26 +89,26 @@ public:
 	size_t getStackOffsetFlex() const { return stkOffsetFlex_; }
 
 	//--------------------------------------------
-	// ‚»‚Ì‘¼
+	// ãã®ä»–
 	//--------------------------------------------
 	PVal* getDefaultArg( size_t iArg ) const;
 	void checkCorrectArg( PVal const* pvArg, size_t iArg, bool bByRef = false ) const;
 
 	//--------------------------------------------
-	// ‰‰ZqƒI[ƒo[ƒ[ƒh
+	// æ¼”ç®—å­ã‚ªãƒ¼ãƒãƒ¼ãƒ­ãƒ¼ãƒ‰
 	//--------------------------------------------
 	int compare( CPrmInfo const& rhs ) const;
 	bool operator ==( CPrmInfo const& rhs ) const { return compare( rhs ) == 0; }
 	bool operator !=( CPrmInfo const& rhs ) const { return !( *this == rhs ); }
 
-	// ‚»‚Ì‘¼
+	// ãã®ä»–
 public:
 	static CPrmInfo Create(hpimod::stdat_t);
 
-	// –¢éŒ¾ŠÖ”‚Ì‰¼ˆø”
+	// æœªå®£è¨€é–¢æ•°ã®ä»®å¼•æ•°
 	static CPrmInfo const undeclaredFunc;
 
-	// ‰¼ˆø”‚ğ1‚Â‚à‚½‚È‚¢ŠÖ”‚Ì‰¼ˆø”
+	// ä»®å¼•æ•°ã‚’1ã¤ã‚‚æŒãŸãªã„é–¢æ•°ã®ä»®å¼•æ•°
 	static CPrmInfo const noprmFunc;
 };
 
