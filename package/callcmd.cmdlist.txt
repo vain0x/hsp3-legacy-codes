@@ -1,5 +1,6 @@
 // call_hpi_cmd
 // no include guard
+// this file must be encoded with ANSI (because this is inculuded by HSP script).
 
 #ifdef HSP3PLUGIN
 # ifndef _CmdlistModeProcess

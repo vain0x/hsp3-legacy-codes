@@ -1,101 +1,101 @@
-
+﻿
 	operation-ex (version 1.0)
 
-�y�@���@�́@�zex-operation
-�y�@��@�ʁ@�zHSP3�g���v���O�C��
-�y�@��@�ҁ@�z���
-�y ��舵�� �z�t���[�\�t�g�E�F�A
-�y �J���� �zWindows XP HomeEdition SP3
-�y ����m�F �zWindows XP
-�y �T�|�[�g �zhttp://prograpark.ninja-web.net/
+【　名　称　】ex-operation
+【　種　別　】HSP3拡張プラグイン
+【　作　者　】上大
+【 取り扱い 】フリーソフトウェア
+【 開発環境 】Windows XP HomeEdition SP3
+【 動作確認 】Windows XP
+【 サポート 】http://prograpark.ninja-web.net/
 
-���ڎ�
-�@�E�T�v
-�@�E�W�J
-�@�E�폜
-�@�E�p�b�P�[�W
-�@�E�@�\
-�@�E�\�[�X�R�[�h
-�@�E���쌠
-�@�E�Q��
+＠目次
+　・概要
+　・展開
+　・削除
+　・パッケージ
+　・機能
+　・ソースコード
+　・著作権
+　・参照
 
-���T�v
-	�Z���Ȃǂ̊g���I�ȉ��Z��񋟂���HSP3��p�̊g���v���O�C���ł��B
+＠概要
+	短絡などの拡張的な演算を提供するHSP3専用の拡張プラグインです。
 	
-	�ڂ����g�p���@�́A�u���@�\�v���Q�Ƃ��Ă��������B
+	詳しい使用方法は、「＠機能」を参照してください。
 	
-���W�J
-	�_�E�����[�h�������k�t�@�C����K���ȂƂ���ɉ𓀂��Ă��������B
-	���ɓ��ʂȎ葱���͕K�v����܂���B
+＠展開
+	ダウンロードした圧縮ファイルを適当なところに解凍してください。
+	他に特別な手続きは必要ありません。
 	
-���폜
-	�{�\�t�g�E�F�A���s�v�ɂȂ����ꍇ�́A
-	�֌W�̂���t�@�C����t�H���_���폜���Ă��������B
-	�u���p�b�P�[�W�v�Q�ƁB
+＠削除
+	本ソフトウェアが不要になった場合は、
+	関係のあるファイルやフォルダを削除してください。
+	「＠パッケージ」参照。
 	
-���p�b�P�[�W
-�@�@[opex]
-�@�@�@�@�� [src]�@�@�@�@ �c�c �b�{�{�\�[�X�R�[�h (�ꕔ)
-�@�@�@�@�� opex.as�@�c�c ��p�w�b�_�B
-�@�@�@�@�� opex.hpi �c�c �v���O�C���{��
-�@�@�@�@�� opex.readme.txt�@�@�c�c ���̃t�@�C���B�戵�������B
+＠パッケージ
+　　[opex]
+　　　　┣ [src]　　　　 …… Ｃ＋＋ソースコード (一部)
+　　　　┣ opex.as　…… 専用ヘッダ。
+　　　　┗ opex.hpi …… プラグイン本体
+　　　　┣ opex.readme.txt　　…… このファイル。取扱説明書。
 	
-���@�\
-�E����
-	�����^�C��( �ʏ��hsp3.exe )��hspcmp.dll������t�H���_��
-	opex.hpi���R�s�[���Ă��������B
+＠機能
+・準備
+	ランタイム( 通常はhsp3.exe )とhspcmp.dllがあるフォルダに
+	opex.hpiをコピーしてください。
 	
-�E�g�p�@
-	��������Ă���T���v�����Q�Ƃ��Ă��������B
+・使用法
+	同梱されているサンプルを参照してください。
 	
-���\�[�X�R�[�h
-	[src]�t�H���_�̓����̃t�@�C�����ׂĂł��B�s�v�ȏꍇ�́A�t�H���_
-	���ƍ폜���Ă����܂��܂���B
+＠ソースコード
+	[src]フォルダの内部のファイルすべてです。不要な場合は、フォルダ
+	ごと削除してもかまいません。
 	
-	Visual C++ 2010 Express Edition ���g�p���Ă��܂��B
-	�o�O��ԈႢ����������A�񍐂��Ă���������Ɣ��ɂ��肪�����ł��B
-	( �u���Q�Ɓv���Q�� )
+	Visual C++ 2010 Express Edition を使用しています。
+	バグや間違いを見つけたら、報告していただけると非常にありがたいです。
+	( 「＠参照」を参照 )
 	
-�����쌠
-	hspsdk�̒��̃��m�́AOpenHSP�̃��C�Z���X�ɏ]���Ă��������B
+＠著作権
+	hspsdkの中のモノは、OpenHSPのライセンスに従ってください。
 	
-	���̑��̒��쌠�͍�҂ł����傪�����Ă��܂��B�v���O�����͖��f��
-	�]�p�E���ς��Ă����܂��܂���Bhpi�P�̂̏ꍇ�A�񎟔z�z�������܂��B
+	その他の著作権は作者である上大が持っています。プログラムは無断で
+	転用・改変してもかまいません。hpi単体の場合、二次配布も許可します。
 	
-���Q��
-	�E�v���O���L��
-	�@�ӌ��⊴�z�A�o�O�񍐁A�ŐV�ł̃_�E�����[�h�Ȃǂ͂����ŁB
-	�@http://prograpark.ninja-web.net/
+＠参照
+	・プログラ広場
+	　意見や感想、バグ報告、最新版のダウンロードなどはここで。
+	　http://prograpark.ninja-web.net/
 	
-	�EHSPTV! ( HSP�{�ƃT�C�g )
-	�@http://hsp.tv/
+	・HSPTV! ( HSP本家サイト )
+	　http://hsp.tv/
 	
-	�EHSP�J��wiki ( �b�{�{�ł̃v���O�C���쐬�u�������� )
-	�@http://hspdev-wiki.net/
-	�@�� ::SideMenu::TOPICS::�v���O�C��::���̑�::�v���O�C���쐬�K�C�h
+	・HSP開発wiki ( Ｃ＋＋でのプラグイン作成講座がある )
+	　http://hspdev-wiki.net/
+	　→ ::SideMenu::TOPICS::プラグイン::その他::プラグイン作成ガイド
 	
-���X�V����
+＠更新履歴
 operate
 
 2014.09.14
-	�E���� memberClone�A�֐� memberOf ��ǉ������B
+	・命令 memberClone、関数 memberOf を追加した。
 
 2012.11.08
-	�E�L�[���[�h constptr ��ǉ��B
-		@ �{���� opex �̖���肶��Ȃ��C������B
+	・キーワード constptr を追加。
+		@ 本来は opex の役回りじゃない気もする。
 
 2012.09.20
-	�Eswap �ŁA�����̕ϐ�������(�Ƃ��������e�[�g)�ł���悤�ɂ����B
-	�E�R�}���h cast_to, value_cast�A���� clone ��ǉ��B
+	・swap で、複数の変数を交換(というかロテート)できるようにした。
+	・コマンド cast_to, value_cast、命令 clone を追加。
 	
 2011.09.12
-	�E���� swap ��ǉ��B
+	・命令 swap を追加。
 	
 2011.08.23
-	�E�R�}���h assign�A�֐� exprs ��ǉ��B
+	・コマンド assign、関数 exprs を追加。
 	
 2011.08.19
-	�Eextend.hpi �����ɊJ���B
+	・extend.hpi を元に開発。
 		short_or, short_and, eq_or, eq_and, which, what
 	
 By uedai 2011 - 2012.

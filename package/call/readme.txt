@@ -1,182 +1,182 @@
-
+﻿
 	call
 
-�y  ��  ��  �zcall
-�y  ��  ��  �zHSP3.2�g���v���O�C��
-�y  ��  ��  �z���
-�y ��舵�� �z�t���[�\�t�g�E�F�A
-�y �J���� �zWindows XP HomeEdition SP3
-�y ����m�F �zWindows XP
-�y  �J����  �zhttp://prograpark.ninja-web.net/
+【  名  称  】call
+【  種  別  】HSP3.2拡張プラグイン
+【  作  者  】上大
+【 取り扱い 】フリーソフトウェア
+【 開発環境 】Windows XP HomeEdition SP3
+【 動作確認 】Windows XP
+【  開発元  】http://prograpark.ninja-web.net/
 
-���ڎ�
-�E�T�v
-�E����
-�E����
-�E�p�b�P�[�W
-�E�@�\
-�E�\�[�X�R�[�h
-�E���쌠
-�E�Q��
+＠目次
+・概要
+・導入
+・除去
+・パッケージ
+・機能
+・ソースコード
+・著作権
+・参照
 
-���T�v
-	���x���������t���ŌĂяo�����Ƃ��\�ɂ���g���v���O�C���ł��B
-	������̕��@���������g�p���Ă���̂ŁAHSP3.2�����ňȊO�ł̓���́A��ؕۏ�
-	�ł��܂���B
+＠概要
+	ラベルを引数付きで呼び出すことを可能にする拡張プラグインです。
+	非公式の方法をいくつか使用しているので、HSP3.2正式版以外での動作は、一切保証
+	できません。
 	
-������
-	�_�E�����[�h�������k�t�@�C�����A�K���ȂƂ���ɉ𓀂��Ă��������B
-	���ɓ��ʂȎ葱���͕K�v����܂���B
+＠導入
+	ダウンロードした圧縮ファイルを、適当なところに解凍してください。
+	他に特別な手続きは必要ありません。
 	
-������
-	�֌W�̂���t�@�C����t�H���_�����̂܂܍폜���Ă��������B
-	���W�X�g���Ȃǂ͘M��܂���B
-	�u���p�b�P�[�W�v�Q�ƁB
+＠除去
+	関係のあるファイルやフォルダをそのまま削除してください。
+	レジストリなどは弄りません。
+	「＠パッケージ」参照。
 	
-���p�b�P�[�W
-�@�@[call]
-�@�@�@�@�� [src]      �c�c HPI�̃\�[�X�R�[�h (C++; VC++)
-�@�@�@�@�� call.as    �c�c ��p�w�b�_
-�@�@�@�@�� call.hpi   �c�c �v���O�C��
-�@�@�@�@�� call.hs    �c�c �w���v�E�t�@�C��
-�@�@�@�@�� ex*.hsp    �c�c �T���v���E�X�N���v�g
-�@�@�@�@�� readme.txt �c�c ���̃t�@�C���B�戵������
-�@�@�@�@
-���@�\
-�E����
-	�����^�C��( hsp3.exe )�� hspcmp.dll ������t�H���_�� call.hpi ���A
-	hsphelp �t�H���_�� call.hs ���A���ꂼ��R�s�[���Ă������� ( ��҂͔C�� )�B
+＠パッケージ
+　　[call]
+　　　　┣ [src]      …… HPIのソースコード (C++; VC++)
+　　　　┣ call.as    …… 専用ヘッダ
+　　　　┣ call.hpi   …… プラグイン
+　　　　┣ call.hs    …… ヘルプ・ファイル
+　　　　┣ ex*.hsp    …… サンプル・スクリプト
+　　　　┗ readme.txt …… このファイル。取扱説明書
+　　　　
+＠機能
+・準備
+	ランタイム( hsp3.exe )と hspcmp.dll があるフォルダに call.hpi を、
+	hsphelp フォルダに call.hs を、それぞれコピーしてください ( 後者は任意 )。
 	
-�E��{�I�Ȏg�p�@
-	��������Ă��� call.as ���A�X�N���v�g�̍ŏ��̕��� #include
-	���Ă��������BLike this:
+・基本的な使用法
+	同梱されている call.as を、スクリプトの最初の方で #include
+	してください。Like this:
 		#include "call.as"
 	
-	���x���Œ�`�������߂��u���x�����߁v�A�֐����u���x���֐��v�ƌĂт܂��B
-	���߂̏ꍇ:
-		call ���x��, ����...
-		call *sttm, 10, 20		// ����Ȋ���
-	�֐��̏ꍇ:
-		call(���x��, ����...)
-		call(*func, 10, 20)		// ����Ȋ����B
-	���̂悤�ɌĂяo���܂��B
+	ラベルで定義した命令を「ラベル命令」、関数を「ラベル関数」と呼びます。
+	命令の場合:
+		call ラベル, 引数...
+		call *sttm, 10, 20		// こんな感じ
+	関数の場合:
+		call(ラベル, 引数...)
+		call(*func, 10, 20)		// こんな感じ。
+	このように呼び出します。
 	
-	��`����Ƃ��́A�T�u���[�`�����L�q���銴�o�ŁA���߂̏����������Ă����A�I����
-	��Ƃ��� return ���߂�p���܂��BLike this:
+	定義するときは、サブルーチンを記述する感覚で、命令の処理を書いていき、終了す
+	るときは return 命令を用います。Like this:
 		*sttm
 			mes "Hello, world!"
 			return
 	
-	�������g�p����ɂ́Acall_aliasAll ���߂���� call_alias ���߂ŁA�ϐ���������
-	�G�C���A�X�ɂł��܂��Bargv() �Œ��ڎQ�Ƃ��邱�Ƃ��\�ł��B�܂��Arefarg()��
-	�����ɏ������ނ��Ƃ��\�ł��BLike this:
+	引数を使用するには、call_aliasAll 命令および call_alias 命令で、変数を引数の
+	エイリアスにできます。argv() で直接参照することも可能です。また、refarg()で
+	引数に書き込むことも可能です。Like this:
 		*assign
 			refarg(0) = argv(1)
 			return
 	
-	����́A�ucall *assign, byref(a), b�v�ŁAb �̒l�� a �ɑ�����܂��B�܂�A
-	��� = �Ƃقړ�������ł� ( refarg() �̓N���[�������̂ŁA�^��ς��邱�Ƃ�
-	�ł��܂��� )�B
+	これは、「call *assign, byref(a), b」で、b の値を a に代入します。つまり、
+	代入 = とほぼ同じ動作です ( refarg() はクローンを作るので、型を変えることが
+	できませんが )。
 	
-	�����͒l�n���ƎQ�Ɠn���̓�ʂ肠��܂��Bcall ���߂ŌĂяo���Ƃ��ɁA�萔�l��
-	������Ă���ꍇ�́A���̒l���R�s�[����܂� (�l�n��)�B�萔�l�ł͂Ȃ��ϐ��E
-	�z��ϐ����w�肳��Ă���ꍇ�́A�������l�n���ł����Abyref() �ň͂��Ďw�肷��
-	�ƁA�Q�Ɠn�����܂��B�O�q�̒ʂ� refarg() �ł��̕ϐ��ւ̑�����ł��܂��B
+	引数は値渡しと参照渡しの二通りあります。call 命令で呼び出すときに、定数値が
+	書かれている場合は、その値がコピーされます (値渡し)。定数値ではなく変数・
+	配列変数が指定されている場合は、同じく値渡しですが、byref() で囲って指定する
+	と、参照渡しします。前述の通り refarg() でその変数への代入もできます。
 	
-	�֐����`����ꍇ�����l�ł��B���x���͊֐��`���ł����ߌ`���ł��Ăяo���܂��B
+	関数を定義する場合も同様です。ラベルは関数形式でも命令形式でも呼び出せます。
 	Like this:
 		*function
 			mes "Hello, world!"
-			return 3.14159		// �ȉ���
+			return 3.14159		// 以下略
 	
-	�߂�l�ɂ́A�ʏ�ʂ� str, double, int ��3���g�p�\�ł��B�܂��Acall_retval
-	���߂��g�p���邱�Ƃɂ���āA���x���^���Ԃ���悤�ɂȂ��Ă��܂��B
+	戻り値には、通常通り str, double, int の3つが使用可能です。また、call_retval
+	命令を使用することによって、ラベル型も返せるようになっています。
 	
-	�܂��A#deffunc �̃p�����[�^�̃G�C���A�X�������x�����߂ɂ��g�p�ł��܂��B
+	また、#deffunc のパラメータのエイリアス名をラベル命令にも使用できます。
 	Like this:
 		#deffunc lbf_add var p1, var p2
 		*add
 			return p1 + p2
 	
-	�����̌^�ɂ́Avar �� array �̂ݎg�p�\�ł��B�萔��ϐ����󂯎��ꍇ�͕K��
-	var �ɂ��A�z��ϐ����󂯎��ꍇ�̂� array �ɂ��܂��Blocal �͎g�p�ł��܂���B
-	#defcfunc�ł��������Ƃ��\�ł��B�������A�Ăяo�����@�͕ς��܂���B
-	���[�J���ϐ�( local �^�C�v )�͎g�p�ł��܂���̂ŁA�����ӂ��������B
-	���g������ ex04_deffunc.hsp ���Q�ƁB
+	引数の型には、var と array のみ使用可能です。定数や変数を受け取る場合は必ず
+	var にし、配列変数を受け取る場合のみ array にします。local は使用できません。
+	#defcfuncでも同じことが可能です。もちろん、呼び出す方法は変わりません。
+	ローカル変数( local タイプ )は使用できませんので、ご注意ください。
+	※使い方は ex04_deffunc.hsp を参照。
 	
-�E�������錾��
-	call_dec ���߂ŁA���x�����߁E�֐���錾�ł��܂��BLike this:
+・仮引数宣言つき
+	call_dec 命令で、ラベル命令・関数を宣言できます。Like this:
 		call_dec *add, "int", "int"
 	
-	�����܂ł� call_dec �͖��߂ł��邱�Ƃɒ��ӂ��Ă��������B�܂�A���s����܂�
-	�L���ł͂���܂���B
+	あくまでも call_dec は命令であることに注意してください。つまり、実行するまで
+	有効ではありません。
 	
-	���������錾���郉�x���ŁA�������ȍ~�́A���������X�g�ł��B���̃��m���g�p
-	�ł��܂��F
+	第一引数が宣言するラベルで、第二引数以降は、仮引数リストです。次のモノが使用
+	できます：
 		label, str, double, int, var, array
 		
-	�Ăяo�����͓����ł����A�������^�C�v���^���Ɠ����ꍇ�A�������ȗ��ł��܂��B��
-	���l�ɂ́A���̌^�̊���l���n����܂� ( ����l���Ȃ��ꍇ�̓G���[�ɂȂ�܂� )�B
+	呼び出し側は同じですが、仮引数タイプが型名と同じ場合、引数を省略できます。省
+	略値には、その型の既定値が渡されます ( 既定値がない場合はエラーになります )。
 	Like this:
 		call_dec *add, "int", "int"
-		mes call( *add )	// call( *add, int(0), int(0) ) �Ƃ����
+		mes call( *add )	// call( *add, int(0), int(0) ) とされる
 		
 		*add
 			return argv(0) + argv(1)
 		
-	#deffunc �̃G�C���A�X���g�p����ꍇ�́Avar, array �����łȂ��A�ʏ�� int �� 
-	str �𗘗p���܂��BLike this:
+	#deffunc のエイリアスを使用する場合は、var, array だけでなく、通常の int や 
+	str を利用します。Like this:
 		#deffunc lbf_add int p1, int p2
 		*add
 			return p1 + p2
 	
-	�萔�� var, array �ɂ����ꍇ�̓���͖���`�ł��̂ŁA�C��t���Ă��������B
+	定数を var, array にした場合の動作は未定義ですので、気を付けてください。
 	
-�E�T���v��
-	��������Ă��� ex*_*.hsp �Ƃ����t�@�C���́A���ׂăT���v���ł��B
+・サンプル
+	同梱されている ex*_*.hsp というファイルは、すべてサンプルです。
 	
-	�������� NYSL (�ς�Ȃ�Ă��Ȃ�D���ɂ��냉�C�Z���X) Version 0.9982 �ł��B
+	※これらは NYSL (煮るなり焼くなり好きにしろライセンス) Version 0.9982 です。
 	
-���\�[�X�R�[�h
-	[src]�t�H���_�̓����̃t�@�C�����ׂĂł��B�s�v�ȏꍇ�́A�t�H���_���ƍ폜����
-	�����܂��܂���B
+＠ソースコード
+	[src]フォルダの内部のファイルすべてです。不要な場合は、フォルダごと削除して
+	もかまいません。
 	
-	VisualC++ 2008 Express Edition (9.0)���g�p���Ă��܂��B�����C++�ł��B�o�O��
-	�ԈႢ�������܂�����A�񍐂��Ă���������Ɣ��ɂ��肪�����ł��B
-	( �u���Q�Ɓv���Q�� )
+	VisualC++ 2008 Express Edition (9.0)を使用しています。言語はC++です。バグや
+	間違いを見つけましたら、報告していただけると非常にありがたいです。
+	( 「＠参照」を参照 )
 	
-	�܂��A�R���p�C������ɂ� hspsdk ���K�v�ł��B�u���Q�Ɓv�́uHSPTV!�v������肵
-	�Ă��������B
+	また、コンパイルするには hspsdk が必要です。「＠参照」の「HSPTV!」から入手し
+	てください。
 	
-�����쌠
-	���쌠�͍�҂ł����傪�����Ă��܂����A�v���O�����̓]�p�E���ρAhpi �̔z�z��
-	�����܂��B���ɂ����񍐂���`���͂���܂���B
+＠著作権
+	著作権は作者である上大が持っていますが、プログラムの転用・改変、hpi の配布は
+	許可します。上大にそれを報告する義務はありません。
 	
-���Q��
-	�E�v���O���L�� ( http://prograpark.ninja-web.net/ )
-		�T�|�[�g�y�[�W�ł��B�ӌ���v�]�A�o�O�񍐂Ȃǂ͂����̌f���܂ł��肢����
-		���B�܂��A�ŐV�ł̃_�E�����[�h�͂����́u���܂��v����s���܂��B
-		HSP�v���O�C���u��������܂��B
+＠参照
+	・プログラ広場 ( http://prograpark.ninja-web.net/ )
+		サポートページです。意見や要望、バグ報告などはここの掲示板までお願いしま
+		す。また、最新版のダウンロードはここの「たまり場」から行えます。
+		HSPプラグイン講座もあります。
 		
-	�EHSPTV! ( http://hsp.tv/ )
-		HSP3�̌����T�C�g�ł��B
+	・HSPTV! ( http://hsp.tv/ )
+		HSP3の公式サイトです。
 		
-	�EHSP�J��wiki ( http://hspdev-wiki.net/ )
-		�� ::SideMenu::TOPICS::�v���O�C��::���̑�::�v���O�C���쐬�K�C�h
-		�b�{�{�ł̃v���O�C���쐬�u��������܂��B��傪�����b�ɂȂ����Ƃ���ł��B
+	・HSP開発wiki ( http://hspdev-wiki.net/ )
+		→ ::SideMenu::TOPICS::プラグイン::その他::プラグイン作成ガイド
+		Ｃ＋＋でのプラグイン作成講座があります。上大がお世話になったところです。
 		
-���X�V����
+＠更新履歴
 2010 05/22 (Sat)
-	�E�X�V (ver: 1.21)�B
+	・更新 (ver: 1.21)。
 	
 2009 08/10 (Mon)
-	�Emethod.hpi �Ɠ����B
+	・method.hpi と統合。
 	
 2009 05/05 (Tue)
-	�E����ƌ��J�B
+	・やっと公開。
 	
 2009 01/29 (Thu)
-	�E����ƌ��J�ɓ��ݐ؂����B
-	�@�Ǝv��������J����̖Y��Ă��B(2009 5/5)
+	・やっと公開に踏み切った。
+	　と思ったら公開するの忘れてた。(2009 5/5)
 	  
 Copyright(C) uedai 2008 - 2010.

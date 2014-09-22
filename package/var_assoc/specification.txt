@@ -1,43 +1,43 @@
+﻿
+	assoc型 仕様書
 
-	assoc�^ �d�l��
-
-���T�v
-	�A�z�z��R���e�i�B
+＠概要
+	連想配列コンテナ。
 	
-	�u�ϐ�( "�L�[" )�v�Ƃ��ēY����t���邱�ƂŁA�����ϐ��ɎQ�Ƃ���B
-	���̂Ƃ��A�L�[�̍��ɂ� assoc �ϐ����̂̓Y�����A�E�ɂ͓����ϐ���
-	�Y�����w��ł���B�Ȃ��A���̌`���ŎQ�Ƃ���Ǝ����I�Ɏ��̉�����B
+	「変数( "キー" )」として添字を付けることで、内部変数に参照する。
+	このとき、キーの左には assoc 変数自体の添字が、右には内部変数の
+	添字が指定できる。なお、この形式で参照すると自動的に実体化する。
 	
-���f�[�^�Ǘ�
-	��PVal�\����
-		�EPVal::pt
-			CAssoc �ւ̃|�C���^��(���I)�z��B
-			int �ȂǂƓ����������\���B
+＠データ管理
+	＊PVal構造体
+		・PVal::pt
+			CAssoc へのポインタの(動的)配列。
+			int などと同じメモリ構造。
 			
-			Alloc() �ł͐V�����v�f�� NULL �ŏ���������邪�Aassoc ���߂ł͂�����S�Ď��̉�����
-			(�� new CMulti ��������)�B
-			@ �Ⴆ�΁A�ux = (assoc�l)�v�Ƃ��ċ��L�Q�Ƃ����Ƃ��AHSP�̎d�l�Ƃ��č��ӂ� assoc �^�ɏ���������邪�A
-			@	���̏����l�͒���̑������ɂ���ď�������邽�߁AAlloc() �Ŗ�����̂��m�ۂ���͖̂��ʂ������B
+			Alloc() では新しい要素は NULL で初期化されるが、assoc 命令ではそれらを全て実体化する
+			(⇔ new CMulti を代入する)。
+			@ 例えば、「x = (assoc値)」として共有参照を作るとき、HSPの仕様として左辺が assoc 型に初期化されるが、
+			@	この初期値は直後の代入操作によって消去されるため、Alloc() で毎回実体を確保するのは無駄が多い。
 			
-		�EPVal::master
-			�Ō�ɓY���ŎQ�Ƃ��ꂽ�f�[�^�ւ̃|�C���^�B
-			�����ϐ��A�܂��� NULL (�{�̂ւ̎Q��)�B
+		・PVal::master
+			最後に添字で参照されたデータへのポインタ。
+			内部変数、または NULL (本体への参照)。
 			
-	��CAssoc �N���X
-		�L�[�Ɠ����ϐ��f�[�^(PVal*)�̃}�b�v�ւ̃|�C���^�����B
-		�Q�ƃJ�E���^�ŊǗ������B
+	＊CAssoc クラス
+		キーと内部変数データ(PVal*)のマップへのポインタを持つ。
+		参照カウンタで管理される。
 		
-�����
-	ObjectWrite() �֐���p����B
+＠代入
+	ObjectWrite() 関数を用いる。
 	
-	�������ϐ��Q�Ƃ�����ꍇ
-		�E�����ϐ��ɑ΂��đ������������B
+	＊内部変数参照がある場合
+		・内部変数に対して代入処理をする。
 		
-	�������ϐ��Q�Ƃ��Ȃ��ꍇ
-		�E���ӂ̃f�[�^��j������B
-		�E�E�ӂ̎��� CAssoc* �����ӂƋ��L����B�Q�ƃJ�E���^��1������B
+	＊内部変数参照がない場合
+		・左辺のデータを破棄する。
+		・右辺の持つ CAssoc* を左辺と共有する。参照カウンタが1つ増える。
 	
-�����\�b�h�Ăяo��
-	�����ϐ��ւ̎Q�Ƃ�K�{�Ƃ���B
-	�����ϐ��̌^�ɍ��킹�āA���̌^�̎��� ObjectMethod �֐����Ăяo���B
+＠メソッド呼び出し
+	内部変数への参照を必須とする。
+	内部変数の型に合わせて、その型の持つ ObjectMethod 関数を呼び出す。
 	

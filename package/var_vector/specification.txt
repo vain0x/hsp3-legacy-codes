@@ -1,55 +1,46 @@
+ï»¿
+	vectoråž‹ ä»•æ§˜æ›¸
 
-	vectorŒ^ Žd—l‘
+ï¼ æ¦‚è¦
+	ä¸€æ¬¡å…ƒå¯å¤‰åž‹é…åˆ—ã‚³ãƒ³ãƒ†ãƒŠã€‚
+	
+	ç›´ç·šçŠ¶ã« n å€‹ã®å†…éƒ¨å¤‰æ•°ã‚’æ‰€æœ‰ã™ã‚‹ã€‚
+	ã€Œå¤‰æ•°(n)ã€ã¨ã—ã¦æ·»å­—ã‚’ä»˜ã‘ã‚‹ã“ã¨ã§ã€å†…éƒ¨å¤‰æ•°ã«å‚ç…§ã™ã‚‹ã€‚æ·»å­—ã®2ã¤ç›®ä»¥é™ã«ã¯ vector å†…éƒ¨å¤‰æ•°ã®æ·»å­—ãŒæŒ‡å®šã§ãã‚‹ã€‚
 
-—ŠT—v
-	ˆêŽŸŒ³‰Â•ÏŒ^”z—ñƒRƒ“ƒeƒiB
-	
-	’¼üó‚É n ŒÂ‚Ì“à•”•Ï”‚ðŠ—L‚·‚éB
-	u•Ï”(n)v‚Æ‚µ‚Ä“YŽš‚ð•t‚¯‚é‚±‚Æ‚ÅA“à•”•Ï”‚ÉŽQÆ‚·‚éB2‚Â–ÚˆÈ~‚É‚Í vector “à•”•Ï”‚Ì“YŽš‚ªŽw’è‚Å‚«‚éB
-	‚È‚¨Anull ’l‚Å‚àA‚±‚ÌŒ`Ž®‚ÅŽQÆ‚·‚é‚ÆŽ©“®“I‚ÉŽÀ‘Ì‰»‚·‚éB
-	
-	•´‚ç‚í‚µ‚¢‚ªAŽQÆŒ^‚Å‚Í‚È‚¢B“à•”•Ï”‚ªŽQÆŒ^‚Ì‚æ‚¤‚ÈU‚é•‘‚¢‚ð‚·‚é‚¾‚¯‚Å‚ ‚éB
-	
-—ƒf[ƒ^ŠÇ—
-	–PVal\‘¢‘Ì
-		EPVal::pt
-			CVector ‚Ö‚Ìƒ|ƒCƒ“ƒ^‚Ö‚Ìƒ|ƒCƒ“ƒ^B( = &PVal::master )
+	ç´›ã‚‰ã‚ã—ã„ãŒã€å‚ç…§åž‹ã§ã¯ãªã„ã€‚å†…éƒ¨å¤‰æ•°ãŒå‚ç…§åž‹ã®ã‚ˆã†ãªæŒ¯ã‚‹èˆžã„ã‚’ã™ã‚‹ã ã‘ã§ã‚ã‚‹ã€‚
+	ã¾ãŸã€null ã«ã¯ãªã‚‰ãªã„ã€‚åˆæœŸçŠ¶æ…‹ã¯ã€Œé•·ã• 0ã€ã§ã‚ã‚‹ã€‚
+
+ï¼ ãƒ‡ãƒ¼ã‚¿ç®¡ç†
+	ï¼ŠPValæ§‹é€ ä½“
+		ãƒ»PVal::pt
+			vector_t ã¸ã®ãƒã‚¤ãƒ³ã‚¿ã€‚å¸¸ã« &this->master ã«ç­‰ã—ã„ã€‚
+
+		ãƒ»PVal::master
+			vector_t å®Ÿä½“ã€‚(æ³¨æ„ï¼šã“ã‚ŒãŒæŒ‡ã—ç¤ºã™ãƒãƒƒãƒ•ã‚¡ãŒ vector_t ãªã®ã§ã¯ãªãã€PVal::master è‡ªä½“ãŒ vector_t ã§ã‚ã‚‹ã€‚)
+
+		ãƒ»PVal::offset
+			vector ã®æ·»å­—ã€‚
 			
-			Alloc() ‚Å‚ÍV‚µ‚¢—v‘f‚Í NULL ‚Å‰Šú‰»‚³‚ê‚é‚ªAvector –½—ß‚Å‚Í‚»‚ê‚ðŽÀ‘Ì‰»‚·‚é
-			(Ì new CVector ‚ð‘ã“ü‚·‚é)B
-			@ —á‚¦‚ÎAux = (vector’l)v‚Æ‚µ‚Ä‹¤—LŽQÆ‚ðì‚é‚Æ‚«AHSP‚ÌŽd—l‚Æ‚µ‚Ä¶•Ó‚ª vector Œ^‚É‰Šú‰»‚³‚ê‚é‚ªA
-			@	‚±‚Ì‰Šú’l‚Í’¼Œã‚Ì‘ã“ü‘€ì‚É‚æ‚Á‚ÄÁ‹Ž‚³‚ê‚é‚½‚ßAAlloc() ‚Å–ˆ‰ñŽÀ‘Ì‚ðŠm•Û‚·‚é‚Ì‚Í–³‘Ê‚ª‘½‚¢B
-			
-			@ ƒeƒ“ƒ|ƒ‰ƒŠ•Ï”‚Ìê‡A”äŠr‰‰ŽZ‚ÌŒ‹‰Ê‚É‚æ‚èAƒ}ƒWƒbƒNƒR[ƒh (NULL ‚Å‚È‚¢‚ª—LŒø‚Å‚È‚¢“Á’è‚Ì’l)A
-			@	CMulti::MagicNull ‚ðŽæ‚é‚±‚Æ‚ª‚ ‚éB
-			@	‰ð•úŽž‚É‚Ì‚Ý‹C‚ð‚Â‚¯‚ê‚Î–â‘è‚È‚¢B
-			
-		EPVal::master
-			CVector ‚Ö‚Ìƒ|ƒCƒ“ƒ^ (= ŽÀ‘Ì)B
-			‚±‚ê‚ªŽw‚µŽ¦‚·ƒoƒbƒtƒ@‚Ìã‚ÉA‚±‚Ì•Ï”‚ªŽ‚Â CVector ‚ÌŽÀ‘Ì‚ª‚ ‚éB
-			
-		EPVal::offset
-			CVector ‚Ì“YŽšB
-			
-	–CVector ƒNƒ‰ƒX
-		“à•”•Ï”ŽQÆ(PValRef*)‚Ì”z—ñ‚ðŽ‚ÂB
-		ŽQÆƒJƒEƒ“ƒ^‚ÅŠÇ—‚³‚ê‚éB
+	ï¼Švector_t ã‚¯ãƒ©ã‚¹
+		å‚ç…§ã‚«ã‚¦ãƒ³ã‚¿æ–¹å¼ã§ç®¡ç†ã•ã‚ŒãŸå†…éƒ¨å¤‰æ•°(ManagedVarData)ã®é…åˆ—ã‚’æŒã¤ã€‚
+		(äºˆå®šï¼šãƒªãƒ†ãƒ©ãƒ«ç”Ÿæˆæ™‚ã« byref ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰ã‚’ä½¿ã†ã“ã¨ã§ã€)
+		call ã®å¯å¤‰é•·å¼•æ•°éƒ¨ã¨ã—ã¦ç”Ÿæˆã•ã‚ŒãŸå ´åˆã€å†…éƒ¨å¤‰æ•°ãŒæ—¢å­˜ã® PVal* ã¸ã®å¼±å‚ç…§ã§ã‚ã‚‹ã“ã¨ã‚‚ã‚ã‚‹ã€‚
+
+ï¼ ä»£å…¥
+	ObjectWrite() é–¢æ•°ã‚’ç”¨ã„ã‚‹ã€‚
 	
-—‘ã“ü
-	ObjectWrite() ŠÖ”‚ð—p‚¢‚éB
-	
-	–“à•”•Ï”ŽQÆ‚ª‚ ‚éê‡
-		E“à•”•Ï”‚É‘Î‚µ‚Ä‘ã“üˆ—‚ð‚·‚éB
-		E˜A‘±‘ã“ü‚Í vector Ž©g‚É‘Î‚µ‚Äs‚í‚ê‚éB
-			@ex: v(n) = a, b Ì v(n) = a, v(n + 1) = b
+	ï¼Šå†…éƒ¨å¤‰æ•°å‚ç…§ãŒã‚ã‚‹å ´åˆ
+		ãƒ»å†…éƒ¨å¤‰æ•°ã«å¯¾ã—ã¦ä»£å…¥å‡¦ç†ã‚’ã™ã‚‹ã€‚
+		ãƒ»é€£ç¶šä»£å…¥ã¯ vector è‡ªèº«ã«å¯¾ã—ã¦è¡Œã‚ã‚Œã‚‹ã€‚
+			@ex: v(n) = a, b â‡” v(n) = a, v(n + 1) = b
 		
-	–“à•”•Ï”ŽQÆ‚ª‚È‚¢ê‡
-		E¶•Ó‚Ìƒf[ƒ^‚ð”jŠü‚·‚éB
-		E¶•Ó‚ªV‚µ‚¢ CVector ‚ð¶¬‚·‚éB
-		E‚»‚ê‚ÉA‰E•Ó‚ªŽ‚ÂŠe“à•”•Ï”‚ÌŽQÆ‚ð’Ç‰Á‚·‚éB
+	ï¼Šå†…éƒ¨å¤‰æ•°å‚ç…§ãŒãªã„å ´åˆ
+		ãƒ»å·¦è¾ºã®ãƒ‡ãƒ¼ã‚¿ã‚’ç ´æ£„ã™ã‚‹ã€‚
+		ãƒ»å·¦è¾ºãŒæ–°ã—ã„ vector ã‚’ç”Ÿæˆã™ã‚‹ã€‚
+		ãƒ»ãã‚Œã«ã€å³è¾ºãŒæŒã¤å„å†…éƒ¨å¤‰æ•°ã®å‚ç…§ã‚’è¿½åŠ ã™ã‚‹ã€‚
 	
-—ƒƒ\ƒbƒhŒÄ‚Ño‚µ
-	“à•”•Ï”‚Ö‚ÌŽQÆ‚ð•K{‚Æ‚·‚éB
-	“à•”•Ï”‚ÌŒ^‚É‡‚í‚¹‚ÄA‚»‚ÌŒ^‚ÌŽ‚Â ObjectMethod ŠÖ”‚ðŒÄ‚Ño‚·B
+ï¼ ãƒ¡ã‚½ãƒƒãƒ‰å‘¼ã³å‡ºã—
+	å†…éƒ¨å¤‰æ•°ã¸ã®å‚ç…§ã‚’å¿…é ˆã¨ã™ã‚‹ã€‚
+	å†…éƒ¨å¤‰æ•°ã®åž‹ã«åˆã‚ã›ã¦ã€ãã®åž‹ã®æŒã¤ ObjectMethod é–¢æ•°ã‚’å‘¼ã³å‡ºã™ã€‚
 	
 	

@@ -1,185 +1,185 @@
+﻿
+	引数付きラベル呼び出しプラグイン
 
-	�����t�����x���Ăяo���v���O�C��
+・被呼び出し先(functor_t)
 
-�E��Ăяo����(functor_t)
+実体は Managed<IFunctor> 型。
+呼び出し先と、引数が与えられた後の呼び出しの具体的な実行を行う。
 
-���̂� Managed<IFunctor> �^�B
-�Ăяo����ƁA�������^����ꂽ��̌Ăяo���̋�̓I�Ȏ��s���s���B
+・呼び出し手順
 
-�E�Ăяo���菇
+functor の一種の、FuncCaller を使う。
+これに呼び出し先と、引数を順次設定してゆき、call を行う。
+FuncCaller が内部で、与えられた functor の呼び出し処理に転送してくれる。
 
-functor �̈��́AFuncCaller ���g���B
-����ɌĂяo����ƁA�����������ݒ肵�Ă䂫�Acall ���s���B
-FuncCaller �������ŁA�^����ꂽ functor �̌Ăяo�������ɓ]�����Ă����B
-
-�EFuncCaller
+・FuncCaller
 
 functor_t
 prmstack
 call
 
-streamcaller �Ɏ��Ă���B
+streamcaller に似ている。
 
 LabelFunc:
 
-���x�������B���������X�g�͐錾���ꂽ����(�L���b�V�������)���A���錾�������ł���B
-�Ăяo���Ƃ��́A�^����ꂽ����������Ȃ� prmstk �� ctx->prmstack �������ւ��āA���x���� gosub ����B
+ラベルを持つ。仮引数リストは宣言されたもの(キャッシュされる)か、未宣言仮引数である。
+呼び出すときは、与えられた実引数からなる prmstk で ctx->prmstack を差し替えて、ラベルに gosub する。
 
-Deffunc�F
+Deffunc：
 
-MODCMD ID �����B���������X�g�́A����̉������� CPrmInfo �ɕϊ������L���b�V����ǂݎ��B
-�Ăяo���Ƃ��́A�^����ꂽ����������Ȃ� prmstk ���g���āA���̃��[�U��`�R�}���h�̐擪���w�����x���ɂ�� LabelFunc ���ĂԁB
+MODCMD ID を持つ。仮引数リストは、それの仮引数を CPrmInfo に変換したキャッシュを読み取る。
+呼び出すときは、与えられた実引数からなる prmstk を使って、そのユーザ定義コマンドの先頭を指すラベルによる LabelFunc を呼ぶ。
 
-���������鎞�_�Ń��x���֐��Ƃ������Ƃɂ��Ă������C�����Ă���
+→生成する時点でラベル関数ということにしてもいい気がしてきた
 
-Bound�F
+Bound：
 
-���ƂȂ� functor �ƁA����ɑ΂��邢�����̎��������^����ꂽ prmstk (finalize �͂���Ă��Ȃ����)�A
-�c��̉���������Ȃ鉼�������X�g�����B
-�Ăяo���Ƃ��́A���� prmstk �̃R�s�[�ɁA�^����ꂽ�������������� finalize ���Ă���A���� functor ���ĂԁB
-(prmstk �̃R�s�[����������K�v������A���Ȃ�)
+元となる functor と、それに対するいくつかの実引数が与えられた prmstk (finalize はされていない状態)、
+残りの仮引数からなる仮引数リストを持つ。
+呼び出すときは、その prmstk のコピーに、与えられた実引数を加えて finalize してから、元の functor を呼ぶ。
+(prmstk のコピーを実装する必要がある、問題ない)
 
-Composite (�����֐�)�F
+Composite (合成関数)：
 
-2�� functor �����B�Ăяo���Ƃ��́A�^����ꂽ��������O�҂ɗ^���ČĂяo���Ă���A���̕Ԓl���������Ƃ��āA��҂ɗ^����B
-���̊֐��̕Ԓl�́A2��ڂɌĂяo�����֐��̕Ԓl�ł���B
+2つの functor を持つ。呼び出すときは、与えられた実引数を前者に与えて呼び出してから、その返値を実引数として、後者に与える。
+この関数の返値は、2回目に呼び出した関数の返値である。
 
-OpDist (���Z���z�֐�)�F
+OpDist (演算分配関数)：
 
-2�� functor ��1�̉��Z�����B
-���������X�g�́A����2�� functor �ɋ��ʂ̂��̂ł���B
-	(���������X�g�̓��l�����`����K�v������G
-	���邢�͉������̏����キ���ċ��ʉ�������@��^����)
-�Ăяo���Ƃ��́A�^����ꂽ�����������ꂼ��ɗ^���ď����Ăяo���Ă���A
-	local �ϐ��̓N���A����H
-�����̕Ԓl�����Z�������̂�Ԃ��B
+2つの functor と1つの演算を持つ。
+仮引数リストは、その2つの functor に共通のものである。
+	(仮引数リストの同値性を定義する必要がある；
+	あるいは仮引数の情報を弱くして共通化する方法を与える)
+呼び出すときは、与えられた実引数をそれぞれに与えて順次呼び出してから、
+	local 変数はクリアする？
+それらの返値を演算したものを返す。
 
-Caster (�^�ϊ��ɂ��֐�)�F
+Caster (型変換による関数)：
 
-2�̌^�^�C�v�l�ƁA����̒l����Ȃ鉼�������X�g�����B
-�Ăяo���Ƃ��́A�^����ꂽ�l���A�����̌^�ɕϊ����āA�����Ԃ��Bgosub �𐶂��Ȃ��B
-���Z�֐��Ɠ��l�ɁAHSP���Ń��[�U��`�֐��Ƃ��Ē�`����΂����B
-	���̒��� opex �� cast �R�}���h���g���B
+2つの型タイプ値と、一方の値からなる仮引数リストを持つ。
+呼び出すときは、与えられた値を、他方の型に変換して、それを返す。gosub を生じない。
+演算関数と同様に、HSP側でユーザ定義関数として定義すればいい。
+	その中で opex の cast コマンドを使う。
 
-Constanct (�萔�֐�)�F
+Constanct (定数関数)：
 
-�^����ꂽ�l�����B��̉��������X�g�����B
-�Ăяo���Ƃ��́A�^����ꂽ�l��Ԃ��Bgosub �𐶂��Ȃ��B
+与えられた値を持つ。空の仮引数リストを持つ。
+呼び出すときは、与えられた値を返す。gosub を生じない。
 constf(any)
 
-Operater (���Z�֐�)�F
-1�̉��Z�ƁA2�� any ����Ȃ鉼�������X�g�����B
-�Ăяo���Ƃ��́A�܂��E�ӂ����ӂ̌^�ɃL���X�g�A
-���̌㍶�ӂ̌^�� HspVarProc ����Y�����鉉�Z�֐����A�����̒l�ɑ΂��ČĂԁB
-���̌��ʂ�Ԓl�Ƃ���B
+Operater (演算関数)：
+1つの演算と、2つの any からなる仮引数リストを持つ。
+呼び出すときは、まず右辺を左辺の型にキャスト、
+その後左辺の型の HspVarProc から該当する演算関数を、それらの値に対して呼ぶ。
+その結果を返値とする。
 
-Lambda�F
+Lambda：
 
-���������R�[�h�A�L���v�`�������l (ManagedPVal[])�A�����������B	
-�Ăяo���Ƃ��́Aprmsk �ɃL���v�`�������̉������� (���Ԍv�Z�l�p��) locals ��ǉ����āA
-	�L���v�`�������� PRM_TYPE_VAR, PRM_TYPE_ARRAY �����A�Ăяo���Ƃ��ɗ^��������̂ł͂Ȃ��̂ŁA
-	���������X�g�𕪂��邱�ƂőΉ����Ă���B
-	PRM_TYPE_CAPTURED �Ȃǂ����΂����̂ł́B�����Ƃ��Ă� local �̓��ށB
-�R�[�h�̐擪���w�����x���̊֐����ĂԁB
-	finalize ������̃��x���̉��������X�g�Ƃ��Đ錾���Ă��������A
+生成したコード、キャプチャした値 (ManagedPVal[])、仮引数を持つ。	
+呼び出すときは、prmsk にキャプチャ引数の仮引数と (中間計算値用の) locals を追加して、
+	キャプチャ引数は PRM_TYPE_VAR, PRM_TYPE_ARRAY だが、呼び出すときに与えられるものではないので、
+	仮引数リストを分けることで対応している。
+	PRM_TYPE_CAPTURED などを作ればいいのでは。扱いとしては local の同類。
+コードの先頭を指すラベルの関数を呼ぶ。
+	finalize した後のラベルの仮引数リストとして宣言してもいいが、
 
 
-����
+メモ
 
-call result �͒N�����H
+call result は誰が持つ？
 
-���x���֐��ɂǂ����Ă�2��ވȏ�̉��������K�v�ȏꍇ�͂���ȃR�}���h��p�ӂ���F
-	labelFunc(*label, prms...) �� �������t�����x���֐� (functor) ��Ԃ�
-�E�����֐�
+ラベル関数にどうしても2種類以上の仮引数が必要な場合はこんなコマンドを用意する：
+	labelFunc(*label, prms...) → 仮引数付きラベル関数 (functor) を返す
+・合成関数
 	(f >> g)(...) = f( g(...) )
-�X�N���v�g������֐��q�̎�ނ����ʂ��鉽���͕K�v�B
+スクリプト側から関数子の種類を識別する何かは必要。
 
 ------------------------------------------------------------------------
-�ȉ��A���o�[�W�����̎d�l�B
+以下、第二バージョンの仕様。
 
-�E��Ăяo����(functor)
-		���x�� or ���[�U��`�֐�
-			prmstack �����ւ�
+・被呼び出し先(functor)
+		ラベル or ユーザ定義関数
+			prmstack 差し替え
 			code_call()
 			
-		�����֐�(bound)
-			�푩���֐��̌Ăяo�� (CCaller ��p����)
+		束縛関数(bound)
+			被束縛関数の呼び出し (CCaller を用いる)
 			
-		�X�g���[���Ăяo��(stream)
-			���̊֐��̌Ăяo�� (CCaller ��p����)
+		ストリーム呼び出し(stream)
+			元の関数の呼び出し (CCaller を用いる)
 			
-		�R���[�`��(coroutine)
-			���̊֐��̌Ăяo�� (������1�� CCaller ��ێ����A������J��Ԃ��p����)
+		コルーチン(coroutine)
+			元の関数の呼び出し (内部で1つの CCaller を保持し、それを繰り返し用いる)
 	
-�E�Ăяo���菇
-	(Call �֐��Q��)
+・呼び出し手順
+	(Call 関数参照)
 	
-	0. CCaller ����
-	1. �Ăяo����ݒ�
+	0. CCaller 生成
+	1. 呼び出し先設定
 		setFunctor
-	2. �����ݒ�
-		addArgByVal		// �O�����������^����
+	2. 引数設定
+		addArgByVal		// 外部から引数を与える
 		addArgByRef
-		setArgNext		// �X�N���v�g������������o��
+		setArgNext		// スクリプトから引数を取り出す
 		setArgAll
-	3. �Ăяo��
+	3. 呼び出し
 		call
-	4. �Ԓl�̎擾
+	4. 返値の取得
 		getCallResult
 		
-�E�N���X
+・クラス
 	CCaller
-		�Ăяo���ƁA����Ɋւ���ݒ���s���������T�|�[�g����C���^�[�t�F�[�X�Ƃ��Ċ��p����B
-		��ɁA�Ăяo�����s���ꏊ�ŁA���[�J���ϐ��Ƃ��Đ��������B
+		呼び出しと、それに関する設定を行う処理をサポートするインターフェースとして活用する。
+		主に、呼び出しを行う場所で、ローカル変数として生成される。
 		
 	CCall
-		�Ăяo���Ɋւ���ݒ�����L�A�Ǘ�����B
+		呼び出しに関する設定を所有、管理する。
 		
 		CCall::CArgData
-			�Ăяo�����Ɏ������ޒl�f�[�^ { ����, this } ����������B
-			�K�v�Ȃ� PVal* �����삷��B
-			CCall �̈ꕔ��Ɨ����������̂ŁACCall �݂̂��F�m����B
+			呼び出し時に持ち込む値データ { 引数, this } を所持する。
+			必要なら PVal* を自作する。
+			CCall の一部を独立させたもので、CCall のみが認知する。
 		
 		CPrmInfo
-			�󂯕t��������^�C�v�̐ݒ����������B
-			���x���֐��Ƃ���̑g���O���[�o���ϐ��ɕۑ�����Ă���B
-			�܂��A���[�U��`�֐���STRUCTDAT������ɕϊ����邱�Ƃ��o����B
-				�ϊ��ɂ͊֐� CreatePrmInfo( ..., STRUCTDAT& ) ��p����B
-				���ۂɕϊ����s�� CCaller::setFunctor �̋Ǐ��ÓI�ϐ��ɁASTRUCTDAT �Ƃ���̑g���ۑ�����Ă���B
+			受け付ける引数タイプの設定を所持する。
+			ラベル関数とこれの組がグローバル変数に保存されている。
+			また、ユーザ定義関数のSTRUCTDATをこれに変換することが出来る。
+				変換には関数 CreatePrmInfo( ..., STRUCTDAT& ) を用いる。
+				実際に変換を行う CCaller::setFunctor の局所静的変数に、STRUCTDAT とこれの組が保存されている。
 	
 --------------------------------------------------------------------------------
-�ȉ��A���ɌÏL���d�l
+以下、非常に古臭い仕様
 
-�E�Ăяo�����@
-	���߁Fcall label, ����1, ����2 ...
-	�֐��Fcall(label, ����1, ����2 ...)
+・呼び出し方法
+	命令：call label, 引数1, 引数2 ...
+	関数：call(label, 引数1, 引数2 ...)
 	
-	�����͉ϒ��B���x�������󂯎������̐��͊֌W�Ȃ��B
+	引数は可変長。ラベル側が受け取る引数の数は関係なし。
 	
-�E���x�����߂̒�`
-	���ߌ`���Ή���
+・ラベル命令の定義
+	命令形式対応版
 	*label
-		// ����
+		// 処理
 		return
 	
-	���ʏ�Ɠ����B
+	※通常と同じ。
 	
-	�֐��`���Ή���
+	関数形式対応版
 	*label
-		// ����
-		call_retval �l	// ���߂�l��ݒ肷��
-		return		// �߂�
+		// 処理
+		call_retval 値	// ←戻り値を設定する
+		return		// 戻る
 	
-	��call_retval�ɒl���Z�b�g����return�����ꍇ�A
-	 �u�֐��̖߂�l���Ȃ��v�Ƃ����G���[����������B
-	�@�K����x�ȏ� call_retval ���Ă΂��悤�Ȑ݌v�ɂ��邱�ƁB
+	※call_retvalに値をセットせずreturnした場合、
+	 「関数の戻り値がない」というエラーが発生する。
+	　必ず一度以上 call_retval が呼ばれるような設計にすること。
 	
-�E���x����
-	���������ׂĎ󂯎��K�v�͂Ȃ��B�܂��A�G�C���A�X�����K�v���Ȃ��B
-	argv() ��refarg()�Ȃǂ̊֐��ɂ���āA�����ɃA�N�Z�X���邱�Ƃ��\
-	�ł���B
+・ラベル側
+	引数をすべて受け取る必要はない。また、エイリアスを作る必要もない。
+	argv() やrefarg()などの関数によって、引数にアクセスすることが可能
+	である。
 	
-	�����́A�\�Ȃ�Q�Ɠn���A�s�\�Ȃ�l�n���ƂȂ�B�܂�A�ϐ���
-	�w�肵���ꍇ�� var�B�萔���w�肵���ꍇ�͒l�n���B�^�`�F�b�N�͍s���
-	�Ȃ��Bplugin���́A�ǂ�Ȍ^�ł����e����B
+	引数は、可能なら参照渡し、不可能なら値渡しとなる。つまり、変数を
+	指定した場合は var。定数を指定した場合は値渡し。型チェックは行われ
+	ない。plugin側は、どんな型でも許容する。
 	
