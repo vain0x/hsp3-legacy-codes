@@ -1,4 +1,4 @@
-// opex - command
+ï»¿// opex - command
 
 #include "mod_makepval.h"
 #include "mod_argGetter.h"
@@ -11,19 +11,19 @@ using namespace hpimod;
 static operator_t GetOpFuncPtr( HspVarProc* hvp, OPTYPE optype );
 
 //------------------------------------------------
-// ‘ã“ü‰‰Z
+// ä»£å…¥æ¼”ç®—
 // 
-// @ ˜A‘±‘ã“ü‰‰Z‘Î‰
+// @ é€£ç¶šä»£å…¥æ¼”ç®—å¯¾å¿œ
 //------------------------------------------------
 static PVal* assign_impl()
 {
-	PVal* const pval = code_get_var();	// ‘ã“üæ
+	PVal* const pval = code_get_var();	// ä»£å…¥å…ˆ
 
-	// ‘æˆê’l‚Ì‘ã“ü
+	// ç¬¬ä¸€å€¤ã®ä»£å…¥
 	if ( code_getprm() <= PARAM_END ) puterror( HSPERR_NO_DEFAULT );
 	PVal_assign( pval, mpval->pt, mpval->flag );
 
-	// ˜A‘±‘ã“ü
+	// é€£ç¶šä»£å…¥
 	code_assign_multi( pval );
 
 	return pval;
@@ -44,7 +44,7 @@ int assign( PDAT** ppResult )
 }
 
 //------------------------------------------------
-// ŒğŠ·‰‰Z (¶ƒƒe[ƒg)
+// äº¤æ›æ¼”ç®— (å·¦ãƒ­ãƒ†ãƒ¼ãƒˆ)
 //------------------------------------------------
 static PVal* swap_impl()
 {
@@ -53,7 +53,7 @@ static PVal* swap_impl()
 	PVal* pval[stc_maxCnt];
 	APTR  aptr[stc_maxCnt];
 
-	// ˆø”‚ÍÅ’á2‚Â•K—v
+	// å¼•æ•°ã¯æœ€ä½2ã¤å¿…è¦
 	aptr[0] = code_getva( &pval[0] );
 	aptr[1] = code_getva( &pval[1] );
 
@@ -62,12 +62,12 @@ static PVal* swap_impl()
 		aptr[cnt] = code_getva( &pval[cnt] );
 	}
 
-	// ŒğŠ·
+	// äº¤æ›
 	for ( int i = cnt - 1; i > 0; -- i ) {
 		PVal_swap( pval[i], pval[(i + 1) % cnt], aptr[i], aptr[(i + 1) % cnt] );
 	}
 
-	return pval[cnt - 1];	// ÅŒã‚ğ•Ô‹p‚·‚é
+	return pval[cnt - 1];	// æœ€å¾Œã‚’è¿”å´ã™ã‚‹
 }
 
 void swap()
@@ -84,7 +84,7 @@ int swap( PDAT** ppResult )
 }
 
 //------------------------------------------------
-// ãQÆ‰‰Z
+// å¼±å‚ç…§æ¼”ç®—
 //------------------------------------------------
 static PVal* clone_impl()
 {
@@ -109,10 +109,10 @@ int clone( PDAT** ppResult )
 }
 
 //------------------------------------------------
-// ƒLƒƒƒXƒg‰‰Z
+// ã‚­ãƒ£ã‚¹ãƒˆæ¼”ç®—
 // 
-// @ mpval ‚ÌŠÖŒW‚ÅAæ‚É flag ‚ğó‚¯æ‚é‚ªA
-// @	ƒ}ƒNƒ‚Å castTo( value, flagDst ) ‚Ì‡‚É’²®‚·‚éB
+// @ mpval ã®é–¢ä¿‚ã§ã€å…ˆã« flag ã‚’å—ã‘å–ã‚‹ãŒã€
+// @	ãƒã‚¯ãƒ­ã§ castTo( value, flagDst ) ã®é †ã«èª¿æ•´ã™ã‚‹ã€‚
 //------------------------------------------------
 int castTo( PDAT** ppResult )
 {
@@ -126,7 +126,7 @@ int castTo( PDAT** ppResult )
 }
 
 //------------------------------------------------
-// ƒƒ“ƒo•Ï”‚Ìæ‚èo‚µ
+// ãƒ¡ãƒ³ãƒå¤‰æ•°ã®å–ã‚Šå‡ºã—
 //------------------------------------------------
 static PVal* GetMemberOf(void* prmstack, stprm_t stprm)
 {
@@ -145,7 +145,7 @@ static PVal* code_get_struct_member()
 
 	PVal* const pvMember = GetMemberOf(modSrc->ptr, stprm);
 
-	// ‚±‚ÌŒãƒƒ“ƒo•Ï”‚Ì“Yšˆ—‚ğs‚¤
+	// ã“ã®å¾Œãƒ¡ãƒ³ãƒå¤‰æ•°ã®æ·»å­—å‡¦ç†ã‚’è¡Œã†
 	return pvMember;
 }
 
@@ -186,7 +186,7 @@ static PDAT* code_get_struct_member_rhs(int& vtype)
 }
 
 // @prm: [ mod, member,  src ]
-// memberOf(mod, member) = src ‚Æ‘ã“ü‚·‚éB
+// memberOf(mod, member) = src ã¨ä»£å…¥ã™ã‚‹ã€‚
 void memberOf()
 {
 	PVal* const pvMember = code_get_struct_member_lhs();
@@ -219,36 +219,36 @@ void memberClone()
 //------------------------------------------------
 
 //#########################################################
-//        ŠÖ”
+//        é–¢æ•°
 //#########################################################
 //------------------------------------------------
-// ’Z—˜_—‰‰Z
+// çŸ­çµ¡è«–ç†æ¼”ç®—
 //------------------------------------------------
 int shortLogOp( PDAT** ppResult, bool bAnd )
 {
 	bool bResult = (bAnd ? true : false);
 
 	for(;;) {
-		// ğŒ
+		// æ¡ä»¶
 		int const prm = code_getprm();
 		if ( prm <= PARAM_END ) break;
 		if ( mpval->flag != HSPVAR_FLAG_INT ) puterror( HSPERR_TYPE_MISMATCH );
 
 		bool const predicate = (*(int*)mpval->pt != 0);
 
-		// and: 1‚Â‚Å‚à false ‚ª‚ ‚ê‚Î false
+		// and: 1ã¤ã§ã‚‚ false ãŒã‚ã‚Œã° false
 		if ( bAnd && !predicate ) {
 			bResult = false;
 			break;
 
-		// or: 1‚Â‚Å‚à true ‚ª‚ ‚ê‚Î true
+		// or: 1ã¤ã§ã‚‚ true ãŒã‚ã‚Œã° true
 		} else if ( !bAnd && predicate ) {
 			bResult = true;
 			break;
 		}
 	}
 
-	// c‚è‚Ìˆø”‚ğÌ‚Ä‚é
+	// æ®‹ã‚Šã®å¼•æ•°ã‚’æ¨ã¦ã‚‹
 	while ( code_skipprm() > PARAM_END )
 		;
 
@@ -256,13 +256,13 @@ int shortLogOp( PDAT** ppResult, bool bAnd )
 }
 
 //------------------------------------------------
-// ”äŠr‰‰Z
+// æ¯”è¼ƒæ¼”ç®—
 //------------------------------------------------
 int cmpLogOp( PDAT** ppResult, bool bAnd )
 {
 	bool bResult = (bAnd ? true : false);
 
-	// ”äŠrŒ³‚Ì’l‚ğæ“¾
+	// æ¯”è¼ƒå…ƒã®å€¤ã‚’å–å¾—
 	if ( code_getprm() <= PARAM_END ) puterror( HSPERR_NO_DEFAULT );
 
 	vartype_t const flag = mpval->flag;
@@ -270,15 +270,15 @@ int cmpLogOp( PDAT** ppResult, bool bAnd )
 
 	if ( pfOp == NULL ) puterror( HSPERR_TYPE_MISMATCH );
 
-	// ”äŠrŒ³‚Ì’l‚ğ•Û‘¶
+	// æ¯”è¼ƒå…ƒã®å€¤ã‚’ä¿å­˜
 	size_t const size = PVal_size( mpval );
-	void* const pTarget    = hspmalloc(size);	// Œ³ƒf[ƒ^
-	void* const pTargetTmp = hspmalloc(size);	// ì‹Æ—pƒoƒbƒtƒ@
+	void* const pTarget    = hspmalloc(size);	// å…ƒãƒ‡ãƒ¼ã‚¿
+	void* const pTargetTmp = hspmalloc(size);	// ä½œæ¥­ç”¨ãƒãƒƒãƒ•ã‚¡
 	if ( !pTarget || !pTargetTmp ) puterror( HSPERR_OUT_OF_MEMORY );
 
-	std::memcpy( pTarget, mpval->pt, size );			// ŠÛXƒRƒs[‚µ‚Ä‚¨‚­
+	std::memcpy( pTarget, mpval->pt, size );			// ä¸¸ã€…ã‚³ãƒ”ãƒ¼ã—ã¦ãŠã
 
-	// ”äŠr’l‚Æ”äŠr
+	// æ¯”è¼ƒå€¤ã¨æ¯”è¼ƒ
 	for(;;) {
 		int prm = code_getprm();
 		if ( prm <= PARAM_END ) break;
@@ -286,14 +286,14 @@ int cmpLogOp( PDAT** ppResult, bool bAnd )
 		bool bPred;
 
 		if ( mpval->flag != flag ) {
-			bPred = false;	// Œ^‚ªˆá‚¤“_‚ÅƒAƒEƒg
+			bPred = false;	// å‹ãŒé•ã†æ™‚ç‚¹ã§ã‚¢ã‚¦ãƒˆ
 
 		} else {
-			// pTarget ‚ğì‹Æ—pƒoƒbƒtƒ@ƒRƒs[
+			// pTarget ã‚’ä½œæ¥­ç”¨ãƒãƒƒãƒ•ã‚¡ã‚³ãƒ”ãƒ¼
 			memcpy( pTargetTmp, pTarget, size );
 
-			// ‰‰Z
-			(*pfOp)( (PDAT*)pTargetTmp, mpval->pt );	// ‰‰Zq‚Ì“®ì
+			// æ¼”ç®—
+			(*pfOp)( (PDAT*)pTargetTmp, mpval->pt );	// æ¼”ç®—å­ã®å‹•ä½œ
 			bPred = ( *(int*)pTargetTmp != 0 );
 		}
 
@@ -307,11 +307,11 @@ int cmpLogOp( PDAT** ppResult, bool bAnd )
 		}
 	}
 
-	// c‚è‚Ìˆø”‚ğÌ‚Ä‚é
+	// æ®‹ã‚Šã®å¼•æ•°ã‚’æ¨ã¦ã‚‹
 	while ( code_skipprm() > PARAM_END )
 		;
 
-	// ƒoƒbƒtƒ@‚ğ‰ğ•ú
+	// ãƒãƒƒãƒ•ã‚¡ã‚’è§£æ”¾
 	if ( pTarget    ) hspfree( pTarget    );
 	if ( pTargetTmp ) hspfree( pTargetTmp );
 
@@ -319,44 +319,44 @@ int cmpLogOp( PDAT** ppResult, bool bAnd )
 }
 
 //------------------------------------------------
-// ğŒ‰‰Z (?:)
+// æ¡ä»¶æ¼”ç®— (?:)
 //------------------------------------------------
 int which(PDAT** ppResult)
 {
 	bool const predicate = (code_geti() != 0);
-	if ( !predicate ) code_skipprm();		// ‹U => ^‚Ì•”•ª‚ğ”ò‚Î‚·
+	if ( !predicate ) code_skipprm();		// å½ => çœŸã®éƒ¨åˆ†ã‚’é£›ã°ã™
 
 	if ( code_getprm() <= PARAM_END ) {
 		puterror( HSPERR_NO_DEFAULT );
 	}
 
-	// •Ô’l‚Æ‚È‚é’l‚ğæ‚èo‚·
+	// è¿”å€¤ã¨ãªã‚‹å€¤ã‚’å–ã‚Šå‡ºã™
 	vartype_t const flag = mpval->flag;
 	*ppResult = mpval->pt;
 
-	if ( predicate ) code_skipprm();		// ^ => ‹U‚Ì•”•ª‚ğ”ò‚Î‚·
+	if ( predicate ) code_skipprm();		// çœŸ => å½ã®éƒ¨åˆ†ã‚’é£›ã°ã™
 	return flag;
 }
 
 //------------------------------------------------
-// •ªŠòŠÖ”
+// åˆ†å²é–¢æ•°
 //------------------------------------------------
 int what(PDAT** ppResult)
 {
 	int const idx = code_geti();
 	if ( idx < 0 ) puterror( HSPERR_ILLEGAL_FUNCTION );
 
-	// ‘O‚Ì•”•ª‚ğ”ò‚Î‚µ‚Ä‚¢‚­
+	// å‰ã®éƒ¨åˆ†ã‚’é£›ã°ã—ã¦ã„ã
 	for( int i = 0; i < idx; i ++ ) {
 		if ( code_skipprm() <= PARAM_END ) puterror( HSPERR_NO_DEFAULT );
 	}
 
-	// •Ô’l‚Æ‚È‚é’l‚ğæ‚èo‚·
+	// è¿”å€¤ã¨ãªã‚‹å€¤ã‚’å–ã‚Šå‡ºã™
 	if ( code_getprm() <= PARAM_END ) puterror( HSPERR_NO_DEFAULT );
 	vartype_t const flag = mpval->flag;
 	*ppResult = mpval->pt;
 
-	// c‚è‚Ìˆø”‚ğÌ‚Ä‚é
+	// æ®‹ã‚Šã®å¼•æ•°ã‚’æ¨ã¦ã‚‹
 	while ( code_skipprm() > PARAM_END )
 		;
 
@@ -364,9 +364,9 @@ int what(PDAT** ppResult)
 }
 
 //------------------------------------------------
-// ƒŠƒXƒg®
+// ãƒªã‚¹ãƒˆå¼
 // 
-// @ Šeˆø”‚ğ•]‰¿‚µ‚ÄAÅŒã‚Ìˆø”‚Ì’l‚ğ•Ô‚·B
+// @ å„å¼•æ•°ã‚’è©•ä¾¡ã—ã¦ã€æœ€å¾Œã®å¼•æ•°ã®å€¤ã‚’è¿”ã™ã€‚
 //------------------------------------------------
 int exprs( PDAT** ppResult )
 {
@@ -382,10 +382,10 @@ int exprs( PDAT** ppResult )
 //------------------------------------------------
 
 //#########################################################
-//        ƒVƒXƒeƒ€•Ï”
+//        ã‚·ã‚¹ãƒ†ãƒ å¤‰æ•°
 //#########################################################
 //------------------------------------------------
-// (kw) ’è”ƒ|ƒCƒ“ƒ^
+// (kw) å®šæ•°ãƒã‚¤ãƒ³ã‚¿
 // 
 // @ kw_constptr || CONST_VALUE
 //------------------------------------------------
@@ -402,7 +402,7 @@ int kw_constptr( PDAT** ppResult )
 			break;
 
 		case TYPE_INUM:
-			puterror( HSPERR_UNSUPPORTED_FUNCTION );	// CS’†‚É–„‚ß‚Ü‚ê‚Ä‚¢‚é‚Ì‚Å‚Æ‚ê‚È‚¢
+			puterror( HSPERR_UNSUPPORTED_FUNCTION );	// CSä¸­ã«åŸ‹ã‚è¾¼ã¾ã‚Œã¦ã„ã‚‹ã®ã§ã¨ã‚Œãªã„
 		default:
 			puterror( HSPERR_SYNTAX );
 	}
@@ -419,10 +419,10 @@ int kw_constptr( PDAT** ppResult )
 //------------------------------------------------
 
 //#########################################################
-//        ‰º¿‚¯
+//        ä¸‹è«‹ã‘
 //#########################################################
 //------------------------------------------------
-// Hvp ‚©‚ç‰‰Zˆ—ŠÖ”‚ğæ‚èo‚·
+// Hvp ã‹ã‚‰æ¼”ç®—å‡¦ç†é–¢æ•°ã‚’å–ã‚Šå‡ºã™
 //------------------------------------------------
 operator_t GetOpFuncPtr( HspVarProc* hvp, OPTYPE optype )
 {
@@ -451,4 +451,4 @@ operator_t GetOpFuncPtr( HspVarProc* hvp, OPTYPE optype )
 	}
 }
 
-           
+           
