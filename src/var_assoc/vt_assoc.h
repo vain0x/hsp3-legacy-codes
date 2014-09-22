@@ -11,12 +11,20 @@ extern int g_vtAssoc;
 extern HspVarProc* g_hvpAssoc;
 
 // traits
-struct assoc_tag : public hpimod::NativeVartypeTag<CAssoc*>
+using vtAssoc = hpimod::VtTraits::NativeVartypeTag<CAssoc*>;
+
+namespace hpimod
 {
-	using master_t = PVal*;
-	static hpimod::vartype_t vartype() { return g_vtAssoc; }
+	namespace VtTraits
+	{
+
+		namespace Impl
+		{
+			template<> struct master_type<vtAssoc> { using type = PVal*; };
+			template<> static vartype_t vartype<vtAssoc>() { return g_vtAssoc; }
+		}
+	}
 };
-using AssocTraits = hpimod::VtTraits<assoc_tag>;
 
 // ä÷êî
 extern void HspVarAssoc_Init( HspVarProc* );

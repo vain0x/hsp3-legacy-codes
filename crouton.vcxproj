@@ -91,6 +91,8 @@
     <ClInclude Include="..\hpimod\mod_makepval.h" />
     <ClInclude Include="..\hpimod\mod_varutil.h" />
     <ClInclude Include="..\hpimod\reffuncResult.h" />
+    <ClInclude Include="..\hpimod\vartype_traits.h" />
+    <ClInclude Include="..\hpimod\vp_template.h" />
     <ClInclude Include="src\call\CBound.h" />
     <ClInclude Include="src\call\CCoRoutine.h" />
     <ClInclude Include="src\call\CLabelFunc.h" />

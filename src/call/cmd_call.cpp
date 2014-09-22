@@ -465,7 +465,7 @@ int FunctorCmd::functor(PDAT** ppResult, bool bSysvar)
 		if ( chk <= PARAM_END ) puterror(HSPERR_NO_DEFAULT);
 
 		*ppResult = g_hvpFunctor->Cnv(mpval->pt, mpval->flag);
-		assert(*ppResult == FunctorTraits::asPDAT(&g_resFunctor));
+		assert(*ppResult == VtTraits::asPDAT<vtFunctor>(&g_resFunctor));
 		return g_vtFunctor;
 
 	} else {
@@ -542,7 +542,7 @@ int CallCmd::unBind( PDAT** ppResult )
 	if ( code_getprm() <= PARAM_END ) puterror( HSPERR_NO_DEFAULT );
 	if ( mpval->flag != g_vtFunctor ) puterror( HSPERR_TYPE_MISMATCH );
 
-	auto const functor = FunctorTraits::derefValptr(mpval->pt);
+	auto const functor = VtTraits::derefValptr<vtFunctor>(mpval->pt);
 	auto const bound   = functor->safeCastTo<bound_t>();
 
 	return SetReffuncResult( ppResult, bound->unbind() );
@@ -663,15 +663,15 @@ static label_t code_labelOf()
 
 		// axcmd
 		if ( mpval->flag == HSPVAR_FLAG_INT ) {
-			return code_labelOfImpl(VtTraits<int>::derefValptr(mpval->pt));
+			return code_labelOfImpl(VtTraits::derefValptr<vtInt>(mpval->pt));
 
 			// label
 		} else if ( mpval->flag == HSPVAR_FLAG_LABEL ) {
-			return VtTraits<label_t>::derefValptr(mpval->pt);
+			return VtTraits::derefValptr<vtLabel>(mpval->pt);
 
 			// functor
 		} else if ( mpval->flag == g_vtFunctor ) {
-			return FunctorTraits::derefValptr(mpval->pt)->getLabel();
+			return VtTraits::derefValptr<vtFunctor>(mpval->pt)->getLabel();
 		}
 		puterror(HSPERR_TYPE_MISMATCH);
 	}

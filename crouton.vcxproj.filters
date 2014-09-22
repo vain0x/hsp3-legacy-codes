@@ -193,6 +193,12 @@
     <ClInclude Include="src\call\iface_call.h">
       <Filter>call_core\cmd</Filter>
     </ClInclude>
+    <ClInclude Include="..\hpimod\vp_template.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\vartype_traits.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\hpimod\mod_argGetter.cpp">

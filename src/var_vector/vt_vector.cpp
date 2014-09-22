@@ -31,7 +31,7 @@ static PDAT* HspVarVector_GetPtr(PVal* pval)
 //------------------------------------------------
 static int HspVarVector_GetUsing(PDAT const* pdat)
 {
-	return HspBool(!VectorTraits::derefValptr(pdat).isNull());
+	return HspBool(!VtTraits::derefValptr<vtVector>(pdat).isNull());
 }
 
 //------------------------------------------------
@@ -52,7 +52,7 @@ static void HspVarVector_Alloc(PVal* pval, PVal const* pval2)
 	// len[1] = 1 なので何度も呼ばれてしまう
 	if ( pval2 ) {
 		assert(pval == pval2);
-		auto& vec = VectorTraits::derefValptr(pval2->pt);
+		auto& vec = VtTraits::derefValptr<vtVector>(pval2->pt);
 		
 		if ( vec->size() < cntElems ) {
 			vec->resize(cntElems);
@@ -60,7 +60,7 @@ static void HspVarVector_Alloc(PVal* pval, PVal const* pval2)
 
 	} else {
 		// pval->master が実体になる
-		auto const p = &VectorTraits::getMaster(pval);
+		auto const p = &VtTraits::getMaster<vtVector>(pval);
 
 		// mpval なら inst = nullptr で初期化
 		if ( pval->support & HSPVAR_SUPPORT_TEMPVAR ) {
@@ -73,8 +73,8 @@ static void HspVarVector_Alloc(PVal* pval, PVal const* pval2)
 
 		pval->flag = g_vtVector;
 		pval->mode = HSPVAR_MODE_MALLOC;
-		pval->size = VectorTraits::basesize;
-		pval->pt  = VectorTraits::asPDAT(p);
+		pval->size = VtTraits::basesize<vtVector>::value;
+		pval->pt  = VtTraits::asPDAT<vtVector>(p);
 	}
 	return;
 }
@@ -85,7 +85,7 @@ static void HspVarVector_Alloc(PVal* pval, PVal const* pval2)
 static void HspVarVector_Free(PVal* pval)
 {
 	if ( pval->mode == HSPVAR_MODE_MALLOC ) {
-		VectorTraits::derefValptr(pval->pt).~Managed();
+		VtTraits::derefValptr<vtVector>(pval->pt).~Managed();
 	}
 
 	pval->pt     = nullptr;
@@ -133,8 +133,8 @@ static void HspVarVector_Set(PVal* pval, PDAT* pdat, PDAT const* in)
 {
 	if ( pval->offset != 0 ) puterror( HSPERR_ARRAY_OVERFLOW );
 
-	auto& dst = VectorTraits::derefValptr(pdat);
-	auto& src = VectorTraits::derefValptr(in);
+	auto& dst = VtTraits::derefValptr<vtVector>(pdat);
+	auto& src = VtTraits::derefValptr<vtVector>(in);
 
 	// テンポラリ変数 => 参照共有
 	if ( pval->support & HSPVAR_SUPPORT_TEMPVAR ) {
@@ -160,8 +160,8 @@ static void HspVarVector_Set(PVal* pval, PDAT* pdat, PDAT const* in)
 //------------------------------------------------
 void HspVarVector_AddI( PDAT* pdat, PDAT const* val )
 {
-	auto& lhs = VectorTraits::derefValptr(pdat);
-	auto  rhs = VectorTraits::derefValptr(val);
+	auto& lhs = VtTraits::derefValptr<vtVector>(pdat);
+	auto  rhs = VtTraits::derefValptr<vtVector>(val);
 
 	assert( !lhs.isNull() && !rhs.isNull() );
 
@@ -209,8 +209,8 @@ static int Compare(vector_t const& lhs, vector_t const& rhs)
 
 /*static*/ int HspVarVector_CmpI( PDAT* pdat, PDAT const* val )
 {
-	auto& lhs = VectorTraits::derefValptr(pdat);
-	auto& rhs = VectorTraits::derefValptr(val);
+	auto& lhs = VtTraits::derefValptr<vtVector>(pdat);
+	auto& rhs = VtTraits::derefValptr<vtVector>(val);
 
 	int const cmp = Compare( lhs, rhs );
 
@@ -228,7 +228,7 @@ static int Compare(vector_t const& lhs, vector_t const& rhs)
 //------------------------------------------------
 static void HspVarVector_ObjectMethod( PVal* pval )
 {
-	PVal* const pvInner = VectorTraits::getInnerPVal(pval);
+	PVal* const pvInner = getInnerPVal(pval);
 	if ( !pvInner ) puterror( HSPERR_UNSUPPORTED_FUNCTION );
 
 	getHvp(pvInner->flag)->ObjectMethod( pvInner );
@@ -252,10 +252,10 @@ static int code_vectorIndex(vector_t const& self)
 {
 	int const idx = code_getdi(-1);
 	if ( idx < 0 ) {
-		if ( idx == VectorTraits::IdxLast ) {
+		if ( idx == vtVector::IdxLast ) {
 			if ( self->empty() ) puterror( HSPERR_ARRAY_OVERFLOW );
 			return self->size() - 1;
-		} else if ( idx == VectorTraits::IdxEnd ) {
+		} else if ( idx == vtVector::IdxEnd ) {
 			return self->size();
 		} else {
 			puterror( HSPERR_ARRAY_OVERFLOW ); throw;
@@ -285,7 +285,7 @@ static PVal* HspVarVector_ArrayObjectImplInner(vector_t const& self, size_t idx)
 template<bool bAsLhs>
 static PVal* HspVarVector_ArrayObjectImpl( PVal* pval )
 {
-	auto& vec = VectorTraits::getMaster(pval);
+	auto& vec = VtTraits::getMaster<vtVector>(pval);
 
 	HspVarCoreReset( pval );
 	int const idx = code_vectorIndex( vec );
@@ -369,10 +369,10 @@ PDAT* Vector_indexRhs( vector_t self, int* mptype )
 //------------------------------------------------
 static void HspVarVector_ObjectWrite( PVal* pval, PDAT const* data, int vflag )
 {
-	PVal* const pvInner = VectorTraits::getInnerPVal(pval);
+	PVal* const pvInner = getInnerPVal(pval);
 
 	DbgArea {
-		auto& self = VectorTraits::derefValptr(pval->pt);
+		auto& self = VtTraits::derefValptr<vtVector>(pval->pt);
 	//	dbgout("ow pval=%p, data=%p, vflag=%d; len = %d, offset=%d", pval, data, vflag, self->size(), pval->offset);
 	}
 
@@ -380,7 +380,7 @@ static void HspVarVector_ObjectWrite( PVal* pval, PDAT const* data, int vflag )
 	if ( !pvInner ) {
 		if ( vflag != g_vtVector ) puterror( HSPERR_INVALID_ARRAYSTORE );	// 右辺の型が不一致
 
-		HspVarVector_Set( pval, VectorTraits::asPDAT(&VectorTraits::getMaster(pval)), data );
+		HspVarVector_Set( pval, VtTraits::asPDAT<vtVector>(&VtTraits::getMaster<vtVector>(pval)), data );
 
 	// 内部変数を参照している場合
 	} else {
@@ -395,7 +395,7 @@ static void HspVarVector_ObjectWrite( PVal* pval, PDAT const* data, int vflag )
 
 		// 連続代入
 		if ( bToVector ) {
-			auto& vec = VectorTraits::getMaster(pval);
+			auto& vec = VtTraits::getMaster<vtVector>(pval);
 			while ( code_isNextArg() ) {
 				int const chk = code_getprm();
 				assert(chk != PARAM_END && chk != PARAM_ENDSPLIT);
@@ -424,11 +424,11 @@ void HspVarVector_Init(HspVarProc* p)
 	g_vtVector = p->flag;
 
 	// 関数ポインタを登録
-	p->GetPtr = HspVarVector_GetPtr;
-	p->GetSize = HspVarTemplate_GetSize<vector_tag>;
-	p->GetUsing = HspVarVector_GetUsing;
-	p->GetBlockSize = HspVarTemplate_GetBlockSize<vector_tag>;
-	p->AllocBlock = HspVarTemplate_AllocBlock<vector_tag>;
+	p->GetPtr       = HspVarVector_GetPtr;
+	p->GetSize      = HspVarTemplate_GetSize<vtVector>;
+	p->GetUsing     = HspVarVector_GetUsing;
+	p->GetBlockSize = HspVarTemplate_GetBlockSize<vtVector>;
+	p->AllocBlock   = HspVarTemplate_AllocBlock<vtVector>;
 
 	p->Alloc = HspVarVector_Alloc;
 	p->Free = HspVarVector_Free;
@@ -462,7 +462,7 @@ void HspVarVector_Init(HspVarProc* p)
 		| HSPVAR_SUPPORT_NOCONVERT		// ObjectWriteで格納
 		| HSPVAR_SUPPORT_VARUSE			// varuse関数を適用
 		;
-	p->basesize = VectorTraits::basesize;	// size / 要素 (byte)
+	p->basesize = VtTraits::basesize<vtVector>::value;	// size / 要素 (byte)
 	return;
 }
 
@@ -476,7 +476,7 @@ void HspVarVector_Init(HspVarProc* p)
 // [[deprecated]]
 static PVal** HspVarVector_GetVectorList( PDAT const* _src, int* pSize )
 {
-	auto const& src = VectorTraits::derefValptr(_src);
+	auto const& src = VtTraits::derefValptr<vtVector>(_src);
 
 	if ( src.isNull() ) {
 		if ( pSize ) { *pSize = 0; }
@@ -512,7 +512,7 @@ EXPORT void WINAPI knowbugVsw_addVarVector(vswriter_t _w, char const* name, PVal
 EXPORT void WINAPI knowbugVsw_addValueVector(vswriter_t _w, char const* name, PDAT const* ptr)
 {
 	auto const kvswm = knowbug_getVswMethods();
-	auto const& src = VectorTraits::derefValptr(ptr);
+	auto const& src = VtTraits::derefValptr<vtVector>(ptr);
 
 	if ( src.isNull() ) {
 		kvswm->catLeafExtra(_w, name, "null_vector");

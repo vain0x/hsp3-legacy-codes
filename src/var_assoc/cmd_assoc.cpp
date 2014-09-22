@@ -21,7 +21,7 @@ CAssoc* code_get_assoc()
 {
 	if ( code_getprm() <= PARAM_END ) puterror( HSPERR_NO_DEFAULT );
 	if ( mpval->flag != g_vtAssoc ) puterror( HSPERR_TYPE_MISMATCH );
-	return *AssocTraits::asValptr(mpval->pt);
+	return *VtTraits::asValptr<vtAssoc>(mpval->pt);
 }
 
 //------------------------------------------------
@@ -32,7 +32,7 @@ CAssoc* code_get_assoc()
 PVal* code_get_assoc_pval()
 {
 	PVal* const pval = hpimod::code_get_var();
-	return AssocTraits::getMaster(pval);
+	return VtTraits::getMaster<vtAssoc>(pval);
 }
 
 //------------------------------------------------
@@ -44,7 +44,7 @@ int SetReffuncResult( PDAT** ppResult, CAssoc* const& pAssoc )
 	g_pAssocResult = pAssoc;
 	CAssoc::AddRef( g_pAssocResult );
 
-	*ppResult = AssocTraits::asPDAT(const_cast<CAssoc**>( &pAssoc ));
+	*ppResult = VtTraits::asPDAT<vtAssoc>(const_cast<CAssoc**>( &pAssoc ));
 	return g_vtAssoc;
 }
 
@@ -74,7 +74,7 @@ void AssocDelete()
 	PVal* const pval = code_get_var();
 	if ( pval->flag != g_vtAssoc ) puterror( HSPERR_TYPE_MISMATCH );
 
-	CAssoc*& self = *AssocTraits::getValptr(pval);
+	CAssoc*& self = *VtTraits::getValptr<vtAssoc>(pval);
 	if ( self ) {
 		self->Release();
 		self = nullptr;
@@ -367,7 +367,7 @@ int AssocExpr( PDAT** ppResult )
 	// AssocResult ‚ªŒÄ‚Î‚ê‚é‚Í‚¸
 	if ( code_geti() != AssocResultExprMagicNumber ) puterror(HSPERR_ILLEGAL_FUNCTION);
 
-	*ppResult = AssocTraits::asPDAT(&g_pAssocResult);
+	*ppResult = VtTraits::asPDAT<vtAssoc>(&g_pAssocResult);
 	return g_vtAssoc;
 }
 

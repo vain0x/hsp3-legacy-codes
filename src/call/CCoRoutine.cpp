@@ -51,7 +51,7 @@ void CCoRoutine::call( CCaller& callerGiven )
 		// Ÿ‚ÌŒÄ‚Ño‚µæ‚ğÄİ’è‚·‚é
 		if ( stt_pvNextVar ) {
 			if ( stt_pvNextVar->flag != HSPVAR_FLAG_LABEL ) puterror( HSPERR_TYPE_MISMATCH );
-			label_t const lb = VtTraits<label_t>::derefValptr(stt_pvNextVar->pt);
+			label_t const lb = VtTraits::derefValptr<vtLabel>(stt_pvNextVar->pt);
 
 			mpCaller->setFunctor(Functor::New(lb));		// Ÿ‚ÌŒÄ‚Ño‚µæ‚ğŠm’è
 			stt_pvNextVar = nullptr;

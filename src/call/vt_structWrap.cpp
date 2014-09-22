@@ -127,7 +127,7 @@ void HspVarStructWrap_Alloc( PVal* pval, PVal const* pval2 )
 		std::memmove(pt, pval2->pt, sizeof(FlexValue) * pval2->len[1]);
 
 		// pval ÇÃï˚Ç™íZÇ¢èÍçáÅAåpè≥Ç≈Ç´Ç»Ç¢ï™Çîjä¸
-		auto const iter2 = StructTraits::asValptr(pval2->pt);
+		auto const iter2 = VtTraits::asValptr<vtStruct>(pval2->pt);
 		for ( int i = pval2->len[1]; i < pval->len[1]; ++i ) {
 			FlexValue_Release(iter2[i]);
 		}
@@ -136,7 +136,7 @@ void HspVarStructWrap_Alloc( PVal* pval, PVal const* pval2 )
 	}
 
 	pval->mode   = HSPVAR_MODE_MALLOC;
-	pval->pt     = StructTraits::asPDAT(pt);
+	pval->pt     = VtTraits::asPDAT<vtStruct>(pt);
 	pval->size   = size;
 //	pval->master = nullptr;	// ïségóp
 	return;
@@ -148,7 +148,7 @@ void HspVarStructWrap_Alloc( PVal* pval, PVal const* pval2 )
 void HspVarStructWrap_Free( PVal* pval )
 {
 	if ( pval->mode == HSPVAR_MODE_MALLOC ) {
-		auto const fv = StructTraits::asValptr(pval->pt);
+		auto const fv = VtTraits::asValptr<vtStruct>(pval->pt);
 		for ( int i = 0; i < pval->len[1]; ++ i ) {
 			FlexValue_Release( fv[i] );
 		}
@@ -167,8 +167,8 @@ void HspVarStructWrap_Free( PVal* pval )
 //------------------------------------------------
 void HspVarStructWrap_Set( PVal* pval, PDAT* pdat, PDAT const* in )
 {
-	auto& fv_dst = *StructTraits::asValptr(pdat);
-	auto& fv_src = *StructTraits::asValptr(in);
+	auto& fv_dst = *VtTraits::asValptr<vtStruct>(pdat);
+	auto& fv_src = *VtTraits::asValptr<vtStruct>(in);
 
 	FlexValue_Copy( fv_dst, fv_src );
 
@@ -237,7 +237,7 @@ void HspVarStructWrap_Dup( FlexValue* result, FlexValue* fv )
 	}
 
 	if ( pvTmp->flag != HSPVAR_FLAG_STRUCT ) puterror( HSPERR_TYPE_MISMATCH );
-	FlexValue_Move( *result, *StructTraits::asValptr(pvTmp->pt) );
+	FlexValue_Move( *result, *VtTraits::asValptr<vtStruct>(pvTmp->pt) );
 
 	PVal_free( pvTmp );
 	return;
@@ -259,8 +259,8 @@ static void HspVarStructWrap_CoreI( PDAT* pdat, void const* val, int opId )
 	bool const bTempOp =
 		(mpval_struct && (void*)mpval_struct->pt == pdat);
 
-	auto const lhs = StructTraits::asValptr(pdat);
-	auto const rhs = StructTraits::asValptr(val);
+	auto const lhs = VtTraits::asValptr<vtStruct>(pdat);
+	auto const rhs = VtTraits::asValptr<vtStruct>(val);
 	assert(!!lhs && !!rhs);
 
 	// åƒÇ—èoÇµ
@@ -327,8 +327,8 @@ static void HspVarStructWrap_CmpI( PDAT* pdat, void const* val, int opId )
 		puterror( HSPERR_TYPE_MISMATCH );
 	}
 
-	auto const lhs = StructTraits::asValptr(pdat);
-	auto const rhs = StructTraits::asValptr(val);
+	auto const lhs = VtTraits::asValptr<vtStruct>(pdat);
+	auto const rhs = VtTraits::asValptr<vtStruct>(val);
 
 	// ââéZåãâ 
 	int cmp;
@@ -352,7 +352,7 @@ static void HspVarStructWrap_CmpI( PDAT* pdat, void const* val, int opId )
 		vartype_t const resVt = caller.getCallResult( &result );
 		if ( resVt != HSPVAR_FLAG_INT ) puterror( HSPERR_TYPE_MISMATCH );
 
-		cmp = VtTraits<int>::derefValptr(result);
+		cmp = VtTraits::derefValptr<vtInt>(result);
 
 	} else {
 		// Ç«ÇøÇÁÇ©Ç™ nullmod ÇÃÇ∆Ç´ÅAnullmod Ç≈Ç»Ç¢ï˚Ç™ëÂÇ´Ç¢Ç∆Ç¢Ç§Ç±Ç∆Ç…Ç∑ÇÈ
@@ -420,9 +420,9 @@ PDAT* HspVarStructWrap_Cnv( PDAT const* buffer, int flag )
 PDAT* HspVarStructWrap_CnvCustom( PDAT const* buffer, int flag )
 {
 	int const opId = OpFlag_CnvTo | flag;
-	auto const fv = StructTraits::asValptr(buffer);
+	auto const fv = VtTraits::asValptr<vtStruct>(buffer);
 
-	if ( flag == HSPVAR_FLAG_STRUCT ) return VtTraits<struct_tag>::asPDAT(const_cast<FlexValue*>(fv));
+	if ( flag == HSPVAR_FLAG_STRUCT ) return VtTraits::asPDAT<vtStruct>(const_cast<FlexValue*>(fv));
 
 	PDAT* result = nullptr;
 
@@ -471,20 +471,20 @@ PDAT* HspVarStructWrap_CnvCustom( PDAT const* buffer, int flag )
 		switch ( flag ) {
 			case HSPVAR_FLAG_LABEL:
 			{
-				static label_t const lb = nullptr; PVal_assign( pval, VtTraits<label_t>::asPDAT(&lb), flag ); break;
+				static label_t const lb = nullptr; PVal_assign( pval, VtTraits::asPDAT<vtLabel>(&lb), flag ); break;
 			}
 			case HSPVAR_FLAG_STR:
 			{
-				static char const* const s = ""; PVal_assign( pval, VtTraits<str_tag>::asPDAT(s), flag ); break;
+				static char const* const s = ""; PVal_assign( pval, VtTraits::asPDAT<vtStr>(s), flag ); break;
 			}
 			case HSPVAR_FLAG_DOUBLE:
 			{
 				static double const r = std::numeric_limits<double>::quiet_NaN();
-				PVal_assign( pval, VtTraits<double>::asPDAT(&r), flag ); break;
+				PVal_assign( pval, VtTraits::asPDAT<double>(&r), flag ); break;
 			}
 			case HSPVAR_FLAG_INT:
 			{
-				static int const n = 0; PVal_assign( pval, VtTraits<int>::asPDAT(&n), flag ); break;
+				static int const n = 0; PVal_assign( pval, VtTraits::asPDAT<vtInt>(&n), flag ); break;
 			}
 			default: puterror( HSPERR_UNSUPPORTED_FUNCTION );
 		}

@@ -36,7 +36,7 @@ static StAssocMapList* HspVarAssoc_GetMapList( CAssoc* src );	// void* user
 //------------------------------------------------
 static PDAT* HspVarAssoc_GetPtr( PVal* pval )
 {
-	return AssocTraits::asPDAT(AssocTraits::getValptr(pval));
+	return VtTraits::asPDAT<vtAssoc>(VtTraits::getValptr<vtAssoc>(pval));
 }
 
 //------------------------------------------------
@@ -44,7 +44,7 @@ static PDAT* HspVarAssoc_GetPtr( PVal* pval )
 //------------------------------------------------
 static int HspVarAssoc_GetUsing( PDAT const* pdat )
 {
-	return HspBool(AssocTraits::derefValptr(pdat) != nullptr);
+	return HspBool(VtTraits::derefValptr<vtAssoc>(pdat) != nullptr);
 }
 
 //------------------------------------------------
@@ -81,7 +81,7 @@ static void HspVarAssoc_Alloc( PVal* pval, PVal const* pval2 )
 	pval->flag   = g_vtAssoc;	// assoc の型タイプ値
 	pval->mode   = HSPVAR_MODE_MALLOC;
 	pval->size   = size;
-	pval->pt     = AssocTraits::asPDAT(pt);
+	pval->pt     = VtTraits::asPDAT<vtAssoc>(pt);
 	pval->master = nullptr;		// 後で使う
 	return;
 }
@@ -116,8 +116,8 @@ static void HspVarAssoc_Free( PVal* pval )
 //------------------------------------------------
 static void HspVarAssoc_Set( PVal* pval, PDAT* pdat, PDAT const* in )
 {
-	auto& dst = AssocTraits::derefValptr(pdat);
-	auto& src = AssocTraits::derefValptr(in);
+	auto& dst = VtTraits::derefValptr<vtAssoc>(pdat);
+	auto& src = VtTraits::derefValptr<vtAssoc>(in);
 
 	if ( dst != src ) {
 		CAssoc::Release( dst );
@@ -188,10 +188,10 @@ void HspVarAssoc_Init( HspVarProc* p )
 	p->Alloc = HspVarAssoc_Alloc;
 	p->Free  = HspVarAssoc_Free;
 
-	p->GetPtr       = HspVarTemplate_GetPtr<assoc_tag>;
-	p->GetSize      = HspVarTemplate_GetSize<assoc_tag>;
-	p->GetBlockSize = HspVarTemplate_GetBlockSize<assoc_tag>;
-	p->AllocBlock   = HspVarTemplate_AllocBlock<assoc_tag>;
+	p->GetPtr       = HspVarTemplate_GetPtr<vtAssoc>;
+	p->GetSize      = HspVarTemplate_GetSize<vtAssoc>;
+	p->GetBlockSize = HspVarTemplate_GetBlockSize<vtAssoc>;
+	p->AllocBlock   = HspVarTemplate_AllocBlock<vtAssoc>;
 
 	// 演算関数
 	p->Set  = HspVarAssoc_Set;
@@ -219,7 +219,7 @@ void HspVarAssoc_Init( HspVarProc* p )
 	    | HSPVAR_SUPPORT_NOCONVERT		// ObjectWriteで格納
 	    | HSPVAR_SUPPORT_VARUSE			// varuse関数を適用
 	    ;
-	p->basesize = AssocTraits::basesize;	// size / 要素 (byte)
+	p->basesize = VtTraits::basesize<vtAssoc>::value;	// size / 要素 (byte)
 	return;
 }
 
@@ -263,7 +263,7 @@ static PVal* HspVarAssoc_IndexImpl( PVal* pval )
 		if ( mpval->flag == HSPVAR_FLAG_INT ) {
 			if ( pval->len[i + 1] <= 0 || i == 4 ) puterror( HSPERR_ARRAY_OVERFLOW );
 
-			code_index_int( pval, VtTraits<int>::derefValptr(mpval->pt), !bAsRhs );
+			code_index_int( pval, VtTraits::derefValptr<vtInt>(mpval->pt), !bAsRhs );
 
 		// str (キー)
 		} else if ( mpval->flag == HSPVAR_FLAG_STR ) {
@@ -284,7 +284,7 @@ static PVal* HspVarAssoc_IndexImpl( PVal* pval )
 	static CAssoc::Key_t stt_key;
 	stt_key = (char*)mpval->pt;		// 既製の変数に格納した方が高速 (一時オブジェクトを作らないため)
 
-	auto const pAssoc = AssocTraits::getValptr(pval);
+	auto const pAssoc = VtTraits::getValptr<vtAssoc>(pval);
 	if ( !*pAssoc ) {
 		(*pAssoc) = CAssoc::New();
 		(*pAssoc)->AddRef();
@@ -331,7 +331,7 @@ static PDAT* HspVarAssoc_ArrayObjectRead( PVal* pval, int* mptype )
 	// assoc 自体の参照
 	if ( !pvInner ) {
 		*mptype = g_vtAssoc;
-		return AssocTraits::asPDAT(AssocTraits::getValptr( pval ));
+		return VtTraits::asPDAT<vtAssoc>(VtTraits::getValptr<vtAssoc>( pval ));
 	}
 
 	// [3] 内部変数の添字を処理
@@ -352,7 +352,7 @@ static PDAT* HspVarAssoc_ArrayObjectRead( PVal* pval, int* mptype )
 //------------------------------------------------
 static void HspVarAssoc_ObjectWrite( PVal* pval, PDAT const* data, int vflag )
 {
-	PVal* const pvInner = AssocTraits::getMaster(pval);
+	PVal* const pvInner = VtTraits::getMaster<vtAssoc>(pval);
 
 	// assoc への代入
 	if ( !pvInner ) {
@@ -381,7 +381,7 @@ static void HspVarAssoc_ObjectWrite( PVal* pval, PDAT const* data, int vflag )
 //------------------------------------------------
 static void HspVarAssoc_ObjectMethod(PVal* pval)
 {
-	PVal* const pvInner = AssocTraits::getMaster(pval);
+	PVal* const pvInner = VtTraits::getMaster<vtAssoc>(pval);
 	if ( !pvInner ) puterror( HSPERR_UNSUPPORTED_FUNCTION );
 
 	// 内部変数の処理に転送
@@ -432,7 +432,7 @@ EXPORT void WINAPI knowbugVsw_addValueAssoc(vswriter_t _w, char const* name, PDA
 	auto const kvswm = knowbug_getVswMethods();
 	if ( !kvswm ) return;
 
-	auto const src = AssocTraits::derefValptr(ptr);
+	auto const src = VtTraits::derefValptr<vtAssoc>(ptr);
 
 	// null
 	if ( !src) {

@@ -79,7 +79,7 @@ void* Vector_getRealPtr( PVal* pval )
 //------------------------------------------------
 CVector*& Vector_getPtr(PVal* pval)
 {
-	return VectorTraits::derefValptr(pval->pt);
+	return VtTraits::derefValptr<vtVector>(pval->pt);
 }
 
 //------------------------------------------------
@@ -101,7 +101,7 @@ void Vector_copy( PVal* pval, vector_t src )
 		exinfo->HspFunc_dim( pval, g_vtVector, 0, 1, 0, 0, 0 );
 	}
 
-	auto& dst = VectorTraits::getMaster( pval );
+	auto& dst = VtTraits::getMaster<vtVector>( pval );
 	dst = vector_t::make();
 	dst.incRef();
 

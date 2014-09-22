@@ -15,49 +15,47 @@ using namespace hpimod;
 
 using vector_t = Managed< std::vector<ManagedVarData, HspAllocator<ManagedVarData>>, false >;
 
-// vartype tag
-struct vector_tag
-{
-	// interfaces
-	using value_t  = vector_t;
-	using valptr_t = value_t*;
-	using const_valptr_t = value_t const*;
-
-	using master_t = value_t;	// 実体値
-
-	static int const basesize = sizeof(value_t);
+// vartype traits
+struct vtVector {
 
 	// special indexes
 	static int const IdxBegin = 0;
 	static int const IdxLast  = (-0x031EC10A);	// 最後の要素を表す添字コード
 	static int const IdxEnd   = (-0x031EC10B);	// (最後の要素 + 1)を表す添字コード
+
 };
 
-// VtTraits<> の特殊化
 namespace hpimod
 {
-	template<> struct VtTraits<vector_tag> : public VtTraitsBase<vector_tag>
+	namespace VtTraits
 	{
-		//------------------------------------------------
-		// 内部変数の取得
-		// 
-		// @ 本体が参照されているときは nullptr を返す。
-		//------------------------------------------------
-		static PVal* getInnerPVal(PVal* pval, APTR aptr)
+		namespace Impl
 		{
-			return getMaster(pval)->at(aptr).getPVal();
+			template<> struct value_type<vtVector> { using type = vector_t; };
+			template<> struct const_value_type<vtVector> { using type = vector_t const; };
+			template<> struct valptr_type<vtVector> { using type = vector_t*; };
+			template<> struct const_valptr_type<vtVector> { using type = vector_t const*; };
+			template<> struct master_type<vtVector> { using type = vector_t; };	// 実体値
+			template<> struct basesize<vtVector> { static int const value = sizeof(vector_t); };
 		}
-
-		static PVal* getInnerPVal(PVal* pval)
-		{
-			if ( pval->arraycnt == 0 ) return nullptr;
-			return getInnerPVal(pval, pval->offset);
-		}
-
-	};
+	}
 }
 
-using VectorTraits = hpimod::VtTraits<vector_tag>;
+//------------------------------------------------
+// 内部変数の取得
+// 
+// @ 本体が参照されているときは nullptr を返す。
+//------------------------------------------------
+static PVal* getInnerPVal(PVal* pval, APTR aptr)
+{
+	return hpimod::VtTraits::getMaster<vtVector>(pval)->at(aptr).getPVal();
+}
+
+static PVal* getInnerPVal(PVal* pval)
+{
+	if ( pval->arraycnt == 0 ) return nullptr;
+	return getInnerPVal(pval, pval->offset);
+}
 
 // グローバル変数
 extern vartype_t g_vtVector;

@@ -77,20 +77,20 @@ CPrmInfo const& code_get_prminfo()
 
 	// label
 	if ( mpval->flag == HSPVAR_FLAG_LABEL ) {
-		auto const lb = VtTraits<label_t>::derefValptr(mpval->pt);
+		auto const lb = VtTraits::derefValptr<vtLabel>(mpval->pt);
 		CPrmInfo::prmlist_t&& prmlist = code_get_prmlist();
 		return CPrmInfo(&prmlist);
 
 	// axcmd
 	} else if ( mpval->flag == HSPVAR_FLAG_INT ) {
-		int const axcmd = VtTraits<int>::derefValptr(mpval->pt);
+		int const axcmd = VtTraits::derefValptr<vtInt>(mpval->pt);
 
 		if ( AxCmd::getType(axcmd) != TYPE_MODCMD ) puterror(HSPERR_ILLEGAL_FUNCTION);
 		return GetPrmInfo(getSTRUCTDAT(AxCmd::getCode(axcmd)));
 
 	// functor
 	} else if ( mpval->flag == g_vtFunctor ) {
-		return FunctorTraits::derefValptr(mpval->pt)->getPrmInfo();
+		return VtTraits::derefValptr<vtFunctor>(mpval->pt)->getPrmInfo();
 
 	} else {
 		puterror(HSPERR_LABEL_REQUIRED);

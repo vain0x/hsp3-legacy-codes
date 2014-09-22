@@ -43,7 +43,7 @@ extern PVal* getMPVal(vartype_t type);
 extern PVal const* getNullmod();
 
 // traits
-using StructTraits = VtTraits<struct_tag>;
+using StructTraits = VtTraits<vtStruct>;
 
 }
 

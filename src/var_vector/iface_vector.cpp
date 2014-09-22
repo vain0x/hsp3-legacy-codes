@@ -146,7 +146,7 @@ static int ProcSysvarCmd( int cmd, PDAT** ppResult )
 		case 0x200:
 		{
 			static vector_t const VectorNull { nullptr };
-			*ppResult = VectorTraits::asPDAT(const_cast<vector_t*>(&VectorNull));
+			*ppResult = VtTraits::asPDAT<vtVector>(const_cast<vector_t*>(&VectorNull));
 			return g_vtVector;
 		}
 

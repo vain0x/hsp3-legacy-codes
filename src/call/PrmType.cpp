@@ -54,13 +54,13 @@ prmtype_t code_get_prmtype(prmtype_t _default)
 
 	switch ( mpval->flag ) {
 		case HSPVAR_FLAG_INT:
-			return VtTraits<int>::derefValptr(mpval->pt);
+			return VtTraits::derefValptr<vtInt>(mpval->pt);
 
 		case HSPVAR_FLAG_STR:
 		{
 			// •¶Žš—ñ => “ÁŽê•¶Žš—ñ or Œ^–¼( HspVarProc ‚©‚çŽæ“¾ )
 
-			auto const prmtype = PrmType::fromString(VtTraits<str_tag>::derefValptr(mpval->pt));
+			auto const prmtype = PrmType::fromString(VtTraits::asValptr<vtStr>(mpval->pt));
 			if ( prmtype == PrmType::None ) puterror(HSPERR_ILLEGAL_FUNCTION);
 			return prmtype;
 		}

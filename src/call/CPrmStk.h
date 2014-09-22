@@ -112,12 +112,12 @@ public:
 	{
 		assert(!hasFinalized());
 		int const prmtype = getNextPrmType();
-		assert(prmtype == VtTraits<VartypeTag>::vartype() && prmtype != HSPVAR_FLAG_STR);
+		assert(prmtype == VtTraits::Impl::vartype<VartypeTag>() && prmtype != HSPVAR_FLAG_STR);
 
 		incCntArgs();
-		super_t::pushValue(VtTraits<VartypeTag>::derefValptr(pdat));
+		super_t::pushValue(VtTraits::derefValptr<VartypeTag>(pdat));
 	}
-	template<> void pushValue<str_tag>(PDAT const* pdat);
+	template<> void pushValue<vtStr>(PDAT const* pdat);
 
 	// 文字列 (prmstk 用にコピーを取る)
 	void pushString(char const* src)
@@ -188,7 +188,7 @@ public:
 		if ( pval->flag != HSPVAR_FLAG_STRUCT ) puterror(HSPERR_TYPE_MISMATCH);
 
 		incCntArgs();
-		auto const fv = VtTraits<struct_tag>::getValptr(pval);
+		auto const fv = VtTraits::getValptr<vtStruct>(pval);
 		super_t::pushThismod(pval, aptr, FlexValue_getModuleTag(fv)->subid);
 		return;
 	}
@@ -254,10 +254,10 @@ public:
 			if ( vtype != prmtype ) puterror(HSPERR_TYPE_MISMATCH);
 
 			switch ( prmtype ) {
-				case HSPVAR_FLAG_LABEL:  return pushValue<label_t>(pdat);
-				case HSPVAR_FLAG_DOUBLE: return pushValue<double >(pdat);
-				case HSPVAR_FLAG_INT:    return pushValue<int    >(pdat);
-				case HSPVAR_FLAG_STR:    return pushString(VtTraits<str_tag>::derefValptr(pdat));
+				case HSPVAR_FLAG_LABEL:  return pushValue<vtLabel >(pdat);
+				case HSPVAR_FLAG_DOUBLE: return pushValue<vtDouble>(pdat);
+				case HSPVAR_FLAG_INT:    return pushValue<vtInt   >(pdat);
+				case HSPVAR_FLAG_STR:    return pushString(VtTraits::asValptr<vtStr>(pdat));
 				default: assert(false);
 			}
 
@@ -301,7 +301,7 @@ public:
 			case PrmType::Any:
 			{
 				static int const zero = 0;
-				pushArgByVal(VtTraits<int>::asPDAT(&zero), HSPVAR_FLAG_INT);
+				pushArgByVal(VtTraits::asPDAT<vtInt>(&zero), HSPVAR_FLAG_INT);
 				break;
 			}
 			default:
@@ -342,7 +342,7 @@ public:
 		if ( PrmType::isNativeVartype(prmtype) ) {
 			vtype = prmtype;
 			return ( prmtype == HSPVAR_FLAG_STR )
-				? VtTraits<str_tag>::asPDAT(*reinterpret_cast<char**>(ptr))
+				? VtTraits::asPDAT<vtStr>(*reinterpret_cast<char**>(ptr))
 				: reinterpret_cast<PDAT*>(ptr);
 
 		} else if ( PrmType::isExtendedVartype(prmtype) || prmtype == PrmType::Any || prmtype == PrmType::Var ) {
@@ -440,7 +440,7 @@ private:
 				case HSPVAR_FLAG_STR:
 				{
 					vartype_t vtype;
-					auto const p = VtTraits<str_tag>::derefValptr(peekValArgAt(i, vtype));
+					auto const p = VtTraits::asValptr<vtStr>(peekValArgAt(i, vtype));
 					assert(!!p && vtype == HSPVAR_FLAG_STR);
 					hspfree(p);
 					break;

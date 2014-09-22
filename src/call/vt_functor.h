@@ -18,23 +18,17 @@ extern HspVarProc* g_hvpFunctor;
 // ŠÖ”
 extern void HspVarFunctor_init(HspVarProc* vp);
 
-// vartype tag
-struct functor_tag
-	: public NativeVartypeTag<functor_t>
-{
-	static vartype_t vartype() { return g_vtFunctor; }
-};
-
-// VtTraits<> ‚Ì“Áê‰»
-namespace hpimod
-{
-	template<> struct VtTraits<functor_tag> : public VtTraitsBase<functor_tag>
+// vartype traits
+using vtFunctor = hpimod::VtTraits::NativeVartypeTag<functor_t>;
+namespace hpimod {
+	namespace VtTraits
 	{
-		static vartype_t vartype() { return g_vtFunctor; }
-	};
+		namespace Impl
+		{
+			template<> static vartype_t vartype<vtFunctor>() { return g_vtFunctor; }
+		}
+	}
 }
-
-using FunctorTraits = hpimod::VtTraits<functor_tag>;
 
 // •Ô’lİ’èŠÖ”
 extern functor_t g_resFunctor;

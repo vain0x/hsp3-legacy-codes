@@ -122,7 +122,7 @@ void FlexValue_Dtor( FlexValue& self )
 		PVal* const pvTmp = &_pvTmp;
 			pvTmp->flag   = HSPVAR_FLAG_STRUCT;
 			pvTmp->mode   = HSPVAR_MODE_CLONE;
-			pvTmp->pt     = ModCls::StructTraits::asPDAT(&self);
+			pvTmp->pt     = ModCls::VtTraits::asPDAT<vtStruct>(&self);
 			pvTmp->len[1] = 1;
 
 		CCaller caller;
@@ -290,7 +290,7 @@ FlexValue* code_get_modinst_impl( FlexValue* def, bool const bDefault )
 		puterror( HSPERR_NO_DEFAULT );
 	}
 	if ( mpval->flag != HSPVAR_FLAG_STRUCT ) puterror( HSPERR_TYPE_MISMATCH );
-	return ModCls::StructTraits::asValptr(mpval->pt);
+	return ModCls::VtTraits::asValptr<vtStruct>(mpval->pt);
 }
 
 FlexValue* code_get_modinst()

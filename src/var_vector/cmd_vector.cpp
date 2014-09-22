@@ -25,14 +25,14 @@ static void VectorMovingImpl( vector_t& self, int cmd );
 int SetReffuncResult( PDAT** ppResult, vector_t const& self )
 {
 	g_pResultVector = self;
-	*ppResult = VectorTraits::asPDAT(&g_pResultVector);
+	*ppResult = VtTraits::asPDAT<vtVector>(&g_pResultVector);
 	return g_vtVector;
 }
 
 int SetReffuncResult( PDAT** ppResult, vector_t&& self )
 {
 	g_pResultVector = std::move(self);
-	*ppResult = VectorTraits::asPDAT(&g_pResultVector);
+	*ppResult = VtTraits::asPDAT<vtVector>(&g_pResultVector);
 	return g_vtVector;
 }
 
@@ -43,7 +43,7 @@ vector_t code_get_vector()
 {
 	if ( code_getprm() <= PARAM_END ) puterror( HSPERR_NO_DEFAULT );
 	if ( mpval->flag != g_vtVector ) puterror( HSPERR_TYPE_MISMATCH );
-	return std::move(VectorTraits::getMaster(mpval));
+	return std::move(VtTraits::getMaster<vtVector>(mpval));
 }
 
 //------------------------------------------------
@@ -54,7 +54,7 @@ PVal* code_get_vector_inner()
 	PVal* const pval = code_get_var();
 	if ( pval->flag != g_vtVector ) puterror( HSPERR_TYPE_MISMATCH );
 
-	PVal* const pvInner = VectorTraits::getInnerPVal( pval );
+	PVal* const pvInner = getInnerPVal( pval );
 	if ( !pvInner ) puterror( HSPERR_VARIABLE_REQUIRED );
 	return pvInner;
 }
@@ -84,7 +84,7 @@ void VectorDelete()
 	PVal* const pval = code_get_var();
 	if ( pval->flag != g_vtVector ) puterror(HSPERR_TYPE_MISMATCH);
 
-	VectorTraits::getMaster(pval).reset();
+	VtTraits::getMaster<vtVector>(pval).reset();
 	return;
 }
 
@@ -233,7 +233,7 @@ void VectorMoving( int cmd )
 	PVal* const pval = code_get_var();
 	if ( pval->flag != g_vtVector ) puterror( HSPERR_TYPE_MISMATCH );
 
-	auto& src = VectorTraits::getMaster(pval);
+	auto& src = VtTraits::getMaster<vtVector>(pval);
 	if ( !src.isNull() ) puterror( HSPERR_ILLEGAL_FUNCTION );
 
 	VectorMovingImpl( src, cmd );
@@ -546,7 +546,7 @@ int VectorJoin( PDAT** ppResult )
 			PVal* const pvdat = self->at(i).getVar();
 
 			if ( pvdat->flag == g_vtVector ) {
-				impl( VectorTraits::getMaster(pvdat), buf, bufsize, idx );
+				impl( VtTraits::getMaster<vtVector>(pvdat), buf, bufsize, idx );
 
 			} else {
 				// •¶Žš—ñ‰»‚µ‚Ä˜AŒ‹

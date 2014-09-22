@@ -116,7 +116,7 @@ void ModCls::term()
 
 	// テンポラリ変数が持つ参照を除去する
 	if ( getMPValStruct() ) {
-		FlexValue_DelRef( *StructTraits::asValptr(getMPValStruct()->pt) );
+		FlexValue_DelRef( *VtTraits::asValptr<vtStruct>(getMPValStruct()->pt) );
 	}
 
 	// 全ての静的変数が持つ参照を除去する
@@ -125,7 +125,7 @@ void ModCls::term()
 
 		if ( it->flag == HSPVAR_FLAG_STRUCT ) {
 			for ( int k = 0; k < it->len[1]; ++ k ) {
-				FlexValue_DelRef( StructTraits::asValptr(it->pt)[k] );
+				FlexValue_DelRef( VtTraits::asValptr<vtStruct>(it->pt)[k] );
 			}
 		}
 	}
@@ -232,7 +232,7 @@ APTR code_newstruct( PVal* pval )
 	if ( pval->flag != HSPVAR_FLAG_STRUCT ) return 0;	// ([0] への別の型の代入 → 型変換される)
 
 	size_t const last = pval->len[1];
-	auto const fv = StructTraits::asValptr(mpval->pt);
+	auto const fv = VtTraits::asValptr<vtStruct>(mpval->pt);
 
 	for ( size_t i = 0; i < last; ++i ) {
 		if ( fv[i].type == FLEXVAL_TYPE_NONE ) return i;
@@ -249,7 +249,7 @@ FlexValue* code_reserve_modinst( PVal* pval, APTR aptr )
 	// 配列を自動拡張させる
 	code_setva( pval, aptr, HSPVAR_FLAG_STRUCT, g_nullmod->pt );
 
-	auto const fv = StructTraits::asValptr(PVal_getptr( pval, aptr ));
+	auto const fv = VtTraits::asValptr<vtStruct>(PVal_getptr( pval, aptr ));
 	assert(fv->type == FLEXVAL_TYPE_NONE && !fv->ptr);
 
 	return fv;
@@ -266,11 +266,11 @@ void ModClsCmd::Delmod()
 	PVal* const pval = code_get_var();
 	if ( pval->flag != HSPVAR_FLAG_STRUCT ) puterror( HSPERR_TYPE_MISMATCH );
 
-	auto const fv = StructTraits::asValptr(PVal_getptr(pval));
+	auto const fv = VtTraits::asValptr<vtStruct>(PVal_getptr(pval));
 
 	if ( fv->ptr ) {
 		if ( getMPValStruct() ) {
-			auto const mpval_fv = StructTraits::asValptr(getMPValStruct()->pt);
+			auto const mpval_fv = VtTraits::asValptr<vtStruct>(getMPValStruct()->pt);
 			if ( mpval_fv && fv->ptr == mpval_fv->ptr ) FlexValue_DelRef( *mpval_fv );
 		}
 
@@ -305,7 +305,7 @@ void ModClsCmd::Dupmod()
 
 	if ( pvSrc->flag != HSPVAR_FLAG_STRUCT ) puterror( HSPERR_TYPE_MISMATCH );
 
-	auto const src = StructTraits::asValptr(PVal_getptr(pvSrc));
+	auto const src = VtTraits::asValptr<vtStruct>(PVal_getptr(pvSrc));
 
 	FlexValue* const dst = code_reserve_modinst( pvDst, pvDst->offset );
 	HspVarStructWrap_Dup( dst, src );

@@ -39,7 +39,7 @@ static void invokeFunctor(functor_t f, PDAT** ppResult, int* mptype)
 //------------------------------------------------
 static int HspVarFunctor_getUsing( PDAT const* pdat )
 {
-	functor_t const& functor = FunctorTraits::derefValptr(pdat);
+	functor_t const& functor = VtTraits::derefValptr<vtFunctor>(pdat);
 	return functor->getUsing();
 }
 
@@ -56,7 +56,7 @@ static void HspVarFunctor_alloc(PVal* pval, PVal const* pval2)
 	if ( pval->len[2] != 0 ) puterror(HSPERR_ARRAY_OVERFLOW);
 
 	size_t const cntElems = pval->len[1];
-	size_t const size     = cntElems * FunctorTraits::basesize;
+	size_t const size     = cntElems * VtTraits::basesize<vtFunctor>::value;
 	
 	functor_t* const pt = (functor_t*)hspmalloc( size );
 	size_t offset = 0;
@@ -76,7 +76,7 @@ static void HspVarFunctor_alloc(PVal* pval, PVal const* pval2)
 	pval->flag   = g_vtFunctor;
 	pval->mode   = HSPVAR_MODE_MALLOC;
 	pval->size   = size;
-	pval->pt     = FunctorTraits::asPDAT(pt);
+	pval->pt     = VtTraits::asPDAT<vtFunctor>(pt);
 //	pval->master = nullptr;
 	return;
 }
@@ -88,7 +88,7 @@ static void HspVarFunctor_free(PVal* pval)
 {
 	if ( pval->mode == HSPVAR_MODE_MALLOC ) {
 		// デストラクタ起動
-		auto const pt = FunctorTraits::asValptr(pval->pt);
+		auto const pt = VtTraits::asValptr<vtFunctor>(pval->pt);
 		for ( int i = 0; i < pval->len[1]; ++ i ) {
 			pt[i].~Managed();
 		}
@@ -112,17 +112,17 @@ static PDAT* HspVarFunctor_cnv(PDAT const* pdat, int flag)
 
 	switch ( flag ) {
 		case HSPVAR_FLAG_LABEL:
-			stt_cnv = Functor::New(VtTraits<label_t>::derefValptr(pdat));
+			stt_cnv = Functor::New(VtTraits::derefValptr<vtLabel>(pdat));
 			break;
 
 		case HSPVAR_FLAG_INT:
 		{
-			stt_cnv = Functor::New(VtTraits<int>::derefValptr(pdat));
+			stt_cnv = Functor::New(VtTraits::derefValptr<vtInt>(pdat));
 			break;
 		}
 		default:
 			if ( flag == g_vtFunctor ) {
-				stt_cnv = FunctorTraits::derefValptr(pdat);
+				stt_cnv = VtTraits::derefValptr<vtFunctor>(pdat);
 
 			} else {
 				puterror( HSPERR_TYPE_MISMATCH );
@@ -130,7 +130,7 @@ static PDAT* HspVarFunctor_cnv(PDAT const* pdat, int flag)
 			break;
 	}
 
-	return FunctorTraits::asPDAT(&stt_cnv);
+	return VtTraits::asPDAT<vtFunctor>(&stt_cnv);
 }
 
 //------------------------------------------------
@@ -140,7 +140,7 @@ static PDAT* HspVarFunctor_cnv(PDAT const* pdat, int flag)
 //------------------------------------------------
 static PDAT* HspVarFunctor_cnvCustom(PDAT const* pdat, int flag)
 {
-	auto const& functor = FunctorTraits::derefValptr(pdat);
+	auto const& functor = VtTraits::derefValptr<vtFunctor>(pdat);
 	PDAT* pResult = nullptr;
 
 	switch ( flag ) {
@@ -149,7 +149,7 @@ static PDAT* HspVarFunctor_cnvCustom(PDAT const* pdat, int flag)
 			static label_t stt_label;
 
 			stt_label = functor->getLabel();
-			if ( stt_label ) pResult = VtTraits<label_t>::asPDAT(&stt_label);
+			if ( stt_label ) pResult = VtTraits::asPDAT<vtLabel>(&stt_label);
 			break;
 		}
 		case HSPVAR_FLAG_INT:
@@ -157,7 +157,7 @@ static PDAT* HspVarFunctor_cnvCustom(PDAT const* pdat, int flag)
 			static int stt_int;
 
 			stt_int = functor->getAxCmd();
-			if ( AxCmd::isOk(stt_int) ) pResult = VtTraits<int>::asPDAT(&stt_int);
+			if ( AxCmd::isOk(stt_int) ) pResult = VtTraits::asPDAT<vtInt>(&stt_int);
 			break;
 		}
 
@@ -191,18 +191,18 @@ static PDAT* HspVarFunctor_arrayObjectRead( PVal* pval, int* mptype )
 		code_index_int_rhs( pval, idx );
 
 		*mptype = g_vtFunctor;
-		return FunctorTraits::asPDAT(FunctorTraits::getValptr( pval ));
+		return VtTraits::asPDAT<vtFunctor>(VtTraits::getValptr<vtFunctor>( pval ));
 	}
 
 	// 呼び出し
-	auto const pf = FunctorTraits::getValptr( pval );
+	auto const pf = VtTraits::getValptr<vtFunctor>( pval );
 	functor_t functor = *pf;
 
 	// 非呼び出し添字 (バグへの対策)
 	if ( *type == g_pluginType_call && *val == CallCmd::Id::noCall ) {
 		code_get_singleToken();
 		*mptype = g_vtFunctor;
-		return FunctorTraits::asPDAT(pf);
+		return VtTraits::asPDAT<vtFunctor>(pf);
 	}
 
 	if ( functor->getUsing() == 0 ) {
@@ -232,8 +232,8 @@ static void HspVarFunctor_arrayObject( PVal* pval )
 //------------------------------------------------
 static void HspVarFunctor_objectWrite( PVal* pval, void* data, int vtype )
 {
-	functor_t& functor = *FunctorTraits::getValptr( pval );
-	functor = FunctorTraits::derefValptr(HspVarFunctor_cnv(data, vtype));
+	functor_t& functor = *VtTraits::getValptr<vtFunctor>( pval );
+	functor = VtTraits::derefValptr<vtFunctor>(HspVarFunctor_cnv(data, vtype));
 
 	// 連続代入
 	code_assign_multi( pval );
@@ -249,7 +249,7 @@ static void HspVarFunctor_method(PVal* pval)
 	char const* const psMethod = code_gets();
 
 	if ( !strcmp(psMethod, "call") ) {
-		invokeFunctor( *FunctorTraits::getValptr(pval), nullptr, nullptr );
+		invokeFunctor( *VtTraits::getValptr<vtFunctor>(pval), nullptr, nullptr );
 
 	} else {
 		puterror( HSPERR_ILLEGAL_FUNCTION );
@@ -262,8 +262,8 @@ static void HspVarFunctor_method(PVal* pval)
 //------------------------------------------------
 static void  HspVarFunctor_set(PVal* pval, PDAT* pdat, PDAT const* in)
 {
-	auto& lhs = FunctorTraits::derefValptr(pdat);
-	auto& rhs = FunctorTraits::derefValptr(in);
+	auto& lhs = VtTraits::derefValptr<vtFunctor>(pdat);
+	auto& rhs = VtTraits::derefValptr<vtFunctor>(in);
 
 	lhs = rhs;
 	return;
@@ -275,8 +275,8 @@ static void  HspVarFunctor_set(PVal* pval, PDAT* pdat, PDAT const* in)
 //static
 int HspVarFunctor_CmpI(PDAT* pdat, PDAT const* val)
 {
-	auto& lhs = FunctorTraits::derefValptr(pdat);
-	auto& rhs = FunctorTraits::derefValptr(val);
+	auto& lhs = VtTraits::derefValptr<vtFunctor>(pdat);
+	auto& rhs = VtTraits::derefValptr<vtFunctor>(val);
 
 	int const cmp = HspBool( lhs != rhs );
 
@@ -292,12 +292,11 @@ void HspVarFunctor_init(HspVarProc* p)
 	g_vtFunctor = p->flag;
 	g_hvpFunctor = p;
 
-	p->GetPtr       = HspVarTemplate_GetPtr<functor_tag>;
-	p->GetSize      = HspVarTemplate_GetSize<functor_tag>;
 	p->GetUsing     = HspVarFunctor_getUsing;
-
-	p->GetBlockSize = HspVarTemplate_GetBlockSize<functor_tag>;
-	p->AllocBlock   = HspVarTemplate_AllocBlock<functor_tag>;
+	p->GetPtr       = HspVarTemplate_GetPtr<vtFunctor>;
+	p->GetSize      = HspVarTemplate_GetSize<vtFunctor>;
+	p->GetBlockSize = HspVarTemplate_GetBlockSize<vtFunctor>;
+	p->AllocBlock   = HspVarTemplate_AllocBlock<vtFunctor>;
 
 	p->Cnv          = HspVarFunctor_cnv;
 	p->CnvCustom    = HspVarFunctor_cnvCustom;
@@ -335,7 +334,7 @@ void HspVarFunctor_init(HspVarProc* p)
 					//| HSPVAR_SUPPORT_NOCONVERT
 	                | HSPVAR_SUPPORT_VARUSE
 					;						// サポート状況フラグ(HSPVAR_SUPPORT_*)
-	p->basesize = FunctorTraits::basesize;	// 1つのデータのbytes / 可変長の時は-1
+	p->basesize = VtTraits::basesize<vtFunctor>::value;	// 1つのデータのbytes / 可変長の時は-1
 	return;
 }
 
@@ -354,7 +353,7 @@ functor_t code_get_functor()
 
 	// label
 	if ( mpval->flag == HSPVAR_FLAG_LABEL ) {
-		return Functor::New(VtTraits<label_t>::derefValptr(mpval->pt));
+		return Functor::New(VtTraits::derefValptr<vtLabel>(mpval->pt));
 
 	// deffid
 	} else if ( mpval->flag == HSPVAR_FLAG_INT ) {
@@ -366,7 +365,7 @@ functor_t code_get_functor()
 
 	// functor
 	} else if ( mpval->flag == g_vtFunctor ) {
-		return FunctorTraits::derefValptr(mpval->pt);
+		return VtTraits::derefValptr<vtFunctor>(mpval->pt);
 
 	} else {
 		puterror(HSPERR_LABEL_REQUIRED);
@@ -379,13 +378,13 @@ functor_t code_get_functor()
 int SetReffuncResult(PDAT** ppResult, functor_t const& src)
 {
 	g_resFunctor = src;
-	*ppResult = FunctorTraits::asPDAT(&g_resFunctor);
+	*ppResult = VtTraits::asPDAT<vtFunctor>(&g_resFunctor);
 	return g_vtFunctor;
 }
 
 int SetReffuncResult(PDAT** ppResult, functor_t&& src)
 {
 	g_resFunctor = std::move(src.beTmpObj());
-	*ppResult = FunctorTraits::asPDAT(&g_resFunctor);
+	*ppResult = VtTraits::asPDAT<vtFunctor>(&g_resFunctor);
 	return g_vtFunctor;
 }
