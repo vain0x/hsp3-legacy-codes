@@ -20,7 +20,7 @@ static int ProcSttmCmd( int cmd )
 {
 #define _CmdlistModeProcess 'S'
 # include "cmdlistMacro.h"
-#include "../../package/call/callcmd.cmdlist.txt"
+#include "../../package/callcmd.cmdlist.txt"
 # include "cmdlistMacro.h"
 #undef _CmdlistModeProcess
 	return RUNMODE_RUN;
@@ -33,7 +33,7 @@ static int ProcFuncCmd( int cmd, PDAT** ppResult )
 {
 #define _CmdlistModeProcess 'F'
 # include "cmdlistMacro.h"
-#include "../../package/call/callcmd.cmdlist.txt"
+#include "../../package/callcmd.cmdlist.txt"
 # include "cmdlistMacro.h"
 #undef _CmdlistModeProcess
 	assert(false); throw;
@@ -46,7 +46,7 @@ static int ProcSysvarCmd( int cmd, PDAT** ppResult )
 {
 #define _CmdlistModeProcess 'V'
 # include "cmdlistMacro.h"
-#include "../../package/call/callcmd.cmdlist.txt"
+#include "../../package/callcmd.cmdlist.txt"
 # include "cmdlistMacro.h"
 #undef _CmdlistModeProcess
 	assert(false); throw;

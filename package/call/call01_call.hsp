@@ -1,6 +1,6 @@
-#include "call.as"
+#include "../crouton.as"
 
-// 用語：ユーザ定義コマンド(module command)
+// 単語：ユーザ定義コマンド(module command)
 // #deffunc, #defcfunc, #modfunc, #modcfunc で定義された、
 // 命令や関数のことは、今後「ユーザ定義コマンド」と呼ぶことにする。
 

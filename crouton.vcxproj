@@ -159,7 +159,7 @@
     <ClCompile Include="src\var_vector\vt_vector.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="package\call\callcmd.cmdlist.txt" />
+    <Text Include="package\callcmd.cmdlist.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

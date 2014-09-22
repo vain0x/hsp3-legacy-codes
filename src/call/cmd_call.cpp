@@ -72,6 +72,35 @@ int CallCmd::declare(PDAT** ppResult)
 	}
 }
 
+//------------------------------------------------
+// ラベル関数の返値を設定する
+//------------------------------------------------
+void CallCmd::call_setResult_()
+{
+	auto& inv = Invoker::top();
+	if ( code_getprm() <= PARAM_END ) puterror(HSPERR_NO_DEFAULT);
+
+	inv.setResult(mpval->pt, mpval->flag);
+	return;
+}
+
+//------------------------------------------------
+// ラベル関数の返値となった値を取り出す
+// 
+// @ call 終了後にだけ呼び出される。
+//------------------------------------------------
+int CallCmd::call_getResult_(PDAT** ppResult)
+{
+	PVal* const pvResult = Invoker::getLastResult();
+	if ( pvResult ) {
+		*ppResult = pvResult->pt;
+		return pvResult->flag;
+
+	} else {
+		puterror(HSPERR_NORETVAL);
+	}
+}
+
 //##########################################################
 //        引数情報取得
 //##########################################################
@@ -124,35 +153,6 @@ int CallCmd::arginfo(PDAT** ppResult)
 }
 
 //------------------------------------------------
-// ラベル関数の返値を設定する
-//------------------------------------------------
-void CallCmd::call_setResult_()
-{
-	auto& inv = Invoker::top();
-	if ( code_getprm() <= PARAM_END ) puterror(HSPERR_NO_DEFAULT);
-
-	inv.setResult(mpval->pt, mpval->flag);
-	return;
-}
-
-//------------------------------------------------
-// ラベル関数の返値となった値を取り出す
-// 
-// @ call 終了後にだけ呼び出される。
-//------------------------------------------------
-int CallCmd::call_getResult_(PDAT** ppResult)
-{
-	PVal* const pvResult = Invoker::getLastResult();
-	if ( pvResult ) {
-		*ppResult = pvResult->pt;
-		return pvResult->flag;
-
-	} else {
-		puterror(HSPERR_NORETVAL);
-	}
-}
-
-//------------------------------------------------
 // 引数の値を取得する
 //
 // @ 参照渡し引数の値は取り出せない。
@@ -189,23 +189,29 @@ void CallCmd::argClone()
 }
 
 //------------------------------------------------
-// エイリアス名を一括して付ける
+// 実引数を変数で受け取る
 //------------------------------------------------
-void CallCmd::argCloneAll()
+void CallCmd::argPeekAll()
 {
 	auto& inv = Invoker::top();
 	auto& args = inv.getArgs();
 
-	// 列挙された変数をエイリアスにする
 	for ( size_t i = 0
 		; code_isNextArg() && (i < args.cntArgs())
 		; ++i
 		) {
 		try {
 			PVal* const pval = code_getpval();
-			PVal* const pvalSrc = args.peekRefArgAt(i);
-			PVal_clone(pval, pvalSrc, pvalSrc->offset);
 
+			bool const bByRef = (getArgInfo(inv, ArgInfoId::IsRef, i) != HspFalse);
+			if ( bByRef ) {
+				PVal* const pvalSrc = args.peekRefArgAt(i);
+				PVal_clone(pval, pvalSrc, pvalSrc->offset);
+			} else {
+				vartype_t vtype;
+				PDAT const* pdat = args.peekValArgAt(i, vtype);
+				PVal_assign(pval, pdat, vtype);
+			}
 		} catch ( HSPERROR e ) {
 			if ( e == HSPERR_VARIABLE_REQUIRED ) continue;
 			puterror(e);
@@ -235,7 +241,7 @@ int CallCmd::localVal( PDAT** ppResult )
 
 void CallCmd::localClone()
 {
-	PVal* pval = code_getpval();
+	PVal* const pval = code_getpval();
 
 	auto& inv = Invoker::top();
 	int const idxLocal = code_geti();
@@ -248,7 +254,6 @@ void CallCmd::localClone()
 	return;
 }
 
-#if 0
 int CallCmd::localVector(PDAT** ppResult)
 {
 	auto& inv = Invoker::top();
@@ -259,8 +264,6 @@ int CallCmd::localVector(PDAT** ppResult)
 	}
 	return SetReffuncResult(ppResult, std::move(vec));
 }
-#endif
-
 
 //------------------------------------------------
 // 可変長引数の値
@@ -306,7 +309,6 @@ void CallCmd::flexClone()
 	}
 }
 
-#if 0
 //------------------------------------------------
 // 可変長引数の vector
 //------------------------------------------------
@@ -320,7 +322,6 @@ int CallCmd::flexVector(PDAT** ppResult)
 		puterror(HSPERR_ILLEGAL_FUNCTION);
 	}
 }
-#endif
 
 //------------------------------------------------
 // 呼び出されたラベル

@@ -335,9 +335,7 @@ int AssocForeachNext(PDAT** ppResult)
 
 	if ( bContinue ) {
 		auto iter = self->begin();
-
-		for ( int i = 0; i < idx; ++ i )	// 要素 [idx] への反復子を取得する
-			++ iter;
+		std::advance(iter, idx);	// 要素 [idx] への反復子を取得する
 
 		// キーの文字列を代入する
 		code_setva( pval, pval->offset, HSPVAR_FLAG_STR, iter->first.c_str() );

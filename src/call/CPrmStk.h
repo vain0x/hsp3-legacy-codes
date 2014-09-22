@@ -1,5 +1,24 @@
 // prmstk クラス
 
+/**
+HSP の prmstk と同じ形式でデータを格納するコンテナ。
+
+prmstk の内部形式を参照するすべての機能をここに閉じ込める。
+prmstk バッファ、str 引数、値渡しされた any 引数用の PVal、flex 用の vector、local 変数を管理する機能を持つ。
+動的な値(prmtype)によって型が決まるという、かなりナイーブな仕様なので、扱いに注意する。
+
+バッファは「引数部」「終端部」の2つから成る。
+「引数部」は与えられた実引数を積んでいく部分。
+「終端部」は、すべての実引数の後に、コードから実引数を受け取らなくていい仮引数タイプに対応する領域を積んでいく部分。
+	具体的には、PrmType::Capture, PrmType::Local, PrmType::Flex のための領域が(この順で)積まれる。
+なおバッファは固定長であり、仮引数の時点でサイズが確定している。
+
+idx は flex を含まない。
+todo: 与えられた MPVarData (Managed かもしれない) を所有するべき
+todo: ManagedBuffer (strbuf ポインタを参照カウンタ方式で管理)
+todo: 引数取り出し部分(Invoker)と2重で prmtype を参照するのがもったいない感じ。
+//*/
+
 #ifndef IG_CLASS_PARAMETER_STACK_CREATOR_MANAGED_H
 #define IG_CLASS_PARAMETER_STACK_CREATOR_MANAGED_H
 
@@ -11,27 +30,6 @@
 #include "ManagedPVal.h"
 
 #include "../var_vector/vt_vector.h"
-
-/**
-@summary:
-	HSP の prmstk と同じ形式でデータを格納するコンテナ。
-
-	prmstk の内部形式を参照するすべての機能をここに閉じ込める。
-	prmstk バッファ、str 引数、値渡しされた any 引数用の PVal、flex 用の vector、local 変数を管理する機能を持つ。
-	動的な値(prmtype)によって型が決まるという、かなりナイーブな仕様なので、扱いに注意する。
-
-	バッファは「引数部」「終端部」の2つから成る。
-	「引数部」は与えられた実引数を積んでいく部分。
-	「終端部」は、すべての実引数の後に、コードから実引数を受け取らなくていい仮引数タイプに対応する領域を積んでいく部分。
-		具体的には、PrmType::Capture, PrmType::Local, PrmType::Flex のための領域が(この順で)積まれる。
-	なおバッファは固定長であり、仮引数の時点でサイズが確定している。
-
-	idx は flex を含まない。
-	todo: 与えられた MPVarData (Managed かもしれない) を所有するべき
-	todo: ManagedBuffer (strbuf ポインタを参照カウンタ方式で管理)
-	todo: 引数取り出し部分(Invoker)と2重で prmtype を参照するのがもったいない感じ。
-**/
-
 
 namespace ArgInfoId
 {
@@ -236,7 +234,7 @@ public:
 		// flex
 		if ( prminfo_.isFlex() ) {
 			vector_t* const vec = allocValue<vector_t>();
-			new(vec)vector_t();
+			new(vec)vector_t {};
 		}
 
 		finalized_ = true;

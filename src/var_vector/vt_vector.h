@@ -65,7 +65,8 @@ extern HspVarProc* g_pHvpVector;
 
 // ä÷êî
 extern void HspVarVector_Init( HspVarProc* p );
-extern int SetReffuncResult( PDAT** ppResult, vector_t self );
+extern int SetReffuncResult( PDAT** ppResult, vector_t const& self );
+extern int SetReffuncResult( PDAT** ppResult, vector_t&& self );
 
 extern PDAT* Vector_indexRhs( vector_t self, int* mptype );
 

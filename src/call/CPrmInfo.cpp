@@ -6,7 +6,7 @@
 
 using namespace hpimod;
 
-CPrmInfo const CPrmInfo::undeclaredFunc({ PrmType::Flex });
+CPrmInfo const CPrmInfo::undeclaredFunc(CPrmInfo::prmlist_t { PrmType::Flex });
 CPrmInfo const CPrmInfo::noprmFunc( nullptr );
 
 //##############################################################################

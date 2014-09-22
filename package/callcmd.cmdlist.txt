@@ -22,14 +22,14 @@ HpiCmdlistBegin;
 	HpiCmd_F_(0x010, arginfo);
 	HpiCmd_F_(0x011, argVal);
 	HpiCmdS__(0x012, argClone);
-	HpiCmdS__(0x01A, argCloneAll);
+	HpiCmdS__(0x01A, argPeekAll);
 //	HpiCmd_F_(0x013, argVector);
 	HpiCmd_F_(0x014, localVal);
 	HpiCmdS__(0x015, localClone);
-//	HpiCmd_F_(0x016, localVector);
+	HpiCmd_F_(0x016, localVector);
 	HpiCmd_F_(0x017, flexVal);
 	HpiCmdS__(0x018, flexClone);
-//	HpiCmd_F_(0x019, flexVector);
+	HpiCmd_F_(0x019, flexVector);
 
 	HpiCmd___(0xF00, call_byRef_);
 	HpiCmd___(0xF01, call_byThismod_);

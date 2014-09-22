@@ -175,7 +175,7 @@ vector_t code_get_vectorFromSequence()
 			case Sty::ByThismod: puterror(HSPERR_UNSUPPORTED_FUNCTION);
 			default: assert(false);
 		}
-		assert(code_isNextArg());
+		//assert(code_isNextArg());
 	}
 }
 
@@ -210,8 +210,6 @@ bool Invoker::code_get_nextArgument()
 	if ( !code_isNextArg() ) return false;
 
 	auto&& result = my_code_getarg(args_.getNextPrmType());
-
-	dbgout("style = %d", result.getStyle());
 
 	using Sty = CodeGetArgResult::Style;
 	switch ( result.getStyle() ) {

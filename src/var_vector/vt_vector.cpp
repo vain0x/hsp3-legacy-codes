@@ -18,17 +18,6 @@ HspVarProc* g_pHvpVector;
 static void HspVarVector_AddI(PDAT* pdat, void const* src);
 static PVal** HspVarVector_GetVectorList( PDAT const* src, int* );	// void* user
 
-static vector_t& VectorActivate(PVal* pval)
-{
-	assert(pval->flag == g_vtVector);
-	vector_t& self = VectorTraits::getMaster(pval);
-	if ( self.isNull() ) {
-		self.reset();
-		self.incRef();
-	}
-	return self;
-}
-
 //------------------------------------------------
 // 実体ポインタ
 //------------------------------------------------
@@ -277,6 +266,7 @@ static int code_vectorIndex(vector_t const& self)
 }
 
 // 内部変数を取得
+// getVar 関数が内部変数の添字状態は array->cnt による。
 template<bool bAsLhs>
 static PVal* HspVarVector_ArrayObjectImplInner(vector_t const& self, size_t idx)
 {
@@ -295,9 +285,7 @@ static PVal* HspVarVector_ArrayObjectImplInner(vector_t const& self, size_t idx)
 template<bool bAsLhs>
 static PVal* HspVarVector_ArrayObjectImpl( PVal* pval )
 {
-	auto& vec = (bAsLhs
-		? VectorActivate(pval)		// 左辺値としての参照なら、自動で実体化する
-		: VectorTraits::getMaster(pval));
+	auto& vec = VectorTraits::getMaster(pval);
 
 	HspVarCoreReset( pval );
 	int const idx = code_vectorIndex( vec );
@@ -318,13 +306,11 @@ void HspVarVector_ArrayObject( PVal* pval )
 {
 	PVal* const pvInner = HspVarVector_ArrayObjectImpl<true>( pval );
 
-	// 内部変数の添字の処理
 	if ( pvInner ) {
 		if ( code_isNextArg() ) {
 			code_expand_index_lhs(pvInner);
-		} else {
-			code_index_reset(pvInner);
 		}
+		//else { code_index_reset(pvInner); }
 	}
 	return;
 }
@@ -339,7 +325,7 @@ static PDAT* HspVarVector_ArrayObjectReadImpl( PVal* pvInner, int* mptype )
 		return code_expand_index_rhs( pvInner, *mptype );
 
 	} else {
-		code_index_reset(pvInner);
+		//code_index_reset(pvInner);
 
 		*mptype = pvInner->flag;
 		return getHvp( pvInner->flag )->GetPtr( pvInner );

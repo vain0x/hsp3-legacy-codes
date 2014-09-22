@@ -293,7 +293,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="package\call\callcmd.cmdlist.txt">
+    <Text Include="package\callcmd.cmdlist.txt">
       <Filter>call_core\cmd</Filter>
     </Text>
   </ItemGroup>

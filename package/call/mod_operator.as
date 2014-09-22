@@ -116,7 +116,30 @@
 		return 1
 	}
 	
+// ÉâÉxÉãêÈåæ
+#deffunc _operators_init
+	declare operator_add,  PrmType_Any, PrmType_Any
+	declare operator_sub,  PrmType_Any, PrmType_Any
+	declare operator_mul,  PrmType_Any, PrmType_Any
+	declare operator_div,  PrmType_Any, PrmType_Any
+	declare operator_mod,  PrmType_Any, PrmType_Any
+	declare operator_and,  PrmType_Any, PrmType_Any
+	declare operator_or,   PrmType_Any, PrmType_Any
+	declare operator_xor,  PrmType_Any, PrmType_Any
+	declare operator_rr,   PrmType_Any, PrmType_Any
+	declare operator_lr,   PrmType_Any, PrmType_Any
+	declare operator_eq,   PrmType_Any, PrmType_Any
+	declare operator_ne,   PrmType_Any, PrmType_Any
+	declare operator_lt,   PrmType_Any, PrmType_Any
+	declare operator_lteq, PrmType_Any, PrmType_Any
+	declare operator_gt,   PrmType_Any, PrmType_Any
+	declare operator_gteq, PrmType_Any, PrmType_Any
+	declare operator_cmp,  PrmType_Any, PrmType_Any
+	return
+	
 #global
+
+	_operators_init
 
 // ñ¢é¿ëï
 #define global ctype op`(%1) (call_operatorOf_(0 %1 0))

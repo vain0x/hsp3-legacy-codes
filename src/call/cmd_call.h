@@ -6,7 +6,7 @@
 #include "hsp3plugin_custom.h"
 
 # include "cmdlistMacro.h"
-#include "../../package/call/callcmd.cmdlist.txt"
+#include "../../package/callcmd.cmdlist.txt"
 # include "cmdlistMacro.h"
 
 #endif

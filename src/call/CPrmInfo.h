@@ -54,8 +54,8 @@ public:
 		, cntCaptures_ { src.cntCaptures_ }
 		, cntLocals_ { src.cntLocals_ }
 		, bFlex_ { src.bFlex_ }
-		, prmlist_ { std::move(src.prmlist_) }
-		, offsetlist_ { std::move(src.offsetlist_) }
+		, prmlist_( std::move(src.prmlist_) )
+		, offsetlist_( std::move(src.offsetlist_) )
 		, stkOffsetCapture_ { src.stkOffsetCapture_ }
 		, stkOffsetLocal_ { src.stkOffsetLocal_ }
 		, stkOffsetFlex_ { src.stkOffsetFlex_ }

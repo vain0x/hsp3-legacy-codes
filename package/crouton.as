@@ -21,12 +21,12 @@
 #define STR_VAR_VECTOR_HPI_PATH STR_CROUTON_HPI_PATH
 #define STR_OPEX_HPI_PATH       STR_CROUTON_HPI_PATH
 
-;#include "./call/call.as"
-;#include "call/call_modcls.as"
-;#include "call/mod_operator.as"
-;#include "var_assoc/var_assoc.as"
-;#include "var_vector/var_vector.as"
-;#include "opex/opex.as"
+#include "call.as"
+;#include "call_modcls.as"
+;#include "mod_operator.as"
+#include "var_assoc.as"
+#include "var_vector.as"
+#include "opex.as"
 
 //************************************************
 // crouton commands

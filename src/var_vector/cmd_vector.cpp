@@ -22,10 +22,15 @@ static void VectorMovingImpl( vector_t& self, int cmd );
 // 
 // @ そのまま返却するとスタックに乗る。
 //------------------------------------------------
-int SetReffuncResult( PDAT** ppResult, vector_t self )
+int SetReffuncResult( PDAT** ppResult, vector_t const& self )
 {
-	self.beTmpObj();
+	g_pResultVector = self;
+	*ppResult = VectorTraits::asPDAT(&g_pResultVector);
+	return g_vtVector;
+}
 
+int SetReffuncResult( PDAT** ppResult, vector_t&& self )
+{
 	g_pResultVector = std::move(self);
 	*ppResult = VectorTraits::asPDAT(&g_pResultVector);
 	return g_vtVector;
@@ -102,7 +107,7 @@ int VectorMake(PDAT** ppResult)
 		// else: 初期値のまま
 	}
 
-	return SetReffuncResult(ppResult, self);
+	return SetReffuncResult(ppResult, std::move(self.beTmpObj()));
 }
 
 //------------------------------------------------
@@ -113,9 +118,9 @@ int VectorSlice(PDAT** ppResult)
 	auto&& self = code_get_vector();
 	auto const&& range = code_get_vector_range(self);
 
-	auto result = vector_t::make();
+	auto&& result = vector_t::make();
 	chainShallow(result, self, range);
-	return SetReffuncResult(ppResult, std::move(result));
+	return SetReffuncResult(ppResult, std::move(result.beTmpObj()));
 }
 
 //------------------------------------------------
@@ -129,13 +134,13 @@ int VectorSliceOut(PDAT** ppResult)
 	size_t const len = self->size();
 	size_t const lenRange = range.second - range.first;
 
-	auto result = vector_t::make();
+	auto&& result = vector_t::make();
 	if ( len > lenRange ) {
 		result->reserve(len - lenRange);
 		chainShallow(result, self, { 0, range.first });
 		chainShallow(result, self, { range.second, len });
 	}
-	return SetReffuncResult(ppResult, std::move(result));
+	return SetReffuncResult(ppResult, std::move(result.beTmpObj()));
 }
 
 //------------------------------------------------
@@ -147,10 +152,10 @@ int VectorDup(PDAT** ppResult)
 	auto&& range = code_get_vector_range(src);
 
 	// PVal の値を複製して vector をもう一つ作る
-	auto self = vector_t::make();
+	auto&& self = vector_t::make();
 
 	chainDeep(self, src, range);
-	return SetReffuncResult(ppResult, self);
+	return SetReffuncResult(ppResult, std::move(self.beTmpObj()));
 }
 
 //------------------------------------------------
@@ -208,7 +213,7 @@ void VectorChain(bool bClear)
 
 	if ( bClear ) dst->clear();
 
-	auto const range = code_get_vector_range(src);
+	auto const&& range = code_get_vector_range(src);
 	chainDeep(dst, src, range);
 	return;
 }
@@ -496,7 +501,9 @@ int VectorExpr( PDAT** ppResult )
 	// ここで VectorResult() が実行されるはず
 	if ( code_geti() != VectorResultExprMagicNumber ) puterror(HSPERR_ILLEGAL_FUNCTION);
 
-	return SetReffuncResult( ppResult, g_pResultVector );
+	return (g_pResultVector.isTmpObj()
+		? SetReffuncResult( ppResult, std::move(g_pResultVector) )
+		: SetReffuncResult( ppResult, g_pResultVector) );
 }
 
 //------------------------------------------------
@@ -505,6 +512,8 @@ int VectorExpr( PDAT** ppResult )
 int VectorJoin( PDAT** ppResult )
 {
 	auto&& self = code_get_vector();
+
+	// todo: use sdt::string?
 
 	char const* const _splitter = code_getds(", ");
 	char splitter[0x80];
