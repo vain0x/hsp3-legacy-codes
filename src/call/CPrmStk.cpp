@@ -4,6 +4,20 @@
 using namespace hpimod;
 
 //------------------------------------------------
+// 構築
+//------------------------------------------------
+CPrmStk::CPrmStk(CPrmInfo const& prminfo)
+	: super_t(hspmalloc(prminfo.getStackSize() + headerSize) + headerSize, prminfo.getStackSize() + headerSize)
+	, prminfo_ { prminfo }
+	, cntArgs_ { 0 }
+	, finalized_ { false }
+{
+	std::memset(getptr(), 0x00, capacity());
+
+	getHeader(super_t::getptr()).magicCode = MagicCode;
+}
+
+//------------------------------------------------
 // 文字列値のプッシュ
 //
 // @ prmstk 用にコピーを取る。破棄時に解放。
@@ -50,6 +64,63 @@ void CPrmStk::pushAnyByRef(PVal* pval, APTR aptr)
 
 	incCntArgs();
 	super_t::pushPVal(pval, aptr);
+	return;
+}
+
+//------------------------------------------------
+// var, array, thismod
+//------------------------------------------------
+void CPrmStk::pushPVal(PVal* pval, APTR aptr)
+{
+	assert(!hasFinalized());
+	assert(getNextPrmType() == PrmType::Var);
+
+	incCntArgs();
+	super_t::pushPVal(pval, aptr);
+	return;
+}
+
+void CPrmStk::pushPVal(PVal* pval)
+{
+	assert(!hasFinalized());
+	assert(getNextPrmType() == PrmType::Array);
+
+	incCntArgs();
+	super_t::pushPVal(pval, 0);
+	return;
+}
+
+void CPrmStk::pushThismod(PVal* pval, APTR aptr)
+{
+	assert(!hasFinalized());
+
+	if ( getNextPrmType() != PrmType::Modvar ) puterror(HSPERR_ILLEGAL_FUNCTION);
+	if ( pval->flag != HSPVAR_FLAG_STRUCT ) puterror(HSPERR_TYPE_MISMATCH);
+
+	incCntArgs();
+	auto const fv = VtTraits::getValptr<vtStruct>(pval);
+	super_t::pushThismod(pval, aptr, FlexValue_getModuleTag(fv)->subid);
+	return;
+}
+
+//------------------------------------------------
+// キャプチャ引数
+//
+// ラムダ関数が内部的に持つキャプチャリストを流し込む
+// prmstk はこれらの ManagedVarData を所有しない
+//------------------------------------------------
+void CPrmStk::importCaptures(vector_t const& captured)
+{
+	assert(hasFinalized());
+	assert(prminfo_.cntCaptures() == captured->size());
+
+	for ( size_t i = 0; i < captured->size(); ++i ) {
+		auto const vardata = peekCaptureAt(i);
+		auto const& iter = captured->at(i);
+
+		assert(!vardata->pval);
+		*vardata = { iter.getPVal(), iter.getAptr() };
+	}
 	return;
 }
 

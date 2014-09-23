@@ -69,16 +69,7 @@ private:
 	static int const MagicCode = 0x55AC;
 
 public:
-	CPrmStk(CPrmInfo const& prminfo)
-		: super_t(hspmalloc(prminfo.getStackSize() + headerSize) + headerSize, prminfo.getStackSize() + headerSize)
-		, prminfo_ { prminfo }
-		, cntArgs_ { 0 }
-		, finalized_ { false }
-	{
-		std::memset(getptr(), 0x00, capacity());
-		getHeader(super_t::getptr()).magicCode = MagicCode;
-	}
-
+	CPrmStk(CPrmInfo const& prminfo);
 	~CPrmStk() { free(); }
 
 	void* getPrmStkPtr() { return super_t::getptr(); }
@@ -107,15 +98,16 @@ public:
 	// 実引数値の push 各種
 	//------------------------------------------------
 	// 単純な値
-	template<typename VartypeTag>
+	template<typename VtTag>
 	void pushValue(PDAT const* pdat)
 	{
 		assert(!hasFinalized());
 		int const prmtype = getNextPrmType();
-		assert(prmtype == VtTraits::Impl::vartype<VartypeTag>() && prmtype != HSPVAR_FLAG_STR);
+		assert(prmtype == VtTraits::Impl::vartype<VtTag>() && prmtype != HSPVAR_FLAG_STR);
 
 		incCntArgs();
-		super_t::pushValue(VtTraits::derefValptr<VartypeTag>(pdat));
+		super_t::pushValue(VtTraits::derefValptr<VtTag>(pdat));
+		return;
 	}
 	template<> void pushValue<vtStr>(PDAT const* pdat);
 
@@ -127,55 +119,11 @@ public:
 	void pushAnyByRef(PVal* pval, APTR aptr);
 
 	// 変数参照
-	void pushPVal(PVal* pval, APTR aptr)
-	{
-		assert(!hasFinalized());
-		assert(getNextPrmType() == PrmType::Var);
+	void pushPVal(PVal* pval, APTR aptr);
+	void pushPVal(PVal* pval);
+	void pushThismod(PVal* pval, APTR aptr);
 
-		incCntArgs();
-		super_t::pushPVal(pval, aptr);
-		return;
-	}
-	void pushPVal(PVal* pval)
-	{
-		assert(!hasFinalized());
-		assert(getNextPrmType() == PrmType::Array);
-
-		incCntArgs();
-		super_t::pushPVal(pval, 0);
-		return;
-	}
-	void pushThismod(PVal* pval, APTR aptr)
-	{
-		assert(!hasFinalized());
-
-		if ( getNextPrmType() != PrmType::Modvar ) puterror(HSPERR_ILLEGAL_FUNCTION);
-		if ( pval->flag != HSPVAR_FLAG_STRUCT ) puterror(HSPERR_TYPE_MISMATCH);
-
-		incCntArgs();
-		auto const fv = VtTraits::getValptr<vtStruct>(pval);
-		super_t::pushThismod(pval, aptr, FlexValue_getModuleTag(fv)->subid);
-		return;
-	}
-
-	// ラムダ関数が内部的に持つキャプチャリストを流し込む
-	// prmstk はこれらの ManagedVarData を所有しない
-	void importCaptures(vector_t const& captured)
-	{
-		assert(hasFinalized());
-		assert(prminfo_.cntCaptures() == captured->size());
-
-		for ( size_t i = 0; i < captured->size(); ++ i ) {
-			auto const vardata = peekCaptureAt(i);
-			auto const& iter = captured->at(i);
-
-			assert(!vardata->pval);
-			*vardata = { iter.getPVal(), iter.getAptr() };
-		}
-		return;
-	}
-
-	// push final parameters
+	void importCaptures(vector_t const& captured);
 	void finalize();
 
 	//------------------------------------------------
