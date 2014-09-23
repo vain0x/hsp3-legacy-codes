@@ -10,7 +10,6 @@
 
 #include "hsp3struct.h"
 #include "hsp3plugin_custom.h"
-using namespace hpimod;
 
 extern FlexValue* code_get_modinst();
 extern FlexValue* code_get_modinst( FlexValue* def );
@@ -23,12 +22,12 @@ extern void FlexValue_NullClear( FlexValue& self );
 extern bool FlexValue_IsNull ( FlexValue const& self );
 extern int  FlexValue_Counter( FlexValue const& self );
 extern int  FlexValue_SubId  ( FlexValue const& self );
-extern stdat_t     FlexValue_ModCls( FlexValue const& self );
+extern hpimod::stdat_t FlexValue_ModCls( FlexValue const& self );
 extern char const* FlexValue_ClsName( FlexValue const& self );
 
-extern void FlexValue_CtorWoCtorCalling( FlexValue& self, stdat_t modcls );
-extern void FlexValue_Ctor( FlexValue& self, stdat_t modcls );
-extern void FlexValue_Ctor( FlexValue& self, stdat_t modcls, PVal* pval, APTR aptr );
+extern void FlexValue_CtorWoCtorCalling( FlexValue& self, hpimod::stdat_t modcls );
+extern void FlexValue_Ctor( FlexValue& self, hpimod::stdat_t modcls );
+extern void FlexValue_Ctor( FlexValue& self, hpimod::stdat_t modcls, PVal* pval, APTR aptr );
 extern void FlexValue_Dtor( FlexValue& self );
 
 extern void FlexValue_Copy( FlexValue& dst, FlexValue const& src );

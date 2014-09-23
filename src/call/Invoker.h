@@ -18,6 +18,8 @@ enum class InvokeMode : unsigned char
 
 class Invoker
 {
+	using ManagedPVal = hpimod::ManagedPVal;
+
 private:
 	// 転送先
 	functor_t functor_;
@@ -66,10 +68,10 @@ public:
 		result_ = ManagedPVal::ofValptr(pval);
 		return;
 	}
-	void setResultByVal(PDAT const* pdat, vartype_t vtype)
+	void setResultByVal(PDAT const* pdat, hpimod::vartype_t vtype)
 	{
 		result_.reset();
-		PVal_assign(result_.valuePtr(), pdat, vtype);
+		hpimod::PVal_assign(result_.valuePtr(), pdat, vtype);
 		return;
 	}
 

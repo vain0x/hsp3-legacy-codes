@@ -1,0 +1,45 @@
+#include "../crouton.as"
+
+// 呼び出された位置(ラベル)、および関数子
+
+	mes "call *LHello1"
+	call *LHello1
+	mes
+	
+	mes "call *LHello2"
+	call *LHello2
+	mes
+	
+	mes "以上"
+	stop
+	
+	
+*LHello1
+	mes "Hello1!"
+	// return しないまま *LHello2 の中に進む
+	
+*LHello2
+	mes "Hello2!"
+	
+// システム変数：thislb
+// call コマンドで呼び出されたラベルの中で、
+// その call のジャンプ先として指定されたラベルを返す。
+	
+	lb = thislb
+	mes "呼び出されたのは：*L" + which(lb == *LHello1, "Hello1", "Hello2")
+	
+// システム変数：thisfunc
+// call コマンドで呼び出されたラベルの中で、
+// その call に使われた関数子(functor)を返す。
+	
+	callbk = thisfunc
+	
+	dialog "この呼び出しを終了しますか？", 2
+	if ( stat == 1 ) {
+		// もういっちょ！
+		call callbk
+	}
+	
+	mes "おわり"
+	return
+

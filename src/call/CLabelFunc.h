@@ -12,11 +12,11 @@
 
 #include "cmd_sub.h"
 
-using namespace hpimod;
-
 class CLabelFunc
 	: public IFunctor
 {
+	using label_t = hpimod::label_t;
+
 	label_t lb_;
 
 public:
@@ -26,7 +26,7 @@ public:
 	label_t getLabel() const override { return lb_; }
 	int getAxCmd() const override { return AxCmd::make(TYPE_LABEL, hpimod::getOTPtr(lb_)); }
 
-	int getUsing() const override { return HspBool(lb_ != nullptr); }			// 使用状況 (0: 無効, 1: 有効, 2: クローン)
+	int getUsing() const override { return hpimod::HspBool(lb_ != nullptr); }			// 使用状況 (0: 無効, 1: 有効, 2: クローン)
 	CPrmInfo const& getPrmInfo() const override {
 		return GetPrmInfo(lb_);
 	}

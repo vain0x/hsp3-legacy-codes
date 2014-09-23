@@ -115,7 +115,6 @@
 
 //*/
 
-#define global defidOf !!"replace 'defidOf' to 'axcmdOf'"!!
 
 //##########################################################
 //    マクロ
@@ -219,9 +218,9 @@
 
 // マジックコード
 #const global MagicCode_AxCmd     0x20000000
-#const global MagicCode_ModcmdId (0x000C0000 | MagicCode_AxCmd)
+;#const global MagicCode_ModcmdId (0x000C0000 | MagicCode_AxCmd)
 
-#define global ctype isModcmdId(%1) ( ((%1) & 0xFFFF0000) == MagicCode_ModcmdId )
+;#define global ctype isModcmdId(%1) ( ((%1) & 0xFFFF0000) == MagicCode_ModcmdId )
 
 //##############################################################################
 //                モジュール
@@ -289,6 +288,7 @@ dupptr %1, \
 	arginfo(ARGINFOID_PTR,  (%2) + 1), \
 	arginfo(ARGINFOID_SIZE, (%2) + 1), \
 	arginfo(ARGINFOID_FLAG, (%2) + 1)  :
+#define global defidOf !!"replace 'defidOf' to 'axcmdOf'"!!
 
 // 仮引数タイプ
 #define global PRM_TYPE_NONE    PrmType_None
@@ -304,5 +304,8 @@ dupptr %1, \
 #define global PRM_TYPE_DOUBLE PrmType_Double
 #define global PRM_TYPE_INT    PrmType_Int
 #define global PRM_TYPE_STRUCT PrmType_Struct
+
+	// label 型の比較演算を定義
+	call_defineLabelComparison
 
 #endif

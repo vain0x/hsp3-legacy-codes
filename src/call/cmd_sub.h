@@ -8,12 +8,10 @@
 #include "hsp3plugin_custom.h"
 #include "CPrmInfo.h"
 
-using namespace hpimod;
-
 // 仮引数リスト関連
-extern CPrmInfo const& DeclarePrmInfo(label_t lb, CPrmInfo&& prminfo);
-extern CPrmInfo const& GetPrmInfo(stdat_t stdat);
-extern CPrmInfo const& GetPrmInfo(label_t);
+extern CPrmInfo const& DeclarePrmInfo(hpimod::label_t lb, CPrmInfo&& prminfo);
+extern CPrmInfo const& GetPrmInfo(hpimod::stdat_t stdat);
+extern CPrmInfo const& GetPrmInfo(hpimod::label_t);
 
 extern CPrmInfo::prmlist_t code_get_prmlist();
 extern CPrmInfo const& code_get_prminfo();

@@ -119,7 +119,7 @@ EXPORT void WINAPI hsp3typeinfo_call(HSP3TYPEINFO* info)
 	info->termfunc = termfunc;
 
 	// functor 型を登録
-	registvar(-1, reinterpret_cast<HSPVAR_COREFUNC>(HspVarFunctor_init));
+	registvar(-1, HspVarFunctor_init);
 
 	// TYPE_INTFUNC のラッピング
 //	wrap_reffunc_intfunc( &(info - g_pluginType_call)[TYPE_INTFUNC] );	// info が HSP3TYPEINFO[] であることが前提

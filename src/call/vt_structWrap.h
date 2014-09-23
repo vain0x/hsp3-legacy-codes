@@ -8,7 +8,6 @@
 #include "hsp3plugin_custom.h"
 #include "Functor.h"
 
-using namespace hpimod;
 // HspVarProc(struct) の処理関数はすべて置き換える。
 // @ HSP本体との互換性は維持する。
 // @ FlexValue::ptr (メンババッファ) は、参照カウンタのために余分に 8[byte] 確保する。
@@ -43,7 +42,7 @@ extern PVal* getMPVal(vartype_t type);
 extern PVal const* getNullmod();
 
 // traits
-using StructTraits = VtTraits<vtStruct>;
+//using StructTraits = VtTraits<vtStruct>;
 
 }
 

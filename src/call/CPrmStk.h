@@ -109,7 +109,7 @@ public:
 		super_t::pushValue(VtTraits::derefValptr<VtTag>(pdat));
 		return;
 	}
-	template<> void pushValue<vtStr>(PDAT const* pdat);
+	template<> void pushValue<hpimod::vtStr>(PDAT const* pdat);
 
 	// 文字列
 	void pushString(char const* src);
@@ -129,7 +129,7 @@ public:
 	//------------------------------------------------
 	// 実引数値の動的な push
 	//------------------------------------------------
-	void pushArgByVal(PDAT const* pdat, vartype_t vtype);
+	void pushArgByVal(PDAT const* pdat, hpimod::vartype_t vtype);
 	void pushArgByRef(PVal* pval, APTR aptr);
 	void pushArgByDefault();
 	void allocArgNoBind(unsigned short magiccode, unsigned short priority);
@@ -140,16 +140,16 @@ public:
 	
 	// 値 or any(byVal)
 	// local や参照渡し引数の値は取り出さない。
-	PDAT* peekValArgAt(size_t idx, vartype_t& vtype) const;
+	PDAT* peekValArgAt(size_t idx, hpimod::vartype_t& vtype) const;
 
 	// 変数
 	PVal* peekRefArgAt(size_t idx) const;
 
-	ManagedVarData peekAnyAt(size_t idx) const
+	hpimod::ManagedVarData peekAnyAt(size_t idx) const
 	{
 		assert( idx < cntArgs() );
 		assert(prminfo_.getPrmType(idx) == PrmType::Any);
-		return ManagedVarData { *reinterpret_cast<MPVarData*>(getArgPtrAt(idx)) };
+		return hpimod::ManagedVarData { *reinterpret_cast<MPVarData*>(getArgPtrAt(idx)) };
 	}
 
 	MPVarData* peekCaptureAt(size_t idx) const

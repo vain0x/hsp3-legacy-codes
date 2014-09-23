@@ -9,7 +9,6 @@
 #define IG_INTERFACE_FUNCTOR_H
 
 #include "hsp3plugin_custom.h"
-using namespace hpimod;
 
 class CPrmInfo;
 class CCaller;
@@ -24,15 +23,11 @@ class Invoker;
 //------------------------------------------------
 class IFunctor
 {
-protected:
-	IFunctor() = default;
-
 public:
-	virtual ~IFunctor() { clear(); }
-	virtual void clear() { }
+	virtual ~IFunctor() { }
 
 	// 取得
-	virtual label_t getLabel() const { return nullptr; }
+	virtual hpimod::label_t getLabel() const { return nullptr; }
 	virtual int getAxCmd() const { return 0; }
 
 	virtual int getUsing() const { return 0; }			// 使用状況 (0: 無効, 1: 有効, 2: クローン)

@@ -452,8 +452,8 @@ int FunctorCmd::functor(PDAT** ppResult, bool bSysvar)
 {
 	if ( ppResult && bSysvar ) {
 		// 型タイプ値
-
-		return SetReffuncResult(ppResult, g_vtFunctor);
+		
+		return SetReffuncResult(ppResult, static_cast<int>(g_vtFunctor));
 
 	} else if ( ppResult && !bSysvar ) {
 		// 型変換
@@ -613,6 +613,32 @@ void CallCmd::coYieldImpl()
 	return;
 }
 #endif
+
+//##########################################################
+//        ラベルのラップ
+//##########################################################
+//------------------------------------------------
+// label 比較
+//------------------------------------------------
+int HspVarLabel_CmpI(PDAT* pdat, PDAT const* val)
+{
+	auto& lhs = VtTraits::derefValptr<vtLabel>(pdat);
+	auto& rhs = VtTraits::derefValptr<vtLabel>(val);
+
+	getHvp(HSPVAR_FLAG_LABEL)->aftertype = HSPVAR_FLAG_INT;
+	return (lhs - rhs);
+}
+
+//------------------------------------------------
+// label 型の比較演算を定義する
+//------------------------------------------------
+void CallCmd::call_defineLabelComparison()
+{
+	auto const hvp = getHvp(HSPVAR_FLAG_LABEL);
+
+	HspVarTemplate_InitCmpI_Full< HspVarLabel_CmpI >(hvp);
+	return;
+}
 
 //##########################################################
 //        一般性のあるコマンド

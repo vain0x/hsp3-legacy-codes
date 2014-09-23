@@ -4,7 +4,6 @@
 #define IG_VECTOR_COMMAND_H
 
 #include "hsp3plugin_custom.h"
-using namespace hpimod;
 
 #include "vt_vector.h"
 

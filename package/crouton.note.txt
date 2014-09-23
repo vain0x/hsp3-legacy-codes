@@ -17,17 +17,26 @@
 	・apply, arguments
 	・Vector: map, fold(L/R), unfold(L/R), filter
 	
-＠wish
-	sort
+＠memo
 
-・参照カウンタがうまくいっているかの確認
+
+＠wish
 ・call の拡張的関数子の実装
 	knowbug 文字列化の実装
-・call/structWrap の実装
+・call/structWrap, methodWrap の実装
 ・vector のコンテナ移動機能の再実装
+	sort
 ・assoc の Managed<> を使った実装
 	PVal::offset だけで添字結果を判断するように
 	prototype 的仕様の追加
 ・obsjson の修整
+・knowbug との連携――call 時に呼び出しノードを push/pop
 
 ・スクリプト側で、今実行されているのが call による呼び出しかどうかを確認する方法。
+
+その他
+opex: varname, labelname (for debug)
+call:
+	vectorを引数列として展開
+	可変長引数にvectorを直接渡す、
+	f(bycomposite g) = f○g

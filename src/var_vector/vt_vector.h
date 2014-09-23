@@ -11,9 +11,10 @@
 
 //#include "CVector.h"
 
-using namespace hpimod;
-
-using vector_t = Managed< std::vector<ManagedVarData, HspAllocator<ManagedVarData>>, false >;
+using vector_t = hpimod::Managed<
+	std::vector<hpimod::ManagedVarData, hpimod::HspAllocator<hpimod::ManagedVarData>>,
+	false
+>;
 
 // vartype traits
 struct vtVector {
@@ -59,7 +60,7 @@ static PVal* getInnerPVal(PVal* pval)
 }
 
 // グローバル変数
-extern vartype_t g_vtVector;
+extern hpimod::vartype_t g_vtVector;
 extern HspVarProc* g_pHvpVector;
 
 // 関数

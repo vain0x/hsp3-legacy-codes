@@ -64,22 +64,23 @@
 	return
 	
 // 手法：ダミー #deffunc
-// 次のようにラベル関数の前に #deffunc を書いておくことで、
+// 次のように「ラベル関数の前に #deffunc を書いておく」ことで、
 // ラベル関数に与えられた引数を、引数エイリアスで参照することができる。
 // #deffunc 自体を呼び出して使うわけではないので、名前はテキトーなものにしておく。
 // (#deffunc を call するのとは違い、Any 引数や可変長引数を扱える。)
 // Any 引数は、var か array で参照できる。
-// 可変長引数は flexVector() を使わなければいけない。
-#defcfunc _accumulate_ var x;,  local flex, local result
+// 基本型(label, str, double, int)以外の型の値は、var で参照できる。
+// 依然として、可変長引数は flexVector() を使わなければ参照できない。
+
+#defcfunc _accumulate_ var x,  local flex, local result
 
 *LAccumulate
 	flex = flexVector()
 	
+	// x に可変長引数で与えられた値を加えて、結果を返す
 	result = x
 	repeat VectorSize(flex())
 		result += flex(cnt)
 	loop
-	mes result
-	dim flex
 	return result
 	

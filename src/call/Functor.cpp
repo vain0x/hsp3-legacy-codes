@@ -3,6 +3,8 @@
 #include "Functor.h"
 #include "CLabelFunc.h"
 
+using namespace hpimod;
+
 namespace Functor
 {
 

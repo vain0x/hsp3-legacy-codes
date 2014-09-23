@@ -31,6 +31,8 @@ HpiCmdlistBegin;
 	HpiCmd_F_(0x017, flexVal);
 	HpiCmdS__(0x018, flexClone);
 	HpiCmd_F_(0x019, flexVector);
+	
+	HpiCmdS__(0x020, call_defineLabelComparison);
 
 	HpiCmd___(0xF00, call_byRef_);
 	HpiCmd___(0xF01, call_byThismod_);

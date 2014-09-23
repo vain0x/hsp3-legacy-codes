@@ -23,7 +23,7 @@ static PVal** HspVarVector_GetVectorList( PDAT const* src, int* );	// void* user
 //------------------------------------------------
 static PDAT* HspVarVector_GetPtr(PVal* pval)
 {
-	return reinterpret_cast<PDAT*>(pval->pt);
+	return pval->pt;
 }
 
 //------------------------------------------------

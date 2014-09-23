@@ -12,7 +12,7 @@
 #include "Functor.h"
 
 // 変数
-extern vartype_t g_vtFunctor;
+extern hpimod::vartype_t g_vtFunctor;
 extern HspVarProc* g_hvpFunctor;
 
 // 関数
@@ -20,6 +20,7 @@ extern void HspVarFunctor_init(HspVarProc* vp);
 
 // vartype traits
 using vtFunctor = hpimod::VtTraits::NativeVartypeTag<functor_t>;
+
 namespace hpimod {
 	namespace VtTraits
 	{

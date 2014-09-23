@@ -22,6 +22,8 @@ functor_t g_resFunctor { nullptr };
 
 static void invokeFunctor(functor_t f, PDAT** ppResult, int* mptype)
 {
+	assert(!f.isNull());
+
 	Invoker inv { f };
 	inv.code_get_arguments();
 	inv.invoke();
@@ -39,7 +41,7 @@ static void invokeFunctor(functor_t f, PDAT** ppResult, int* mptype)
 static int HspVarFunctor_getUsing( PDAT const* pdat )
 {
 	functor_t const& functor = VtTraits::derefValptr<vtFunctor>(pdat);
-	return functor->getUsing();
+	return (!functor.isNull() ? functor->getUsing() : 0);
 }
 
 //------------------------------------------------
@@ -354,9 +356,9 @@ functor_t code_get_functor()
 	if ( mpval->flag == HSPVAR_FLAG_LABEL ) {
 		return Functor::New(VtTraits::derefValptr<vtLabel>(mpval->pt));
 
-	// deffid
+	// axcmd
 	} else if ( mpval->flag == HSPVAR_FLAG_INT ) {
-		int const axcmd = *reinterpret_cast<int*>(mpval->pt);
+		int const axcmd = VtTraits::derefValptr<vtInt>(mpval->pt);
 
 		if ( AxCmd::getType(axcmd) != TYPE_MODCMD ) puterror(HSPERR_ILLEGAL_FUNCTION);
 
