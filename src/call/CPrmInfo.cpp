@@ -95,7 +95,7 @@ void CPrmInfo::setPrmlist( prmlist_t const& prmlist )
 //-----------------------------------------------
 // 仮引数タイプ (failure: PrmType::None)
 //-----------------------------------------------
-int CPrmInfo::getPrmType( size_t idx ) const
+prmtype_t CPrmInfo::getPrmType( size_t idx ) const
 {
 	assert( idx < cntPrms_ );
 

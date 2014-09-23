@@ -20,8 +20,9 @@ struct vtVector {
 
 	// special indexes
 	static int const IdxBegin = 0;
-	static int const IdxLast  = (-0x031EC10A);	// 最後の要素を表す添字コード
-	static int const IdxEnd   = (-0x031EC10B);	// (最後の要素 + 1)を表す添字コード
+	static int const IdxLast = (-101);	// 最後の要素を表す添字コード
+	static int const IdxEnd  = (-102);	// (最後の要素 + 1)を表す添字コード
+	static int const IdxFullSlice = (-100);	// vector の全体スライスを表す添字コード
 
 };
 

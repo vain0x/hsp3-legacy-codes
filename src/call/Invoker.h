@@ -1,14 +1,7 @@
 ﻿#ifndef IG_CLASS_FUNCTION_CALLER_H
 #define IG_CLASS_FUNCTION_CALLER_H
 
-// 関数呼び出しのオブジェクト
-// 引数から直接 prmstack の生成を行う。
-// CCaller, CCall の代わりにするつもり。
-
-// CStreamCaller に似ているが、呼び出し時に追加の引数を与えられない。
-
-// というつもりで作ったが、肝は CPrmStk (実引数データ) を所有し、コードから実引数を取り出す機能を持つことである。
-// argument 型オブジェクトということにした方が収まりがいい気がする。
+// 関数の呼び出しを行うためのオブジェクト
 
 #include "hsp3plugin_custom.h"
 #include "Functor.h"
@@ -37,13 +30,14 @@ private:
 	// 返値データ
 	ManagedPVal result_;
 
+	// 最後の返値
 	static ManagedPVal lastResult;
 
 public:
 	// 構築
 	// @prm f: must be non-null
 	Invoker(functor_t f, InvokeMode invmode_ = InvokeMode::Call)
-		: functor_ { f }
+		: functor_ { (assert(!f.isNull()), f) }
 		, args_ { f->getPrmInfo() }
 		, invmode_ { invmode_ }
 		, result_ { nullptr }
@@ -52,7 +46,7 @@ public:
 //	Invoker(Invoker const&) = delete;
 
 public:
-	void invoke() { push(*this); functor_->invoke(*this); pop(); }
+	void invoke();
 
 	functor_t const& getFunctor() const { return functor_; }
 	CPrmInfo const& getPrmInfo() const { return args_.getPrmInfo(); }
@@ -67,16 +61,16 @@ public:
 		if ( !hasResult() ) puterror(HSPERR_NORETVAL);
 		return result_.valuePtr();
 	}
-	PVal* setResult(PVal* pval)
+	void setResultByRef(PVal* pval)
 	{
 		result_ = ManagedPVal::ofValptr(pval);
-		return getResult();
+		return;
 	}
-	PVal* setResult(PDAT const* pdat, vartype_t vtype)
+	void setResultByVal(PDAT const* pdat, vartype_t vtype)
 	{
 		result_.reset();
 		PVal_assign(result_.valuePtr(), pdat, vtype);
-		return getResult();
+		return;
 	}
 
 	// コードの取り出し

@@ -76,10 +76,10 @@ static size_t sizeOf(prmtype_t prmtype)
 		case PrmType::Flex:    return sizeof(void*);
 		default:
 			// その他の型タイプ値
-			if ( HSPVAR_FLAG_INT < prmtype && prmtype < (HSPVAR_FLAG_USERDEF + ctx->hsphed->max_varhpi) ) {
+			if ( isExtendedVartype(prmtype) ) {
 				return sizeof(MPVarData);
 			}
-			return 0;
+			assert(false); puterror(HSPERR_UNKNOWN_CODE);
 	}
 }
 

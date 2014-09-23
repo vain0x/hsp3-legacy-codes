@@ -137,7 +137,7 @@
 #define global argc argcount
 //#define global argv argVal
 
-#define global call_return(%1 = __call_empty__) call_setRetval_ %1 : return
+#define global call_return(%1) call_setResult_ (%1) : return
 
 // ラムダ式
 #define global __p0 ( call_prmof(0) )
@@ -178,18 +178,6 @@
 
 #define global co_exit return
 
-// 後方互換用
-
-#define global funcexpr lambda
-#define global argv argVal
-#define global call_alias argClone
-#define global call_aliasAll argPeekAll
-#define global call_setprm(%1, %2) \
-dupptr %1, \
-	arginfo(ARGINFOID_PTR,  (%2) + 1), \
-	arginfo(ARGINFOID_SIZE, (%2) + 1), \
-	arginfo(ARGINFOID_FLAG, (%2) + 1)  :
-
 //##############################################################################
 //                定数を定義
 //##############################################################################
@@ -213,20 +201,21 @@ dupptr %1, \
 #enum global ARGINFOID_MAX
 
 // 仮引数タイプ
-#define global PRM_TYPE_NONE    0		// (error-type)
-#define global PRM_TYPE_FLEX    (-1)	// 可変長引数の許可
-#define global PRM_TYPE_VAR     (-2)	// 変数参照の要求
-#define global PRM_TYPE_ARRAY   (-3)	// 配列参照の要求
-#define global PRM_TYPE_MODVAR  (-4)	// modvar 引数
-#define global PRM_TYPE_ANY     (-5)	// 任意の引数
-#define global PRM_TYPE_CAPTURE (-6)
-#define global PRM_TYPE_LOCAL   (-7)	// ローカル変数 ( 実引数不要 )
+#define global PrmType_None    0
+#define global PrmType_Var     (-2)	// 変数参照の要求
+#define global PrmType_Array   (-3)	// 配列参照の要求
+#define global PrmType_Modvar  (-4)	// modvar 引数
+#define global PrmType_Any     (-5)	// 任意の引数
+#define global PrmType_Capture (-6)
+#define global PrmType_Local   (-7)	// ローカル変数 ( 実引数不要 )
+#define global PrmType_Flex    (-1)	// 可変長引数の許可
 
-#define global PRM_TYPE_LABEL  1	// 型タイプ値
-#define global PRM_TYPE_STR    2
-#define global PRM_TYPE_DOUBLE 3
-#define global PRM_TYPE_INT    4
-#define global PRM_TYPE_FUNCTOR (functor)
+#define global PrmType_Label  1	// 型タイプ値
+#define global PrmType_Str    2
+#define global PrmType_Double 3
+#define global PrmType_Int    4
+#define global PrmType_Struct 5
+#define global PrmType_Functor (functor)
 
 // マジックコード
 #const global MagicCode_AxCmd     0x20000000
@@ -288,5 +277,32 @@ dim co_next_label@__callmod
 	call_return x
 
 #global
+
+// 後方互換用
+
+#define global funcexpr lambda
+#define global argv argVal
+#define global call_alias argClone
+#define global call_aliasAll argPeekAll
+#define global call_setprm(%1, %2) \
+dupptr %1, \
+	arginfo(ARGINFOID_PTR,  (%2) + 1), \
+	arginfo(ARGINFOID_SIZE, (%2) + 1), \
+	arginfo(ARGINFOID_FLAG, (%2) + 1)  :
+
+// 仮引数タイプ
+#define global PRM_TYPE_NONE    PrmType_None
+#define global PRM_TYPE_FLEX    PrmType_Flex
+#define global PRM_TYPE_VAR     PrmType_Var
+#define global PRM_TYPE_ARRAY   PrmType_Array
+#define global PRM_TYPE_MODVAR  PrmType_Modvar
+#define global PRM_TYPE_ANY     PrmType_Any
+#define global PRM_TYPE_LOCAL   PrmType_Local
+
+#define global PRM_TYPE_LABEL  PrmType_Label
+#define global PRM_TYPE_STR    PrmType_Str
+#define global PRM_TYPE_DOUBLE PrmType_Double
+#define global PRM_TYPE_INT    PrmType_Int
+#define global PRM_TYPE_STRUCT PrmType_Struct
 
 #endif

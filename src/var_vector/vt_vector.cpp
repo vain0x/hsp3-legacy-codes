@@ -250,9 +250,11 @@ static void HspVarVector_ObjectMethod( PVal* pval )
 // vector 自身への添字を受け取る
 static int code_vectorIndex(vector_t const& self)
 {
-	int const idx = code_getdi(-1);
+	int const idx = code_getdi(vtVector::IdxFullSlice);
 	if ( idx < 0 ) {
-		if ( idx == vtVector::IdxLast ) {
+		if ( idx == vtVector::IdxFullSlice ) {
+			return -1;
+		} else if ( idx == vtVector::IdxLast ) {
 			if ( self->empty() ) puterror( HSPERR_ARRAY_OVERFLOW );
 			return self->size() - 1;
 		} else if ( idx == vtVector::IdxEnd ) {
@@ -308,6 +310,7 @@ void HspVarVector_ArrayObject( PVal* pval )
 
 	if ( pvInner ) {
 		if ( code_isNextArg() ) {
+			if ( pvInner->arraycnt > 0 ) puterror(HSPERR_INVALID_ARRAY);
 			code_expand_index_lhs(pvInner);
 		}
 		//else { code_index_reset(pvInner); }
@@ -322,13 +325,14 @@ void HspVarVector_ArrayObject( PVal* pval )
 static PDAT* HspVarVector_ArrayObjectReadImpl( PVal* pvInner, int* mptype )
 {
 	if ( code_isNextArg() ) {
+		if ( pvInner->arraycnt > 0 ) puterror(HSPERR_INVALID_ARRAY);
 		return code_expand_index_rhs( pvInner, *mptype );
 
 	} else {
 		//code_index_reset(pvInner);
 
 		*mptype = pvInner->flag;
-		return getHvp( pvInner->flag )->GetPtr( pvInner );
+		return PVal_getPtr(pvInner);
 	}
 }
 

@@ -55,7 +55,7 @@ static label_t declareImpl()
 	CPrmInfo::prmlist_t&& prmlist = code_get_prmlist();		// 仮引数列
 
 	// 登録
-	DeclarePrmInfo( lb, CPrmInfo(&prmlist) );
+	DeclarePrmInfo( lb, CPrmInfo(std::move(prmlist)) );
 	return lb;
 }
 
@@ -77,7 +77,7 @@ void CallCmd::call_setResult_()
 	auto& inv = Invoker::top();
 	if ( code_getprm() <= PARAM_END ) puterror(HSPERR_NO_DEFAULT);
 
-	inv.setResult(mpval->pt, mpval->flag);
+	inv.setResultByVal(mpval->pt, mpval->flag);
 	return;
 }
 

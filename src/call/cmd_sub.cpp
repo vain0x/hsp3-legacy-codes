@@ -33,7 +33,9 @@ CPrmInfo const& DeclarePrmInfo(label_t lb, CPrmInfo&& prminfo)
 		dbgout("多重定義です。");
 		puterror(HSPERR_ILLEGAL_FUNCTION);
 	}
-	return g_prmlistLabel.insert({ lb, std::move(prminfo) }).first->second;
+	auto it = g_prmlistLabel.insert({ lb, std::move(prminfo) });
+	assert(it.second);
+	return it.first->second;
 }
 
 //------------------------------------------------

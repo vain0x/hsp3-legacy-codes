@@ -19,7 +19,7 @@
 class CPrmInfo
 {
 public:
-	using prmlist_t = std::vector<int>;
+	using prmlist_t = std::vector<prmtype_t>;
 	using offset_t  = std::vector<size_t>;
 
 private:
@@ -79,7 +79,7 @@ public:
 	size_t cntLocals()   const { return cntLocals_; }
 	bool   isFlex()      const { return bFlex_; }
 
-	int getPrmType( size_t idx ) const;
+	prmtype_t getPrmType( size_t idx ) const;
 
 	size_t getStackSize() const { return stkSize_; }
 	size_t getStackOffset(size_t idx) const;

@@ -297,6 +297,9 @@
     <ClCompile Include="src\call\iface_call.cpp">
       <Filter>call_core\cmd</Filter>
     </ClCompile>
+    <ClCompile Include="src\call\CPrmStk.cpp">
+      <Filter>call_core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="package\callcmd.cmdlist.txt">

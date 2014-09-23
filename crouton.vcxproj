@@ -141,6 +141,7 @@
     <ClCompile Include="src\call\cmd_sub.cpp" />
     <ClCompile Include="src\call\CModClsCtor.cpp" />
     <ClCompile Include="src\call\CPrmInfo.cpp" />
+    <ClCompile Include="src\call\CPrmStk.cpp" />
     <ClCompile Include="src\call\CStreamCaller.cpp" />
     <ClCompile Include="src\call\Functor.cpp" />
     <ClCompile Include="src\call\iface_call.cpp" />

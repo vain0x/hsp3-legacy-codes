@@ -42,7 +42,7 @@ public:
 
 		// return から返値を受け取る (やや黒魔術？)
 		if ( ctx->retval_level == (ctx->sublev + 1) ) {
-			inv.setResult(*exinfo->mpval);
+			inv.setResultByVal((*exinfo->mpval)->pt, (*exinfo->mpval)->flag);
 			ctx->retval_level = 0;
 		}
 

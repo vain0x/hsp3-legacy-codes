@@ -20,7 +20,9 @@ functor_t const& New(label_t lb)
 
 	} else {
 		functor_t&& f = functor_t::makeDerived<CLabelFunc>(lb);
-		return stt_functorCache.insert({ lb, std::move(f) }).first->second;
+		auto it = stt_functorCache.insert({ lb, std::move(f) });
+		assert(it.second);
+		return it.first->second;
 	}
 }
 

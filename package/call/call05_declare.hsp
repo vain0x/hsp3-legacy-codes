@@ -1,0 +1,85 @@
+#include "../crouton.as"
+
+// ラベル宣言
+
+// 以前見たように、ラベルを call すると、引数は「flex」の1つである。
+// 引数の型が決まっている場合は、あらかじめ宣言を行っておくと便利である。
+
+// 命令：declare lb, prmtype...
+// ラベル lb の仮引数を、仮引数タイプの列 prmtype... で宣言する。
+// 仮引数タイプには次のものがある。
+
+// PrmType_*
+// Var:   変数(配列要素)を1つ受け取る。#deffunc の var と同じ。
+// Array: 配列変数を1つ受け取る。#deffunc の array と同じ。
+// Any:   好きな型の値か、変数を1つ受け取る。byref で参照渡しできる。
+// Local: ローカル変数を1つ持つ。
+//        #deffunc の local と同じだが、PrmType_Local は他の仮引数より後にかかなければいけない。
+// Flex: 可変長引数を持つことを表す。
+//       仮引数タイプリストのどこに書いても同じで、実引数の最後が可変長部分になる。
+// また、仮引数タイプに型タイプ値を書くと、その型の値を受け取る。
+
+	// *LHello(str, var) を宣言
+	declare *LHello, PrmType_Str, PrmType_Var
+	
+	// 呼ぶ
+	;call *LHello, "Hi!", n
+	
+	// n は byref していないが、var 引数なので参照渡しされている。
+	mes "n = " + n
+	
+	// *LAccumulate(any, flex, local, local) を宣言
+	declare *LAccumulate, PrmType_Any, PrmType_Flex, PrmType_Local, PrmType_Local
+	
+	// 呼ぶ
+	sum1 = call(*LAccumulate, 1, 2, 3)
+	mes "1 + 2 + 3 = " + sum1
+	
+	sum2 = call(*LAccumulate, "Hello, ", "World!")
+	mes "string cat: " + sum2
+	
+	mes "以上"
+	stop
+	
+	
+*LHello
+// 関数：argVal(idx)
+// idx 番目の実引数の値を返す。(可変長部分は除く)
+// idx 番目が参照渡しなら、エラーになる。
+	mes "argVal(0) = " + argVal(0)
+	
+// 命令：argClone var, idx
+// var を、実引数の idx 番目に渡された変数のクローンにする。(可変長部分は除く)
+// idx 番目が値渡しなら、エラーになる。
+	argClone r, 1
+	mes "argClone(1) = " + r
+	r = 42
+	
+// 命令：argPeekAll var...
+// call されたときの実引数を、与えられた各変数に設定する。(可変長部分は除く)
+// 値渡しされたならその値を変数に代入し、参照渡しされたなら変数をそのクローンにする。
+// 変数は適当に省略してもよい。
+	argPeekAll _p0, _p1
+	assert _p0 == argVal(0) && varptr(_p1) == varptr(r)
+	return
+	
+// 手法：ダミー #deffunc
+// 次のようにラベル関数の前に #deffunc を書いておくことで、
+// ラベル関数に与えられた引数を、引数エイリアスで参照することができる。
+// #deffunc 自体を呼び出して使うわけではないので、名前はテキトーなものにしておく。
+// (#deffunc を call するのとは違い、Any 引数や可変長引数を扱える。)
+// Any 引数は、var か array で参照できる。
+// 可変長引数は flexVector() を使わなければいけない。
+#defcfunc _accumulate_ var x;,  local flex, local result
+
+*LAccumulate
+	flex = flexVector()
+	
+	result = x
+	repeat VectorSize(flex())
+		result += flex(cnt)
+	loop
+	mes result
+	dim flex
+	return result
+	

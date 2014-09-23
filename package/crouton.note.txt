@@ -3,6 +3,9 @@
 	
 	@ member: call, opex, var_assoc, var_vector
 	
+2014.09.23 (Tue)
+	・vector: var 参照を持つ要素に内部変数の添字を与えたら、「配列・関数として使用できない型です」(HSPERR_INVALID_ARRAY)エラーを出すようにした。
+
 2014.09.21 (Sun)
 	・obsidian → crouton に改名した。
 	・git/github でバージョン管理するようにした。
@@ -16,3 +19,15 @@
 	
 ＠wish
 	sort
+
+・参照カウンタがうまくいっているかの確認
+・call の拡張的関数子の実装
+	knowbug 文字列化の実装
+・call/structWrap の実装
+・vector のコンテナ移動機能の再実装
+・assoc の Managed<> を使った実装
+	PVal::offset だけで添字結果を判断するように
+	prototype 的仕様の追加
+・obsjson の修整
+
+・スクリプト側で、今実行されているのが call による呼び出しかどうかを確認する方法。

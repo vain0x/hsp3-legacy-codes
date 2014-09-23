@@ -1,0 +1,33 @@
+#include "../crouton.as"
+
+// 返値
+
+	// 0, 1, ..., 9 という vector を返すラベル関数
+	v = call(axcmdOf(VectorIota), 0, 10)
+	
+	repeat VectorSize(v)
+		mes "v(" + cnt + ") = " + v(cnt)
+	loop
+	stop
+	
+//------------------------------------------------
+// iBgn, ..., iEnd という連番のベクトルを返す
+//------------------------------------------------
+#defcfunc VectorIota int iBgn, int iEnd,  local cntRange, local result
+	cntRange = iEnd - iBgn
+	
+	assert( cntRange >= 0 )
+	
+	vector result, cntRange
+	repeat cntRange
+		result(cnt) = iBgn + cnt
+	loop
+	
+// 命令：call_return value
+// value を返値として、call された場所から return する。
+// 通常の return を使ってもいいが、この命令なら好きな型の値を返すことができる。
+
+	// 作成した vector を返す
+	// (注意：連想配列型の local 変数なので添字を付けなければいけない)
+	call_return result()
+	

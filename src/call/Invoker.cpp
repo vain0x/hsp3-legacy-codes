@@ -124,8 +124,8 @@ CodeGetArgResult my_code_getarg(int prmtype)
 
 			} else if ( PrmType::isRef(prmtype) ) {
 				switch ( prmtype ) {
-					case PrmType::Array:  return CodeGetArgResult::byRef    (code_getpval());
-					case PrmType::Var:    return CodeGetArgResult::byRef    (code_get_var());
+					case PrmType::Array:  return CodeGetArgResult::byRef(code_getpval());
+					case PrmType::Var:    return CodeGetArgResult::byRef(code_get_var());
 					case PrmType::Modvar: return CodeGetArgResult::byThismod(code_get_var());
 					default: assert(false);
 				}
@@ -137,7 +137,7 @@ CodeGetArgResult my_code_getarg(int prmtype)
 					case PARAM_SPLIT:
 					{
 						if ( prmtype == HSPVAR_FLAG_DOUBLE && mpval->flag == HSPVAR_FLAG_INT ) {
-							// double → int の暗黙変換を許可する
+							// int → double の暗黙変換を許可する
 							return CodeGetArgResult::byVal(Valptr_cnvTo(mpval->pt, mpval->flag, prmtype), prmtype);
 						} else {
 							return CodeGetArgResult::byVal(mpval->pt, mpval->flag);
@@ -299,6 +299,20 @@ bool Invoker::code_get_nextArgument()
 	}
 	return true;
 #endif
+}
+
+//------------------------------------------------
+// 呼び出し処理
+//------------------------------------------------
+void Invoker::invoke()
+{
+	push(*this);
+	functor_->invoke(*this);
+	pop();
+	if ( hasResult() ) {
+		lastResult = result_;
+	}
+	return;
 }
 
 //------------------------------------------------

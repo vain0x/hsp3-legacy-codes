@@ -109,7 +109,7 @@ void CModClsCtor::call( CCaller& callerInvoke )
 	CCall& callInvoke = callerInvoke.getCall();
 
 	if ( isBottom() ) {
-		callInvoke.setResult( ModCls::getNullmod()->pt, HSPVAR_FLAG_STRUCT );
+		callInvoke.setResultByVal( ModCls::getNullmod()->pt, HSPVAR_FLAG_STRUCT );
 		return;
 	}
 
@@ -134,7 +134,7 @@ void CModClsCtor::call( CCaller& callerInvoke )
 	}
 
 	// 返値
-	callInvoke.setResult( &self, HSPVAR_FLAG_STRUCT );
+	callInvoke.setResultByVal( &self, HSPVAR_FLAG_STRUCT );
 	
 	// 変数 self による所有の終了
 	FlexValue_Release(self);
