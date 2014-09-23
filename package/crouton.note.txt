@@ -1,22 +1,30 @@
-﻿
-	crouton - hsp3 integral hpi
-	
-	@ member: call, opex, var_assoc, var_vector
-	
-2014.09.23 (Tue)
-	・vector: var 参照を持つ要素に内部変数の添字を与えたら、「配列・関数として使用できない型です」(HSPERR_INVALID_ARRAY)エラーを出すようにした。
+﻿crouton - hsp3 integral hpi
 
-2014.09.21 (Sun)
-	・obsidian → crouton に改名した。
-	・git/github でバージョン管理するようにした。
+＠メンバー
 
-2012.09.24 (Mon)
-	
-2012.09.23 (Sun)
-	・作成。
-	・apply, arguments
-	・Vector: map, fold(L/R), unfold(L/R), filter
-	
+call, opex, var_assoc, var_vector
+
+＠履歴
+－2014.09.24 (Wed)
+
+－2014.09.23 (Tue)
+
+・vector: var 参照を持つ要素に内部変数の添字を与えたら、「配列・関数として使用できない型です」(HSPERR_INVALID_ARRAY)エラーを出すようにした。
+・label に比較演算を定義するようにした。
+	call_defineLabelComparison
+・opex: 変数型の名前を取得するコマンド、vtname() を追加した。
+
+－2014.09.21 (Sun)
+
+・obsidian → crouton に改名した。
+・git/github でバージョン管理するようにした。
+
+－2012.09.23 (Sun)
+
+・作成。
+・apply, arguments
+・Vector: map, fold(L/R), unfold(L/R), filter
+
 ＠memo
 
 
@@ -35,7 +43,7 @@
 ・スクリプト側で、今実行されているのが call による呼び出しかどうかを確認する方法。
 
 その他
-opex: varname, labelname (for debug)
+opex: labelname (for debug; CAxを使う or めんどくさい)
 call:
 	vectorを引数列として展開
 	可変長引数にvectorを直接渡す、

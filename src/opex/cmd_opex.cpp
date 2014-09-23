@@ -378,6 +378,24 @@ int exprs( PDAT** ppResult )
 }
 
 //------------------------------------------------
+// 変数型の名前
+//------------------------------------------------
+extern int vtname(PDAT** ppResult)
+{
+	int const vtype = code_get_vartype(HSPVAR_FLAG_NONE);
+
+	if ( !(HSPVAR_FLAG_NONE < vtype && vtype < HSPVAR_FLAG_USERDEF + ctx->hsphed->max_varhpi) ) {
+		puterror(HSPERR_ILLEGAL_FUNCTION);
+	}
+
+	*ppResult = VtTraits::asPDAT<vtStr>(getHvp(vtype)->vartype_name);
+	return HSPVAR_FLAG_STR;
+}
+
+//------------------------------------------------
+// 
+//------------------------------------------------
+//------------------------------------------------
 // 
 //------------------------------------------------
 

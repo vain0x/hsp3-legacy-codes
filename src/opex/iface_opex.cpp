@@ -14,29 +14,6 @@
 
 using namespace hpimod;
 
-static int   ProcSttmCmd( int cmd );
-static int   ProcFuncCmd( int cmd, PDAT** ppResult );
-static int ProcSysvarCmd( int cmd, PDAT** ppResult );
-
-//##########################################################
-//        HPI処理
-//##########################################################
-//------------------------------------------------
-// HPI登録関数
-//------------------------------------------------
-EXPORT void WINAPI hsp3typeinfo_opex( HSP3TYPEINFO* info )
-{
-	hsp3sdk_init( info );
-
-	info->cmdfunc  = cmdfunc<ProcSttmCmd>;
-	info->reffunc  = reffunc<ProcFuncCmd, ProcSysvarCmd>;
-	//info->termfunc = termfunc;
-	return;
-}
-
-//##########################################################
-//        コマンド処理
-//##########################################################
 //------------------------------------------------
 // 命令
 //------------------------------------------------
@@ -77,6 +54,8 @@ static int ProcFuncCmd( int cmd, PDAT** ppResult )
 
 		case 0x106: return exprs( ppResult );
 
+		case 0x110: return vtname(ppResult);
+
 		default:
 			puterror( HSPERR_UNSUPPORTED_FUNCTION );
 	}
@@ -95,4 +74,17 @@ static int ProcSysvarCmd( int cmd, PDAT** ppResult )
 			puterror( HSPERR_UNSUPPORTED_FUNCTION );
 	}
 	return 0;
+}
+
+//------------------------------------------------
+// HPI登録関数
+//------------------------------------------------
+EXPORT void WINAPI hsp3typeinfo_opex(HSP3TYPEINFO* info)
+{
+	hsp3sdk_init(info);
+
+	info->cmdfunc = cmdfunc<ProcSttmCmd>;
+	info->reffunc = reffunc<ProcFuncCmd, ProcSysvarCmd>;
+	//info->termfunc = termfunc;
+	return;
 }

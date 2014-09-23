@@ -28,6 +28,9 @@ extern int what(PDAT** ppResult);
 
 extern int exprs( PDAT** ppResult );
 
+extern int vtname(PDAT** ppResult);
+//extern int labelname(PDAT** ppResult);
+
 extern int kw_constptr( PDAT** ppResult );
 
 // 定数
