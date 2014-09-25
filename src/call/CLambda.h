@@ -1,5 +1,5 @@
 ﻿// ラムダ関数クラス
-#if 0
+
 #ifndef IG_CLASS_LAMBDA_FUNC_H
 #define IG_CLASS_LAMBDA_FUNC_H
 
@@ -7,13 +7,10 @@
 #include <vector>
 #include <memory>
 
-#include "CCaller.h"
+#include "Invoker.h"
 #include "CHspCode.h"
 #include "CPrmInfo.h"
 #include "IFunctor.h"
-
-class CLambda;
-using myfunc_t = CLambda*;
 
 class CLambda
 	: public IFunctor
@@ -21,33 +18,26 @@ class CLambda
 	// メンバ変数
 private:
 	// 自作関数の本体コード、仮引数
-	std::unique_ptr<CHspCode> mpBody;		
-	std::unique_ptr<CPrmInfo> mpPrmInfo;
+	std::unique_ptr<CHspCode> body_;		
+	std::unique_ptr<CPrmInfo> prms_;
 
 	// 生成環境の実引数を保存するもの
-	std::unique_ptr<CCaller> mpArgCloser;
+	vector_t capturer_;
 
 	// 構築
-private:
+public:
 	CLambda();
 
-	CCaller* argCloser();
+	CHspCode const& getBody() const { assert(body_); return *body_; }
+	CPrmInfo const& getPrmInfo() const override;
+	hpimod::label_t getLabel() const override;
 
-public:
-	void call( CCaller& caller );
+	int getUsing() const override { return 1; }
 
+	void call( Caller& caller ) override;
+
+private:
 	void code_get();
-
-	CHspCode const& getBody()    const { return *mpBody; }
-	CPrmInfo const& getPrmInfo() const;
-	label_t         getLabel()   const;
-
-	int getUsing() const { return 1; }
-
-	// ラッパー
-	static myfunc_t New();
 };
-
-#endif
 
 #endif

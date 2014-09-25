@@ -30,6 +30,10 @@ call, opex, var_assoc, var_vector
 
 
 ＠wish
+
+PrmStk を操作するインターフェースクラスの再考
+
+
 ・call の拡張的関数子の実装
 	knowbug 文字列化の実装
 ・call/structWrap, methodWrap の実装
@@ -45,6 +49,7 @@ call, opex, var_assoc, var_vector
 
 issues
 ・argbind: flex 引数に nobind を与えることができない。
+・unbind などの一時オブジェクトでないオブジェクトを返す関数を何らかの方法で再実装
 
 その他
 opex: labelname (for debug; CAxを使う or めんどくさい)
@@ -53,3 +58,5 @@ call:
 f(bycomposite g) = f○g
 既定引数
 束縛を再帰的に解除する仕様？
+lambda の命令版
+内部から lambda を生成する

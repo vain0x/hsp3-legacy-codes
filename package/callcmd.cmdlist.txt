@@ -76,10 +76,10 @@ HpiCmdlistBegin;
 	HpiCmdS__(0x141, streamCallerAdd);
 	HpiCmd_F_(0x160, coCreate);
 	HpiCmdS__(0x161, coYield_);
+#endif
 	HpiCmd_F_(0x170, lambda);
 	HpiCmdS__(0x171, lambdaBody_);
 	HpiCmd_F_(0x172, lambdaValue_);
-#endif
 
 	HpiCmdlistSectionEnd;
 

@@ -51,7 +51,8 @@
 
 ;#cmd VectorNull        0x200		// null オブジェクト
 
-//######## 置換マクロ ######################################
+// 置換マクロ
+
 ;#define global VectorInit(%1, %2 = "", %3 = 4) VectorDim %1(%2), %3
 
 #define global VectorReturn(%1) return VectorResult(%1)
@@ -63,16 +64,16 @@
 #define global VectorEnqueue VecotrPushBack
 #define global VectorDequeue VectorPopFront
 
-#define global ctype VectorVartype(%1) VectorInfo(%1, VarInfo_Flag)
-#define global ctype VectorVarmode(%1) VectorInfo(%1, VarInfo_Mode)
-#define global ctype VectorLen0(%1)    VectorInfo(%1, VarInfo_Len0)
-#define global ctype VectorLen1(%1)    VectorInfo(%1, VarInfo_Len1)
-#define global ctype VectorLen2(%1)    VectorInfo(%1, VarInfo_Len2)
-#define global ctype VectorLen3(%1)    VectorInfo(%1, VarInfo_Len3)
-#define global ctype VectorLen4(%1)    VectorInfo(%1, VarInfo_Len4)
-;#define global ctype VectorSize(%1)    VectorInfo(%1, VarInfo_Size)
-#define global ctype VectorPtr(%1)     VectorInfo(%1, VarInfo_Ptr)
-#define global ctype VectorMaster(%1)  VectorInfo(%1, VarInfo_Master)
+#define global ctype VectorVartype(%1) VectorInfo(%1, VarInfo_Flag@)
+#define global ctype VectorVarmode(%1) VectorInfo(%1, VarInfo_Mode@)
+#define global ctype VectorLen0(%1)    VectorInfo(%1, VarInfo_Len0@)
+#define global ctype VectorLen1(%1)    VectorInfo(%1, VarInfo_Len1@)
+#define global ctype VectorLen2(%1)    VectorInfo(%1, VarInfo_Len2@)
+#define global ctype VectorLen3(%1)    VectorInfo(%1, VarInfo_Len3@)
+#define global ctype VectorLen4(%1)    VectorInfo(%1, VarInfo_Len4@)
+;#define global ctype VectorSize(%1)    VectorInfo(%1, VarInfo_Size@)
+#define global ctype VectorPtr(%1)     VectorInfo(%1, VarInfo_Ptr@)
+#define global ctype VectorMaster(%1)  VectorInfo(%1, VarInfo_Master@)
 
 #define global VectorLen VectorLen1
 
@@ -80,30 +81,14 @@
 ;#define global ctype VectorSliceOut(%1, %2, %3) (VectorSlice(%1, , %2) + VectorSlice(%1, %3, ))
 ;#define global ctype VectorReplace(%1, %2, %3, %4) (VectorSlice(%1, , %2) + (%4) + VectorSlice(%1, %3, ))
 
-//######## 定数・マクロ ####################################
+// 定数・マクロ
+
 #define global VectorVtName "vector_k"
 #define global VectorLast (-0x031EC10A)
 #define global VectorEnd  (-0x031EC10B)
 
-// 定数
-#ifndef VarInfo
-#define VarInfo
- #enum global VarInfo_None = 0
- #enum global VarInfo_Flag = VarInfo_None
- #enum global VarInfo_Mode
- #enum global VarInfo_Len0
- #enum global VarInfo_Len1
- #enum global VarInfo_Len2
- #enum global VarInfo_Len3
- #enum global VarInfo_Len4
- #enum global VarInfo_SIZE
- #enum global VarInfo_PT
- #enum global VarInfo_Master
- #enum global VarInfo_MAX
-#endif
+// モジュール
 
-//######## モジュール ######################################
-//*
 #module __vector_mod
 
 // @static
@@ -130,6 +115,5 @@
 	VectorReturn it()
 	
 #global
-//*/
 
 #endif

@@ -3,7 +3,7 @@
 
 #include "hsp3plugin_custom.h"
 
-using prmtype_t = int;
+using prmtype_t = short;
 
 extern prmtype_t code_get_prmtype(prmtype_t _default);
 

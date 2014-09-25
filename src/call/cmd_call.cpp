@@ -544,35 +544,32 @@ int FunctorCmd::unBind( PDAT** ppResult )
 #endif
 }
 
-#if 0
 //------------------------------------------------
 // ラムダ式
 // 
-// @ funcexpr(args...) → function() { lambdaBody args... : return }
+// lambda(args..., result) → function() {
+//     lambdaBody_ args... : call_setResult_ result : return
+// }
 //------------------------------------------------
-int CallCmd::lambda( PDAT** ppResult )
+int FunctorCmd::lambda( PDAT** ppResult )
 {
-	auto const lambda = CLambda::New();
-
-	lambda->code_get();
-
-	return SetReffuncResult( ppResult, functor_t::make(lambda) );
+	return SetReffuncResult( ppResult, functor_t::makeDerived<CLambda>() );
 }
 
 //------------------------------------------------
 // lambda が内部で用いるコマンド
 // 
-// @ LambdaBody:
+// @ LambdaBody_:
 // @	引数を順に取り出し、それぞれを local 変数に代入していく。
 // @	最後の引数は返値として受け取る。
 // @	ゆえに、この命令の引数は必ず (local 変数の数 + 1) 存在する。
-// @ LambdaValue:
-// @	idx 番目の local 変数を取り出す。
+// @ LambdaValue_:
+// @	idx 番目の local 変数の値を取り出す。現状 localVal に等しい。
 //------------------------------------------------
-void CallCmd::lambdaBody()
+void FunctorCmd::lambdaBody_()
 {
 	auto& caller = Caller::top();
-	size_t const cntLocals = caller.getPrmInfo().cntLocals();
+	size_t const cntLocals = caller.getPrms().cntLocals();
 
 	for ( size_t i = 0; i < cntLocals; ++ i ) {
 		int const chk = code_getprm();
@@ -581,10 +578,16 @@ void CallCmd::lambdaBody()
 		PVal_assign( pvLocal, mpval->pt, mpval->flag );
 	}
 
-	CallCmd::retval();
+	CallCmd::call_setResult_();
 	return;
 }
 
+int FunctorCmd::lambdaValue_(PDAT** ppResult)
+{
+	return CallCmd::localVal(ppResult);
+}
+
+#if 0
 //------------------------------------------------
 // コルーチン::生成
 //------------------------------------------------

@@ -43,9 +43,9 @@ public:
 	// 構築
 	//--------------------------------------------
 	CPrmInfo() : CPrmInfo(nullptr) { }
-	CPrmInfo(prmlist_t const* pPrmlist);
 
-	CPrmInfo(prmlist_t&& prmlist) : CPrmInfo(&prmlist) { }
+	explicit CPrmInfo(prmlist_t const* pPrmlist);
+	explicit CPrmInfo(prmlist_t&& prmlist) : CPrmInfo(&prmlist) { }
 #if 0
 	CPrmInfo(CPrmInfo&&) = default;
 #else

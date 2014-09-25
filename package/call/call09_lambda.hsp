@@ -1,0 +1,22 @@
+#include "../crouton.as"
+
+// ラムダ関数(λ(lambda) function)
+
+// 関数：lambda(exprs..., return_value)
+// 「exprs..., return_value を順番に実行して、最後の値を返す」という関数を作る。
+
+	// 「greet()」を実行する関数を返す
+	lmbGreeter = lambda( greet() )
+	
+	mes "lmbGreeter = { return greet() }"
+	
+	// lmbGreeter を実行する
+	mes "lmbGreeter() = " + lmbGreeter()
+	
+	stop
+	
+	
+#defcfunc greet
+	mes "Hello, world!"
+	return "Hello."
+	

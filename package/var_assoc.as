@@ -44,11 +44,19 @@
 ;#define global AssocNewCom(%1, %2, %3 = 0, %4 = 0) newcom _temp_com@assoc_mod, %2, %3, %4 : %1 = _temp_com@assoc_mod
 ;#define global AssocDelCom(%1) delcom AssocRef(%1)
 
-#define global ctype AssocVarType(%1) AssocInfo(%1, VARINFO_FLAG)
-#define global ctype AssocVarMode(%1) AssocInfo(%1, VARINFO_MODE)
-#define global ctype AssocLen(%1,%2=0)AssocInfo(%1, VARINFO_LEN, %2)
-;#define global ctype AssocSize(%1)    AssocInfo(%1, VARINFO_SIZE)		// AssocSize (要素数) と衝突
-#define global ctype AssocPtr(%1)     AssocInfo(%1, VARINFO_PT)
+/*
+#define global ctype AssocVarType(%1) AssocInfo(%1, VarInfo_Flag@)
+#define global ctype AssocVarMode(%1) AssocInfo(%1, VarInfo_Mode@)
+#define global ctype AssocLen0(%1) AssocInfo(%1, VarInfo_Len0@)
+#define global ctype AssocLen1(%1) AssocInfo(%1, VarInfo_Len1@)
+#define global ctype AssocLen2(%1) AssocInfo(%1, VarInfo_Len2@)
+#define global ctype AssocLen3(%1) AssocInfo(%1, VarInfo_Len3@)
+#define global ctype AssocLen4(%1) AssocInfo(%1, VarInfo_Len4@)
+//#define global ctype AssocSize(%1) AssocInfo(%1, VarInfo_Size@)		// AssocSize (要素数) と衝突
+#define global ctype AssocPtr(%1)     AssocInfo(%1, VarInfo_Pt@)
+
+#define global AssocLen AssocLen1
+//*/
 
 #define global AssocForeach(%1, %2 = key_) %tAssocForeach repeat : if ( AssocForeachNext(%1, %2, cnt) ) {
 #define global AssocForeachEnd %tAssocForeach } else { break } loop
@@ -59,19 +67,6 @@
 #define global AssocVtName "assoc_k"
 #define global AssocIndexBak //
 #define global AssocIndexFullslice , 0xFABC0000
-
-// 定数
-#ifndef VARINFO
-#define VARINFO
- #enum global VARINFO_NONE = 0
- #enum global VARINFO_FLAG = VARINFO_NONE
- #enum global VARINFO_MODE
- #enum global VARINFO_LEN
- #enum global VARINFO_SIZE
- #enum global VARINFO_PT
- #enum global VARINFO_MASTER
- #enum global VARINFO_MAX
-#endif
 
 //######## モジュール ######################################
 #module __assoc

@@ -329,6 +329,32 @@ bool ArgBinder::code_get_nextArgument()
 	return true;
 }
 
+#if 0
+vector_t ArgBinder::code_get_flex()
+{
+	vector_t vec {};
+	for ( ;; ) {
+		auto&& result = my_code_getarg(PrmType::Any);
+
+		using Sty = CodeGetArgResult::Style;
+		switch ( result.getStyle() ) {
+			case Sty::End: return std::move(vec);
+			case Sty::Default: break;
+
+			case Sty::ByVal: vec->push_back(ManagedVarData(result.getValptr(), result.getVartype())); break;
+			case Sty::ByRef: vec->push_back(ManagedVarData(result.getPVal(), result.getPVal()->offset)); break;
+			case Sty::ByFlex: dbgout("未実装"); puterror(HSPERR_UNSUPPORTED_FUNCTION);
+
+			case Sty::ByThismod: puterror(HSPERR_UNSUPPORTED_FUNCTION);
+			case Sty::NoBind: 
+				//
+			default: assert(false);
+		}
+		//assert(code_isNextArg());
+	}
+}
+#endif
+
 //------------------------------------------------
 // 
 //------------------------------------------------

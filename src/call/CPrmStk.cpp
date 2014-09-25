@@ -107,27 +107,6 @@ void CPrmStk::pushThismod(PVal* pval, APTR aptr)
 }
 
 //------------------------------------------------
-// キャプチャ引数
-//
-// ラムダ関数が内部的に持つキャプチャリストを流し込む
-// prmstk はこれらの ManagedVarData を所有しない
-//------------------------------------------------
-void CPrmStk::importCaptures(vector_t const& captured)
-{
-	assert(hasFinalized());
-	assert(prminfo_.cntCaptures() == captured->size());
-
-	for ( size_t i = 0; i < captured->size(); ++i ) {
-		auto const vardata = peekCaptureAt(i);
-		auto const& iter = captured->at(i);
-
-		assert(!vardata->pval);
-		*vardata = { iter.getPVal(), iter.getAptr() };
-	}
-	return;
-}
-
-//------------------------------------------------
 // 一般、値渡し
 //------------------------------------------------
 void CPrmStk::pushArgByVal(PDAT const* pdat, vartype_t vtype)
@@ -477,6 +456,29 @@ void CPrmStk::merge(CPrmStk const& src, CBound& boundfunc, CPrmStk& argsMerged)
 	assert(cntArgs() == src.cntArgs());
 	
 	pushFinalsFrom(src);
+	return;
+}
+
+//------------------------------------------------
+// キャプチャ引数
+//
+// ラムダ関数が内部的に持つキャプチャリストを流し込む
+// prmstk はこれらの ManagedVarData を所有しない
+//
+// for CLambda
+//------------------------------------------------
+void CPrmStk::importCaptures(vector_t const& captured)
+{
+	assert(hasFinalized());
+	assert(prminfo_.cntCaptures() == captured->size());
+
+	for ( size_t i = 0; i < captured->size(); ++i ) {
+		auto const vardata = peekCaptureAt(i);
+		auto const& iter = captured->at(i);
+
+		assert(!vardata->pval);
+		*vardata = { iter.getPVal(), iter.getAptr() };
+	}
 	return;
 }
 

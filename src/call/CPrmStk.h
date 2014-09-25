@@ -96,11 +96,15 @@ private:
 	void incCntArgs() { ++cntArgs_; }
 
 public:
-	// copy/move semantics
+	// copy/move/swap
 	CPrmStk(CPrmStk const& src);
-	CPrmStk& operator=(CPrmStk const& src) { this->~CPrmStk(); new(this) CPrmStk(src); }
 	CPrmStk(CPrmStk&& src);
-	CPrmStk& operator=(CPrmStk&& src) { this->~CPrmStk(); new(this) CPrmStk(std::move(src)); }
+
+	// (todo: prminfo_ can't be swapped)
+	CPrmStk& swap(CPrmStk& rhs) _NOEXCEPT;
+
+	//CPrmStk& operator=(CPrmStk rhs) { this->swap(rhs); }
+	CPrmStk& operator =(CPrmStk&& rhs) { this->~CPrmStk(); new(this) CPrmStk(std::move(rhs)); return *this; }
 
 public:
 	//------------------------------------------------

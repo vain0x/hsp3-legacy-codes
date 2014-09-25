@@ -115,6 +115,7 @@ public:
 	void code_get_arguments();
 private:
 	bool code_get_nextArgument();
+	vector_t code_get_flex();
 };
 
 #endif

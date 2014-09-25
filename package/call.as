@@ -3,8 +3,6 @@
 #ifndef        IG_IMPORT_HEADER_CALL_AS
 #define global IG_IMPORT_HEADER_CALL_AS
 
-#include "../crouton.as"
-
 #define HPI_CALL_VERSION 1.3	// last update: 
 
 ;#define IF_CALL_HPI_RELEASE

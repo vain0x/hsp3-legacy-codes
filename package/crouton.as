@@ -21,6 +21,8 @@
 #define STR_VAR_VECTOR_HPI_PATH STR_CROUTON_HPI_PATH
 #define STR_OPEX_HPI_PATH       STR_CROUTON_HPI_PATH
 
+#include "crouton_internal.as"
+
 #include "call.as"
 ;#include "call_modcls.as"
 ;#include "mod_operator.as"
