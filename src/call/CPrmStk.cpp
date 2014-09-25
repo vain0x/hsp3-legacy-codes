@@ -7,18 +7,97 @@
 using namespace hpimod;
 
 //------------------------------------------------
+// private members
+//------------------------------------------------
+struct CPrmStk::Impl
+{
+	//CPrmStk* this_;
+
+	CPrmInfo const& prminfo_;
+
+	CPrmStkNative prmstk_;
+
+	// 現在、追加された実引数の個数 (flex は除く)
+	size_t cntArgs_;
+
+	// 終端部が追加されたか否か
+	bool finalized_;
+
+public:
+	static header_t& getHeader(void* prmstk) {
+		return reinterpret_cast<header_t*>(prmstk)[-1];
+	}
+
+	void* getOwnerPtr() { return &getHeader(prmstk_.get()); }
+	void incCntArgs() { ++cntArgs_; }
+};
+
+//------------------------------------------------
+// こまごました public 関数
+//------------------------------------------------
+CPrmInfo const& CPrmStk::getPrmInfo() const
+{
+	return p_->prminfo_;
+}
+
+prmtype_t CPrmStk::getNextPrmType() const
+{
+	return getPrmInfo().getPrmType(cntArgs());
+}
+
+CPrmStkNative const& CPrmStk::getPrmStk() const
+{
+	return p_->prmstk_;
+}
+
+void* CPrmStk::getPrmStkPtr()
+{
+	return getPrmStk().get();
+}
+
+size_t CPrmStk::cntArgs() const
+{
+	return p_->cntArgs_;
+}
+
+bool CPrmStk::hasFinalized() const {
+	return p_->finalized_;
+}
+
+//------------------------------------------------
 // 構築
 //------------------------------------------------
 CPrmStk::CPrmStk(CPrmInfo const& prminfo)
-	: super_t(hspmalloc(prminfo.getStackSize() + headerSize) + headerSize, prminfo.getStackSize() + headerSize)
-	, prminfo_ { prminfo }
-	, cntArgs_ { 0 }
-	, finalized_ { false }
+	: p_ { new Impl {
+		prminfo,
+		{ hspmalloc(prminfo.getStackSize() + headerSize) + headerSize, prminfo.getStackSize() + headerSize },
+		0,
+		false
+	} }
 {
-	std::memset(getptr(), 0x00, capacity());
+	std::memset(getPrmStkPtr(), 0x00, getPrmStk().capacity());
 
-	getHeader(super_t::getptr()).magicCode = MagicCode;
+	getHeader(getPrmStkPtr()).magicCode = MagicCode;
 }
+
+//------------------------------------------------
+// 単純な値の push
+//------------------------------------------------
+template<typename VtTag>
+void CPrmStk::pushValue(PDAT const* pdat)
+{
+	assert(!hasFinalized());
+	prmtype_t const prmtype = getNextPrmType();
+	assert(prmtype == VtTraits::Impl::vartype<VtTag>() && prmtype != HSPVAR_FLAG_STR);
+
+	p_->incCntArgs();
+	getPrmStk().pushValue(VtTraits::derefValptr<VtTag>(pdat));
+	return;
+}
+
+template void CPrmStk::pushValue<vtLabel>(PDAT const* pdat);
+template void CPrmStk::pushValue<vtDouble>(PDAT const* pdat);
+template void CPrmStk::pushValue<vtInt>(PDAT const* pdat);
 
 //------------------------------------------------
 // 文字列値のプッシュ
@@ -29,9 +108,9 @@ void CPrmStk::pushString(char const* src)
 {
 	assert(!hasFinalized());
 	assert(getNextPrmType() == HSPVAR_FLAG_STR);
-	incCntArgs();
+	p_->incCntArgs();
 
-	char** const p = allocValue<char*>();
+	char** const p = getPrmStk().allocValue<char*>();
 	size_t const len = std::strlen(src);
 	size_t const size = len * sizeof(char) + 1;
 	*p = hspmalloc(size);
@@ -49,10 +128,10 @@ void CPrmStk::pushAnyByVal(PDAT const* pdat, vartype_t vtype)
 	int const prmtype = getNextPrmType();
 	assert(prmtype == PrmType::Any || PrmType::isExtendedVartype(prmtype));
 
-	incCntArgs();
+	p_->incCntArgs();
 	hpimod::ManagedPVal pval;
 	hpimod::PVal_assign(pval.valuePtr(), pdat, vtype);
-	super_t::pushPVal(pval.valuePtr(), 0);
+	getPrmStk().pushPVal({ pval.valuePtr(), 0 });
 	pval.incRef();	// prmstk による所有
 	return;
 }
@@ -65,8 +144,8 @@ void CPrmStk::pushAnyByRef(PVal* pval, APTR aptr)
 	assert(!hasFinalized());
 	assert(getNextPrmType() == PrmType::Any);
 
-	incCntArgs();
-	super_t::pushPVal(pval, aptr);
+	p_->incCntArgs();
+	getPrmStk().pushPVal({ pval, aptr });
 	return;
 }
 
@@ -78,8 +157,8 @@ void CPrmStk::pushPVal(PVal* pval, APTR aptr)
 	assert(!hasFinalized());
 	assert(getNextPrmType() == PrmType::Var);
 
-	incCntArgs();
-	super_t::pushPVal(pval, aptr);
+	p_->incCntArgs();
+	getPrmStk().pushPVal({ pval, aptr });
 	return;
 }
 
@@ -88,8 +167,8 @@ void CPrmStk::pushPVal(PVal* pval)
 	assert(!hasFinalized());
 	assert(getNextPrmType() == PrmType::Array);
 
-	incCntArgs();
-	super_t::pushPVal(pval, 0);
+	p_->incCntArgs();
+	getPrmStk().pushPVal({ pval, 0 });
 	return;
 }
 
@@ -100,9 +179,9 @@ void CPrmStk::pushThismod(PVal* pval, APTR aptr)
 	if ( getNextPrmType() != PrmType::Modvar ) puterror(HSPERR_ILLEGAL_FUNCTION);
 	if ( pval->flag != HSPVAR_FLAG_STRUCT ) puterror(HSPERR_TYPE_MISMATCH);
 
-	incCntArgs();
+	p_->incCntArgs();
 	auto const fv = VtTraits::getValptr<vtStruct>(pval);
-	super_t::pushThismod(pval, aptr, FlexValue_getModuleTag(fv)->subid);
+	getPrmStk().pushThismod(pval, aptr, FlexValue_getModuleTag(fv)->subid);
 	return;
 }
 
@@ -195,18 +274,18 @@ void CPrmStk::allocArgNoBind(unsigned short priority)
 	size_t const size = PrmType::sizeOf(prmtype);
 	assert(size >= sizeof(unsigned short[2]));
 
-	incCntArgs();
-	auto const p = static_cast<unsigned short*>(allocBlank(size));
-	p[0] = priority;
-	p[1] = MagicCodeNoBind;
+	p_->incCntArgs();
+	auto const ptr = static_cast<unsigned short*>(getPrmStk().allocBlank(size));
+	ptr[0] = priority;
+	ptr[1] = MagicCodeNoBind;
 	return;
 }
 
-unsigned short* CPrmStk::peekArgNoBind(size_t idx) const
+unsigned short const* CPrmStk::peekArgNoBind(size_t idx) const
 {
 	assert(idx < cntArgs());
-	auto const p = reinterpret_cast<unsigned short*>(getArgPtrAt(idx));
-	return (p[1] == MagicCodeNoBind ? p : nullptr);
+	auto const ptr = reinterpret_cast<unsigned short const*>(getArgPtrAt(idx));
+	return (ptr[1] == MagicCodeNoBind ? ptr : nullptr);
 }
 
 //------------------------------------------------
@@ -215,18 +294,18 @@ unsigned short* CPrmStk::peekArgNoBind(size_t idx) const
 // @ any は参照渡しでも値を取る。配列なら (0) を返す。
 // @ 参照渡し引数は取り出さない。
 //------------------------------------------------
-PDAT* CPrmStk::peekValArgAt(size_t idx, vartype_t& vtype) const
+PDAT const* CPrmStk::peekValArgAt(size_t idx, vartype_t& vtype) const
 {
-	int const prmtype = prminfo_.getPrmType(idx);
-	auto const ptr = getArgPtrAt(idx);
+	int const prmtype = getPrmInfo().getPrmType(idx);
 	if ( PrmType::isNativeVartype(prmtype) ) {
+		auto const ptr = getArgPtrAt(idx);
 		vtype = prmtype;
 		return ( prmtype == HSPVAR_FLAG_STR )
-			? VtTraits::asPDAT<vtStr>(*reinterpret_cast<char**>(ptr))
-			: reinterpret_cast<PDAT*>(ptr);
+			? VtTraits::asPDAT<vtStr>(*reinterpret_cast<char const* const*>(ptr))
+			: reinterpret_cast<PDAT const*>(ptr);
 
 	} else if ( PrmType::isExtendedVartype(prmtype) || prmtype == PrmType::Any || prmtype == PrmType::Var ) {
-		auto& vardata = *reinterpret_cast<MPVarData*>(getArgPtrAt(idx));
+		auto& vardata = getPrmStk().peekPVal( getPrmInfo().getStackOffsetParam(idx) );
 		assert(vardata.aptr <= 0);
 		vtype = vardata.pval->flag;
 		return vardata.pval->pt;
@@ -239,28 +318,70 @@ PDAT* CPrmStk::peekValArgAt(size_t idx, vartype_t& vtype) const
 //------------------------------------------------
 // 参照渡し引数の参照
 //------------------------------------------------
-PVal* CPrmStk::peekRefArgAt(size_t idx) const
+PVal const* CPrmStk::peekRefArgAt(size_t idx) const
 {
-	int const prmtype = prminfo_.getPrmType(idx);
+	int const prmtype = getPrmInfo().getPrmType(idx);
 	switch ( prmtype ) {
 		case PrmType::Var:
 		case PrmType::Array:
 		case PrmType::Any:
 		{
-			auto& vardata = *reinterpret_cast<MPVarData*>(getArgPtrAt(idx));
+			auto& vardata = getPrmStk().peekPVal(getPrmInfo().getStackOffsetParam(idx));
 			assert(vardata.aptr >= 0);
 			vardata.pval->offset = vardata.aptr;
 			return vardata.pval;
 		}
 		case PrmType::Modvar:
 		{
-			auto& thismod = *reinterpret_cast<MPModVarData*>(getArgPtrAt(idx));
+			auto& thismod = getPrmStk().peekThismod(getPrmInfo().getStackOffsetParam(idx));
 			assert(thismod.magic == MODVAR_MAGICCODE);
 			thismod.pval->offset = thismod.aptr;
 			return thismod.pval;
 		}
 		default: puterror(HSPERR_VARIABLE_REQUIRED);
 	}
+}
+
+//------------------------------------------------
+// その他の引数の参照
+//------------------------------------------------
+ManagedVarData const CPrmStk::peekAnyAt(size_t idx) const
+{
+	assert(idx < cntArgs());
+	assert(getPrmInfo().getPrmType(idx) == PrmType::Any);
+	return hpimod::ManagedVarData { getPrmStk().peekPVal(getPrmInfo().getStackOffsetParam(idx)) };
+}
+
+MPVarData const* CPrmStk::peekCaptureAt(size_t idx) const
+{
+	assert(hasFinalized());
+	return &getPrmStk().peekValue<MPVarData>(getPrmInfo().getStackOffsetCapture(idx));
+}
+PVal const* CPrmStk::peekLocalAt(size_t idx) const
+{
+	assert(hasFinalized());
+	return &getPrmStk().peekValue<PVal>(getPrmInfo().getStackOffsetLocal(idx));
+}
+vector_t const* CPrmStk::peekFlex() const
+{
+	return (getPrmInfo().isFlex() && hasFinalized())
+		? &getPrmStk().peekValue<vector_t>(getPrmInfo().getStackOffsetFlex())
+		: nullptr;
+}
+
+//------------------------------------------------
+// スタックの参照
+//------------------------------------------------
+void const* CPrmStk::getOffsetPtr(size_t offset) const
+{
+	assert(offset <= getPrmStk().stackPos());
+	return &reinterpret_cast<char const*>(getPrmStk().get())[offset];
+}
+
+void const* CPrmStk::getArgPtrAt(size_t idx) const
+{
+	assert(idx < cntArgs());
+	return getOffsetPtr(getPrmInfo().getStackOffsetParam(idx));
 }
 
 //------------------------------------------------
@@ -273,32 +394,32 @@ void CPrmStk::finalize()
 	assert(!hasFinalized());
 
 	// 残りの数だけ既定引数を積む
-	for ( size_t i = cntArgs(); i < prminfo_.cntPrms(); ++i ) {
+	for ( size_t i = cntArgs(); i < getPrmInfo().cntPrms(); ++i ) {
 		pushArgByDefault();
 	}
 
 	// captures (only allocating)
-	for ( size_t i = 0; i < prminfo_.cntCaptures(); ++i ) {
-		assert(super_t::size() == getPrmInfo().getStackOffsetCapture(i));
-		super_t::pushPVal(nullptr, 0);
+	for ( size_t i = 0; i < getPrmInfo().cntCaptures(); ++i ) {
+		assert(getPrmStk().stackPos() == getPrmInfo().getStackOffsetCapture(i));
+		getPrmStk().pushPVal({ nullptr, 0 });
 	}
 
 	// locals
-	for ( size_t i = 0; i < prminfo_.cntLocals(); ++i ) {
-		assert(super_t::size() == getPrmInfo().getStackOffsetLocal(i));
-			PVal* const pval = super_t::allocLocal();
+	for ( size_t i = 0; i < getPrmInfo().cntLocals(); ++i ) {
+		assert(getPrmStk().stackPos() == getPrmInfo().getStackOffsetLocal(i));
+		PVal* const pval = getPrmStk().allocLocal();
 		hpimod::PVal_init(pval, HSPVAR_FLAG_INT);
 	}
 
 	// flex
-	if ( prminfo_.isFlex() ) {
-		assert(super_t::size() == getPrmInfo().getStackOffsetFlex());
-		vector_t* const vec = allocValue<vector_t>();
+	if ( getPrmInfo().isFlex() ) {
+		assert(getPrmStk().stackPos() == getPrmInfo().getStackOffsetFlex());
+		vector_t* const vec = getPrmStk().allocValue<vector_t>();
 		new(vec)vector_t {};
 	}
 
-	assert(super_t::size() == getPrmInfo().getStackSize());
-	finalized_ = true;
+	assert(getPrmStk().stackPos() == getPrmInfo().getStackSize());
+	p_->finalized_ = true;
 	return;
 }
 
@@ -314,7 +435,7 @@ void CPrmStk::free()
 
 	// スタック上の管理されたオブジェクトを解放する
 	for ( size_t i = 0; i < cntArgs(); ++i ) {
-		int const prmtype = prminfo_.getPrmType(i);
+		int const prmtype = getPrmInfo().getPrmType(i);
 			switch ( prmtype ) {
 			case HSPVAR_FLAG_STR:
 			{
@@ -334,10 +455,10 @@ void CPrmStk::free()
 	}
 
 	if ( hasFinalized() ) {
-		for ( size_t i = 0; i < prminfo_.cntCaptures(); ++i ) {
+		for ( size_t i = 0; i < getPrmInfo().cntCaptures(); ++i ) {
 			ManagedPVal::ofValptr(peekCaptureAt(i)->pval).decRef();
 		}
-		for ( size_t i = 0; i < prminfo_.cntLocals(); ++i ) {
+		for ( size_t i = 0; i < getPrmInfo().cntLocals(); ++i ) {
 			PVal* const pval = peekLocalAt(i);
 			PVal_free(pval);
 		}
@@ -346,7 +467,7 @@ void CPrmStk::free()
 		}
 	}
 
-	hspfree(getOwnerPtr());
+	hspfree(p_->getOwnerPtr());
 }
 
 //------------------------------------------------
@@ -364,11 +485,6 @@ CPrmStk::CPrmStk(CPrmStk const& src)
 	return;
 }
 
-CPrmStk::CPrmStk(CPrmStk&& src)
-	: prminfo_(src.getPrmInfo())
-	, CPrmStkCreator(std::move(src))
-{ }
-
 //------------------------------------------------
 // prmstk 上の値の push
 //
@@ -376,8 +492,11 @@ CPrmStk::CPrmStk(CPrmStk&& src)
 // src の idxSrc 番目の実引数を push する。
 // それが nobind なら、対応する実引数を argsManeged から取り出して push する。
 //------------------------------------------------
-void CPrmStk::pushArgFromPrmStk(CPrmStk const& src, size_t idxSrc, CBound* boundfunc, CPrmStk* argsMerged)
+void CPrmStk::pushArgFromPrmStk(CPrmStk const& _src, size_t idxSrc, CBound* boundfunc, CPrmStk* argsMerged)
 {
+	// (todo: 各 peek 関数の、const へのポインタを返すバージョンを作る)
+	CPrmStk& src = const_cast<CPrmStk&>(_src);
+
 	auto const prmtype = getNextPrmType();
 	auto const srcPrmtype = src.getPrmInfo().getPrmType(idxSrc);
 
@@ -418,8 +537,10 @@ void CPrmStk::pushArgFromPrmStk(CPrmStk const& src, size_t idxSrc, CBound* bound
 	return;
 }
 
-void CPrmStk::pushFinalsFrom(CPrmStk const& src)
+void CPrmStk::pushFinalsFrom(CPrmStk const& _src)
 {
+	CPrmStk& src = const_cast<CPrmStk&>(_src);
+
 	if ( src.hasFinalized() ) {
 		finalize();
 
@@ -445,6 +566,8 @@ void CPrmStk::pushFinalsFrom(CPrmStk const& src)
 }
 
 //------------------------------------------------
+// 実引数列の merge
+// 
 // for CBound
 //------------------------------------------------
 void CPrmStk::merge(CPrmStk const& src, CBound& boundfunc, CPrmStk& argsMerged)
@@ -470,7 +593,7 @@ void CPrmStk::merge(CPrmStk const& src, CBound& boundfunc, CPrmStk& argsMerged)
 void CPrmStk::importCaptures(vector_t const& captured)
 {
 	assert(hasFinalized());
-	assert(prminfo_.cntCaptures() == captured->size());
+	assert(getPrmInfo().cntCaptures() == captured->size());
 
 	for ( size_t i = 0; i < captured->size(); ++i ) {
 		auto const vardata = peekCaptureAt(i);

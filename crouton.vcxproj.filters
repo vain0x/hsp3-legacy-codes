@@ -136,9 +136,6 @@
     <ClInclude Include="src\call\CPrmStk.h">
       <Filter>call_core</Filter>
     </ClInclude>
-    <ClInclude Include="src\call\CPrmStkCreator.h">
-      <Filter>call_core</Filter>
-    </ClInclude>
     <ClInclude Include="src\call\Invoker.h">
       <Filter>call_core</Filter>
     </ClInclude>
@@ -198,6 +195,9 @@
     </ClInclude>
     <ClInclude Include="..\hpimod\vartype_traits.h">
       <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="src\call\CPrmStkNative.h">
+      <Filter>call_core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

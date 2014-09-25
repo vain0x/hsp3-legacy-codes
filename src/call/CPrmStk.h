@@ -19,14 +19,15 @@ todo: ManagedBuffer (strbuf ポインタを参照カウンタ方式で管理)
 todo: 引数取り出し部分(Caller)と2重で prmtype を参照するのがもったいない感じ。
 //*/
 
-#ifndef IG_CLASS_PARAMETER_STACK_CREATOR_MANAGED_H
-#define IG_CLASS_PARAMETER_STACK_CREATOR_MANAGED_H
+#ifndef IG_CLASS_PARAMETER_STACK_MANAGED_H
+#define IG_CLASS_PARAMETER_STACK_MANAGED_H
 
 #include <vector>
+#include <memory>
 
 #include "hsp3plugin_custom.h"
 #include "CPrmInfo.h"
-#include "CPrmStkCreator.h"
+#include "CPrmStkNative.h"
 #include "ManagedPVal.h"
 
 #include "../var_vector/vt_vector.h"
@@ -49,18 +50,10 @@ using arguments_t = CPrmStk;
 // 高級な prmstk 
 //------------------------------------------------
 class CPrmStk
-	: private CPrmStkCreator
 {
 private:
-	CPrmInfo const& prminfo_;
-
-	// 現在、追加された実引数の個数 (flex は除く)
-	size_t cntArgs_;
-
-	// 終端部が追加されたか否か
-	bool finalized_;
-
-	using super_t = CPrmStkCreator;
+	struct Impl;
+	std::shared_ptr<Impl> p_;
 
 	// ヘッダ
 	struct header_t {
@@ -74,37 +67,24 @@ public:
 	CPrmStk(CPrmInfo const& prminfo);
 	~CPrmStk() { free(); }
 
-	CPrmInfo const& getPrmInfo() const { return prminfo_; }
-	int getNextPrmType() const {
-		return prminfo_.getPrmType(cntArgs());
-	}
-	size_t cntArgs() const { return cntArgs_; }
-	bool hasFinalized() const { return finalized_; }
+	CPrmInfo const& getPrmInfo() const;
+	prmtype_t getNextPrmType() const;
+	CPrmStkNative const& getPrmStk() const;
+	void* getPrmStkPtr();
+	size_t cntArgs() const;
+	bool hasFinalized() const;
 
-	void* getPrmStkPtr() { return super_t::getptr(); }
-	void const* getPrmStkPtr() const { return super_t::getptr(); }
+	CPrmStkNative& getPrmStk() { return const_cast<CPrmStkNative&>(static_cast<CPrmStk const*>(this)->getPrmStk()); }
 
-	static bool hasMagicCode(void* prmstk) {
-		return (getHeader(prmstk).magicCode == MagicCode);
-	}
-private:
-	static header_t& getHeader(void* prmstk) {
-		return reinterpret_cast<header_t*>(prmstk)[-1];
-	}
-
-	void* getOwnerPtr() { return &getHeader(getPrmStkPtr()); }
-	void incCntArgs() { ++cntArgs_; }
-
+	static header_t& getHeader(void* prmstk) { return reinterpret_cast<header_t*>(prmstk)[-1]; }
+	static bool hasMagicCode(void* prmstk) { return (getHeader(prmstk).magicCode == MagicCode); }
 public:
 	// copy/move/swap
-	CPrmStk(CPrmStk const& src);
-	CPrmStk(CPrmStk&& src);
+	CPrmStk(CPrmStk const& rhs);
+	CPrmStk(CPrmStk&& rhs) : p_ { std::move(rhs.p_) } { }
 
-	// (todo: prminfo_ can't be swapped)
-	CPrmStk& swap(CPrmStk& rhs) _NOEXCEPT;
-
-	//CPrmStk& operator=(CPrmStk rhs) { this->swap(rhs); }
-	CPrmStk& operator =(CPrmStk&& rhs) { this->~CPrmStk(); new(this) CPrmStk(std::move(rhs)); return *this; }
+	CPrmStk& swap(CPrmStk& rhs) _NOEXCEPT { std::swap(p_, rhs.p_); return *this; }
+	CPrmStk& operator=(CPrmStk rhs) { return this->swap(rhs); }
 
 public:
 	//------------------------------------------------
@@ -112,16 +92,7 @@ public:
 	//------------------------------------------------
 	// 単純な値
 	template<typename VtTag>
-	void pushValue(PDAT const* pdat)
-	{
-		assert(!hasFinalized());
-		int const prmtype = getNextPrmType();
-		assert(prmtype == VtTraits::Impl::vartype<VtTag>() && prmtype != HSPVAR_FLAG_STR);
-
-		incCntArgs();
-		super_t::pushValue(VtTraits::derefValptr<VtTag>(pdat));
-		return;
-	}
+	void pushValue(PDAT const* pdat);
 
 	// 文字列
 	void pushString(char const* src);
@@ -150,51 +121,36 @@ public:
 	// 実引数値の peek 各種
 	//------------------------------------------------
 	
-	// 値 or any(byVal)
-	// local や参照渡し引数の値は取り出さない。
-	PDAT* peekValArgAt(size_t idx, hpimod::vartype_t& vtype) const;
+	PDAT const* peekValArgAt(size_t idx, hpimod::vartype_t& vtype) const;
+	PVal const* peekRefArgAt(size_t idx) const;
 
-	// 変数
-	PVal* peekRefArgAt(size_t idx) const;
+	hpimod::ManagedVarData const peekAnyAt(size_t idx) const;
 
-	hpimod::ManagedVarData peekAnyAt(size_t idx) const
-	{
-		assert( idx < cntArgs() );
-		assert(prminfo_.getPrmType(idx) == PrmType::Any);
-		return hpimod::ManagedVarData { *reinterpret_cast<MPVarData*>(getArgPtrAt(idx)) };
-	}
+	MPVarData const* peekCaptureAt(size_t idx) const;
+	PVal const* peekLocalAt(size_t idx) const;
+	vector_t const* peekFlex() const;
 
-	MPVarData* peekCaptureAt(size_t idx) const
-	{
-		assert(hasFinalized());
-		return reinterpret_cast<MPVarData*>(getOffsetPtr(prminfo_.getStackOffsetCapture(idx)));
-	}
-	PVal* peekLocalAt(size_t idx) const
-	{
-		assert(hasFinalized());
-		return reinterpret_cast<PVal*>(getOffsetPtr(prminfo_.getStackOffsetLocal(idx)));
-	}
-	vector_t* peekFlex() const
-	{
-		return ( prminfo_.isFlex() && hasFinalized() ) 
-			? reinterpret_cast<vector_t*>(getOffsetPtr(prminfo_.getStackOffsetFlex()))
-			: nullptr;
-	}
-	unsigned short* peekArgNoBind(size_t idx) const;
+	unsigned short const* peekArgNoBind(size_t idx) const;
+
+	// nonconst versions
+
+	PDAT* peekValArgAt(size_t idx, hpimod::vartype_t& vtype) { return const_cast<PDAT*>(static_cast<CPrmStk const*>(this)->peekValArgAt(idx, vtype)); }
+	PVal* peekRefArgAt(size_t idx) { return const_cast<PVal*>(static_cast<CPrmStk const*>(this)->peekRefArgAt(idx)); }
+
+	hpimod::ManagedVarData peekAnyAt(size_t idx) { return const_cast<hpimod::ManagedVarData&&>(static_cast<CPrmStk const*>(this)->peekAnyAt(idx)); }
+
+	MPVarData* peekCaptureAt(size_t idx){ return const_cast<MPVarData*>(static_cast<CPrmStk const*>(this)->peekCaptureAt(idx)); }
+	PVal* peekLocalAt(size_t idx) { return const_cast<PVal*>(static_cast<CPrmStk const*>(this)->peekLocalAt(idx)); }
+	vector_t* peekFlex() { return const_cast<vector_t*>(static_cast<CPrmStk const*>(this)->peekFlex()); }
+
+	unsigned short* peekArgNoBind(size_t idx){ return const_cast<unsigned short*>(static_cast<CPrmStk const*>(this)->peekArgNoBind(idx)); }
 
 private:
 	//------------------------------------------------
 	// prmstk 上へのポインタ
 	//------------------------------------------------
-	void* getOffsetPtr(size_t offset) const {
-		assert(offset <= size());
-		return &reinterpret_cast<char*>(getptr())[ offset ];
-	}
-	void* getArgPtrAt(size_t idx) const
-	{
-		assert(idx < cntArgs());
-		return getOffsetPtr(prminfo_.getStackOffsetParam(idx));
-	}
+	void const* getOffsetPtr(size_t offset) const;
+	void const* getArgPtrAt(size_t idx) const;
 
 	//------------------------------------------------
 	// その他

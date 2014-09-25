@@ -2,7 +2,7 @@
 
 // 返値
 
-	// 0, 1, ..., 9 という vector を返すラベル関数
+	// vector(0, 1, ..., 9) が返る
 	v = call(axcmdOf(VectorIota), 0, 10)
 	
 	repeat VectorSize(v)
@@ -14,10 +14,12 @@
 // iBgn, ..., iEnd という連番のベクトルを返す
 //------------------------------------------------
 #defcfunc VectorIota int iBgn, int iEnd,  local cntRange, local result
+
+	// 区間の長さ
 	cntRange = iEnd - iBgn
-	
 	assert( cntRange >= 0 )
 	
+	// 返す vector の生成
 	vector result, cntRange
 	repeat cntRange
 		result(cnt) = iBgn + cnt
@@ -28,6 +30,6 @@
 // 通常の return を使ってもいいが、この命令なら好きな型の値を返すことができる。
 
 	// 作成した vector を返す
-	// (注意：連想配列型の local 変数なので添字を付けなければいけない)
+	// (注意：連想配列型の local 変数なので、添字を付けなければいけない)
 	call_return result()
 	

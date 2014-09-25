@@ -37,7 +37,7 @@ void CBound::createRemainPrms()
 	assert(!remainPrms_);
 
 	CPrmInfo const& srcPrms = getUnbound()->getPrmInfo();
-	arguments_t const& args = binder_.getArgs();
+	arguments_t& args = binder_.getArgs();
 	assert(args.hasFinalized());
 
 	size_t const cntPrms = srcPrms.cntPrms();

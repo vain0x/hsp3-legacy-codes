@@ -103,7 +103,7 @@
     <ClInclude Include="src\call\CModClsCtor.h" />
     <ClInclude Include="src\call\CPrmInfo.h" />
     <ClInclude Include="src\call\CPrmStk.h" />
-    <ClInclude Include="src\call\CPrmStkCreator.h" />
+    <ClInclude Include="src\call\CPrmStkNative.h" />
     <ClInclude Include="src\call\CStreamCaller.h" />
     <ClInclude Include="src\call\Functor.h" />
     <ClInclude Include="src\call\iface_call.h" />
