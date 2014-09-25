@@ -14,40 +14,6 @@
 #include "hsp3plugin_custom.h"
 #include "reffuncResult.h"
 
-#include "knowbug/knowbugForHPI.h"
-
-static int   termfunc( int option );
-
-static int   ProcSttmCmd( int cmd );
-static int   ProcFuncCmd( int cmd, PDAT** ppResult );
-static int ProcSysvarCmd( int cmd, PDAT** ppResult );
-
-//------------------------------------------------
-// HPI登録関数
-//------------------------------------------------
-EXPORT void WINAPI hpi_assoc( HSP3TYPEINFO* info )
-{
-	hsp3sdk_init( info );			// SDKの初期化(最初に行なって下さい)
-
-	info->cmdfunc  = hpimod::cmdfunc<ProcSttmCmd>;
-	info->reffunc  = hpimod::reffunc<ProcFuncCmd, ProcSysvarCmd>;
-	info->termfunc = termfunc;
-
-	// 新規型を追加
-	registvar(-1, HspVarAssoc_Init);
-	return;
-}
-
-//------------------------------------------------
-// 終了時
-//------------------------------------------------
-static int termfunc(int option)
-{
-	AssocTerm();
-	terminateKnowbugForHPI();
-	return 0;
-}
-
 //------------------------------------------------
 // 命令
 //------------------------------------------------
@@ -116,4 +82,29 @@ static int ProcSysvarCmd( int cmd, PDAT** ppResult )
 			puterror( HSPERR_UNSUPPORTED_FUNCTION );
 	}
 	return 0;
+}
+
+//------------------------------------------------
+// 終了時
+//------------------------------------------------
+static int termfunc(int option)
+{
+	AssocTerm();
+	return 0;
+}
+
+//------------------------------------------------
+// HPI登録関数
+//------------------------------------------------
+EXPORT void WINAPI hpi_assoc( HSP3TYPEINFO* info )
+{
+	hsp3sdk_init( info );			// SDKの初期化(最初に行なって下さい)
+
+	info->cmdfunc  = hpimod::cmdfunc<ProcSttmCmd>;
+	info->reffunc  = hpimod::reffunc<ProcFuncCmd, ProcSysvarCmd>;
+	info->termfunc = termfunc;
+
+	// 新規型を追加
+	registvar(-1, HspVarAssoc_Init);
+	return;
 }

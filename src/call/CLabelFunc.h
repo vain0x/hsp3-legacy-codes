@@ -32,17 +32,17 @@ public:
 	}
 
 	// 動作
-	void invoke(Invoker& inv) override
+	void call(Caller& caller) override
 	{
 		auto const prmstk_bak = ctx->prmstack;
-		auto const prmstk = const_cast<void*>(inv.getArgs().getPrmStkPtr());
+		auto const prmstk = const_cast<void*>(caller.getArgs().getPrmStkPtr());
 		ctx->prmstack = prmstk;
 
 		code_call(getLabel());
 
 		// return から返値を受け取る (やや黒魔術？)
 		if ( ctx->retval_level == (ctx->sublev + 1) ) {
-			inv.setResultByVal((*exinfo->mpval)->pt, (*exinfo->mpval)->flag);
+			caller.setResultByVal((*exinfo->mpval)->pt, (*exinfo->mpval)->flag);
 			ctx->retval_level = 0;
 		}
 

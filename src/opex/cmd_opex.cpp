@@ -380,7 +380,7 @@ int exprs( PDAT** ppResult )
 //------------------------------------------------
 // 変数型の名前
 //------------------------------------------------
-extern int vtname(PDAT** ppResult)
+int vtname(PDAT** ppResult)
 {
 	int const vtype = code_get_vartype(HSPVAR_FLAG_NONE);
 

@@ -13,7 +13,7 @@
 class CPrmInfo;
 class CCaller;
 class CPrmStk;
-class Invoker;
+class Caller;
 
 //------------------------------------------------
 // 関数子を表すクラス
@@ -34,19 +34,13 @@ public:
 	virtual CPrmInfo const& getPrmInfo() const = 0;		// 仮引数
 
 	// キャスト
-	template<typename T>       T*     castTo()       { return dynamic_cast<T*>(this); }
-	template<typename T> const T*     castTo() const { return dynamic_cast<T*>(this); }
-	template<typename T>       T* safeCastTo()       { return safeCastTo_Impl<T*>(); }
-	template<typename T> const T* safeCastTo() const { return safeCastTo_Impl<T const*>(); }
-
-	template<typename T> T safeCastTo_Impl() const {
-		auto const result = castTo<T>();
-		if ( !result ) puterror(HSPERR_TYPE_MISMATCH);
-		return result;
-	}
+	template<typename T> T*           castTo()       { return static_cast<T*>(this); }
+	template<typename T> T const*     castTo() const { return static_cast<T const*>(this); }
+	template<typename T> T*       safeCastTo()       { return dynamic_cast<T*>(this); }
+	template<typename T> T const* safeCastTo() const { return dynamic_cast<T const*>(this); }
 
 	// 動作
-	virtual void invoke(Invoker&) = 0;
+	virtual void call(Caller&) = 0;
 
 	// 形式的比較
 	virtual int compare(IFunctor const& obj) const { return this - &obj; }

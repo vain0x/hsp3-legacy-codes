@@ -30,13 +30,14 @@ using namespace hpimod;
 int CallCmd::call( PDAT** ppResult )
 {
 	auto&& f = code_get_functor();
-	Invoker inv { std::move(f) };
-	inv.code_get_arguments();
-//	dbgout("%d", inv.getArgs().cntArgs());
-	inv.invoke();
+
+	Caller caller { std::move(f) };
+	caller.code_get_arguments();
+	//dbgout("%d", caller.getArgs().cntArgs());
+	caller.invoke();
 
 	if ( ppResult ) {
-		PVal* const pval = inv.getResult();
+		PVal* const pval = caller.getResult();
 		*ppResult = pval->pt;
 		return pval->flag;
 	} else {
@@ -62,7 +63,8 @@ static label_t declareImpl()
 int CallCmd::declare(PDAT** ppResult)
 {
 	if ( ppResult ) {
-		return SetReffuncResult(ppResult, Functor::New(declareImpl()));
+		puterror(HSPERR_UNSUPPORTED_FUNCTION);
+		//return SetReffuncResult(ppResult, Functor::New(declareImpl()));
 	} else {
 		declareImpl();
 		return HSPVAR_FLAG_NONE;
@@ -74,10 +76,10 @@ int CallCmd::declare(PDAT** ppResult)
 //------------------------------------------------
 void CallCmd::call_setResult_()
 {
-	auto& inv = Invoker::top();
+	auto& caller = Caller::top();
 	if ( code_getprm() <= PARAM_END ) puterror(HSPERR_NO_DEFAULT);
 
-	inv.setResultByVal(mpval->pt, mpval->flag);
+	caller.setResultByVal(mpval->pt, mpval->flag);
 	return;
 }
 
@@ -88,7 +90,7 @@ void CallCmd::call_setResult_()
 //------------------------------------------------
 int CallCmd::call_getResult_(PDAT** ppResult)
 {
-	PVal* const pvResult = Invoker::getLastResult();
+	PVal* const pvResult = Caller::getLastResult();
 	if ( pvResult ) {
 		*ppResult = pvResult->pt;
 		return pvResult->flag;
@@ -104,9 +106,9 @@ int CallCmd::call_getResult_(PDAT** ppResult)
 //------------------------------------------------
 // arginfo
 //------------------------------------------------
-static int getArgInfo(Invoker const& inv, int id, size_t idxArg)
+static int getArgInfo(Caller const& caller, int id, size_t idxArg)
 {
-	auto const prmtype = inv.getPrmInfo().getPrmType(idxArg);
+	auto const prmtype = caller.getPrms().getPrmType(idxArg);
 
 	switch ( id ) {
 		case ArgInfoId::IsVal:
@@ -114,7 +116,7 @@ static int getArgInfo(Invoker const& inv, int id, size_t idxArg)
 				return HspTrue;
 
 			} else if ( prmtype == PrmType::Any ) {
-				return HspBool( ManagedPVal::isManagedValue(inv.getArgs().peekRefArgAt(idxArg)) );
+				return HspBool( ManagedPVal::isManagedValue(caller.getArgs().peekRefArgAt(idxArg)) );
 			} else {
 				return HspFalse;
 			}
@@ -123,7 +125,7 @@ static int getArgInfo(Invoker const& inv, int id, size_t idxArg)
 				return HspTrue;
 
 			} else if ( prmtype == PrmType::Any ) {
-				return HspBool(getArgInfo(inv, ArgInfoId::IsVal, idxArg) == HspFalse);
+				return HspBool(getArgInfo(caller, ArgInfoId::IsVal, idxArg) == HspFalse);
 
 			} else {
 				return HspFalse;
@@ -140,13 +142,13 @@ static int getArgInfo(Invoker const& inv, int id, size_t idxArg)
 //------------------------------------------------
 int CallCmd::arginfo(PDAT** ppResult)
 {
-	auto& inv = Invoker::top();
+	auto& caller = Caller::top();
 
 	auto const id = code_geti();	// データの種類
 	int const idxArg = code_geti();
-	if ( !(0 <= idxArg && static_cast<size_t>(idxArg) < inv.getArgs().cntArgs()) ) puterror(HSPERR_ILLEGAL_FUNCTION);
+	if ( !(0 <= idxArg && static_cast<size_t>(idxArg) < caller.getArgs().cntArgs()) ) puterror(HSPERR_ILLEGAL_FUNCTION);
 
-	return SetReffuncResult( ppResult, getArgInfo(inv, id, idxArg) );
+	return SetReffuncResult( ppResult, getArgInfo(caller, id, idxArg) );
 }
 
 //------------------------------------------------
@@ -156,8 +158,8 @@ int CallCmd::arginfo(PDAT** ppResult)
 //------------------------------------------------
 int CallCmd::argVal(PDAT** ppResult)
 {
-	auto& inv = Invoker::top();
-	auto& args = inv.getArgs();
+	auto& caller = Caller::top();
+	auto& args = caller.getArgs();
 
 	int const idxArg = code_getdi(0);
 	if ( !(0 <= idxArg && static_cast<size_t>(idxArg) < args.cntArgs()) ) puterror(HSPERR_ILLEGAL_FUNCTION);
@@ -173,8 +175,8 @@ int CallCmd::argVal(PDAT** ppResult)
 //------------------------------------------------
 void CallCmd::argClone()
 {
-	auto& inv = Invoker::top();
-	auto& args = inv.getArgs();
+	auto& caller = Caller::top();
+	auto& args = caller.getArgs();
 
 	PVal* const pval = code_getpval();
 	int const idxArg = code_geti();
@@ -190,8 +192,8 @@ void CallCmd::argClone()
 //------------------------------------------------
 void CallCmd::argPeekAll()
 {
-	auto& inv = Invoker::top();
-	auto& args = inv.getArgs();
+	auto& caller = Caller::top();
+	auto& args = caller.getArgs();
 
 	for ( size_t i = 0
 		; code_isNextArg() && (i < args.cntArgs())
@@ -200,7 +202,7 @@ void CallCmd::argPeekAll()
 		try {
 			PVal* const pval = code_getpval();
 
-			bool const bByRef = (getArgInfo(inv, ArgInfoId::IsRef, i) != HspFalse);
+			bool const bByRef = (getArgInfo(caller, ArgInfoId::IsRef, i) != HspFalse);
 			if ( bByRef ) {
 				PVal* const pvalSrc = args.peekRefArgAt(i);
 				PVal_clone(pval, pvalSrc, pvalSrc->offset);
@@ -224,12 +226,12 @@ void CallCmd::argPeekAll()
 //------------------------------------------------
 int CallCmd::localVal( PDAT** ppResult )
 {
-	auto& inv = Invoker::top();
+	auto& caller = Caller::top();
 
 	int const idxLocal = code_geti();
-	if ( !(0 <= idxLocal && static_cast<size_t>(idxLocal) < inv.getPrmInfo().cntLocals()) ) puterror(HSPERR_ILLEGAL_FUNCTION);
+	if ( !(0 <= idxLocal && static_cast<size_t>(idxLocal) < caller.getPrms().cntLocals()) ) puterror(HSPERR_ILLEGAL_FUNCTION);
 
-	PVal* const pvLocal = inv.getArgs().peekLocalAt(idxLocal);
+	PVal* const pvLocal = caller.getArgs().peekLocalAt(idxLocal);
 	if ( !pvLocal ) puterror( HSPERR_ILLEGAL_FUNCTION );
 
 	*ppResult = pvLocal->pt;
@@ -240,11 +242,11 @@ void CallCmd::localClone()
 {
 	PVal* const pval = code_getpval();
 
-	auto& inv = Invoker::top();
+	auto& caller = Caller::top();
 	int const idxLocal = code_geti();
-	if ( !(0 <= idxLocal && static_cast<size_t>(idxLocal) < inv.getPrmInfo().cntLocals()) ) puterror(HSPERR_ILLEGAL_FUNCTION);
+	if ( !(0 <= idxLocal && static_cast<size_t>(idxLocal) < caller.getPrms().cntLocals()) ) puterror(HSPERR_ILLEGAL_FUNCTION);
 
-	PVal* const pvLocal = inv.getArgs().peekLocalAt(idxLocal);
+	PVal* const pvLocal = caller.getArgs().peekLocalAt(idxLocal);
 	if ( !pvLocal ) puterror( HSPERR_ILLEGAL_FUNCTION );
 
 	PVal_clone(pval, pvLocal);
@@ -253,11 +255,11 @@ void CallCmd::localClone()
 
 int CallCmd::localVector(PDAT** ppResult)
 {
-	auto& inv = Invoker::top();
+	auto& caller = Caller::top();
 
 	vector_t vec {};
-	for ( size_t i = 0; i < inv.getPrmInfo().cntLocals(); ++i ) {
-		vec->push_back({ inv.getArgs().peekLocalAt(i), 0 });
+	for ( size_t i = 0; i < caller.getPrms().cntLocals(); ++i ) {
+		vec->push_back({ caller.getArgs().peekLocalAt(i), 0 });
 	}
 	return SetReffuncResult(ppResult, std::move(vec));
 }
@@ -267,9 +269,9 @@ int CallCmd::localVector(PDAT** ppResult)
 //------------------------------------------------
 int CallCmd::flexVal(PDAT** ppResult)
 {
-	auto& inv = Invoker::top();
+	auto& caller = Caller::top();
 
-	if ( auto pFlex = inv.getArgs().peekFlex() ) {
+	if ( auto pFlex = caller.getArgs().peekFlex() ) {
 		auto& flex = *pFlex;
 
 		int const idxFlex = code_geti();
@@ -288,9 +290,9 @@ int CallCmd::flexVal(PDAT** ppResult)
 //------------------------------------------------
 void CallCmd::flexClone()
 {
-	auto& inv = Invoker::top();
+	auto& caller = Caller::top();
 
-	if ( auto pFlex = inv.getArgs().peekFlex() ) {
+	if ( auto pFlex = caller.getArgs().peekFlex() ) {
 		auto& flex = *pFlex;
 
 		int const idxFlex = code_geti();
@@ -311,8 +313,8 @@ void CallCmd::flexClone()
 //------------------------------------------------
 int CallCmd::flexVector(PDAT** ppResult)
 {
-	auto& inv = Invoker::top();
-	if ( auto pFlex = inv.getArgs().peekFlex() ) {
+	auto& caller = Caller::top();
+	if ( auto pFlex = caller.getArgs().peekFlex() ) {
 		return SetReffuncResult(ppResult, *pFlex);
 
 	} else {
@@ -325,12 +327,13 @@ int CallCmd::flexVector(PDAT** ppResult)
 //------------------------------------------------
 int CallCmd::thislb(PDAT** ppResult)
 {
-	return SetReffuncResult( ppResult, Invoker::top().getFunctor()->getLabel() );
+	return SetReffuncResult( ppResult, Caller::top().getFunctor()->getLabel() );
 }
 
 int CallCmd::thisfunc(PDAT** ppResult)
 {
-	return SetReffuncResult( ppResult, Invoker::top().getFunctor() );
+	puterror(HSPERR_UNSUPPORTED_FUNCTION);
+	//return SetReffuncResult( ppResult, Caller::top().getFunctor() );
 }
 
 #if 0
@@ -511,40 +514,37 @@ int FunctorCmd::prminfo(PDAT** ppResult)
 //##########################################################
 //    その他
 //##########################################################
-#if 0
 //------------------------------------------------
 // 引数束縛
 //------------------------------------------------
-int CallCmd::argBind( PDAT** ppResult )
+int FunctorCmd::argBind( PDAT** ppResult )
 {
-	bound_t const bound = CBound::New();
+	auto&& f = code_get_functor();
+	auto&& result = functor_t::makeDerived<CBound>(f);
 
-	// 引数処理
-	CCaller* const caller = bound->getCaller();
-	{
-		caller->setFunctor();	// スクリプトから被束縛関数を取り出す
-		caller->setArgAll();	// スクリプトから与えられた引数を全て受け取る (不束縛引数も受け付ける)
-	}
+	auto const bound = result->castTo<CBound>();
+	assert(bound);
 	bound->bind();
 
-	// functor 型として返却する
-	return SetReffuncResult( ppResult, functor_t::make(bound) );
+	return SetReffuncResult( ppResult, std::move(result) );
 }
 
 //------------------------------------------------
 // 束縛解除
 //------------------------------------------------
-int CallCmd::unBind( PDAT** ppResult )
+int FunctorCmd::unBind( PDAT** ppResult )
 {
-	if ( code_getprm() <= PARAM_END ) puterror( HSPERR_NO_DEFAULT );
-	if ( mpval->flag != g_vtFunctor ) puterror( HSPERR_TYPE_MISMATCH );
+	puterror(HSPERR_UNSUPPORTED_FUNCTION);
+#if 0
+	auto&& f = code_get_functor();
+	auto const bound = f->safeCastTo<CBound>();
+	if ( !bound ) puterror(HSPERR_ILLEGAL_FUNCTION);
 
-	auto const functor = VtTraits::derefValptr<vtFunctor>(mpval->pt);
-	auto const bound   = functor->safeCastTo<bound_t>();
-
-	return SetReffuncResult( ppResult, bound->unbind() );
+	return SetReffuncResult( ppResult, bound->getUnbound() );
+#endif
 }
 
+#if 0
 //------------------------------------------------
 // ラムダ式
 // 
@@ -571,13 +571,13 @@ int CallCmd::lambda( PDAT** ppResult )
 //------------------------------------------------
 void CallCmd::lambdaBody()
 {
-	auto& inv = Invoker::top();
-	size_t const cntLocals = inv.getPrmInfo().cntLocals();
+	auto& caller = Caller::top();
+	size_t const cntLocals = caller.getPrmInfo().cntLocals();
 
 	for ( size_t i = 0; i < cntLocals; ++ i ) {
 		int const chk = code_getprm();
 		assert(chk > PARAM_END);
-		PVal* const pvLocal = inv.getArgs().peekLocalAt(i);
+		PVal* const pvLocal = caller.getArgs().peekLocalAt(i);
 		PVal_assign( pvLocal, mpval->pt, mpval->flag );
 	}
 

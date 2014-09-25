@@ -33,7 +33,6 @@ namespace hpimod {
 
 // 返値設定関数
 extern functor_t g_resFunctor;
-extern int SetReffuncResult(PDAT** ppResult, functor_t const& src);
 extern int SetReffuncResult(PDAT** ppResult, functor_t&& src);
 
 // その他

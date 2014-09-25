@@ -7,7 +7,10 @@
 
 using namespace hpimod;
 
-ManagedPVal Invoker::lastResult { nullptr };
+ManagedPVal Caller::lastResult { nullptr };
+
+// nobind(N) に指定できる N の最大値
+static int const NobindPriorityMax = std::numeric_limits<unsigned short>::max();
 
 //------------------------------------------------
 // my_code_getarg の返値
@@ -77,19 +80,20 @@ CodeGetArgResult my_code_getarg(int prmtype)
 		default:
 		{
 			if ( *type == g_pluginType_call && *val == CallCmd::Id::noBind ) {
-				// 不束縛引数 (nobind)
+				// 不束縛引数 (noBind)
 
 				code_next();
-				int priority = 0;
-
+				int priority = NobindPriorityMax;
+				
 				if ( *type == TYPE_MARK && *val == '(' ) {
 					// ( ) あり => 優先度数を取り出す
 					code_next();
-					priority = code_getdi(0);
+					priority = code_getdi(priority);
+					if ( !(0 <= priority && priority <= NobindPriorityMax) ) puterror(HSPERR_ILLEGAL_FUNCTION);
 					if ( !code_next_expect(TYPE_MARK, ')') ) puterror(HSPERR_TOO_MANY_PARAMETERS);
-				} else {
-					*exinfo->npexflg &= ~EXFLG_2;	// 引数取り出し後に必要な処理
 				}
+
+				*exinfo->npexflg &= ~EXFLG_2;	// 引数取り出し後に必要な処理
 				return CodeGetArgResult::noBind(priority);
 
 			} else if ( *type == g_pluginType_call
@@ -179,19 +183,35 @@ vector_t code_get_vectorFromSequence()
 	}
 }
 
+//******************************************************************************
+//------------------------------------------------
+// 呼び出し処理
+//------------------------------------------------
+void Caller::invoke()
+{
+	push(*this);
+	getFunctor()->call(*this);
+	pop();
+	if ( hasResult() ) {
+		lastResult = result_;
+	}
+	return;
+}
+
 //------------------------------------------------
 // すべての引数を取り出す
 //------------------------------------------------
-void Invoker::code_get_arguments()
+void Caller::code_get_arguments()
 {
-	for ( size_t i = 0; i < getPrmInfo().cntPrms(); ++i ) {
+	for ( size_t i = 0; i < getPrms().cntPrms(); ++i ) {
 		if ( !code_get_nextArgument() ) break;
 	}
-	args_.finalize();
+
+	getArgs().finalize();
 
 	// 残りを flex 引数として取り出す
 	if ( code_isNextArg() ) {
-		if ( vector_t* const vec = args_.peekFlex() ) {
+		if ( vector_t* const vec = getArgs().peekFlex() ) {
 			*vec = code_get_vectorFromSequence();
 		} else {
 			puterror(HSPERR_TOO_MANY_PARAMETERS);
@@ -205,140 +225,108 @@ void Invoker::code_get_arguments()
 // 
 // @result: 引数を取り出したか？
 //------------------------------------------------
-bool Invoker::code_get_nextArgument()
+bool Caller::code_get_nextArgument()
 {
 	if ( !code_isNextArg() ) return false;
 
-	auto&& result = my_code_getarg(args_.getNextPrmType());
+	auto&& result = my_code_getarg(getArgs().getNextPrmType());
 
 	using Sty = CodeGetArgResult::Style;
 	switch ( result.getStyle() ) {
-		case Sty::Default:   args_.pushArgByDefault(); break;
-		case Sty::ByVal:     args_.pushArgByVal(result.getValptr(), result.getVartype()); break;
-		case Sty::ByRef:     args_.pushArgByRef(result.getPVal(), result.getPVal()->offset); break;
-		case Sty::ByThismod: args_.pushThismod(result.getPVal(), result.getPVal()->offset); break;
+		case Sty::Default:   getArgs().pushArgByDefault(); break;
+		case Sty::ByVal:     getArgs().pushArgByVal(result.getValptr(), result.getVartype()); break;
+		case Sty::ByRef:     getArgs().pushArgByRef(result.getPVal(), result.getPVal()->offset); break;
+		case Sty::ByThismod: getArgs().pushThismod(result.getPVal(), result.getPVal()->offset); break;
 		case Sty::ByFlex: dbgout("未実装"); puterror(HSPERR_UNSUPPORTED_FUNCTION); break;
-		case Sty::NoBind:    args_.allocArgNoBind(CallCmd::Id::noBind, result.getPriority()); break;
+		case Sty::NoBind: puterror(HSPERR_ILLEGAL_FUNCTION);
 		case Sty::End: //
 		default: assert(false);
 	}
 	return true;
-
-#if 0
-	if ( *type == g_pluginType_call && *val == CallCmd::Id::noBind ) {
-		// 不束縛引数 (nobind)
-
-		if ( invmode_ != InvokeMode::Bind ) puterror(HSPERR_ILLEGAL_FUNCTION);
-		code_next();
-
-		int priority = 0;
-
-		if ( *type == TYPE_MARK && *val == '(' ) {
-			// ( ) あり => 優先度数を取り出す
-			code_next();
-			priority = code_getdi(0);
-			if ( !code_next_expect(TYPE_MARK, ')') ) puterror(HSPERR_TOO_MANY_PARAMETERS);
-
-		} else {
-			// () なし => 引数の取り出しの完了処理をする
-			if ( *exinfo->npexflg & EXFLG_2 ) {
-				*exinfo->npexflg &= ~EXFLG_2;	// 引数を取り出した
-
-			} else {
-				// ↓？
-				if ( code_isNextArg() ) puterror(HSPERR_SYNTAX);
-			}
-		}
-
-		prmstk_.allocArgNoBind(CallCmd::Id::noBind, std::max(priority + 0xF000, 0) & 0xFFFF);
-		return true;
-
-	} else if ( *type == g_pluginType_call && (*val == CallCmd;;Id::call_byRef_ || *val == CallCmd::Id::call_byThismod_) ) {
-		// 明示的参照渡し (byref, bythismod)
-		// 中間コードは [ keyword var || ] となっている。
-
-		code_next();
-		PVal* const pval = code_get_var();
-		if ( !code_next_expect(TYPE_MARK, CALCCODE_OR) ) puterror(HSPERR_SYNTAX);
-
-		prmstk_.pushArgByRef(pval, pval->offset);
-
-	} else {
-		int const prmtype = prmstk_.getNextPrmType();
-
-		if ( PrmType::isRef(prmtype) ) {
-			PVal* pval;
-
-			switch ( prmtype ) {
-				case PrmType::Array:  pval = code_getpval(); break;
-				case PrmType::Var:    //
-				case PrmType::Modvar: pval = code_get_var(); break;
-				default: assert(false);
-			}
-			prmstk_.pushArgByRef(pval, pval->offset);
-
-		} else {
-			int chk;
-
-			if ( *type == g_pluginType_call && *val == CallCmd::Id::byDef ) {
-				// 明示的引数省略 (bydef)
-				code_get_singleToken();
-				chk = PARAM_DEFAULT;
-
-			} else {
-				chk = code_getprm();
-				if ( chk == PARAM_END || chk == PARAM_ENDSPLIT ) return false;
-			}
-
-			if ( chk == PARAM_DEFAULT ) {
-				prmstk_.pushArgByDefault();
-			} else {
-				prmstk_.pushArgByVal(mpval->pt, mpval->flag);
-			}
-		}
-	}
-	return true;
-#endif
-}
-
-//------------------------------------------------
-// 呼び出し処理
-//------------------------------------------------
-void Invoker::invoke()
-{
-	push(*this);
-	functor_->invoke(*this);
-	pop();
-	if ( hasResult() ) {
-		lastResult = result_;
-	}
-	return;
 }
 
 //------------------------------------------------
 // 呼び出しスタック
 //------------------------------------------------
-static std::stack<Invoker*> stt_stkInvoker;
+static std::stack<Caller*> stt_stkCaller;
 
-void Invoker::push(Invoker& src)
+void Caller::push(Caller& src)
 {
-	stt_stkInvoker.push(&src);
+	stt_stkCaller.push(&src);
 	return;
 }
 
-void Invoker::pop()
+void Caller::pop()
 {
-	assert(!stt_stkInvoker.empty());
-	stt_stkInvoker.pop();
+	assert(!stt_stkCaller.empty());
+	stt_stkCaller.pop();
 	return;
 }
 
-Invoker& Invoker::top()
+Caller& Caller::top()
 {
-	assert(!stt_stkInvoker.empty());
-	auto const pInv = stt_stkInvoker.top();
+	assert(!stt_stkCaller.empty());
+	auto const pInv = stt_stkCaller.top();
 	assert(pInv);
 	return *pInv;
+}
+
+//******************************************************************************
+
+//------------------------------------------------
+// 起動
+//------------------------------------------------
+//void ArgBinder::invoke() { }
+
+//------------------------------------------------
+// すべての引数を取り出す
+//------------------------------------------------
+void ArgBinder::code_get_arguments()
+{
+	for ( size_t i = 0; i < getPrms().cntPrms(); ++i ) {
+		if ( !code_get_nextArgument() ) break;
+	}
+
+	for ( size_t i = getArgs().cntArgs(); i < getPrms().cntPrms(); ++i ) {
+		getArgs().allocArgNoBind(NobindPriorityMax);
+	}
+
+	getArgs().finalize();
+
+	// 残りを flex 引数として取り出す
+	if ( code_isNextArg() ) {
+		if ( vector_t* const vec = getArgs().peekFlex() ) {
+			*vec = code_get_vectorFromSequence();
+		} else {
+			puterror(HSPERR_TOO_MANY_PARAMETERS);
+		}
+	}
+	return;
+}
+
+//------------------------------------------------
+// 次の実引数を取り出す
+// 
+// @result: 引数を取り出したか？
+//------------------------------------------------
+bool ArgBinder::code_get_nextArgument()
+{
+	if ( !code_isNextArg() ) return false;
+
+	auto&& result = my_code_getarg(getArgs().getNextPrmType());
+
+	using Sty = CodeGetArgResult::Style;
+	switch ( result.getStyle() ) {
+		case Sty::Default:   getArgs().pushArgByDefault(); break;
+		case Sty::ByVal:     getArgs().pushArgByVal(result.getValptr(), result.getVartype()); break;
+		case Sty::ByRef:     getArgs().pushArgByRef(result.getPVal(), result.getPVal()->offset); break;
+		case Sty::ByThismod: getArgs().pushThismod(result.getPVal(), result.getPVal()->offset); break;
+		case Sty::ByFlex: dbgout("未実装"); puterror(HSPERR_UNSUPPORTED_FUNCTION); break;
+		case Sty::NoBind:    getArgs().allocArgNoBind(result.getPriority()); break;
+		case Sty::End: //
+		default: assert(false);
+	}
+	return true;
 }
 
 //------------------------------------------------

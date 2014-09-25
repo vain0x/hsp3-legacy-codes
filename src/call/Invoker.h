@@ -10,52 +10,50 @@
 
 #include "mod_makepval.h"
 
-enum class InvokeMode : unsigned char
-{
-	Call = 0,
-	Bind,
-};
-
 class Invoker
 {
-	using ManagedPVal = hpimod::ManagedPVal;
-
-private:
 	// 転送先
 	functor_t functor_;
 
 	// 実引数データ
 	arguments_t args_;
 
-	InvokeMode invmode_;
-
-	// 返値データ
-	ManagedPVal result_;
-
-	// 最後の返値
-	static ManagedPVal lastResult;
-
 public:
-	// 構築
 	// @prm f: must be non-null
-	Invoker(functor_t f, InvokeMode invmode_ = InvokeMode::Call)
+	Invoker(functor_t const& f)
 		: functor_ { (assert(!f.isNull()), f) }
-		, args_ { f->getPrmInfo() }
-		, invmode_ { invmode_ }
-		, result_ { nullptr }
+		, args_(f->getPrmInfo())
 	{ }
 
-//	Invoker(Invoker const&) = delete;
-
-public:
 	void invoke();
 
 	functor_t const& getFunctor() const { return functor_; }
-	CPrmInfo const& getPrmInfo() const { return args_.getPrmInfo(); }
 
-	// 実引数
+	// 引数
+	CPrmInfo const& getPrms() const { return args_.getPrmInfo(); }
 	arguments_t& getArgs() { return args_; }
 	arguments_t const& getArgs() const { return args_; }
+
+};
+
+class Caller
+	: public Invoker
+{
+	using ManagedPVal = hpimod::ManagedPVal;
+
+private:
+	// 返値データ
+	ManagedPVal result_;
+
+public:
+	// 構築
+	Caller(functor_t const& f)
+		: Invoker(f)
+		, result_ { nullptr }
+	{ }
+
+public:
+	void invoke();
 
 	// 返値
 	bool hasResult() const { return !result_.isNull(); }
@@ -74,22 +72,49 @@ public:
 		hpimod::PVal_assign(result_.valuePtr(), pdat, vtype);
 		return;
 	}
+	void moveResult(Caller& src)
+	{
+		// Remark: src.result_ maybe null.
+		result_ = src.result_; src.result_.nullify();
+		return;
+	}
 
 	// コードの取り出し
 	void code_get_arguments();
-
 private:
 	bool code_get_nextArgument();
 
-	// 呼び出しスタック
-	static void push(Invoker&);
-	static void pop();
 public:
-	static Invoker& top();
-
-	// 返値
+	// 最後の返値
+	static ManagedPVal lastResult;
 	static PVal* getLastResult() { return lastResult.valuePtr(); }
 	static void clearLastResult() { lastResult.nullify(); }
+
+protected:
+	// 呼び出しスタック
+	static void push(Caller&);
+	static void pop();
+public:
+	static Caller& top();
+};
+
+// todo: 仕様がふにゃふにゃ
+class ArgBinder
+	: public Invoker
+{
+	friend class CBound;
+
+public:
+	ArgBinder(functor_t const& f)
+		: Invoker(f)
+	{ }
+
+	//void invoke();
+
+	// コードの取り出し
+	void code_get_arguments();
+private:
+	bool code_get_nextArgument();
 };
 
 #endif

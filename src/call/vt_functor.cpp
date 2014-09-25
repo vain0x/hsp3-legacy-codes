@@ -20,21 +20,6 @@ vartype_t g_vtFunctor;
 HspVarProc* g_hvpFunctor;
 functor_t g_resFunctor { nullptr };
 
-static void invokeFunctor(functor_t f, PDAT** ppResult, int* mptype)
-{
-	assert(!f.isNull());
-
-	Invoker inv { f };
-	inv.code_get_arguments();
-	inv.invoke();
-	if ( ppResult ) {
-		assert(mptype);
-		PVal* const pval = inv.getResult();
-		*ppResult = pval->pt; *mptype = pval->flag;
-	}
-	return;
-}
-
 //------------------------------------------------
 // 使用状況(varuse)
 //------------------------------------------------
@@ -42,6 +27,24 @@ static int HspVarFunctor_getUsing( PDAT const* pdat )
 {
 	functor_t const& functor = VtTraits::derefValptr<vtFunctor>(pdat);
 	return (!functor.isNull() ? functor->getUsing() : 0);
+}
+
+//------------------------------------------------
+// f の呼び出し
+//------------------------------------------------
+static void callFunctor(functor_t f, PDAT** ppResult, int* mptype)
+{
+	assert(HspVarFunctor_getUsing(VtTraits::asPDAT<vtFunctor>(&f)));
+	
+	Caller caller { f };
+	caller.code_get_arguments();
+	caller.invoke();
+	if ( ppResult ) {
+		assert(mptype);
+		PVal* const pval = caller.getResult();
+		*ppResult = pval->pt; *mptype = pval->flag;
+	}
+	return;
 }
 
 //------------------------------------------------
@@ -212,7 +215,7 @@ static PDAT* HspVarFunctor_arrayObjectRead( PVal* pval, int* mptype )
 
 	// 呼び出し
 	PDAT* pResult = nullptr;
-	invokeFunctor(functor, &pResult, mptype);
+	callFunctor(functor, &pResult, mptype);
 	assert(pResult);
 	return pResult;
 }
@@ -250,7 +253,7 @@ static void HspVarFunctor_method(PVal* pval)
 	char const* const psMethod = code_gets();
 
 	if ( !strcmp(psMethod, "call") ) {
-		invokeFunctor( *VtTraits::getValptr<vtFunctor>(pval), nullptr, nullptr );
+		callFunctor( *VtTraits::getValptr<vtFunctor>(pval), nullptr, nullptr );
 
 	} else {
 		puterror( HSPERR_ILLEGAL_FUNCTION );
@@ -376,13 +379,6 @@ functor_t code_get_functor()
 //-----------------------------------------------
 // 関数コマンドの設定する
 //------------------------------------------------
-int SetReffuncResult(PDAT** ppResult, functor_t const& src)
-{
-	g_resFunctor = src;
-	*ppResult = VtTraits::asPDAT<vtFunctor>(&g_resFunctor);
-	return g_vtFunctor;
-}
-
 int SetReffuncResult(PDAT** ppResult, functor_t&& src)
 {
 	g_resFunctor = std::move(src.beTmpObj());

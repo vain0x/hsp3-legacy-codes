@@ -60,7 +60,7 @@ static int termfunc(int option)
 	g_resFunctor.nullify();
 
 	Functor::Terminate();
-	Invoker::clearLastResult();
+	Caller::clearLastResult();
 //	Proto_Term();
 //	ModOp_Term();
 	return 0;

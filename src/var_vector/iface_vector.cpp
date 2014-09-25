@@ -7,8 +7,6 @@
 #include "mod_varutil.h"
 #include "reffuncResult.h"
 
-#include "knowbug/knowbugForHPI.h"
-
 using namespace hpimod;
 
 static int hpi_termfunc( int option );
@@ -39,8 +37,6 @@ EXPORT void WINAPI hpi_vector( HSP3TYPEINFO* info )
 static int hpi_termfunc( int option )
 {
 	VectorCmdTerminate();
-
-	terminateKnowbugForHPI();
 	return 0;
 }
 

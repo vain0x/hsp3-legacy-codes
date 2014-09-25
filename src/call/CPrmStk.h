@@ -16,7 +16,7 @@ prmstk バッファ、str 引数、値渡しされた any 引数用の PVal、fl
 idx は flex を含まない。
 todo: 与えられた MPVarData (Managed かもしれない) を所有するべき
 todo: ManagedBuffer (strbuf ポインタを参照カウンタ方式で管理)
-todo: 引数取り出し部分(Invoker)と2重で prmtype を参照するのがもったいない感じ。
+todo: 引数取り出し部分(Caller)と2重で prmtype を参照するのがもったいない感じ。
 //*/
 
 #ifndef IG_CLASS_PARAMETER_STACK_CREATOR_MANAGED_H
@@ -41,6 +41,7 @@ namespace ArgInfoId
 		;
 }
 
+class CBound;
 class CPrmStk;
 using arguments_t = CPrmStk;
 
@@ -67,23 +68,21 @@ private:
 	};
 	static size_t const headerSize = sizeof(header_t);
 	static int const MagicCode = 0x55AC;
+	static int const MagicCodeNoBind = 0x55AD;
 
 public:
 	CPrmStk(CPrmInfo const& prminfo);
 	~CPrmStk() { free(); }
 
-	void* getPrmStkPtr() { return super_t::getptr(); }
-	void const* getPrmStkPtr() const { return super_t::getptr(); }
-
-	size_t cntArgs() const { return cntArgs_; }
-	bool hasFinalized() const { return finalized_; }
-
 	CPrmInfo const& getPrmInfo() const { return prminfo_; }
 	int getNextPrmType() const {
 		return prminfo_.getPrmType(cntArgs());
 	}
+	size_t cntArgs() const { return cntArgs_; }
+	bool hasFinalized() const { return finalized_; }
 
-	void incCntArgs() { ++cntArgs_; }
+	void* getPrmStkPtr() { return super_t::getptr(); }
+	void const* getPrmStkPtr() const { return super_t::getptr(); }
 
 	static bool hasMagicCode(void* prmstk) {
 		return (getHeader(prmstk).magicCode == MagicCode);
@@ -92,6 +91,16 @@ private:
 	static header_t& getHeader(void* prmstk) {
 		return reinterpret_cast<header_t*>(prmstk)[-1];
 	}
+
+	void* getOwnerPtr() { return &getHeader(getPrmStkPtr()); }
+	void incCntArgs() { ++cntArgs_; }
+
+public:
+	// copy/move semantics
+	CPrmStk(CPrmStk const& src);
+	CPrmStk& operator=(CPrmStk const& src) { this->~CPrmStk(); new(this) CPrmStk(src); }
+	CPrmStk(CPrmStk&& src);
+	CPrmStk& operator=(CPrmStk&& src) { this->~CPrmStk(); new(this) CPrmStk(std::move(src)); }
 
 public:
 	//------------------------------------------------
@@ -109,7 +118,6 @@ public:
 		super_t::pushValue(VtTraits::derefValptr<VtTag>(pdat));
 		return;
 	}
-	template<> void pushValue<hpimod::vtStr>(PDAT const* pdat);
 
 	// 文字列
 	void pushString(char const* src);
@@ -132,7 +140,7 @@ public:
 	void pushArgByVal(PDAT const* pdat, hpimod::vartype_t vtype);
 	void pushArgByRef(PVal* pval, APTR aptr);
 	void pushArgByDefault();
-	void allocArgNoBind(unsigned short magiccode, unsigned short priority);
+	void allocArgNoBind(unsigned short priority);
 
 	//------------------------------------------------
 	// 実引数値の peek 各種
@@ -168,6 +176,7 @@ public:
 			? reinterpret_cast<vector_t*>(getOffsetPtr(prminfo_.getStackOffsetFlex()))
 			: nullptr;
 	}
+	unsigned short* peekArgNoBind(size_t idx) const;
 
 private:
 	//------------------------------------------------
@@ -183,7 +192,19 @@ private:
 		return getOffsetPtr(prminfo_.getStackOffsetParam(idx));
 	}
 
+	//------------------------------------------------
+	// その他
+	//------------------------------------------------
+	// 解体
 	void free();
+
+	// for CBound
+	void pushArgFromPrmStk(CPrmStk const& src, size_t idxSrc,  CBound* boundfunc = nullptr, CPrmStk* argsMerged = nullptr);
+	void pushFinalsFrom(CPrmStk const& src);
+public:
+	void merge(CPrmStk const& src, CBound& boundfunc, CPrmStk& argsMerged);
 };
+
+template<> void CPrmStk::pushValue<hpimod::vtStr>(PDAT const* pdat);
 
 #endif

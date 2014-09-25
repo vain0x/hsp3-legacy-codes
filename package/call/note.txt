@@ -773,19 +773,6 @@
 
 ＠Developing
 ＠Wish
-・functor の label, axcmd への型変換
-・knowbug との連繋
-・ラベル関数以外もコルーチンにできるようにしたい。
-
-・vector.hpi と統合
-	実引数リストの vector 扱い。
-	引数の完全転送、マージング
-	
-	統合するなら独立性を高く設計する技術がほしい。
-	
-	内部的に CVector を使う (vector.hpi と初めから統合していることにする) という仕様でもいい気がする。両方必要なら obsidian.hpi を使ってね (assoc もついてくるけど)。
-	→ APTR の扱いが異なるので困る。
-
 -----
 ・省略値を独自で設定できるようにしたい。CPrmInfo を使えばできるが、(HSPから) どのように指定するのか。
 	functor FuncWithDefaultArg (→ 省略値を含む PrmStk を持つ) を噛ませる

@@ -30,6 +30,7 @@
 #cmd which       0x104		// 条件演算
 #cmd what        0x105		// 分岐演算
 #cmd exprs       0x106		// リスト式
+#cmd vtname      0x110		// 変数型の名前
 
 #cmd _kw_constptr   0x200	// (kw) 定数ポインタ
 

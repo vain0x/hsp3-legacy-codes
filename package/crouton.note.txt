@@ -5,14 +5,15 @@
 call, opex, var_assoc, var_vector
 
 ＠履歴
-－2014.09.24 (Wed)
+－2014.09.25 (Thu)
+・call: 束縛関数を生成する関数コマンド、argbind を追加した。
 
 －2014.09.23 (Tue)
 
 ・vector: var 参照を持つ要素に内部変数の添字を与えたら、「配列・関数として使用できない型です」(HSPERR_INVALID_ARRAY)エラーを出すようにした。
 ・label に比較演算を定義するようにした。
 	call_defineLabelComparison
-・opex: 変数型の名前を取得するコマンド、vtname() を追加した。
+・opex: 変数型の名前を取得する関数コマンド、vtname() を追加した。
 
 －2014.09.21 (Sun)
 
@@ -42,9 +43,13 @@ call, opex, var_assoc, var_vector
 
 ・スクリプト側で、今実行されているのが call による呼び出しかどうかを確認する方法。
 
+issues
+・argbind: flex 引数に nobind を与えることができない。
+
 その他
 opex: labelname (for debug; CAxを使う or めんどくさい)
 call:
-	vectorを引数列として展開
-	可変長引数にvectorを直接渡す、
-	f(bycomposite g) = f○g
+可変長引数にvectorを直接渡す、
+f(bycomposite g) = f○g
+既定引数
+束縛を再帰的に解除する仕様？

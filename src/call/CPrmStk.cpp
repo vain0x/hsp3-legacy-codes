@@ -1,6 +1,9 @@
 ﻿
 #include "CPrmStk.h"
 
+#include "Invoker.h"
+#include "CBound.h"
+
 using namespace hpimod;
 
 //------------------------------------------------
@@ -204,16 +207,27 @@ void CPrmStk::pushArgByDefault()
 
 //------------------------------------------------
 // 不束縛引数のプッシュ
+//
+// @ unsigned short[2] として扱う。
 //------------------------------------------------
-void CPrmStk::allocArgNoBind(unsigned short magiccode, unsigned short priority)
+void CPrmStk::allocArgNoBind(unsigned short priority)
 {
 	int const prmtype = getNextPrmType();
 	size_t const size = PrmType::sizeOf(prmtype);
-	assert(size >= sizeof(int));
+	assert(size >= sizeof(unsigned short[2]));
 
-	int* const p = static_cast<int*>(allocBlank(size));
-	*p = MAKELONG(priority, magiccode);
+	incCntArgs();
+	auto const p = static_cast<unsigned short*>(allocBlank(size));
+	p[0] = priority;
+	p[1] = MagicCodeNoBind;
 	return;
+}
+
+unsigned short* CPrmStk::peekArgNoBind(size_t idx) const
+{
+	assert(idx < cntArgs());
+	auto const p = reinterpret_cast<unsigned short*>(getArgPtrAt(idx));
+	return (p[1] == MagicCodeNoBind ? p : nullptr);
 }
 
 //------------------------------------------------
@@ -310,13 +324,6 @@ void CPrmStk::finalize()
 }
 
 //------------------------------------------------
-// 
-//------------------------------------------------
-//------------------------------------------------
-// 
-//------------------------------------------------
-
-//------------------------------------------------
 // 解体
 //
 // @ 実引数の取り出しの途中で死亡することもあるので注意したい。
@@ -360,5 +367,119 @@ void CPrmStk::free()
 		}
 	}
 
-	hspfree(&getHeader(prmstk));
+	hspfree(getOwnerPtr());
 }
+
+//------------------------------------------------
+// 複製
+//------------------------------------------------
+CPrmStk::CPrmStk(CPrmStk const& src)
+	: CPrmStk(src.getPrmInfo())
+{
+	for ( size_t i = 0; i < src.cntArgs(); ++i ) {
+		pushArgFromPrmStk(src, i);
+	}
+	assert(cntArgs() == src.cntArgs());
+
+	pushFinalsFrom(src);
+	return;
+}
+
+CPrmStk::CPrmStk(CPrmStk&& src)
+	: prminfo_(src.getPrmInfo())
+	, CPrmStkCreator(std::move(src))
+{ }
+
+//------------------------------------------------
+// prmstk 上の値の push
+//
+// for CBound (todo: CBound との分離)
+// src の idxSrc 番目の実引数を push する。
+// それが nobind なら、対応する実引数を argsManeged から取り出して push する。
+//------------------------------------------------
+void CPrmStk::pushArgFromPrmStk(CPrmStk const& src, size_t idxSrc, CBound* boundfunc, CPrmStk* argsMerged)
+{
+	auto const prmtype = getNextPrmType();
+	auto const srcPrmtype = src.getPrmInfo().getPrmType(idxSrc);
+
+	if ( auto const p = src.peekArgNoBind(idxSrc) ) {
+		if ( !boundfunc ) {
+			allocArgNoBind(*p);
+
+		} else {
+			// merge 処理
+
+			assert(argsMerged);
+
+			// 対応する添字の検索
+			// prmIdxAssoc: (idxMerged: 束縛関数 f への実引数の添字) -> (idxNext: unbind(f) の束縛されていない引数の添字)
+			auto const& prmIdxAssoc = boundfunc->getPrmIdxAssoc();
+			size_t const idxNext = cntArgs();
+			auto const iter = std::find(prmIdxAssoc.begin(), prmIdxAssoc.end(), idxNext);
+			assert(iter != prmIdxAssoc.end());
+			size_t const idxMerged = std::distance(prmIdxAssoc.begin(), iter);
+			assert(prmIdxAssoc[idxMerged] == idxNext);
+
+			//dbgout("merge: %d <- merged[%d]", idxNext, idxMerged);
+
+			pushArgFromPrmStk(*argsMerged, idxMerged, nullptr);
+		}
+
+	} else if ( PrmType::isRef(prmtype)
+		|| (prmtype == PrmType::Any && (PrmType::isRef(srcPrmtype) || srcPrmtype == PrmType::Any))
+		) {
+		auto const ref = src.peekRefArgAt(idxSrc);
+		pushArgByRef(ref, ref->offset);
+
+	} else {
+		vartype_t vtype;
+		auto const pdat = src.peekValArgAt(idxSrc, vtype);
+		pushArgByVal(pdat, vtype);
+	}
+	return;
+}
+
+void CPrmStk::pushFinalsFrom(CPrmStk const& src)
+{
+	if ( src.hasFinalized() ) {
+		finalize();
+
+		auto& prms = src.getPrmInfo();
+
+		// captures : 未実装
+		assert(prms.cntCaptures() == 0);
+
+		// locals
+		for ( size_t i = 0; i < prms.cntLocals(); ++i ) {
+			PVal_copy(peekLocalAt(i), src.peekLocalAt(i));
+		}
+
+		// flex
+		if ( auto const flex = peekFlex() ) {
+			auto const srcFlex = src.peekFlex();
+			assert(srcFlex);
+
+			*flex = *srcFlex;
+		}
+	}
+	return;
+}
+
+//------------------------------------------------
+// for CBound
+//------------------------------------------------
+void CPrmStk::merge(CPrmStk const& src, CBound& boundfunc, CPrmStk& argsMerged)
+{
+	//dbgout("this.cntArgs = %d, this.cntPrms = %d, src.cntArgs = %d, src.cntPrms = %d", cntArgs(), getPrmInfo().cntPrms(), src.cntArgs(), src.getPrmInfo().cntPrms());
+	for ( size_t i = 0; i < src.cntArgs(); ++i ) {
+		pushArgFromPrmStk(src, i, &boundfunc, &argsMerged);
+	}
+	assert(cntArgs() == src.cntArgs());
+	
+	pushFinalsFrom(src);
+	return;
+}
+
+//------------------------------------------------
+// 
+//------------------------------------------------

@@ -18,12 +18,19 @@ private:
 	size_t bufSize_;	// 確保済みのサイズ
 
 public:
-	CPrmStkCreator( void* buf, size_t bufSize )
-		: ptr_( reinterpret_cast<char*>( buf ) )
-		, bufSize_( bufSize )
-		, usingSize_( 0 )
+	CPrmStkCreator(void* buf, size_t bufSize)
+		: ptr_(reinterpret_cast<char*>(buf))
+		, bufSize_(bufSize)
+		, usingSize_(0)
 	{ }
 	~CPrmStkCreator() { }
+
+	// move
+	CPrmStkCreator(CPrmStkCreator&& src)
+		: ptr_ { src.ptr_ }
+		, usingSize_ { src.usingSize_ }
+		, bufSize_ { src.bufSize_ }
+	{ src.ptr_ = nullptr; }
 
 	// 取得
 	void*  getptr()   const { return ptr_; }
