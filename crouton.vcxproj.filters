@@ -300,6 +300,9 @@
     <ClCompile Include="src\call\CPrmStk.cpp">
       <Filter>call_core</Filter>
     </ClCompile>
+    <ClCompile Include="..\hpimod\CHspCode.cpp">
+      <Filter>hpimod</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="package\callcmd.cmdlist.txt">

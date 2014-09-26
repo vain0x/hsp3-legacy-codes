@@ -22,14 +22,14 @@
 #define       HpiCmdlistEnd //
 #define ctype HpiCmdlistSectionBegin(%1) //
 #define       HpiCmdlistSectionEnd //
-#define ctype HpiCmd___(%1, %2) #cmd %2 %1
-#define ctype HpiCmdS__(%1, %2) #cmd %2 %1
-#define ctype HpiCmd_F_(%1, %2) #cmd %2 %1
-#define ctype HpiCmdSF_(%1, %2) #cmd %2 %1
-#define ctype HpiCmd__V(%1, %2) #cmd %2 %1
-#define ctype HpiCmdS_V(%1, %2) #cmd %2 %1
-#define ctype HpiCmd_FV(%1, %2) #cmd %2 %1
-#define ctype HpiCmdSFV(%1, %2) #cmd %2 %1
+#define ctype HpiCmd___(%1, %2) #cmd %2@ %1
+#define ctype HpiCmdS__(%1, %2) #cmd %2@ %1
+#define ctype HpiCmd_F_(%1, %2) #cmd %2@ %1
+#define ctype HpiCmdSF_(%1, %2) #cmd %2@ %1
+#define ctype HpiCmd__V(%1, %2) #cmd %2@ %1
+#define ctype HpiCmdS_V(%1, %2) #cmd %2@ %1
+#define ctype HpiCmd_FV(%1, %2) #cmd %2@ %1
+#define ctype HpiCmdSFV(%1, %2) #cmd %2@ %1
 
 #regcmd "_hsp3typeinfo_call@4", STR_CALL_HPI_PATH, 1
 
@@ -134,43 +134,39 @@
 #define global argc argcount
 //#define global argv argVal
 
-#define global call_return(%1) call_setResult_ (%1) : return
+#define global call_return(%1) call_setResult_@ (%1) : return
 
 // ラムダ式
-#define global __p0 ( call_prmof(0) )
-#define global __p1 ( call_prmof(1) )
-#define global __p2 ( call_prmof(2) )
-#define global __p3 ( call_prmof(3) )
-#define global __p4 ( call_prmof(4) )
-#define global __p5 ( call_prmof(5) )
-#define global __p6 ( call_prmof(6) )
-#define global __p7 ( call_prmof(7) )
-#define global __p8 ( call_prmof(8) )
-#define global __p9 ( call_prmof(9) )
+#define global __p0 ( call_prmof_@(0) )
+#define global __p1 ( call_prmof_@(1) )
+#define global __p2 ( call_prmof_@(2) )
+#define global __p3 ( call_prmof_@(3) )
+#define global __p4 ( call_prmof_@(4) )
+#define global __p5 ( call_prmof_@(5) )
+#define global __p6 ( call_prmof_@(6) )
+#define global __p7 ( call_prmof_@(7) )
 
-#define global __v0 ( call_valof(0) )
-#define global __v1 ( call_valof(1) )
-#define global __v2 ( call_valof(2) )
-#define global __v3 ( call_valof(3) )
-#define global __v4 ( call_valof(4) )
-#define global __v5 ( call_valof(5) )
-#define global __v6 ( call_valof(6) )
-#define global __v7 ( call_valof(7) )
-#define global __v8 ( call_valof(8) )
-#define global __v9 ( call_valof(9) )
+#define global __v0 ( lambdaValue_@(0) )
+#define global __v1 ( lambdaValue_@(1) )
+#define global __v2 ( lambdaValue_@(2) )
+#define global __v3 ( lambdaValue_@(3) )
+#define global __v4 ( lambdaValue_@(4) )
+#define global __v5 ( lambdaValue_@(5) )
+#define global __v6 ( lambdaValue_@(6) )
+#define global __v7 ( lambdaValue_@(7) )
 
 #define global functor_id axcmdOf( _functor_id@__callmod )	// 恒等写像; 後ろで定義している
 
 // コマンド
-#define global ctype callcs(%1) callcmd(%1) : call_byref	// call_byref はダミー(なんでもいいから1つ必要)
-#define global ctype callcf(%1, %2 = __call_empty__) callcmd(%1, call_byref %2)	// 〃
+#define global ctype callcs(%1) callcmd(%1) : call_byref@	// call_byref はダミー(なんでもいいから1つ必要)
+#define global ctype callcf(%1, %2 = __call_empty__) callcmd(%1, call_byref@ %2)	// 〃
 
 #define global insub %tinsub *%i : if(0) : %o :
 
 // コルーチン
 #define global co_yield(%1 = __call_empty__) \
-	co_yield_impl %1, co_next_label@call_hpi_mod :\
-	newlab co_next_label@call_hpi_mod, 1 :\
+	co_yield_impl %1, co_next_label@__callmod :\
+	newlab co_next_label@__callmod, 1 :\
 	return :
 
 #define global co_exit return

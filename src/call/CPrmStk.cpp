@@ -430,6 +430,9 @@ void CPrmStk::finalize()
 //------------------------------------------------
 void CPrmStk::free()
 {
+	// moved
+	if ( !p_ ) return;
+
 	void* const prmstk = getPrmStkPtr();
 	assert(!!prmstk);
 

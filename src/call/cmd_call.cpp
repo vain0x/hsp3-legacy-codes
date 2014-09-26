@@ -161,7 +161,7 @@ int CallCmd::argVal(PDAT** ppResult)
 	auto& caller = Caller::top();
 	auto& args = caller.getArgs();
 
-	int const idxArg = code_getdi(0);
+	int const idxArg = code_geti();
 	if ( !(0 <= idxArg && static_cast<size_t>(idxArg) < args.cntArgs()) ) puterror(HSPERR_ILLEGAL_FUNCTION);
 
 	// 返値を設定する

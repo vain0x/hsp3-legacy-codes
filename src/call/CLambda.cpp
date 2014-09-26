@@ -80,16 +80,16 @@ void CLambda::call( Caller& callerGiven )
 				stprm_t const prm = &ctx->mem_minfo[_v];
 				dbgout( "subid id: %d, mptype: %d", (int)prm->subid, (int)prm->mptype );
 			}
-			if ( i != 0 && _e & EXFLG_1 ) break;
+			if ( i != 0 && (_e & EXFLG_1) ) break;
 		}
 	}
 #endif
 
-	arguments_t& args = callerGiven.getArgs();
+	Caller callerInternal { Functor::New(lbDst) };
+	auto& args = callerInternal.getArgs();
+	args = std::move(callerGiven.getArgs());
 	args.importCaptures(capturer_);
 
-	Caller callerInternal { Functor::New(lbDst) };
-	callerInternal.getArgs() = std::move(args);
 	callerInternal.invoke();
 	
 	assert( callerInternal.hasResult() );
@@ -131,7 +131,7 @@ void CLambda::code_get()
 	size_t cntLocals = 0;
 	
 	// 「キャプチャされた変数」を参照するコードの位置 (後で修整するために位置を記憶する)
-	std::vector<std::pair<stprm_t, label_t>> outerArgs;
+	std::vector<std::pair<stprm_t, size_t>> outerArgs;
 
 	// 専用の命令コマンドを配置
 	body.put( g_pluginType_call, FunctorCmd::Id::lambdaBody_, EXFLG_1 );
@@ -161,19 +161,19 @@ void CLambda::code_get()
 				int const mptype = stprm->mptype;
 
 				switch ( mptype ) {
-					case MPTYPE_VAR:
 					case MPTYPE_ARRAYVAR:
-						return body.putVar( reinterpret_cast<MPVarData*>(ptr)->pval );
+						body.putVar( reinterpret_cast<MPVarData*>(ptr)->pval );
+						break;
 
-					case MPTYPE_LABEL: return body.putVal( *reinterpret_cast<label_t*>(ptr) );
-					case MPTYPE_LOCALSTRING: return body.putVal( *reinterpret_cast<char**>(ptr) );
-					case MPTYPE_DNUM: return body.putVal( *reinterpret_cast<double*>(ptr) );
-					case MPTYPE_INUM: return body.putVal( *reinterpret_cast<int*>(ptr) );
+					case MPTYPE_LABEL: body.putVal( *reinterpret_cast<label_t*>(ptr) ); break;
+					case MPTYPE_LOCALSTRING: body.putVal( *reinterpret_cast<char**>(ptr) ); break;
+					case MPTYPE_DNUM: body.putVal( *reinterpret_cast<double*>(ptr) ); break;
+					case MPTYPE_INUM: body.putVal( *reinterpret_cast<int*>(ptr) ); break;
 
 					case MPTYPE_SINGLEVAR:
 					case MPTYPE_LOCALVAR:
 					{
-						// 変数要素は、リテラル値で記述できないので、lambda関数の prmstk に乗せるために保存する
+						// 変数要素は、リテラル値で記述できないので、lambda関数の prmstk に乗せるためにキャプチャする
 						if ( mptype == MPTYPE_SINGLEVAR ) {
 							auto const vardata = reinterpret_cast<MPVarData*>(ptr);
 							capturer_->push_back({ vardata->pval, vardata->aptr });
@@ -181,13 +181,16 @@ void CLambda::code_get()
 						// ローカル変数は、実行中に消滅するかもなのでコピーを取る
 						} else {
 							auto const pval = reinterpret_cast<PVal*>(ptr);
-							capturer_->push_back(ManagedVarData::duplicate(pval));
+							auto&& vardata = ManagedVarData::duplicate(pval);
+							//dbgout("local copy: vardata->ref = %d", ManagedPVal::ofValptr(vardata.getPVal()).cntRefers());
+							capturer_->push_back(std::move(vardata));
 						}
 
 						// キャプチャしたものを記録しておく
-						// これが lamda 関数の何番目の引数になるかは、仮引数の数が確定するまで分からない
-						// short では収まらない値かもなので、(-1 にして) int サイズを確保する
-						outerArgs.push_back({ stprm, body.getlbNow() });
+						// このエイリアスの offset 値は、元々のものと異なるので、自作した STRUCTPRM を用意する。
+						// 仮引数の数が確定するまで offset が分からないので、ダミー値 (-1) を書いておき、後で書き換える。
+						// short では収まらない値かもなので、(-1 にして) int サイズを確保する。
+						outerArgs.push_back({ stprm, body.getCurrentOffset() });
 						body.put( TYPE_STRUCT, -1, exflg );
 						break;
 					}
@@ -215,7 +218,7 @@ void CLambda::code_get()
 			// 対応する実引数を取り出すコード「argv(n)」を出力
 			body.put( g_pluginType_call, CallCmd::Id::argVal, exflg_here );
 			body.put( TYPE_MARK, '(', 0 );
-			body.putVal( iPrm );
+			body.putVal( iPrm, EXFLG_0 );
 			body.put( TYPE_MARK, ')', 0 );
 
 		} else if ( *type == g_pluginType_call && *val == FunctorCmd::Id::lambda ) {
@@ -253,7 +256,7 @@ void CLambda::code_get()
 	// 仮引数リストの構築
 	// lambda 関数が呼ばれるときと、lambda の内部から実際のラベルにジャンプするときで、共用する。
 	{
-		// 仮引数形式：「lambda引数(_pN) + キャプチャ変数 + ローカル変数(_vN)」
+		// 仮引数形式：「lambda引数(__pN) + キャプチャ変数 + ローカル変数(__vN)」
 
 		CPrmInfo::prmlist_t prmlist;
 		prmlist.resize(cntPrms + outerArgs.size() + cntLocals);
@@ -263,7 +266,7 @@ void CLambda::code_get()
 
 		// キャプチャ値
 		for ( size_t i = 0; i < outerArgs.size(); ++i ) {
-			prmlist.push_back(
+			prmlist[cntPrms + i] = (
 				PrmType::Capture
 #if 0
 				(outerArgs[cntPrms + i].first->mptype == MPTYPE_SINGLEVAR)
@@ -278,16 +281,24 @@ void CLambda::code_get()
 
 		assert(!prms_);
 		prms_ = std::make_unique<CPrmInfo>(std::move(prmlist));
+
+		dbgout("(prms, caps, locals) = (%d, %d, %d)", cntPrms, outerArgs.size(), cntLocals);
 	}
 
 	// ラムダ式中に含まれる、「キャプチャ変数を参照している TYPE_STRUCT コード」の code 値を補完する
 	{
+		label_t const lbBody = getLabel();
+
 		for ( size_t i = 0; i < outerArgs.size(); ++ i ) {
-			*(int*)(outerArgs[i].second + 1) = body.putDsStPrm(
-				STRUCTPRM_SUBID_STACK,
+			int const idxPrm = body.putDsStPrm({
 				((outerArgs[i].first->mptype) == MPTYPE_SINGLEVAR ? MPTYPE_SINGLEVAR : MPTYPE_ARRAYVAR),
+				STRUCTPRM_SUBID_STACK,
 				prms_->getStackOffsetCapture(i)
-			);
+			});
+
+			auto const p = const_cast<unsigned short*>(lbBody) + outerArgs[i].second;
+			assert((*p & CSTYPE) == TYPE_STRUCT && *reinterpret_cast<int*>(p + 1) == -1);
+			*reinterpret_cast<int*>(p + 1) = idxPrm;
 		}
 	}
 	return;
@@ -303,10 +314,12 @@ void* GetReferedPrmstk(stprm_t stprm)
 	void* const cur_prmstk = ctx->prmstack;
 	if ( !cur_prmstk ) return nullptr;
 
-	if ( stprm->subid == STRUCTPRM_SUBID_STACK ) {		// 実引数
+	if ( stprm->subid == STRUCTPRM_SUBID_STACK ) {
+		// コマンドの引数
 		return cur_prmstk;
 
-	} else if ( stprm->subid >= 0 ) {	// メンバ変数
+	} else if ( stprm->subid >= 0 ) {
+		// メンバ変数
 		auto const thismod = reinterpret_cast<MPModVarData*>(cur_prmstk);
 		if ( thismod->pval->flag != HSPVAR_FLAG_STRUCT ) puterror(HSPERR_TYPE_MISMATCH);
 		return VtTraits::asValptr<vtStruct>(PVal_getPtr(thismod->pval, thismod->aptr))->ptr;

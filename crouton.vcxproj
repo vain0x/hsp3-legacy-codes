@@ -127,6 +127,7 @@
     <ClInclude Include="src\var_vector\vt_vector.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\hpimod\CHspCode.cpp" />
     <ClCompile Include="..\hpimod\hspsdk\hsp3plugin.cpp" />
     <ClCompile Include="..\hpimod\knowbug\knowbugForHPI.cpp" />
     <ClCompile Include="..\hpimod\mod_argGetter.cpp" />

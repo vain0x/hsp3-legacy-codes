@@ -15,6 +15,8 @@
 class CLambda
 	: public IFunctor
 {
+	using CHspCode = hpimod::CHspCode;
+
 	// メンバ変数
 private:
 	// 自作関数の本体コード、仮引数

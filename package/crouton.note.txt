@@ -32,7 +32,7 @@ call, opex, var_assoc, var_vector
 ＠wish
 
 PrmStk を操作するインターフェースクラスの再考
-
+lambda のデバッグ
 
 ・call の拡張的関数子の実装
 	knowbug 文字列化の実装
@@ -58,5 +58,7 @@ call:
 f(bycomposite g) = f○g
 既定引数
 束縛を再帰的に解除する仕様？
+
 lambda の命令版
+debug 実行ならlambda ラベルの位置情報を dinfo に書き込む
 内部から lambda を生成する

@@ -2,21 +2,42 @@
 
 // ラムダ関数(λ(lambda) function)
 
-// 関数：lambda(exprs..., return_value)
-// 「exprs..., return_value を順番に実行して、最後の値を返す」という関数を作る。
+// 関数：lambda(exprs...)
+// 「exprs... を順番に実行して、最後の式の値を返す」という関数を作る。
+// lambda が生み出す関数のことを「ラムダ関数」と呼ぶ。
 
-	// 「greet()」を実行する関数を返す
-	lmbGreeter = lambda( greet() )
+	// あまり意味のない例
+	lmbFunc = lambda( logging("str(pi) = " + M_PI) )
 	
-	mes "lmbGreeter = { return greet() }"
+	mes "lmbFunc は { return logging(\"str(pi) = \" + M_PI) } を行う関数"
+	mes "lmbFunc(): " + lmbFunc()
+	mes
 	
-	// lmbGreeter を実行する
-	mes "lmbGreeter() = " + lmbGreeter()
+// キーワード：__pN
+// (N には具体的な数値 0～7 を書く)
+// lambda() の引数式の中に __pN と書かれているなら、
+// その lambda() が返すラムダ関数は (N+1) 個以上の引数を受け取る。
+// ラムダ関数の実行時には、__pN は与えられた N 番目の実引数の値を表す。
+
+	// lmbAdd: (a, b) → a + b
+	lmbAdd = lambda(__p0 + __p1)
+	
+	mes "lmbAdd(\"1 + 2 = \", 1 + 2) = " + lmbAdd(1, 2)
+	
+// キーワード：__vN
+// (N には具体的な数値 0～7 を書く)
+// lambda() の N 番目の式の値を表す。
+// N 番目の評価が終わっていない場合は未定義。
+
+	// lmbF: (a, b) → (a + b) * (a + b)
+	lmbF = lambda(__p0 + __p1,  __v0 * __v0)
+	
+	mes "lmbF(1, 2) = " + lmbF(1, 2)
 	
 	stop
 	
 	
-#defcfunc greet
-	mes "Hello, world!"
-	return "Hello."
+#defcfunc logging str s
+	mes "logging(" + s + ") が呼ばれた！"
+	return s
 	

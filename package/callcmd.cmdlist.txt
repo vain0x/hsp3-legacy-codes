@@ -41,7 +41,7 @@ HpiCmdlistBegin;
 	HpiCmd___(0xF04, noBind);
 	HpiCmd___(0xF05, noCall);
 	HpiCmd___(0xF06, call_prmOf_);
-	HpiCmd___(0xF07, call_valOf_);
+//	HpiCmd___(0xF07, call_valOf_);
 
 	HpiCmd_F_(0xFF0, axcmdOf);
 	HpiCmd_F_(0xFF1, labelOf);
