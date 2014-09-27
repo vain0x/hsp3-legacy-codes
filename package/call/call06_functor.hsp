@@ -31,12 +31,7 @@
 // functor 型の型タイプ値を返す。
 
 	mes "functor の型タイプ値：" + functor
-
-// システム変数：functor_vtname
-// functor 型の本当の名前を表す文字列。
-
-	mes "vartype(" + functor_vtname + ") = " + vartype(functor_vtname)
-
+	
 // functor 型の値も call コマンドで呼び出すことができる。
 
 	mes "fLabel は *LHello を指しているなう"

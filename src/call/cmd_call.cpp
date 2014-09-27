@@ -116,7 +116,7 @@ static int getArgInfo(Caller const& caller, int id, size_t idxArg)
 				return HspTrue;
 
 			} else if ( prmtype == PrmType::Any ) {
-				return HspBool( ManagedPVal::isManagedValue(caller.getArgs().peekRefArgAt(idxArg)) );
+				return HspBool( ManagedPVal::isManagedValue(caller.getArgs()->peekRefArgAt(idxArg)) );
 			} else {
 				return HspFalse;
 			}
@@ -146,7 +146,7 @@ int CallCmd::arginfo(PDAT** ppResult)
 
 	auto const id = code_geti();	// データの種類
 	int const idxArg = code_geti();
-	if ( !(0 <= idxArg && static_cast<size_t>(idxArg) < caller.getArgs().cntArgs()) ) puterror(HSPERR_ILLEGAL_FUNCTION);
+	if ( !(0 <= idxArg && static_cast<size_t>(idxArg) < caller.getArgs()->cntArgs()) ) puterror(HSPERR_ILLEGAL_FUNCTION);
 
 	return SetReffuncResult( ppResult, getArgInfo(caller, id, idxArg) );
 }
@@ -162,11 +162,11 @@ int CallCmd::argVal(PDAT** ppResult)
 	auto& args = caller.getArgs();
 
 	int const idxArg = code_geti();
-	if ( !(0 <= idxArg && static_cast<size_t>(idxArg) < args.cntArgs()) ) puterror(HSPERR_ILLEGAL_FUNCTION);
+	if ( !(0 <= idxArg && static_cast<size_t>(idxArg) < args->cntArgs()) ) puterror(HSPERR_ILLEGAL_FUNCTION);
 
 	// 返値を設定する
 	vartype_t vtype;
-	*ppResult = args.peekValArgAt(idxArg, vtype);
+	*ppResult = args->peekValArgAt(idxArg, vtype);
 	return vtype;
 }
 
@@ -180,9 +180,9 @@ void CallCmd::argClone()
 
 	PVal* const pval = code_getpval();
 	int const idxArg = code_geti();
-	if ( !(0 <= idxArg && static_cast<size_t>(idxArg) < args.cntArgs()) ) puterror(HSPERR_ILLEGAL_FUNCTION);
+	if ( !(0 <= idxArg && static_cast<size_t>(idxArg) < args->cntArgs()) ) puterror(HSPERR_ILLEGAL_FUNCTION);
 
-	PVal* const pvalSrc = args.peekRefArgAt(idxArg);
+	PVal* const pvalSrc = args->peekRefArgAt(idxArg);
 	PVal_clone(pval, pvalSrc, pvalSrc->offset);
 	return;
 }
@@ -196,7 +196,7 @@ void CallCmd::argPeekAll()
 	auto& args = caller.getArgs();
 
 	for ( size_t i = 0
-		; code_isNextArg() && (i < args.cntArgs())
+		; code_isNextArg() && (i < args->cntArgs())
 		; ++i
 		) {
 		try {
@@ -204,11 +204,11 @@ void CallCmd::argPeekAll()
 
 			bool const bByRef = (getArgInfo(caller, ArgInfoId::IsRef, i) != HspFalse);
 			if ( bByRef ) {
-				PVal* const pvalSrc = args.peekRefArgAt(i);
+				PVal* const pvalSrc = args->peekRefArgAt(i);
 				PVal_clone(pval, pvalSrc, pvalSrc->offset);
 			} else {
 				vartype_t vtype;
-				PDAT const* pdat = args.peekValArgAt(i, vtype);
+				PDAT const* pdat = args->peekValArgAt(i, vtype);
 				PVal_assign(pval, pdat, vtype);
 			}
 		} catch ( HSPERROR e ) {
@@ -231,7 +231,7 @@ int CallCmd::localVal( PDAT** ppResult )
 	int const idxLocal = code_geti();
 	if ( !(0 <= idxLocal && static_cast<size_t>(idxLocal) < caller.getPrms().cntLocals()) ) puterror(HSPERR_ILLEGAL_FUNCTION);
 
-	PVal* const pvLocal = caller.getArgs().peekLocalAt(idxLocal);
+	PVal* const pvLocal = caller.getArgs()->peekLocalAt(idxLocal);
 	if ( !pvLocal ) puterror( HSPERR_ILLEGAL_FUNCTION );
 
 	*ppResult = pvLocal->pt;
@@ -246,7 +246,7 @@ void CallCmd::localClone()
 	int const idxLocal = code_geti();
 	if ( !(0 <= idxLocal && static_cast<size_t>(idxLocal) < caller.getPrms().cntLocals()) ) puterror(HSPERR_ILLEGAL_FUNCTION);
 
-	PVal* const pvLocal = caller.getArgs().peekLocalAt(idxLocal);
+	PVal* const pvLocal = caller.getArgs()->peekLocalAt(idxLocal);
 	if ( !pvLocal ) puterror( HSPERR_ILLEGAL_FUNCTION );
 
 	PVal_clone(pval, pvLocal);
@@ -259,7 +259,7 @@ int CallCmd::localVector(PDAT** ppResult)
 
 	vector_t vec {};
 	for ( size_t i = 0; i < caller.getPrms().cntLocals(); ++i ) {
-		vec->push_back({ caller.getArgs().peekLocalAt(i), 0 });
+		vec->push_back({ caller.getArgs()->peekLocalAt(i), 0 });
 	}
 	return SetReffuncResult(ppResult, std::move(vec));
 }
@@ -271,7 +271,7 @@ int CallCmd::flexVal(PDAT** ppResult)
 {
 	auto& caller = Caller::top();
 
-	if ( auto pFlex = caller.getArgs().peekFlex() ) {
+	if ( auto pFlex = caller.getArgs()->peekFlex() ) {
 		auto& flex = *pFlex;
 
 		int const idxFlex = code_geti();
@@ -292,7 +292,7 @@ void CallCmd::flexClone()
 {
 	auto& caller = Caller::top();
 
-	if ( auto pFlex = caller.getArgs().peekFlex() ) {
+	if ( auto pFlex = caller.getArgs()->peekFlex() ) {
 		auto& flex = *pFlex;
 
 		int const idxFlex = code_geti();
@@ -314,7 +314,7 @@ void CallCmd::flexClone()
 int CallCmd::flexVector(PDAT** ppResult)
 {
 	auto& caller = Caller::top();
-	if ( auto pFlex = caller.getArgs().peekFlex() ) {
+	if ( auto pFlex = caller.getArgs()->peekFlex() ) {
 		return SetReffuncResult(ppResult, *pFlex);
 
 	} else {
@@ -574,7 +574,7 @@ void FunctorCmd::lambdaBody_()
 	for ( size_t i = 0; i < cntLocals; ++ i ) {
 		int const chk = code_getprm();
 		assert(chk > PARAM_END);
-		PVal* const pvLocal = caller.getArgs().peekLocalAt(i);
+		PVal* const pvLocal = caller.getArgs()->peekLocalAt(i);
 		PVal_assign( pvLocal, mpval->pt, mpval->flag );
 	}
 
@@ -587,35 +587,42 @@ int FunctorCmd::lambdaValue_(PDAT** ppResult)
 	return CallCmd::localVal(ppResult);
 }
 
-#if 0
 //------------------------------------------------
 // コルーチン::生成
 //------------------------------------------------
-int CallCmd::coCreate( PDAT** ppResult )
+int FunctorCmd::coCreate( PDAT** ppResult )
 {
-	auto coroutine = CCoRoutine::New();
+	auto&& functor = code_get_functor();
 
-	CCaller* const caller = coroutine->getCaller();
-	caller->setFunctor();		// functor を受ける
-	caller->setArgAll();
+	auto&& result = functor_t::makeDerived<CCoRoutine>(std::move(functor));
+	auto const coroutine = result->safeCastTo<CCoRoutine>();
 
-	return SetReffuncResult( ppResult, functor_t::make(coroutine) );
+	Caller* const caller = coroutine->getCallerFirst();
+	caller->code_get_arguments();
+
+	return SetReffuncResult( ppResult, std::move(result) );
 }
 
 //------------------------------------------------
-// コルーチン::中断実装
+// コルーチン::中断
 //------------------------------------------------
-void CallCmd::coYieldImpl()
+void FunctorCmd::coYield_()
 {
-	CallCmd::retval();		// 返値を受け取る
+	// 第一引数を返値として受け取る
+	CallCmd::call_setResult_();
 
-	// newlab される変数をコルーチンに渡す
-	PVal* const pvNextLab = code_get_var();
-	CCoRoutine::setNextVar( pvNextLab );	// static 変数に格納する
+	// newlab される変数
+	PVal* const pvalResume = code_get_var();
 
+	arguments_t&& args = arguments_t::ofValptr(CPrmStk::ofPrmStkPtr(ctx->prmstack));
+	//dbgout("args = %d:%d", (int)!!args, (!!args ? args.cntRefers() : -9));
+
+	CCoRoutine::onYield(
+		pvalResume,
+		std::move(args)
+	);
 	return;
 }
-#endif
 
 //##########################################################
 //        ラベルのラップ

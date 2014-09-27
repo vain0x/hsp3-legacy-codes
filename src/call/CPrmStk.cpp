@@ -23,6 +23,12 @@ struct CPrmStk::Impl
 	// 終端部が追加されたか否か
 	bool finalized_;
 
+	// prmstk の前に置かれるヘッダー
+	struct header_t {
+		CPrmStk* thisPtr;
+		unsigned short magicCode;
+	};
+	static int const MagicCode = 0x55AC;
 public:
 	static header_t& getHeader(void* prmstk) {
 		return reinterpret_cast<header_t*>(prmstk)[-1];
@@ -64,20 +70,27 @@ bool CPrmStk::hasFinalized() const {
 	return p_->finalized_;
 }
 
+CPrmStk* CPrmStk::ofPrmStkPtr(void* prmstk) {
+	auto const& header = Impl::getHeader(prmstk);
+	return (header.magicCode == Impl::MagicCode ? header.thisPtr : nullptr);
+}
+
 //------------------------------------------------
 // 構築
 //------------------------------------------------
 CPrmStk::CPrmStk(CPrmInfo const& prminfo)
 	: p_ { new Impl {
 		prminfo,
-		{ hspmalloc(prminfo.getStackSize() + headerSize) + headerSize, prminfo.getStackSize() + headerSize },
+		{ hspmalloc(prminfo.getStackSize() + sizeof(Impl::header_t)) + sizeof(Impl::header_t),
+			prminfo.getStackSize() },
 		0,
 		false
 	} }
 {
 	std::memset(getPrmStkPtr(), 0x00, getPrmStk().capacity());
 
-	getHeader(getPrmStkPtr()).magicCode = MagicCode;
+	auto& header = Impl::getHeader(getPrmStkPtr());
+	header = { this, Impl::MagicCode };
 }
 
 //------------------------------------------------

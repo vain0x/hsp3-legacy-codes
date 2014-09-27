@@ -38,10 +38,10 @@ void CBound::createRemainPrms()
 
 	CPrmInfo const& srcPrms = getUnbound()->getPrmInfo();
 	arguments_t& args = binder_.getArgs();
-	assert(args.hasFinalized());
+	assert(args->hasFinalized());
 
 	size_t const cntPrms = srcPrms.cntPrms();
-	size_t const cntArgs = args.cntArgs();
+	size_t const cntArgs = args->cntArgs();
 	//dbgout("(prms, args) = (%d, %d) -> %d", cntPrms, cntArgs, cntPrms - cntArgs );
 
 	CPrmInfo::prmlist_t prmlist;
@@ -71,7 +71,7 @@ argbind() の引数で不束縛引数 nobind が指定されているもの、�
 		std::priority_queue< pair_t, std::vector<pair_t>, std::greater_equal<pair_t>  > argsNobind;
 
 		for ( size_t i = 0; i < cntArgs; ++ i ) {
-			if ( auto const p = args.peekArgNoBind(i) ) {
+			if ( auto const p = args->peekArgNoBind(i) ) {
 				argsNobind.push(std::make_tuple(*p, i));
 				//dbgout("nobind-arg; push (%d, %d)", (int)*p, i);
 			}
@@ -100,7 +100,7 @@ void CBound::call(Caller& callerRemain)
 	Caller caller { getUnbound() };
 
 	// 実引数のマージ
-	caller.getArgs().merge(binder_.getArgs(), *this, callerRemain.getArgs());
+	caller.getArgs()->merge(*binder_.getArgs(), *this, *callerRemain.getArgs());
 
 	auto& args = caller.getArgs();
 

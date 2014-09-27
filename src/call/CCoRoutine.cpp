@@ -1,78 +1,62 @@
 ﻿// コルーチンクラス
-#if 0
+
 #include "CCoRoutine.h"
 
-#include "CCall.h"
-#include "CCaller.h"
+#include "Invoker.h"
 #include "Functor.h"
 #include "CPrmInfo.h"
 
 using namespace hpimod;
 
-PVal const* CCoRoutine::stt_pvNextVar = nullptr;
-
-//------------------------------------------------
-// 構築 (ラッパー)
-//------------------------------------------------
-coroutine_t CCoRoutine::New()
-{
-	return new CCoRoutine();
-}
+arguments_t CCoRoutine::stt_args { nullptr };
+PVal const* CCoRoutine::stt_pvalResume { nullptr };
 
 //------------------------------------------------
 // 構築
 //------------------------------------------------
-CCoRoutine::CCoRoutine()
-	: mpCaller( new CCaller )
+CCoRoutine::CCoRoutine(functor_t f)
+	: callerFirst_ { new Caller(std::move(f)) }
+	, resumeLabel_ { nullptr }
+	, resumeArgs_ { nullptr }
 { }
-
-//------------------------------------------------
-// 破棄
-//------------------------------------------------
-CCoRoutine::~CCoRoutine()
-{
-	delete mpCaller; mpCaller = nullptr;
-	return;
-}
 
 //------------------------------------------------
 // 呼び出し処理
 // 
 // @ 関数を呼び出す or 実行を再開する。
 //------------------------------------------------
-void CCoRoutine::call( CCaller& callerGiven )
+void CCoRoutine::call( Caller& callerGiven )
 {
-	mpCallerGiven = &callerGiven;
+	if ( !resumeLabel_ ) {
+		// 既に終了している
+		if ( !callerFirst_ ) puterror(HSPERR_INVALID_ARRAY);
 
-	{
-		// 呼び出す
-		mpCaller->call();
+		// 1回目
 
-		// 次の呼び出し先を再設定する
-		if ( stt_pvNextVar ) {
-			if ( stt_pvNextVar->flag != HSPVAR_FLAG_LABEL ) puterror( HSPERR_TYPE_MISMATCH );
-			label_t const lb = VtTraits::derefValptr<vtLabel>(stt_pvNextVar->pt);
+		callerFirst_->invoke();
+		callerGiven.moveResult(*callerFirst_);
 
-			mpCaller->setFunctor(Functor::New(lb));		// 次の呼び出し先を確定
-			stt_pvNextVar = nullptr;
-		}
+		callerFirst_.reset(nullptr);
+	} else {
+		// 2回目
 
-		// 返値を callerGiven に転送する
-		callerGiven.getCall().setRetValTransmit( mpCaller->getCall() );
+		// caller スタックを使わずに label を呼ぶ
+		PVal* const pval = callLabelWithPrmStk(resumeLabel_, resumeArgs_->getPrmStkPtr());
+		assert(!pval && callerGiven.hasResult());
+	}
+
+	// 次の呼び出し先を再設定する
+	if ( stt_pvalResume ) {
+		if ( stt_pvalResume->flag != HSPVAR_FLAG_LABEL ) puterror(HSPERR_TYPE_MISMATCH);
+
+		resumeLabel_ = VtTraits::derefValptr<vtLabel>(stt_pvalResume->pt);
+		resumeArgs_ = std::move(stt_args);
+
+		stt_pvalResume = nullptr;
 	}
 	return;
 }
 
 //------------------------------------------------
-// 仮引数
-//------------------------------------------------
-CPrmInfo const& CCoRoutine::getPrmInfo() const
-{
-	return CPrmInfo::noprmFunc;
-}
-
-//------------------------------------------------
 // 
 //------------------------------------------------
-
-#endif

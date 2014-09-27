@@ -164,12 +164,12 @@
 #define global insub %tinsub *%i : if(0) : %o :
 
 // コルーチン
-#define global co_yield(%1 = __call_empty__) \
-	co_yield_impl %1, co_next_label@__callmod :\
+#define global coYield(%1) \
+	coYield_@ (%1), co_next_label@__callmod :\
 	newlab co_next_label@__callmod, 1 :\
 	return :
 
-#define global co_exit return
+#define global coExit return
 
 //##############################################################################
 //                定数を定義

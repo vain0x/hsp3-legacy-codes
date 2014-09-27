@@ -207,11 +207,11 @@ void Caller::code_get_arguments()
 		if ( !code_get_nextArgument() ) break;
 	}
 
-	getArgs().finalize();
+	getArgs()->finalize();
 
 	// 残りを flex 引数として取り出す
 	if ( code_isNextArg() ) {
-		if ( vector_t* const vec = getArgs().peekFlex() ) {
+		if ( vector_t* const vec = getArgs()->peekFlex() ) {
 			*vec = code_get_vectorFromSequence();
 		} else {
 			puterror(HSPERR_TOO_MANY_PARAMETERS);
@@ -229,14 +229,14 @@ bool Caller::code_get_nextArgument()
 {
 	if ( !code_isNextArg() ) return false;
 
-	auto&& result = my_code_getarg(getArgs().getNextPrmType());
+	auto&& result = my_code_getarg(getArgs()->getNextPrmType());
 
 	using Sty = CodeGetArgResult::Style;
 	switch ( result.getStyle() ) {
-		case Sty::Default:   getArgs().pushArgByDefault(); break;
-		case Sty::ByVal:     getArgs().pushArgByVal(result.getValptr(), result.getVartype()); break;
-		case Sty::ByRef:     getArgs().pushArgByRef(result.getPVal(), result.getPVal()->offset); break;
-		case Sty::ByThismod: getArgs().pushThismod(result.getPVal(), result.getPVal()->offset); break;
+		case Sty::Default:   getArgs()->pushArgByDefault(); break;
+		case Sty::ByVal:     getArgs()->pushArgByVal(result.getValptr(), result.getVartype()); break;
+		case Sty::ByRef:     getArgs()->pushArgByRef(result.getPVal(), result.getPVal()->offset); break;
+		case Sty::ByThismod: getArgs()->pushThismod(result.getPVal(), result.getPVal()->offset); break;
 		case Sty::ByFlex: dbgout("未実装"); puterror(HSPERR_UNSUPPORTED_FUNCTION); break;
 		case Sty::NoBind: puterror(HSPERR_ILLEGAL_FUNCTION);
 		case Sty::End: //
@@ -287,15 +287,15 @@ void ArgBinder::code_get_arguments()
 		if ( !code_get_nextArgument() ) break;
 	}
 
-	for ( size_t i = getArgs().cntArgs(); i < getPrms().cntPrms(); ++i ) {
-		getArgs().allocArgNoBind(NobindPriorityMax);
+	for ( size_t i = getArgs()->cntArgs(); i < getPrms().cntPrms(); ++i ) {
+		getArgs()->allocArgNoBind(NobindPriorityMax);
 	}
 
-	getArgs().finalize();
+	getArgs()->finalize();
 
 	// 残りを flex 引数として取り出す
 	if ( code_isNextArg() ) {
-		if ( vector_t* const vec = getArgs().peekFlex() ) {
+		if ( vector_t* const vec = getArgs()->peekFlex() ) {
 			*vec = code_get_vectorFromSequence();
 		} else {
 			puterror(HSPERR_TOO_MANY_PARAMETERS);
@@ -313,16 +313,16 @@ bool ArgBinder::code_get_nextArgument()
 {
 	if ( !code_isNextArg() ) return false;
 
-	auto&& result = my_code_getarg(getArgs().getNextPrmType());
+	auto&& result = my_code_getarg(getArgs()->getNextPrmType());
 
 	using Sty = CodeGetArgResult::Style;
 	switch ( result.getStyle() ) {
-		case Sty::Default:   getArgs().pushArgByDefault(); break;
-		case Sty::ByVal:     getArgs().pushArgByVal(result.getValptr(), result.getVartype()); break;
-		case Sty::ByRef:     getArgs().pushArgByRef(result.getPVal(), result.getPVal()->offset); break;
-		case Sty::ByThismod: getArgs().pushThismod(result.getPVal(), result.getPVal()->offset); break;
+		case Sty::Default:   getArgs()->pushArgByDefault(); break;
+		case Sty::ByVal:     getArgs()->pushArgByVal(result.getValptr(), result.getVartype()); break;
+		case Sty::ByRef:     getArgs()->pushArgByRef(result.getPVal(), result.getPVal()->offset); break;
+		case Sty::ByThismod: getArgs()->pushThismod(result.getPVal(), result.getPVal()->offset); break;
 		case Sty::ByFlex: dbgout("未実装"); puterror(HSPERR_UNSUPPORTED_FUNCTION); break;
-		case Sty::NoBind:    getArgs().allocArgNoBind(result.getPriority()); break;
+		case Sty::NoBind:    getArgs()->allocArgNoBind(result.getPriority()); break;
 		case Sty::End: //
 		default: assert(false);
 	}
@@ -355,9 +355,30 @@ vector_t ArgBinder::code_get_flex()
 }
 #endif
 
+//******************************************************************************
+
 //------------------------------------------------
-// 
+// ラベル呼び出しの実体
 //------------------------------------------------
+PVal* callLabelWithPrmStk(label_t lb, void* prmstk)
+{
+	auto const prmstk_bak = ctx->prmstack;
+	ctx->prmstack = prmstk;
+
+	code_call(lb);
+
+	assert(ctx->prmstack == prmstk);
+	ctx->prmstack = prmstk_bak;
+
+	// return から返値を受け取る (やや黒魔術？)
+	if ( ctx->retval_level == (ctx->sublev + 1) ) {
+		ctx->retval_level = 0;
+		return *exinfo->mpval;
+	} else {
+		return nullptr;
+	}
+}
+
 //------------------------------------------------
 // 
 //------------------------------------------------

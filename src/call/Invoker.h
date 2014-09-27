@@ -21,8 +21,8 @@ class Invoker
 public:
 	// @prm f: must be non-null
 	Invoker(functor_t const& f)
-		: functor_ { (assert(!f.isNull()), f) }
-		, args_(f->getPrmInfo())
+		: functor_ { (assert(!!f), f) }
+		, args_(arguments_t::make(f->getPrmInfo()))
 	{ }
 
 	void invoke();
@@ -30,10 +30,10 @@ public:
 	functor_t const& getFunctor() const { return functor_; }
 
 	// 引数
-	CPrmInfo const& getPrms() const { return args_.getPrmInfo(); }
-	arguments_t& getArgs() { return args_; }
-	arguments_t const& getArgs() const { return args_; }
+	CPrmInfo const& getPrms() const { return getArgs()->getPrmInfo(); }
+	arguments_t const& getArgs() const { assert(!!args_); return args_; }
 
+	arguments_t& getArgs() { return const_cast<arguments_t&>(static_cast<Invoker const*>(this)->getArgs()); }
 };
 
 class Caller
@@ -117,5 +117,7 @@ private:
 	bool code_get_nextArgument();
 	vector_t code_get_flex();
 };
+
+extern PVal* callLabelWithPrmStk(hpimod::label_t lb, void* prmstk);
 
 #endif

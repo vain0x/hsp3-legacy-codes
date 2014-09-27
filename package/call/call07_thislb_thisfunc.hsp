@@ -1,5 +1,7 @@
 #include "../crouton.as"
 
+// !! thisfunc is unsupported now
+
 // 呼び出された位置(ラベル)、および関数子
 
 	mes "call *LHello1"

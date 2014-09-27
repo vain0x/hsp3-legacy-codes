@@ -1,59 +1,66 @@
 ﻿// コルーチンクラス
-#if 0
-// IFunctor を継承する必要がある。
 
-#ifndef IG_CLASS_CO_ROUTINE_H
-#define IG_CLASS_CO_ROUTINE_H
+#ifndef IG_CLASS_COROUTINE_H
+#define IG_CLASS_COROUTINE_H
 
+#include <memory>
 #include <vector>
 
 #include "hsp3plugin_custom.h"
 #include "IFunctor.h"
 #include "Functor.h"
-
-//	#define DBGOUT_CO_ROUTINE_ADDREF_OR_RELEASE	// AddRef, Release を dbgout で報告する
-
-class CCoRoutine;
-class CCaller;
-
-using coroutine_t = CCoRoutine*;
+#include "Invoker.h"
+#include "AxCmd.h"
 
 class CCoRoutine
 	: public IFunctor
 {
-	// メンバ変数
 private:
-	CCaller* mpCaller;		// 継続している呼び出し
-	functor_t mNext;			// 次に呼び出すラベル
+	// 元のファンクタ
+	std::unique_ptr<Caller> callerFirst_;
 
-	CCaller const* mpCallerGiven;	// 実際の呼び出しへの参照
+	// 再開用
+	hpimod::label_t resumeLabel_;
+	arguments_t resumeArgs_;
 
-	static PVal const* stt_pvNextVar;	// next を受け取る変数への参照
-
-	// 構築
-private:
-	CCoRoutine();
-	~CCoRoutine();
+	// yield から受け取る再開用情報
+	static arguments_t stt_args;
+	static PVal const* stt_pvalResume;
 
 public:
-	CCaller* getCaller()  const { return mpCaller; }
-	CPrmInfo const& getPrmInfo() const;
+	CCoRoutine(functor_t f);
+
+	Caller* getCallerFirst() { return callerFirst_.get(); }
 
 	// 継承
-	label_t getLabel() const { return mNext.getLabel(); }
-	int     getAxCmd() const { return mNext.getAxCmd(); }
-	int     getUsing() const { return 1; }
+	CPrmInfo const& getPrmInfo() const override { return CPrmInfo::noprmFunc; }
+	hpimod::label_t getLabel() const override {
+		return (callerFirst_
+			? callerFirst_->getFunctor()->getLabel()
+			: resumeLabel_);
+	}
+	int getAxCmd() const override {
+		return (callerFirst_
+			? callerFirst_->getFunctor()->getAxCmd()
+			: AxCmd::make(TYPE_LABEL, hpimod::getOTPtr(resumeLabel_)));
+	}
+	int getUsing() const override {
+		return (callerFirst_
+			? callerFirst_->getFunctor()->getUsing()
+			: hpimod::HspBool(!!resumeLabel_));
+	}
 
 	// 動作
-	void call( CCaller& callerGiven );		// 追加引数
+	void call(Caller& callerGiven) override;
 
-	// ラッパー
-	static coroutine_t New();
+	static void onYield( PVal const* pval, arguments_t args )
+	{
+		// coYield_ 実行時にコルーチンを参照する方法はないので、static field に入れておく。
+		// この直後に起こる call() の返しでこれらを回収する。
 
-	static void setNextVar( PVal const* pv )	// co_yield_impl 実行時にコルーチンを参照する方法はない (実際に呼ばれているのは実体なわけだし)
-	{ stt_pvNextVar = pv; }
+		stt_pvalResume = pval;
+		stt_args = std::move(args);
+	}
 };
-
-#endif
 
 #endif

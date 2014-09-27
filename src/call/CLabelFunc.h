@@ -34,20 +34,12 @@ public:
 	// 動作
 	void call(Caller& caller) override
 	{
-		auto const prmstk_bak = ctx->prmstack;
-		auto const prmstk = const_cast<void*>(caller.getArgs().getPrmStkPtr());
-		ctx->prmstack = prmstk;
+		auto const prmstk = const_cast<void*>(caller.getArgs()->getPrmStkPtr());
+		auto const pvalResult = callLabelWithPrmStk(getLabel(), prmstk);
 
-		code_call(getLabel());
-
-		// return から返値を受け取る (やや黒魔術？)
-		if ( ctx->retval_level == (ctx->sublev + 1) ) {
-			caller.setResultByVal((*exinfo->mpval)->pt, (*exinfo->mpval)->flag);
-			ctx->retval_level = 0;
+		if ( pvalResult ) {
+			caller.setResultByVal(pvalResult->pt, pvalResult->flag);
 		}
-
-		assert(ctx->prmstack == prmstk);
-		ctx->prmstack = prmstk_bak;
 		return;
 	}
 };

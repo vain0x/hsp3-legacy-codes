@@ -85,30 +85,14 @@ void CLambda::call( Caller& callerGiven )
 	}
 #endif
 
-	Caller callerInternal { Functor::New(lbDst) };
-	auto& args = callerInternal.getArgs();
-	args = std::move(callerGiven.getArgs());
-	args.importCaptures(capturer_);
+	auto& args = callerGiven.getArgs();
+	args->importCaptures(capturer_);
 
-	callerInternal.invoke();
-	
-	assert( callerInternal.hasResult() );
-	callerGiven.moveResult(callerInternal);
+	// Caller 用のスタックを用いずに呼ぶ
+	PVal* const pvalResult = callLabelWithPrmStk(lbDst, args->getPrmStkPtr());
+
+	assert( !pvalResult && callerGiven.hasResult() );
 	return;
-
-#if 0
-	callerGiven.setFunctor( lbDst );
-
-	// 保存された引数列を追加する
-	if ( mpArgCloser ) {
-		auto& callCloser = mpArgCloser->getCall();
-		for ( size_t i = 0; i < callCloser.getCntArg(); ++ i ) {
-			callerGiven.addArgByRef( callCloser.getArgPVal(i), callCloser.getArgAptr(i) );
-		}
-	}
-	// 呼び出す
-	callerGiven.call();
-#endif
 }
 
 //------------------------------------------------
@@ -282,7 +266,7 @@ void CLambda::code_get()
 		assert(!prms_);
 		prms_ = std::make_unique<CPrmInfo>(std::move(prmlist));
 
-		dbgout("(prms, caps, locals) = (%d, %d, %d)", cntPrms, outerArgs.size(), cntLocals);
+		//dbgout("(prms, caps, locals) = (%d, %d, %d)", cntPrms, outerArgs.size(), cntLocals);
 	}
 
 	// ラムダ式中に含まれる、「キャプチャ変数を参照している TYPE_STRUCT コード」の code 値を補完する

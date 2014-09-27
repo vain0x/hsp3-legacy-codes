@@ -1,0 +1,51 @@
+#include "../crouton.as"
+
+// コルーチン
+
+// 単語：コルーチン(coroutine)
+// 途中で中断・再開することのできる関数のこと。
+
+// 関数：coCreate( f, args... )
+// 関数 f をコルーチンとして生成する。
+// そのコルーチンが最初に呼ばれたとき、f(args...) が実行される。
+// 2回目以降の呼び出しでは、前回 co_yield した場所から実行が再開される。
+// 前回の呼び出しで return されていた場合、呼び出すことはできない (エラーとなる)。
+
+	// 奇数カウンター
+	oddCounter = coCreate(axcmdOf(_counter), 1, 2)
+	
+	repeat 10
+		o = oddCounter()
+		mes "o = " + o
+		assert( o == cnt * 2 + 1 )
+	loop
+	
+// 命令：coYield value
+// value を返値として、コルーチン呼び出しを中断する。
+// このコルーチンが次に呼ばれるときは、この次から再開される。
+// repeat-loop の中で使ってはいけない。
+#module
+#defcfunc _counter int init, int step,  local k
+	k = init
+	mes "_counter 開始: init = " + init
+	
+	// 無限ループ
+	while
+		coYield k
+		
+		mes "_counter 再開: (init, k) = (" + init + ", " + k + ")"
+		k += step
+	wend
+#global
+
+// 命令：coExit value
+// value を返値として、コルーチン呼び出しを終了する。
+// もう呼び出すことはできない。
+// (メモ：通常の return と同じと考えてよい。)
+
+// 追記
+// HSPにも予約語 yield, resume があるため、ランタイムレベルでの対応が期待されている。
+// ここで実装したのは、いわばなんちゃってコルーチンである。
+
+	stop
+	

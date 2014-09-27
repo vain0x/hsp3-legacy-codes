@@ -44,7 +44,7 @@ namespace ArgInfoId
 
 class CBound;
 class CPrmStk;
-using arguments_t = CPrmStk;
+using arguments_t = hpimod::Managed<CPrmStk, true>;
 
 //------------------------------------------------
 // 高級な prmstk 
@@ -56,11 +56,6 @@ private:
 	std::shared_ptr<Impl> p_;
 
 	// ヘッダ
-	struct header_t {
-		unsigned short magicCode;
-	};
-	static size_t const headerSize = sizeof(header_t);
-	static int const MagicCode = 0x55AC;
 	static int const MagicCodeNoBind = 0x55AD;
 
 public:
@@ -76,8 +71,7 @@ public:
 
 	CPrmStkNative& getPrmStk() { return const_cast<CPrmStkNative&>(static_cast<CPrmStk const*>(this)->getPrmStk()); }
 
-	static header_t& getHeader(void* prmstk) { return reinterpret_cast<header_t*>(prmstk)[-1]; }
-	static bool hasMagicCode(void* prmstk) { return (getHeader(prmstk).magicCode == MagicCode); }
+	static CPrmStk* ofPrmStkPtr(void* prmstk);
 public:
 	// copy/move/swap
 	CPrmStk(CPrmStk const& rhs);

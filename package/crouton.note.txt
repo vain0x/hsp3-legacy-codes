@@ -5,6 +5,9 @@
 call, opex, var_assoc, var_vector
 
 ＠履歴
+－2014.09.26 (Fri)
+・call: コマンド lambda を追加したが、キャプチャされた local が正しく振る舞わない。
+
 －2014.09.25 (Thu)
 ・call: 束縛関数を生成する関数コマンド、argbind を追加した。
 
@@ -32,7 +35,9 @@ call, opex, var_assoc, var_vector
 ＠wish
 
 PrmStk を操作するインターフェースクラスの再考
+vector_t の中身の extern template 宣言
 lambda のデバッグ
+	(arr(n) -> 配列の要素が無効です、のエラー、length() で十分な要素数を持つことは確認している)
 
 ・call の拡張的関数子の実装
 	knowbug 文字列化の実装
