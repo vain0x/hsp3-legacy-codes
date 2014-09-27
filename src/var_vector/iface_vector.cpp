@@ -53,24 +53,22 @@ static int ProcSttmCmd( int cmd )
 
 		case 0x010: VectorDimtype();   break;
 		case 0x011: VectorClone(); break;
-#if 0
-		case 0x013: VectorInsert();    break;
-		case 0x014: VectorInsert1();   break;
-		case 0x015: VectorPushFront(); break;
-		case 0x016: VectorPushBack();  break;
-		case 0x017: VectorRemove();    break;
-		case 0x018: VectorRemove1();   break;
-		case 0x019: VectorPopFront();  break;
-		case 0x01A: VectorPopBack();   break;
-		case 0x01B: VectorReplace();   break;
 
-		case VectorCmdId::Move:
+		case VectorCmdId::Insert:
+		case VectorCmdId::InsertOne:
+		case VectorCmdId::PushFront:
+		case VectorCmdId::PushBack:
+		case VectorCmdId::Remove :
+		case VectorCmdId::RemoveOne:
+		case VectorCmdId::PopFront:
+		case VectorCmdId::PopBack:
+		case VectorCmdId::Replace:
 		case VectorCmdId::Swap:
 		case VectorCmdId::Rotate:
 		case VectorCmdId::Reverse:
-			VectorMoving( cmd );
+		case VectorCmdId::Relocate:
+			VectorContainerProc( cmd );
 			break;
-#endif
 		default:
 			puterror( HSPERR_UNSUPPORTED_FUNCTION );
 	}
@@ -90,23 +88,21 @@ static int ProcFuncCmd( int cmd, PDAT** ppResult )
 		case 0x011:
 			VectorClone();
 			return SetReffuncResult( ppResult, 0 );
-#if 0
-		case 0x013: return VectorInsert   ( ppResult );
-		case 0x014: return VectorInsert1  ( ppResult );
-		case 0x015: return VectorPushFront( ppResult );
-		case 0x016: return VectorPushBack ( ppResult );
-		case 0x017: return VectorRemove   ( ppResult );
-		case 0x018: return VectorRemove1  ( ppResult );
-		case 0x019: return VectorPopFront ( ppResult );
-		case 0x01A: return VectorPopBack  ( ppResult );
-		case 0x01B: return VectorReplace  ( ppResult );
 
-		case VectorCmdId::Move:
+		case VectorCmdId::Insert:
+		case VectorCmdId::InsertOne:
+		case VectorCmdId::PushFront:
+		case VectorCmdId::PushBack:
+		case VectorCmdId::Remove :
+		case VectorCmdId::RemoveOne:
+		case VectorCmdId::PopFront:
+		case VectorCmdId::PopBack:
+		case VectorCmdId::Replace:
 		case VectorCmdId::Swap:
 		case VectorCmdId::Rotate:
 		case VectorCmdId::Reverse:
-			return VectorMovingFunc( ppResult, cmd );
-#endif
+		case VectorCmdId::Relocate:
+			return VectorContainerProcFunc( ppResult, cmd );
 
 		case 0x100:	return VectorVarinfo( ppResult );
 		case 0x101:	return VectorSize( ppResult );

@@ -25,29 +25,9 @@ extern void VectorDimtype();
 extern void VectorClone();
 
 extern void VectorChain(bool bClear);	// 連結 (or 複写)
-#if 0
-extern void VectorMoving( int cmd );	// 要素順序操作系
-extern int  VectorMovingFunc( PDAT** ppResult, int cmd );
 
-extern void VectorInsert();				// 要素追加
-extern void VectorInsert1();
-extern void VectorPushFront();
-extern void VectorPushBack();
-extern void VectorRemove();				// 要素削除
-extern void VectorRemove1();
-extern void VectorPopFront();
-extern void VectorPopBack();
-extern void VectorReplace();
-extern int VectorInsert( PDAT** ppResult ) ;
-extern int VectorInsert1( PDAT** ppResult ) ;
-extern int VectorPushFront( PDAT** ppResult );
-extern int VectorPushBack( PDAT** ppResult );
-extern int VectorRemove( PDAT** ppResult );
-extern int VectorRemove1( PDAT** ppResult );
-extern int VectorPopFront( PDAT** ppResult );
-extern int VectorPopBack( PDAT** ppResult );
-extern int VectorReplace( PDAT** ppResult );
-#endif
+extern void VectorContainerProc( int cmd );	// コンテナ操作系
+extern int  VectorContainerProcFunc( PDAT** ppResult, int cmd );
 
 extern int VectorResult( PDAT** ppResult );
 extern int VectorExpr( PDAT** ppResult );
@@ -62,10 +42,21 @@ extern void VectorCmdTerminate();
 // 定数
 namespace VectorCmdId {
 	int const
-		Move    = 0x20,
-		Swap    = 0x21,
-		Rotate  = 0x22,
-		Reverse = 0x23;
+		Insert    = 0x20,
+		InsertOne = 0x21,
+		PushFront = 0x22,
+		PushBack  = 0x23,
+		Remove    = 0x24,
+		RemoveOne = 0x25,
+		PopFront  = 0x26,
+		PopBack   = 0x27,
+		Replace   = 0x28,
+
+		Swap      = 0x30,
+		Rotate    = 0x31,
+		Reverse   = 0x32,
+		Relocate  = 0x33//,
+	;
 };
 
 #endif

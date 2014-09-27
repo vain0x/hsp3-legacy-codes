@@ -9,19 +9,19 @@ using namespace hpimod;
 
 bool isValidIndex(vector_t const& self, int idx)
 {
-	return (!self.isNull() && 0 <= idx && static_cast<size_t>(idx) < self->size());
+	return (!!self && 0 <= idx && static_cast<size_t>(idx) < self->size());
 }
 
 bool isValidRange(vector_t const& self, size_t iBgn, size_t iEnd)
 {
-	return !self.isNull() && iBgn < iEnd && iEnd <= self->size();
+	return !!self && iBgn < iEnd && iEnd <= self->size();
 }
 
 void chainShallow(vector_t& dst, vector_t const& src, std::pair<size_t, size_t> range)
 {
-	assert(!dst.isNull() && isValidRange(src, range.first, range.second));
+	assert(!!dst && isValidRange(src, range.first, range.second));
 
-	if ( !src.isNull() ) {
+	if ( !!src ) {
 		dst->insert(dst->end(), src->begin() + range.first, src->begin() + range.second);
 	}
 	return;
@@ -29,9 +29,9 @@ void chainShallow(vector_t& dst, vector_t const& src, std::pair<size_t, size_t> 
 
 void chainDeep(vector_t& dst, vector_t const& src, std::pair<size_t, size_t> range)
 {
-	assert(!dst.isNull() && isValidRange(src, range.first, range.second));
+	assert(!!dst && isValidRange(src, range.first, range.second));
 
-	if ( !src.isNull() ) {
+	if ( !!src ) {
 		size_t const offset = dst->size();
 		size_t const lenRange = (range.second - range.first);
 		dst->resize(offset + lenRange);
@@ -104,7 +104,7 @@ void Vector_copy( PVal* pval, vector_t src )
 	dst = vector_t::make();
 	dst.incRef();
 
-	if ( !src.isNull() ) {
+	if ( !!src ) {
 		dst->insert(dst->end(), src->begin(), src->end());
 	}
 	return;

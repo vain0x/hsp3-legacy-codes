@@ -15,7 +15,7 @@ using namespace hpimod;
 
 static vector_t g_pResultVector { nullptr };
 
-static void VectorMovingImpl( vector_t& self, int cmd );
+static void VectorContainerProcImpl(vector_t& self, int cmd);
 
 //------------------------------------------------
 // vector 型の値を返却する
@@ -49,7 +49,7 @@ vector_t code_get_vector()
 //------------------------------------------------
 // vector の内部変数を受け取る
 //------------------------------------------------
-PVal* code_get_vector_inner()
+PVal* code_get_vectorInner()
 {
 	PVal* const pval = code_get_var();
 	if ( pval->flag != g_vtVector ) puterror( HSPERR_TYPE_MISMATCH );
@@ -62,7 +62,7 @@ PVal* code_get_vector_inner()
 //------------------------------------------------
 // vector の範囲を取り出す
 //------------------------------------------------
-std::pair<size_t, size_t> code_get_vector_range(vector_t const& self)
+std::pair<size_t, size_t> code_get_vectorRange(vector_t const& self)
 {
 	bool const bNull = self.isNull();
 
@@ -71,6 +71,13 @@ std::pair<size_t, size_t> code_get_vector_range(vector_t const& self)
 	if ( (!bNull && !isValidRange(self, iBgn, iEnd))
 		|| (bNull && (iBgn != 0 || iEnd != 0)) ) puterror(HSPERR_ILLEGAL_FUNCTION);
 	return { iBgn, iEnd };
+}
+
+static size_t code_get_vectorIndex(vector_t const& self)
+{
+	int const idx = code_geti();
+	if ( !(0 <= idx && static_cast<size_t>(idx) < self->size()) ) puterror(HSPERR_ILLEGAL_FUNCTION);
+	return static_cast<size_t>(idx);
 }
 
 //#########################################################
@@ -116,7 +123,7 @@ int VectorMake(PDAT** ppResult)
 int VectorSlice(PDAT** ppResult)
 {
 	auto&& self = code_get_vector();
-	auto const&& range = code_get_vector_range(self);
+	auto const&& range = code_get_vectorRange(self);
 
 	auto&& result = vector_t::make();
 	chainShallow(result, self, range);
@@ -129,7 +136,7 @@ int VectorSlice(PDAT** ppResult)
 int VectorSliceOut(PDAT** ppResult)
 {
 	auto&& self = code_get_vector();
-	auto const&& range = code_get_vector_range(self);
+	auto const&& range = code_get_vectorRange(self);
 
 	size_t const len = self->size();
 	size_t const lenRange = range.second - range.first;
@@ -149,7 +156,7 @@ int VectorSliceOut(PDAT** ppResult)
 int VectorDup(PDAT** ppResult)
 {
 	auto&& src = code_get_vector();
-	auto&& range = code_get_vector_range(src);
+	auto&& range = code_get_vectorRange(src);
 
 	// PVal の値を複製して vector をもう一つ作る
 	auto&& self = vector_t::make();
@@ -164,13 +171,13 @@ int VectorDup(PDAT** ppResult)
 int VectorIsNull(PDAT** ppResult)
 {
 	auto&& self = code_get_vector();
-	return SetReffuncResult(ppResult, HspBool(!self.isNull()));
+	return SetReffuncResult(ppResult, HspBool(!!self));
 }
 
 int VectorSize(PDAT** ppResult)
 {
 	auto&& self = code_get_vector();
-	assert(!self.isNull());
+	assert(!!self);
 
 	return SetReffuncResult(ppResult, static_cast<int>(self->size()));
 }
@@ -180,14 +187,14 @@ int VectorSize(PDAT** ppResult)
 //------------------------------------------------
 void VectorDimtype()
 {
-	PVal* const pvInner = code_get_vector_inner();
-	code_dimtype(pvInner, code_geti());
+	PVal* const pvInner = code_get_vectorInner();
+	code_dimtype(pvInner, code_get_vartype());
 	return;
 }
 
 void VectorClone()
 {
-	PVal* const pvalSrc = code_get_vector_inner();
+	PVal* const pvalSrc = code_get_vectorInner();
 	PVal* const pvalDst = code_getpval();
 
 	PVal_cloneVar( pvalDst, pvalSrc );
@@ -196,320 +203,36 @@ void VectorClone()
 
 int VectorVarinfo(PDAT** ppResult)
 {
-	PVal* const pvInner = code_get_vector_inner();
+	PVal* const pvInner = code_get_vectorInner();
 	return SetReffuncResult(ppResult, code_varinfo(pvInner));
 }
 
-//#########################################################
-//        コンテナ操作
-//#########################################################
-//------------------------------------------------
-// 連結
-//------------------------------------------------
-void VectorChain(bool bClear)
-{
-	auto&& dst = code_get_vector();
-	auto&& src = code_get_vector();
-
-	if ( bClear ) dst->clear();
-
-	auto const&& range = code_get_vector_range(src);
-	chainDeep(dst, src, range);
-	return;
-}
-
-#if 0
-
-//------------------------------------------------
-// コンテナ操作処理テンプレート
-//------------------------------------------------
-// 難しい
-
-//------------------------------------------------
-// 要素順序
-//------------------------------------------------
-void VectorMoving( int cmd )
-{
-	PVal* const pval = code_get_var();
-	if ( pval->flag != g_vtVector ) puterror( HSPERR_TYPE_MISMATCH );
-
-	auto& src = VtTraits::getMaster<vtVector>(pval);
-	if ( !src.isNull() ) puterror( HSPERR_ILLEGAL_FUNCTION );
-
-	VectorMovingImpl( src, cmd );
-	return;
-}
-
-static void VectorMovingImpl( vector_t& self, int cmd )
-{
-	switch ( cmd ) {
-		case VectorCmdId::Move:
-		{
-			int const iDst = code_geti();
-			int const iSrc = code_geti();
-			if ( isValidIndex(self, iDst) || !isValidIndex(self, iSrc) ) puterror( HSPERR_ILLEGAL_FUNCTION );
-
-			std::move(
-				self->begin() + iSrc,
-				self->begin() + (iSrc + 1),
-				self->begin() + iDst
-			);
-			break;
-		}
-		case VectorCmdId::Swap:
-		{
-			int const idx1 = code_geti();
-			int const idx2 = code_geti();
-
-			std::swap(self->begin() + idx1, self->begin() + idx2);
-			break;
-		}
-		case VectorCmdId::Rotate:
-		{
-			int const step = code_getdi(1);
-			assert(false);
-			//std::rotate(self->begin(), self->end());
-			break;
-		}
-		case VectorCmdId::Reverse:
-		{
-			auto&& range = code_get_vector_range(self);
-			std::reverse(self->begin() + range.first, self->begin() + range.second);
-			break;
-		}
-	}
-	return;
-}
-
-int VectorMovingFunc( PDAT** ppResult, int cmd )
-{
-	auto&& src = code_get_vector();
-	if ( !src.isNull() ) puterror( HSPERR_ILLEGAL_FUNCTION );
-
-	// 全区間スライス
-	auto self = vector_t::make();
-	CVector* const self = CVector::NewTemp();
-	{
-		chain(self, src, { 0, src->size() });
-		VectorMovingImpl( self, cmd );
-	}
-
-	return SetReffuncResult( ppResult, self );
-}
-
-//------------------------------------------------
-// 要素: 追加, 除去
-// 
-// @t-prm idProc: ここで使うのみ。
-// @	0: Insert
-// @	1: Insert1
-// @	2: PushFront
-// @	3: PushBack
-// @	4: Remove
-// @	5: Remove1
-// @	6: PopFront
-// @	7: PopBack
-// @	8: Replace
-//------------------------------------------------
-template<int idProc>
-static void VectorElemProcImpl( CVector* self )
-{
-	switch ( idProc ) {
-		// 区間アクセス => 区間が必要; 特に insert => 初期値リストを取る (省略可)
-		case 0:
-		case 4:
-		{
-			int const iBgn = code_geti();
-			int const iEnd = code_geti();
-			if ( iBgn == iEnd ) break;
-
-			if ( idProc == 0 ) {
-				self->Insert( iBgn, iEnd );
-
-				// 初期値リスト (省略可)
-				bool   const bReversed = (iBgn > iEnd);
-				size_t const cntElems  = ( !bReversed ? iEnd - iBgn : iBgn - iEnd );
-				for ( size_t i = 0; i < cntElems; ++ i ) {
-					int const chk = code_getprm();
-					if ( chk <= PARAM_END ) {
-						if ( chk == PARAM_DEFAULT ) continue; else break;
-					}
-					PVal_assign( self->AtSafe( (!bReversed ? iBgn + i : iBgn - i) ), mpval->pt, mpval->flag );
-				}
-
-			} else {
-				self->Remove( iBgn, iEnd );
-			}
-			break;
-		}
-		// 単一アクセス => 添字が必要; 特に insert1 => 初期値を取る (省略可)
-		case 1:
-		case 5:
-		{
-			int const idx = code_geti();
-
-			if ( idProc == 1 ) {
-				PVal* const pvdat = self->Insert( idx );
-
-				// 初期値
-				if ( code_getprm() > PARAM_END ) {
-					PVal_assign( pvdat, mpval->pt, mpval->flag );
-				}
-
-			} else {
-				self->Remove( idx );
-			}
-			break;
-		}
-		// push => 初期値を取る (省略可)
-		case 2:
-		case 3:
-		{
-			PVal* const pvdat = (idProc == 2)
-				? self->PushFront()
-				: self->PushBack();
-
-			if ( code_getprm() > PARAM_END )  {
-				PVal_assign( pvdat, mpval->pt, mpval->flag );
-			}
-			break;
-		}
-		// pop
-		case 6: self->PopFront(); break;
-		case 7: self->PopBack();  break;
-
-		default:
-			puterror( HSPERR_UNSUPPORTED_FUNCTION );
-	}
-
-	return;
-}
-
-// 命令
-template<int idProc>
-static void VectorElemProc()
-{
-	auto&& self = code_get_vector();
-	if ( isNull( self ) ) puterror( HSPERR_ILLEGAL_FUNCTION );
-
-	VectorElemProcImpl<idProc>( self );
-	return;
-}
-
-void VectorInsert()    { VectorElemProc<0>(); }
-void VectorInsert1()   { VectorElemProc<1>(); }
-void VectorPushFront() { VectorElemProc<2>(); }
-void VectorPushBack()  { VectorElemProc<3>(); }
-void VectorRemove()    { VectorElemProc<4>(); }
-void VectorRemove1()   { VectorElemProc<5>(); }
-void VectorPopFront()  { VectorElemProc<6>(); }
-void VectorPopBack()   { VectorElemProc<7>(); }
-
-// 関数
-template<int idProc>
-static int VectorElemProc( PDAT** ppResult )
-{
-	auto&& src = code_get_vector();
-	if ( isNull( src ) ) puterror( HSPERR_ILLEGAL_FUNCTION );
-
-	CVector* const self = CVector::NewTemp();		// 同値な一時オブジェクトを生成
-	self->Chain( *src );
-
-	VectorElemProcImpl<idProc>( self );
-
-	return SetReffuncResult( ppResult, self );
-}
-
-int VectorInsert   ( PDAT** ppResult ) { return VectorElemProc<0>( ppResult ); }
-int VectorInsert1  ( PDAT** ppResult ) { return VectorElemProc<1>( ppResult ); }
-int VectorPushFront( PDAT** ppResult ) { return VectorElemProc<2>( ppResult ); }
-int VectorPushBack ( PDAT** ppResult ) { return VectorElemProc<3>( ppResult ); }
-int VectorRemove   ( PDAT** ppResult ) { return VectorElemProc<4>( ppResult ); }
-int VectorRemove1  ( PDAT** ppResult ) { return VectorElemProc<5>( ppResult ); }
-int VectorPopFront ( PDAT** ppResult ) { return VectorElemProc<6>( ppResult ); }
-int VectorPopBack  ( PDAT** ppResult ) { return VectorElemProc<7>( ppResult ); }
-
-//------------------------------------------------
-// 要素置換
-//------------------------------------------------
-// 命令
-void VectorReplace()
-{
-	PVal* const pval = code_get_var();
-	if ( pval->flag != g_vtVector ) puterror( HSPERR_TYPE_MISMATCH );
-
-	auto const self = Vector_getPtr(pval);
-	if ( isNull( self ) ) puterror( HSPERR_ILLEGAL_FUNCTION );
-
-	int const iBgn = code_getdi( 0 );
-	int const iEnd = code_getdi( self->Size() );
-	if ( !self->IsValid(iBgn, iEnd) ) puterror( HSPERR_ILLEGAL_FUNCTION );
-
-	auto&& src = code_get_vector();	// null-able
-
-	self->Replace( iBgn, iEnd, src );
-	return;
-}
-
-// 関数
-int VectorReplace( PDAT** ppResult )
-{
-	auto&& self = code_get_vector();
-	if ( isNull( self ) ) puterror( HSPERR_ILLEGAL_FUNCTION );
-
-	int const iBgn = code_getdi(0);
-	int const iEnd = code_getdi(self->Size());
-	if ( !self->IsValid(iBgn, iEnd) ) puterror( HSPERR_ILLEGAL_FUNCTION );
-
-	auto&& src = code_get_vector();	// null-able
-
-	if ( !self->IsValid(iBgn, iEnd) ) {
-		return SetReffuncResult( ppResult, CVector::Null );
-
-	} else {
-		// 同値な一時オブジェクトを生成する
-		CVector* const result = CVector::NewTemp();
-		{
-			result->Chain(*self);
-			result->Replace(iBgn, iEnd, src);
-		}
-		return SetReffuncResult( ppResult, result );
-	}
-}
-#endif
-
-//#########################################################
-//        関数
-//#########################################################
-//------------------------------------------------
-// 内部変数の情報を得る
-//------------------------------------------------
 //------------------------------------------------
 // vector 返却関数
 //------------------------------------------------
 static int const VectorResultExprMagicNumber = 0x31EC100A;
 
-int VectorResult( PDAT** ppResult )
+int VectorResult(PDAT** ppResult)
 {
 	g_pResultVector = code_get_vector();
 
 	return SetReffuncResult(ppResult, VectorResultExprMagicNumber);
 }
 
-int VectorExpr( PDAT** ppResult )
+int VectorExpr(PDAT** ppResult)
 {
 	// ここで VectorResult() が実行されるはず
 	if ( code_geti() != VectorResultExprMagicNumber ) puterror(HSPERR_ILLEGAL_FUNCTION);
 
 	return (g_pResultVector.isTmpObj()
-		? SetReffuncResult( ppResult, std::move(g_pResultVector) )
-		: SetReffuncResult( ppResult, g_pResultVector) );
+		? SetReffuncResult(ppResult, std::move(g_pResultVector))
+		: SetReffuncResult(ppResult, g_pResultVector));
 }
 
 //------------------------------------------------
 // 文字列結合(Join)
 //------------------------------------------------
-int VectorJoin( PDAT** ppResult )
+int VectorJoin(PDAT** ppResult)
 {
 	auto&& self = code_get_vector();
 
@@ -537,22 +260,22 @@ int VectorJoin( PDAT** ppResult )
 		strcpy_s(&buf[idx], bufsize - idx, leftBracket); idx += lenLeftBracket;
 
 		// foreach
-		for ( size_t i = 0; i < self->size(); ++ i ) {
+		for ( size_t i = 0; i < self->size(); ++i ) {
 			if ( i != 0 ) {
 				// 区切り文字
-				strcpy_s( &buf[idx], bufsize - idx, splitter ); idx += lenSplitter;
+				strcpy_s(&buf[idx], bufsize - idx, splitter); idx += lenSplitter;
 			}
 
 			PVal* const pvdat = self->at(i).getVar();
 
 			if ( pvdat->flag == g_vtVector ) {
-				impl( VtTraits::getMaster<vtVector>(pvdat), buf, bufsize, idx );
+				impl(VtTraits::getMaster<vtVector>(pvdat), buf, bufsize, idx);
 
 			} else {
 				// 文字列化して連結
 				char const* const pStr = (char const*)Valptr_cnvTo(PVal_getptr(pvdat), pvdat->flag, HSPVAR_FLAG_STR);
-				size_t const lenStr = std::strlen( pStr );
-				strcpy_s( &buf[idx], bufsize - idx, pStr ); idx += lenStr;
+				size_t const lenStr = std::strlen(pStr);
+				strcpy_s(&buf[idx], bufsize - idx, pStr); idx += lenStr;
 			}
 		}
 
@@ -561,17 +284,17 @@ int VectorJoin( PDAT** ppResult )
 
 	auto const lambda = [&self, &impl](char* buf, int bufsize) {
 		size_t idx = 0;				// 結合後の文字列の長さ
-		impl( self, buf, bufsize, idx );
-		buf[idx ++] = '\0';
+		impl(self, buf, bufsize, idx);
+		buf[idx++] = '\0';
 	};
 
-	return SetReffuncResultString( ppResult, lambda );
+	return SetReffuncResultString(ppResult, lambda);
 }
 
 //------------------------------------------------
 // 添字関数
 //------------------------------------------------
-int VectorAt( PDAT** ppResult )
+int VectorAt(PDAT** ppResult)
 {
 	auto&& self = code_get_vector();
 
@@ -583,6 +306,227 @@ int VectorAt( PDAT** ppResult )
 		return SetReffuncResult(ppResult, self);
 	}
 }
+
+//#########################################################
+//        コンテナ操作
+//#########################################################
+//------------------------------------------------
+// 連結
+//------------------------------------------------
+void VectorChain(bool bClear)
+{
+	auto&& dst = code_get_vector();
+	auto&& src = code_get_vector();
+
+	if ( bClear ) dst->clear();
+
+	auto const&& range = code_get_vectorRange(src);
+	chainDeep(dst, src, range);
+	return;
+}
+
+//------------------------------------------------
+// コンテナ操作処理テンプレート
+//------------------------------------------------
+// 難しい
+
+//------------------------------------------------
+// 要素順序
+//------------------------------------------------
+void VectorContainerProc(int cmd)
+{
+	PVal* const pval = code_get_var();
+	if ( pval->flag != g_vtVector ) puterror( HSPERR_TYPE_MISMATCH );
+
+	auto& self = VtTraits::getMaster<vtVector>(pval);
+	if ( !self ) puterror(HSPERR_ILLEGAL_FUNCTION);
+
+	VectorContainerProcImpl(self, cmd);
+	return;
+}
+
+int VectorContainerProcFunc(PDAT** ppResult, int cmd)
+{
+	auto&& src = code_get_vector();
+	if ( !src ) puterror(HSPERR_ILLEGAL_FUNCTION);
+
+	// 全区間スライス
+	auto&& result = vector_t::make();
+	{
+		chainShallow(result, src, { 0, src->size() });
+		VectorContainerProcImpl(result, cmd);
+	}
+	return SetReffuncResult(ppResult, std::move(result.beTmpObj()));
+}
+
+static void VectorContainerProcImpl(vector_t& self, int cmd)
+{
+	switch ( cmd ) {
+		case VectorCmdId::Insert:
+		{
+			// 区間
+			// iEnd の側は現在の size を無視できる。
+			size_t const iBgn = code_get_vectorIndex(self);
+			int const iEnd = code_geti();
+			if ( iEnd <= static_cast<int>(iBgn) ) puterror(HSPERR_ILLEGAL_FUNCTION);
+
+			size_t const cntRange = iEnd - iBgn;
+
+			// 初期値リスト
+			vector_t ins {}; ins->reserve(cntRange);
+			for ( size_t i = 0; i < cntRange; ++i ) {
+				int const chk = code_getprm();
+				ins->push_back((chk <= PARAM_END)
+					? ManagedVarData {}
+					: ManagedVarData { mpval->pt, static_cast<vartype_t>(mpval->flag) }
+				);
+			}
+
+			self->insert(self->begin() + iBgn, ins->begin(), ins->end());
+			break;
+		}
+		case VectorCmdId::Remove:
+		{
+			auto&& range = code_get_vectorRange(self);
+			self->erase(self->begin() + range.first, self->begin() + range.second);
+			break;
+		}
+		case VectorCmdId::InsertOne:
+		case VectorCmdId::PushFront:
+		case VectorCmdId::PushBack:
+		case VectorCmdId::RemoveOne:
+		case VectorCmdId::PopFront:
+		case VectorCmdId::PopBack:
+		{
+			// 添字
+			int idx;
+			switch ( cmd ) {
+				case VectorCmdId::InsertOne:
+				{
+					idx = code_geti();
+
+					// idx == end まで許される
+					if ( !(0 <= idx && static_cast<size_t>(idx) <= self->size()) ) {
+						puterror(HSPERR_ILLEGAL_FUNCTION);
+					}
+					break;
+				}
+				case VectorCmdId::RemoveOne: idx = code_get_vectorIndex(self); break;
+				case VectorCmdId::PushFront: //
+				case VectorCmdId::PopFront:  idx = 0; break;
+				case VectorCmdId::PushBack:  idx = self->size(); break;
+				case VectorCmdId::PopBack:   idx = self->size() - 1; break;
+				default: assert(false);
+			}
+
+			switch ( cmd ) {
+				case VectorCmdId::InsertOne:
+				case VectorCmdId::PushFront:
+				case VectorCmdId::PushBack:
+				{
+					// 初期値
+					int const chk = code_getprm();
+					auto vardata = (chk <= PARAM_END
+						? ManagedVarData {}
+						: ManagedVarData { mpval->pt, static_cast<vartype_t>(mpval->flag) }
+					);
+
+					self->insert(self->begin() + idx, std::move(vardata));
+					break;
+				}
+				case VectorCmdId::RemoveOne:
+				case VectorCmdId::PopFront:
+				case VectorCmdId::PopBack:
+					self->erase(self->begin() + idx);
+					break;
+
+				default: assert(false);
+			}
+			break;
+		}
+		case VectorCmdId::Replace:
+		{
+			auto&& range = code_get_vectorRange(self);
+			auto&& src = code_get_vector();
+
+			size_t const cntRange = range.second - range.first;
+			auto&& result = vector_t::make();
+			result->reserve(self->size() - cntRange + src->size());
+
+			chainShallow(result, self, { 0, range.first });
+			chainShallow(result, src, { 0, src->size() });
+			chainShallow(result, self, { range.second, self->size() });
+
+			self = std::move(result);
+			break;
+		}
+		case VectorCmdId::Swap:
+		{
+			size_t const idx1 = code_get_vectorIndex(self);
+			size_t const idx2 = code_get_vectorIndex(self);
+
+			std::iter_swap(self->begin() + idx1, self->begin() + idx2);
+			break;
+		}
+		case VectorCmdId::Rotate:
+		{
+			int const step = code_getdi(1);
+
+			size_t const size = self->size();
+			if ( size > 1 ) {
+				// regularize step (use positive-minimum modulo)
+				size_t const stepReg
+					//= step % size
+					= ((step % size) + size) % size;
+
+				std::rotate(self->begin() , self->begin() + stepReg, self->end());
+			}
+			break;
+		}
+		case VectorCmdId::Reverse:
+		{
+			auto&& range = code_get_vectorRange(self);
+			std::reverse(self->begin() + range.first, self->begin() + range.second);
+			break;
+		}
+		case VectorCmdId::Relocate:
+		{
+			size_t const idxDst = code_get_vectorIndex(self);
+			size_t const idxSrc = code_get_vectorIndex(self);
+			if ( idxSrc != idxDst ) {
+				auto srcElem = self->at(idxSrc);
+
+				auto&& bak = vector_t::make();
+				if ( idxSrc < idxDst ) {
+					chainShallow(bak, self, { idxSrc + 1, idxDst + 1 });
+					std::move(
+						bak->begin(),
+						bak->end(),
+						self->begin() + idxSrc
+					);
+				} else {
+					chainShallow(bak, self, { idxDst, idxSrc });
+					std::move(
+						bak->begin(),
+						bak->end(),
+						self->begin() + idxDst + 1
+					);
+				}
+				self->at(idxDst) = std::move(srcElem);
+			}
+			break;
+		}
+		default: assert(false);
+	}
+	return;
+}
+
+//#########################################################
+//        関数
+//#########################################################
+//------------------------------------------------
+// 内部変数の情報を得る
+//------------------------------------------------
 
 
 //------------------------------------------------

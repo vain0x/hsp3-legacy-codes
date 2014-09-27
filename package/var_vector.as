@@ -25,25 +25,25 @@
 #cmd VectorDim         0x010		// vector型の内部変数を配列にする
 #cmd VectorClone       0x011		// vector型の内部変数のクローンを作る
 
-#cmd VectorInsert      0x013		// 要素追加
-#cmd VectorInsert1     0x014		// 
-#cmd VectorPushFront   0x015		// 
-#cmd VectorPushBack    0x016		// 
-#cmd VectorRemove      0x017		// 要素除去
-#cmd VectorRemove1     0x018		// 
-#cmd VectorPopFront    0x019		// 
-#cmd VectorPopBack     0x01A		// 
-#cmd VectorReplace     0x01B		// 要素置換
+#cmd VectorInsert      0x020		// 要素追加
+#cmd VectorInsertOne   0x021		// 
+#cmd VectorPushFront   0x022		// 
+#cmd VectorPushBack    0x023		// 
+#cmd VectorRemove      0x024		// 要素除去
+#cmd VectorRemoveOne   0x025		// 
+#cmd VectorPopFront    0x026		// 
+#cmd VectorPopBack     0x027		// 
+#cmd VectorReplace     0x028		// 要素置換
 
-#cmd VectorMove        0x020		// 移動
-#cmd VectorSwap        0x021		// 交換
-#cmd VectorRotate      0x022		// 巡回
-#cmd VectorReverse     0x023		// 反転
+#cmd VectorSwap        0x030		// 交換
+#cmd VectorRotate      0x031		// 巡回
+#cmd VectorReverse     0x032		// 反転
+#cmd VectorRelocate    0x033		// 移動
 
 #cmd VectorInfo        0x100		// 内部変数の情報を取得する
 #cmd VectorSize        0x101		// 要素数
 #cmd VectorSlice       0x102		// スライス
-#cmd VectorSliceOut    0x103		// スライス排除 [a, b)
+#cmd VectorSliceOut    0x103		// スライス排除
 #cmd VectorResult      0x104		// vector 返却関数
 #cmd VectorExpr        0x105		// vector 式
 #cmd VectorJoin        0x106		// 文字列結合
@@ -59,8 +59,8 @@
 #define global VectorForeach(%1) %tVectorForeach repeat VectorSize(%1)
 #define global VectorForeachEnd  %tVectorForeach loop
 
-#define global VectorPush    VectorPushBack
-#define global VectorPop     VectorPopBack
+;#define global VectorPush    VectorPushBack
+;#define global VectorPop     VectorPopBack
 #define global VectorEnqueue VecotrPushBack
 #define global VectorDequeue VectorPopFront
 
@@ -83,7 +83,6 @@
 
 // 定数・マクロ
 
-#define global VectorVtName "vector_k"
 #define global VectorLast (-0x031EC10A)
 #define global VectorEnd  (-0x031EC10B)
 
@@ -115,5 +114,11 @@
 	VectorReturn it()
 	
 #global
+
+// 後方互換
+#define global VectorVtName "vector_k"
+#define global VectorInsert1 VectorInsertOne
+#define global VectorRemove1 VectorRemoveOne
+#define global ctype VectorMove(%1, %2, %3) VectorRelocate(%1, %3, %2)
 
 #endif

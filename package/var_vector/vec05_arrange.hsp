@@ -1,0 +1,49 @@
+#include "../crouton.as"
+
+// 順番変え(arrange)
+
+	self = vector(0, 1, 2, 3)
+	
+// 関数：VectorSwap(self, idx0, idx1)
+// self の位置 idx0, idx1 の要素を、交換する。
+
+	v1 = VectorSwap(self, 1, 3)
+	mes "v1 = " + VectorToString(v1)
+	
+// 関数：VectorRotate(self, step)
+// self を step 回 rotete する。
+// rotate とは、(0, 1, 2, ... , N) → (1, 2, ..., N, 0) という操作のこと。
+
+	v2 = VectorRotate(self, -1)
+	mes "v2 = " + VectorToString(v2)
+	
+// 関数：VectorReverse(self, iBgn, iEnd)
+// self の区間 [iBgn, iEnd) を反転させる。
+
+	v3 = VectorReverse(self, 0, 2)
+	mes "v3 = " + VectorToString(v3)
+
+// 関数：VectorRelocate(self, idxDst, idxSrc)
+// self の位置 idxSrc の要素を、位置 idxDst に移動させる。
+// (メモ：VectorMove から改名された。引数の順番も変わったので注意。)
+
+	v4 = VectorRelocate(self, 3, 1)
+	mes "v4 = " + VectorToString(v4)
+	
+	v5 = VectorRelocate(self, 1, 3)
+	mes "v5 = " + VectorToString(v5)
+	
+	mes "以上"
+	stop
+
+/**
+https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Array/splice
+
+#define global __call_empty_paren__ ()
+#define global ctype VectorSplice(%1, %2, %3 = 0, %4 = __call_empty_paren__) \
+	VectorSplice_(%1, %2, %3, vector %4)
+#module
+#defcfunc VectorSplice_ array self, int idx, int cntRemove, array another
+	VectorReturn VectorReplace(self, idx, idx + cntRemove, another)
+#global
+//*/
