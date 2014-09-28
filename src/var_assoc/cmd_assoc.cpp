@@ -2,26 +2,29 @@
 
 #include "vt_assoc.h"
 #include "cmd_assoc.h"
-#include "CAssoc.h"
 
 #include "mod_makepval.h"
 #include "mod_argGetter.h"
+#include "mod_varutil.h"
 #include "reffuncResult.h"
 
 using namespace hpimod;
 
-static CAssoc* g_pAssocResult = nullptr;	// 返却値を所有する
+// コマンドの返却値用
+static assoc_t g_resultAssoc { nullptr };
 
 //------------------------------------------------
 // assoc 型の値を受け取る
-// 
-// @ mpval は assoc 型となる。
 //------------------------------------------------
-CAssoc* code_get_assoc()
+assoc_t code_get_assoc()
 {
 	if ( code_getprm() <= PARAM_END ) puterror( HSPERR_NO_DEFAULT );
 	if ( mpval->flag != g_vtAssoc ) puterror( HSPERR_TYPE_MISMATCH );
-	return *VtTraits::asValptr<vtAssoc>(mpval->pt);
+
+	auto const& self = VtTraits::derefValptr<vtAssoc>(mpval->pt);
+	assert(!!self);
+
+	return self;
 }
 
 //------------------------------------------------
@@ -29,67 +32,80 @@ CAssoc* code_get_assoc()
 //
 // @ 内部変数を指す添字がついていなければ、nullptr。
 //------------------------------------------------
-PVal* code_get_assoc_pval()
+PVal* code_get_assocInner()
 {
-	PVal* const pval = hpimod::code_get_var();
-	return VtTraits::getMaster<vtAssoc>(pval);
+	PVal* pval = hpimod::code_get_var();
+	if ( pval->flag != g_vtAssoc ) puterror(HSPERR_TYPE_MISMATCH);
+	return VtTraits::getAssocInnerVar(pval);
 }
 
 //------------------------------------------------
 // assoc 型の値を返却する
 //------------------------------------------------
-int SetReffuncResult( PDAT** ppResult, CAssoc* const& pAssoc )
+int SetReffuncResult( PDAT** ppResult, assoc_t&& assoc )
 {
-	CAssoc::Release( g_pAssocResult );
-	g_pAssocResult = pAssoc;
-	CAssoc::AddRef( g_pAssocResult );
-
-	*ppResult = VtTraits::asPDAT<vtAssoc>(const_cast<CAssoc**>( &pAssoc ));
+	g_resultAssoc = std::move(assoc);
+	*ppResult = VtTraits::asPDAT<vtAssoc>(&g_resultAssoc);
 	return g_vtAssoc;
 }
 
-//#########################################################
-//        命令
-//#########################################################
 //------------------------------------------------
-// 構築 (dim)
+// 構築 (リテラル風)
 //------------------------------------------------
-void AssocNew()
+int AssocMake(PDAT** ppResult)
 {
-	PVal* const pval = code_getpval();
-	int len[4];
-	for ( int i = 0; i < 4; ++ i ) {
-		len[i] = code_getdi(0);
-	}
+	assoc_t result;
 
-	exinfo->HspFunc_dim( pval, g_vtAssoc, 0, len[0], len[1], len[2], len[3] );
-	return;
+	while ( code_isNextArg() ) {
+		// key
+		assocKey_t const key = code_gets();
+
+		// value
+		int const chk = code_getprm();
+		auto const value = ( chk <= PARAM_END
+			? ManagedVarData {}
+			: ManagedVarData { mpval->pt, static_cast<vartype_t>(mpval->flag) }
+		);
+
+		result->insert({ std::move(key), std::move(value) });
+	}
+	return SetReffuncResult(ppResult, std::move(result.beTmpObj()));
 }
 
 //------------------------------------------------
-// 破棄
+// 構築 (複製)
 //------------------------------------------------
-void AssocDelete()
+int AssocDupShallow(PDAT** ppResult)
 {
-	PVal* const pval = code_get_var();
-	if ( pval->flag != g_vtAssoc ) puterror( HSPERR_TYPE_MISMATCH );
+	assoc_t const&& src = code_get_assoc();
+	if ( !src ) puterror(HSPERR_ILLEGAL_FUNCTION);
 
-	CAssoc*& self = *VtTraits::getValptr<vtAssoc>(pval);
-	if ( self ) {
-		self->Release();
-		self = nullptr;
+	assoc_t result = assoc_t::make(src->begin(), src->end());
+	return SetReffuncResult(ppResult, std::move(result.beTmpObj()));
+}
+
+int AssocDupDeep(PDAT** ppResult)
+{
+	assoc_t const&& src = code_get_assoc();
+	if ( !src ) puterror(HSPERR_ILLEGAL_FUNCTION);
+
+	assoc_t result {};
+	for ( auto const& iter : *src ) {
+		result->emplace_hint(result->end(),
+			std::make_pair(iter.first, ManagedVarData::duplicate(iter.second.getVar()))
+		);
 	}
-	return;
+	return SetReffuncResult(ppResult, std::move(result.beTmpObj()));
 }
 
 //------------------------------------------------
 // 外部変数のインポート
 //------------------------------------------------
-static void AssocImportImpl( CAssoc* self, char const* src );
+static void AssocImportImpl( assoc_t self, char const* src );
 
 void AssocImport()
 {
-	CAssoc* const self = code_get_assoc();
+	assoc_t const self = code_get_assoc();
 	if ( !self ) puterror( HSPERR_ILLEGAL_FUNCTION );
 
 	while ( code_isNextArg() ) {
@@ -99,7 +115,7 @@ void AssocImport()
 	return;
 }
 
-static void AssocImportImpl( CAssoc* const self, char const* const src )
+static void AssocImportImpl( assoc_t const self, char const* const src )
 {
 	// モジュール名
 	if ( src[0] == '@' ) {
@@ -124,10 +140,11 @@ static void AssocImportImpl( CAssoc* const self, char const* const src )
 	} else {
 		PVal* const pval = hpimod::seekSttVar(src);
 		if ( pval ) {
-			self->Insert( src, pval );
+			self->insert({ src, ManagedVarData { pval, pval->offset } });
+		} else {
+			puterror(HSPERR_ILLEGAL_FUNCTION);
 		}
 	}
-
 	return;
 }
 
@@ -139,74 +156,60 @@ static void AssocImportImpl( CAssoc* const self, char const* const src )
 //------------------------------------------------
 void AssocInsert()
 {
-	CAssocHolder self = code_get_assoc();
+	auto&& self = code_get_assoc();
 	char const* const key = code_gets();
 
 	if ( !self ) puterror( HSPERR_ILLEGAL_FUNCTION );
 
 	// 参照された内部変数
-	PVal* const pvInner = self->At( key );
+	PVal* const pvInner = assocAt(self, assocFindDynamic(self, key));
 
 	// 初期値 (省略可能)
 	if ( code_getprm() > PARAM_END ) {
-		int const fUserElem = pvInner->support & CAssoc::HSPVAR_SUPPORT_USER_ELEM;
-
 		PVal_assign( pvInner, mpval->pt, mpval->flag );
-
-		pvInner->support |= fUserElem;
 	}
-
 	return;
 }
 
 void AssocRemove()
 {
-	CAssocHolder self = code_get_assoc();
-	char const* const key = code_gets();
+	auto&& self = code_get_assoc();
+	assocKey_t const key = code_gets();
 
 	if ( !self ) puterror( HSPERR_ILLEGAL_FUNCTION );
 
-	self->Remove( key );
+	self->erase(key);
 	return;
 }
 
 //------------------------------------------------
-// 内部変数の dim
-// 
-// @prm: [ assoc("key"), vartype, len1..4 ]
+// 内部変数
 //------------------------------------------------
 void AssocDim()
 {
-	PVal* const pvInner = code_get_assoc_pval();
-	if ( !pvInner ) puterror( HSPERR_ILLEGAL_FUNCTION );
+	PVal* const pvInner = code_get_assocInner();
+	if ( !pvInner ) puterror(HSPERR_VARIABLE_REQUIRED);
 
-	int const fUserElem = pvInner->support & CAssoc::HSPVAR_SUPPORT_USER_ELEM;
-
-	int const vflag = code_getdi( pvInner->flag );	// 型タイプ値
-	int len[4];
-	for ( int i = 0; i < hpimod::ArrayDimMax; ++ i ) {
-		len[i] = code_getdi(0);		// 要素数
-	}
-
-	// 配列として初期化する
-	exinfo->HspFunc_dim( pvInner, vflag, 0, len[0], len[1], len[2], len[3] );
-
-	pvInner->support |= fUserElem;
+	code_dimtype(pvInner, code_get_vartype());
 	return;
 }
 
-//------------------------------------------------
-// 内部変数のクローンを作る
-//------------------------------------------------
 void AssocClone()
 {
-	PVal* const pvInner = code_get_assoc_pval();	// クローン元
-	PVal* const pval    = code_getpval();			// クローン先
+	PVal* const pvInner = code_get_assocInner();
+	PVal* const pval = code_getpval();
+	if ( !pvInner || !pval ) puterror(HSPERR_VARIABLE_REQUIRED);
 
-	if ( !pvInner || !pval ) puterror( HSPERR_ILLEGAL_FUNCTION );
-
-	PVal_cloneVar( pval, pvInner );
+	PVal_cloneVar(pval, pvInner);
 	return;
+}
+
+int AssocVarinfo(PDAT** ppResult)
+{
+	PVal* const pvInner = code_get_assocInner();
+	if ( !pvInner ) puterror(HSPERR_ILLEGAL_FUNCTION);
+
+	return code_varinfo(pvInner);
 }
 
 //------------------------------------------------
@@ -214,15 +217,13 @@ void AssocClone()
 //------------------------------------------------
 static void AssocChainOrCopy( bool bCopy )
 {
-	CAssocHolder dst = code_get_assoc();
-	CAssoc* const src = code_get_assoc();
+	auto&& dst = code_get_assoc();
+	auto&& src = code_get_assoc();
 	if ( !dst || !src ) puterror( HSPERR_ILLEGAL_FUNCTION );
 
-	if ( bCopy ) {
-		dst->Copy( src );
-	} else {
-		dst->Chain( src );
-	}
+	if ( bCopy ) dst.reset();
+
+	dst->insert(src->begin(), src->end());
 	return;
 }
 
@@ -234,10 +235,10 @@ void AssocChain() { AssocChainOrCopy( false ); }
 //------------------------------------------------
 void AssocClear()
 {
-	CAssoc* const self = code_get_assoc();
+	assoc_t const self = code_get_assoc();
 	if ( !self ) puterror( HSPERR_ILLEGAL_FUNCTION );
 
-	self->Clear();
+	self->clear();
 	return;
 }
 
@@ -245,57 +246,12 @@ void AssocClear()
 //        関数
 //#########################################################
 //------------------------------------------------
-// 構築 (一時変数)
-//------------------------------------------------
-int AssocNewTemp(PDAT** ppResult)
-{
-	return SetReffuncResult( ppResult, CAssoc::New() );	// 直後に mpval に所有される
-}
-
-//------------------------------------------------
-// 構築 (複製)
-//------------------------------------------------
-int AssocNewTempDup(PDAT** ppResult)
-{
-	CAssoc* const src = code_get_assoc();
-	if ( !src ) puterror( HSPERR_ILLEGAL_FUNCTION );
-
-	CAssoc* const newOne = CAssoc::New();
-	newOne->Chain( src );
-	return SetReffuncResult( ppResult, newOne );	// 直後に mpval に所有される
-}
-
-//------------------------------------------------
 // null か
 //------------------------------------------------
 int AssocIsNull(PDAT** ppResult)
 {
-	CAssoc* const self = code_get_assoc();
-	return SetReffuncResult( ppResult, HspBool(self != nullptr));
-}
-
-//------------------------------------------------
-// 内部変数の情報を得る
-//------------------------------------------------
-int AssocVarinfo(PDAT** ppResult)
-{
-	PVal* const pvInner = code_get_assoc_pval();
-	if ( !pvInner ) puterror( HSPERR_ILLEGAL_FUNCTION );
-
-	int const varinfo = code_getdi( VARINFO_NONE );
-	int const opt     = code_getdi( 0 );
-
-	switch ( varinfo ) {
-		case VARINFO_FLAG:   return SetReffuncResult( ppResult, (int)pvInner->flag );
-		case VARINFO_MODE:   return SetReffuncResult( ppResult, (int)pvInner->mode );
-		case VARINFO_LEN:    return SetReffuncResult( ppResult, pvInner->len[opt + 1] );
-		case VARINFO_SIZE:   return SetReffuncResult( ppResult, pvInner->size );
-		case VARINFO_PT:     return SetReffuncResult( ppResult, (int)(getHvp(pvInner->flag))->GetPtr(pvInner) );
-		case VARINFO_MASTER: return SetReffuncResult( ppResult, (int)pvInner->master );
-		default:
-			puterror( HSPERR_UNSUPPORTED_FUNCTION );
-			throw;
-	}
+	assoc_t const&& self = code_get_assoc();
+	return SetReffuncResult( ppResult, HspBool(!!self));
 }
 
 //------------------------------------------------
@@ -303,9 +259,9 @@ int AssocVarinfo(PDAT** ppResult)
 //------------------------------------------------
 int AssocSize(PDAT** ppResult)
 {
-	CAssoc* const self = code_get_assoc();
-	int const size = (self ? self->Size() : 0);
-	return SetReffuncResult(ppResult, size);
+	assoc_t const&& self = code_get_assoc();
+	size_t const size = (self ? self->size() : 0);
+	return SetReffuncResult(ppResult, static_cast<int>(size));
 }
 
 //------------------------------------------------
@@ -313,10 +269,10 @@ int AssocSize(PDAT** ppResult)
 //------------------------------------------------
 int AssocExists(PDAT** ppResult)
 {
-	CAssocHolder self = code_get_assoc();
+	assoc_t&& self = code_get_assoc();
 	char const* const key  = code_gets();
 
-	return SetReffuncResult( ppResult, (int)(self ? self->Exists(key) : false) );
+	return SetReffuncResult( ppResult, HspBool(self ? assocFindStatic(self, key) >= 0 : false) );
 }
 
 //------------------------------------------------
@@ -324,13 +280,13 @@ int AssocExists(PDAT** ppResult)
 //------------------------------------------------
 int AssocForeachNext(PDAT** ppResult)
 {
-	CAssocHolder self = code_get_assoc();	// assoc
-	PVal* const pval = code_get_var();		// iter (key)
-	int const idx  = code_geti();
+	assoc_t&& self = code_get_assoc();
+	PVal* const pval = code_get_var();	// iter (key)
+	int const idx = code_geti();
 
 	bool bContinue =			// 続けるか否か
 		( !!self && idx >= 0
-		&& static_cast<size_t>(idx) < self->Size()
+		&& static_cast<size_t>(idx) < self->size()
 		);
 
 	if ( bContinue ) {
@@ -351,14 +307,7 @@ static int const AssocResultExprMagicNumber = 0xA550C;
 
 int AssocResult( PDAT** ppResult )
 {
-	if ( g_pAssocResult ) {			// 前のを解放する
-		CAssoc::Release( g_pAssocResult );
-		g_pAssocResult = nullptr;
-	}
-
-	g_pAssocResult = code_get_assoc();
-	CAssoc::AddRef( g_pAssocResult );
-
+	g_resultAssoc = code_get_assoc();
 	return SetReffuncResult(ppResult, AssocResultExprMagicNumber);
 }
 
@@ -367,7 +316,8 @@ int AssocExpr( PDAT** ppResult )
 	// AssocResult が呼ばれるはず
 	if ( code_geti() != AssocResultExprMagicNumber ) puterror(HSPERR_ILLEGAL_FUNCTION);
 
-	*ppResult = VtTraits::asPDAT<vtAssoc>(&g_pAssocResult);
+
+	*ppResult = VtTraits::asPDAT<vtAssoc>(&g_resultAssoc);
 	return g_vtAssoc;
 }
 
@@ -376,6 +326,6 @@ int AssocExpr( PDAT** ppResult )
 //------------------------------------------------
 void AssocTerm()
 {
-	CAssoc::Release( g_pAssocResult ); g_pAssocResult = nullptr;
+	g_resultAssoc.nullify();
 	return;
 }

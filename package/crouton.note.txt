@@ -5,6 +5,10 @@
 call, opex, var_assoc, var_vector
 
 ＠履歴
+－2014.09.27 (Sat)
+・call: コマンド coCreate, coYield, coExit を実装した。
+	特殊関数子、コルーチンを追加した。
+
 －2014.09.26 (Fri)
 ・call: コマンド lambda を追加したが、キャプチャされた local が正しく振る舞わない。
 
@@ -35,7 +39,6 @@ call, opex, var_assoc, var_vector
 ＠wish
 
 PrmStk を操作するインターフェースクラスの再考
-vector_t の中身の extern template 宣言
 lambda のデバッグ
 	(arr(n) -> 配列の要素が無効です、のエラー、length() で十分な要素数を持つことは確認している)
 
@@ -49,6 +52,7 @@ lambda のデバッグ
 	prototype 的仕様の追加
 ・obsjson の修整
 ・knowbug との連携――call 時に呼び出しノードを push/pop
+serialize/unserialize
 
 ・スクリプト側で、今実行されているのが call による呼び出しかどうかを確認する方法。
 

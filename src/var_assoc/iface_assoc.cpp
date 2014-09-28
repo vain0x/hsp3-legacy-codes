@@ -13,6 +13,9 @@
 
 #include "hsp3plugin_custom.h"
 #include "reffuncResult.h"
+#include "mod_varutil.h"
+
+using namespace hpimod;
 
 //------------------------------------------------
 // 命令
@@ -20,8 +23,8 @@
 static int ProcSttmCmd( int cmd )
 {
 	switch ( cmd ) {
-		case 0x000: AssocNew();    break;
-		case 0x001: AssocDelete(); break;
+		case 0x000: code_dimtype(code_getpval(), g_vtAssoc); break;
+		//case 0x001: break;
 		case 0x002: AssocClear();  break;
 		case 0x003: AssocChain();  break;
 		case 0x004: AssocCopy();   break;
@@ -46,8 +49,7 @@ static int ProcSttmCmd( int cmd )
 static int ProcFuncCmd( int cmd, PDAT** ppResult )
 {
 	switch ( cmd ) {
-		case 0x000: return AssocNewTemp(ppResult);
-		case 0x004: return AssocNewTempDup(ppResult);
+		case 0x000: return AssocMake(ppResult);
 
 		case 0x021:
 			AssocClone();
@@ -59,8 +61,10 @@ static int ProcFuncCmd( int cmd, PDAT** ppResult )
 		case 0x103: return AssocForeachNext(ppResult);
 		case 0x104: return AssocResult( ppResult );
 		case 0x105: return AssocExpr( ppResult );
+		case 0x106: return AssocDupShallow(ppResult);
+		case 0x107: return AssocDupDeep(ppResult);
 
-		case 0x200: return AssocIsNull( ppResult );
+		//case 0x200: return AssocIsNull( ppResult );
 
 		default:
 			puterror( HSPERR_UNSUPPORTED_FUNCTION );
@@ -76,7 +80,7 @@ static int ProcSysvarCmd( int cmd, PDAT** ppResult )
 	switch ( cmd ) {
 		case 0x000: return hpimod::SetReffuncResult( ppResult, g_vtAssoc );	// assoc
 
-		case 0x200: return SetReffuncResult(ppResult, nullptr);		// AssocNull
+		//case 0x200: return SetReffuncResult(ppResult, nullptr);		// AssocNull
 
 		default:
 			puterror( HSPERR_UNSUPPORTED_FUNCTION );

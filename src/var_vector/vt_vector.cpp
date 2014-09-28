@@ -31,7 +31,7 @@ static PDAT* HspVarVector_GetPtr(PVal* pval)
 //------------------------------------------------
 static int HspVarVector_GetUsing(PDAT const* pdat)
 {
-	return HspBool(!VtTraits::derefValptr<vtVector>(pdat).isNull());
+	return HspBool(!!VtTraits::derefValptr<vtVector>(pdat));
 }
 
 //------------------------------------------------
@@ -201,7 +201,11 @@ static int Compare(vector_t const& lhs, vector_t const& rhs)
 		if ( lenLhs != lenRhs ) return (lenLhs < lenRhs ? -1 : 1);
 
 		for ( size_t i = 0; i < lenLhs; ++i ) {
-			if ( lhs->at(i).getPVal() != rhs->at(i).getPVal() ) return -1;	// 違ったらとりあえず左のが小さいことにする
+			PVal* const pvalLhs = lhs->at(i).getPVal();
+			PVal* const pvalRhs = rhs->at(i).getPVal();
+			if ( pvalLhs != pvalRhs ) {
+				return pvalLhs - pvalRhs;
+			}
 		}
 		return 0;
 	}
@@ -268,7 +272,7 @@ static int code_vectorIndex(vector_t const& self)
 }
 
 // 内部変数を取得
-// getVar 関数が内部変数の添字状態は array->cnt による。
+// getVar 関数により、内部変数の添字状態が更新される (添字を受け取るか否かは array->cnt による)。
 template<bool bAsLhs>
 static PVal* HspVarVector_ArrayObjectImplInner(vector_t const& self, size_t idx)
 {

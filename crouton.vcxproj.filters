@@ -151,9 +151,6 @@
     <ClInclude Include="src\opex\iface_opex.h">
       <Filter>opex</Filter>
     </ClInclude>
-    <ClInclude Include="src\var_assoc\CAssoc.h">
-      <Filter>var_assoc</Filter>
-    </ClInclude>
     <ClInclude Include="src\var_assoc\cmd_assoc.h">
       <Filter>var_assoc</Filter>
     </ClInclude>
@@ -263,9 +260,6 @@
     </ClCompile>
     <ClCompile Include="src\opex\iface_opex.cpp">
       <Filter>opex</Filter>
-    </ClCompile>
-    <ClCompile Include="src\var_assoc\CAssoc.cpp">
-      <Filter>var_assoc</Filter>
     </ClCompile>
     <ClCompile Include="src\var_assoc\cmd_assoc.cpp">
       <Filter>var_assoc</Filter>

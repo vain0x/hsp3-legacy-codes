@@ -1,6 +1,5 @@
 ﻿// assoc - VarProc code
 
-#include "CAssoc.h"
 #include "vt_assoc.h"
 
 #include "hsp3plugin_custom.h"
@@ -16,25 +15,39 @@ using namespace hpimod;
 int g_vtAssoc;
 HspVarProc* g_hvpAssoc;
 
-// 関数の宣言
-extern PDAT* HspVarAssoc_GetPtr         ( PVal* pval) ;
-extern int   HspVarAssoc_GetSize        ( PDAT const* pdat );
-extern int   HspVarAssoc_GetUsing       ( PDAT const* pdat );
-extern PDAT* HspVarAssoc_GetBlockSize   ( PVal* pval, PDAT* pdat, int* size );
-extern void  HspVarAssoc_AllocBlock     ( PVal* pval, PDAT* pdat, int  size );
-extern void  HspVarAssoc_Alloc          ( PVal* pval, PVal const* pval2 );
-extern void  HspVarAssoc_Free           ( PVal* pval);
-extern PDAT* HspVarAssoc_ArrayObjectRead( PVal* pval, int* mptype );
-extern void  HspVarAssoc_ArrayObject    ( PVal* pval);
-extern void  HspVarAssoc_ObjectWrite    ( PVal* pval, PDAT const* data, int vflag );
-extern void  HspVarAssoc_ObjectMethod   ( PVal* pval);
+static StAssocMapList* HspVarAssoc_GetMapList( assoc_t src );	// void* user
 
-static StAssocMapList* HspVarAssoc_GetMapList( CAssoc* src );	// void* user
+//------------------------------------------------
+// ヘルパ関数
+//------------------------------------------------
+PVal* assocAt(assoc_t self, APTR offset)
+{
+	if ( !(0 <= offset && static_cast<size_t>(offset) < self->size()) ) return nullptr;
+
+	auto iter = self->begin();
+	std::advance(iter, offset);
+	return iter->second.getVar();
+}
+
+APTR assocFindDynamic(assoc_t self, assocKey_t const& key)
+{
+	auto const iter = self->insert({ key, assocValue_t {} }).first;
+	return std::distance(self->begin(), iter);
+}
+
+APTR assocFindStatic(assoc_t self, assocKey_t const& key)
+{
+	auto const iter = self->find(key);
+	return (iter != self->end()
+		? std::distance(self->begin(), iter)
+		: -1
+	);
+}
 
 //------------------------------------------------
 // Core
 //------------------------------------------------
-static PDAT* HspVarAssoc_GetPtr( PVal* pval )
+static PDAT* HspVarAssoc_GetPtr(PVal* pval)
 {
 	return VtTraits::asPDAT<vtAssoc>(VtTraits::getValptr<vtAssoc>(pval));
 }
@@ -44,7 +57,7 @@ static PDAT* HspVarAssoc_GetPtr( PVal* pval )
 //------------------------------------------------
 static int HspVarAssoc_GetUsing( PDAT const* pdat )
 {
-	return HspBool(VtTraits::derefValptr<vtAssoc>(pdat) != nullptr);
+	return HspBool(!!VtTraits::derefValptr<vtAssoc>(pdat));
 }
 
 //------------------------------------------------
@@ -56,33 +69,36 @@ static int HspVarAssoc_GetUsing( PDAT const* pdat )
 static void HspVarAssoc_Alloc( PVal* pval, PVal const* pval2 )
 {
 	if ( pval->len[1] < 1 ) pval->len[1] = 1;		// 最低1要素は確保する
+	
 	size_t const cntElems = PVal_cntElems( pval );
-	size_t const     size = cntElems * sizeof(CAssoc*);
+	size_t const     size = cntElems * VtTraits::basesize<vtAssoc>::value;
+
+	if ( cntElems >= VtTraits::assocElementsMax ) puterror(HSPERR_ARRAY_OVERFLOW);
 
 	// バッファ確保
-	auto const pt = reinterpret_cast<CAssoc**>(hspmalloc(size));
-	std::memset(pt, 0, size);
+	assoc_t* pt;
+	size_t lenOld = 0;
 
 	// 継承
 	if ( pval2 ) {
-		std::memcpy( pt, pval2->pt, pval2->size );
-		hspfree( pval2->pt );
+		lenOld = pval2->size / VtTraits::basesize<vtAssoc>::value;
+		pt = reinterpret_cast<assoc_t*>(hspexpand(reinterpret_cast<char*>(pval2->pt), size));
+
+	} else {
+		pt = reinterpret_cast<assoc_t*>(hspmalloc(size));
 	}
 
 	// 初期化
-	for ( size_t i = 0; i < cntElems; ++ i ) {
-		if ( !pt[i] ) {
-			pt[i] = CAssoc::New();
-			pt[i]->AddRef();
-		}
+	for ( size_t i = lenOld; i < cntElems; ++i ) {
+		new(&pt[i]) assoc_t {};
 	}
 
 	// pval へ設定
-	pval->flag   = g_vtAssoc;	// assoc の型タイプ値
+	pval->flag   = g_vtAssoc;
 	pval->mode   = HSPVAR_MODE_MALLOC;
 	pval->size   = size;
 	pval->pt     = VtTraits::asPDAT<vtAssoc>(pt);
-	pval->master = nullptr;		// 後で使う
+	//pval->master = nullptr;	// 不使用
 	return;
 }
 
@@ -93,14 +109,13 @@ static void HspVarAssoc_Free( PVal* pval )
 {
 	if ( pval->mode == HSPVAR_MODE_MALLOC ) {
 		// 全ての要素を Release
-		auto const pt = reinterpret_cast<CAssoc**>(pval->pt);
+		auto const pt = reinterpret_cast<assoc_t*>(pval->pt);
 		size_t const cntElems = PVal_cntElems( pval );
 
 		for ( size_t i = 0; i < cntElems; ++ i ) {
-			CAssoc::Release( pt[i] );
+			pt[i].~Managed();
 		}
 
-		// バッファを解放
 		hspfree( pval->pt );
 	}
 
@@ -119,12 +134,8 @@ static void HspVarAssoc_Set( PVal* pval, PDAT* pdat, PDAT const* in )
 	auto& dst = VtTraits::derefValptr<vtAssoc>(pdat);
 	auto& src = VtTraits::derefValptr<vtAssoc>(in);
 
-	if ( dst != src ) {
-		CAssoc::Release( dst );
-		dst = src;
-		CAssoc::AddRef( dst );
-	}
-
+	dst = src;
+	
 	g_hvpAssoc->aftertype = g_vtAssoc;
 	return;
 }
@@ -141,86 +152,21 @@ static void HspVarAssoc_AddI( PDAT* pdat, void const* val )
 }
 //*/
 
-/*
 //------------------------------------------------
-// 比較関数 (参照同値性比較)
-// 
-// @ pdat は Assoc のテンポラリ変数の mpval->pt なので、
-// @	値を代入すると、左辺の参照が1つ勝手に消えることになる。
-// @	そのため、予め左辺の参照を Release しておく。
+// 比較関数 (参照同値)
 //------------------------------------------------
-static void HspVarAssoc_EqI( PDAT* pdat, void const* val )
+int HspVarAssoc_CmpI( PDAT* pdat, PDAT const* val )
 {
-	CAssoc*& lhs = *(CAssoc**)pdat;
-	CAssoc*& rhs = *(CAssoc**)val;
+	auto& lhs = VtTraits::derefValptr<vtAssoc>(pdat);
+	auto& rhs = VtTraits::derefValptr<vtAssoc>(val);
 
-	if (lhs) lhs->Release();
+	int const cmp = (lhs == rhs ? 0 : -1);
 
-	*(int*)pdat = (int)( (lhs == rhs) ? CAssoc::New() : NULL );
+	lhs.nullify();
+	rhs.beNonTmpObj();
+
 	g_hvpAssoc->aftertype = HSPVAR_FLAG_INT;
-	return;
-}
-
-static void HspVarAssoc_NeI( PDAT* pdat, void const* val )
-{
-	CAssoc*& lhs = *(CAssoc**)pdat;
-	CAssoc*& rhs = *(CAssoc**)val;
-
-	if (lhs) lhs->Release();
-
-	*(int*)pdat = (int)( (lhs != rhs) ? CAssoc::New() : NULL );
-	g_hvpAssoc->aftertype = HSPVAR_FLAG_INT;
-	return;
-}
-//*/
-
-//------------------------------------------------
-// Assoc 登録関数
-//------------------------------------------------
-void HspVarAssoc_Init( HspVarProc* p )
-{
-	g_hvpAssoc      = p;
-	g_vtAssoc       = p->flag;
-
-	// 関数ポインタを登録
-	p->GetUsing = HspVarAssoc_GetUsing;
-
-	p->Alloc = HspVarAssoc_Alloc;
-	p->Free  = HspVarAssoc_Free;
-
-	p->GetPtr       = HspVarTemplate_GetPtr<vtAssoc>;
-	p->GetSize      = HspVarTemplate_GetSize<vtAssoc>;
-	p->GetBlockSize = HspVarTemplate_GetBlockSize<vtAssoc>;
-	p->AllocBlock   = HspVarTemplate_AllocBlock<vtAssoc>;
-
-	// 演算関数
-	p->Set  = HspVarAssoc_Set;
-//	p->AddI = HspVarAssoc_AddI;
-//	p->EqI  = HspVarAssoc_EqI;
-//	p->NeI  = HspVarAssoc_NeI;
-
-	// 連想配列用
-	p->ArrayObjectRead = HspVarAssoc_ArrayObjectRead;	// 参照(右)
-	p->ArrayObject     = HspVarAssoc_ArrayObject;		// 参照(左)
-	p->ObjectWrite     = HspVarAssoc_ObjectWrite;		// 格納
-	p->ObjectMethod    = HspVarAssoc_ObjectMethod;		// メソッド
-
-	// 拡張データ
-	p->user = reinterpret_cast<char*>(HspVarAssoc_GetMapList);
-
-	// その他設定
-	p->vartype_name = "assoc_k";		// タイプ名 (衝突しないように変な名前にする)
-	p->version      = 0x001;			// runtime ver(0x100 = 1.0)
-
-	p->support							// サポート状況フラグ(HSPVAR_SUPPORT_*)
-		= HSPVAR_SUPPORT_STORAGE		// 固定長ストレージ
-		| HSPVAR_SUPPORT_FLEXARRAY		// 可変長配列
-	    | HSPVAR_SUPPORT_ARRAYOBJ		// 連想配列サポート
-	    | HSPVAR_SUPPORT_NOCONVERT		// ObjectWriteで格納
-	    | HSPVAR_SUPPORT_VARUSE			// varuse関数を適用
-	    ;
-	p->basesize = VtTraits::basesize<vtAssoc>::value;	// size / 要素 (byte)
-	return;
+	return cmp;
 }
 
 //#########################################################
@@ -236,7 +182,8 @@ void HspVarAssoc_Init( HspVarProc* p )
 template<bool bAsRhs>
 static PVal* HspVarAssoc_IndexImpl( PVal* pval )
 {
-	if ( *type == TYPE_MARK && *val == ')' ) return nullptr;	// 添字状態を更新しない
+	// [[deprecated]] 添字状態を更新しない (無更新参照)
+	if ( *type == TYPE_MARK && *val == ')' ) return nullptr;
 
 	bool bKey = false;		// キーがあったか
 
@@ -252,8 +199,8 @@ static PVal* HspVarAssoc_IndexImpl( PVal* pval )
 
 		if ( chk == PARAM_DEFAULT ) {
 			// 変数自体の参照 ( (, idxFullSlice) )
-			if ( i == 0 && code_getdi(0) == assocIndexFullslice ) {
-				pval->master = nullptr; return nullptr;
+			if ( i == 0 && code_getdi(0) == VtTraits::assocIndexFullslice ) {
+				break;
 			}
 			puterror(HSPERR_NO_DEFAULT);
 		}
@@ -273,31 +220,39 @@ static PVal* HspVarAssoc_IndexImpl( PVal* pval )
 		}
 	}
 
+	APTR const aptrAssoc = pval->offset;
+
 	// [2] 参照先 (assoc or 内部変数) を決定
 
-	if ( !bKey ) {		// キーなし => assoc 自体への参照
-		pval->master = nullptr;
+	if ( !bKey ) {
+		// キーなし => assoc 自体への参照
+		pval->offset = VtTraits::makeIndexOfAssoc(aptrAssoc, VtTraits::assocIndexInnerMask);
 		return nullptr;
 	}
 
 	assert(mpval->flag == HSPVAR_FLAG_STR);
-	static CAssoc::Key_t stt_key;
-	stt_key = (char*)mpval->pt;		// 既製の変数に格納した方が高速 (一時オブジェクトを作らないため)
+	assocKey_t const key = VtTraits::asValptr<vtStr>(mpval->pt);
 
-	auto const pAssoc = VtTraits::getValptr<vtAssoc>(pval);
-	if ( !*pAssoc ) {
-		(*pAssoc) = CAssoc::New();
-		(*pAssoc)->AddRef();
-	}
+	auto& self = *VtTraits::getValptr<vtAssoc>(pval);
+	assert(!!self);
 
-	PVal* const pvInner = (!bAsRhs
-		? (*pAssoc)->At( stt_key )		// 左辺値 => 自動拡張あり
-		: (*pAssoc)->AtSafe( stt_key )	// 右辺値 => 自動拡張なし
+	APTR const aptrInner = (!bAsRhs
+		? assocFindDynamic(self, key)	// 左辺値 => 自動拡張あり
+		: assocFindStatic(self, key)	// 右辺値 => 自動拡張なし
 	);
+	if ( bAsRhs && aptrInner < 0 ) puterror( HSPERR_ARRAY_OVERFLOW );
 
-	if ( bAsRhs && !pvInner ) puterror( HSPERR_ARRAY_OVERFLOW );
+	pval->offset = VtTraits::makeIndexOfAssoc(aptrAssoc, aptrInner);
 
-	pval->master = pvInner;
+#if 0
+	DbgArea {
+		auto iter = self->begin(); std::advance(iter, aptrInner);
+		dbgout("(aptrAssoc, key [aptrInner], [aptrInner].key) = (%d, %s [%d], %s)", aptrAssoc, key.c_str(), aptrInner, iter->first.c_str());
+	};
+#endif
+
+	PVal* const pvInner = assocAt(self, aptrInner);
+	assert(!!pvInner);
 	return pvInner;
 }
 
@@ -307,17 +262,14 @@ static PVal* HspVarAssoc_IndexImpl( PVal* pval )
 static void HspVarAssoc_ArrayObject( PVal* pval )
 {
 	PVal* const pvInner = HspVarAssoc_IndexImpl<false>( pval );
-	if ( !pvInner ) return;
 
 	// [3] 内部変数の添字を処理
-	if ( code_isNextArg() ) {			// 添字が続く場合
-		code_expand_index_lhs( pvInner );
-	} else {
-		if ( PVal_supportArray(pvInner) && !(pvInner->support & HSPVAR_SUPPORT_ARRAYOBJ) ) {	// 標準配列サポート
-			HspVarCoreReset( pvInner );		// 添字状態の初期化だけしておく
+	if ( pvInner ) {
+		if ( code_isNextArg() ) {
+			if ( pvInner->arraycnt > 0 ) puterror(HSPERR_INVALID_ARRAY);
+			code_expand_index_lhs(pvInner);
 		}
 	}
-
 	return;
 }
 
@@ -335,13 +287,10 @@ static PDAT* HspVarAssoc_ArrayObjectRead( PVal* pval, int* mptype )
 	}
 
 	// [3] 内部変数の添字を処理
-	if ( code_isNextArg() ) {			// 添字が続く場合
+	if ( code_isNextArg() ) {
 		return code_expand_index_rhs( pvInner, *mptype );
-	} else {
-		if ( PVal_supportArray(pvInner) && !(pvInner->support & HSPVAR_SUPPORT_ARRAYOBJ) ) {	// 標準配列サポート
-			HspVarCoreReset( pvInner );		// 添字状態の初期化だけしておく
-		}
 
+	} else {
 		*mptype = pvInner->flag;
 		return getHvp( pvInner->flag )->GetPtr( pvInner );
 	}
@@ -352,23 +301,19 @@ static PDAT* HspVarAssoc_ArrayObjectRead( PVal* pval, int* mptype )
 //------------------------------------------------
 static void HspVarAssoc_ObjectWrite( PVal* pval, PDAT const* data, int vflag )
 {
-	PVal* const pvInner = VtTraits::getMaster<vtAssoc>(pval);
+	PVal* const pvInner = VtTraits::getAssocInnerVar(pval);
 
 	// assoc への代入
 	if ( !pvInner ) {
-		if ( vflag != g_vtAssoc ) puterror( HSPERR_INVALID_ARRAYSTORE );	// 右辺の型が不一致
+		if ( vflag != g_vtAssoc ) puterror( HSPERR_INVALID_ARRAYSTORE );
 
 		HspVarAssoc_Set( pval, HspVarAssoc_GetPtr(pval), data );
-		code_assign_multi( pval );				// 連続代入の処理
+		//code_assign_multi( pval );
 
 	// 内部変数を参照している場合
 	} else {
-		int const fUserElem = pvInner->support & CAssoc::HSPVAR_SUPPORT_USER_ELEM;
-
 		PVal_assign( pvInner, data, vflag );	// 内部変数への代入処理
 		code_assign_multi( pvInner );
-
-		pvInner->support |= fUserElem;
 	}
 
 	return;
@@ -381,11 +326,59 @@ static void HspVarAssoc_ObjectWrite( PVal* pval, PDAT const* data, int vflag )
 //------------------------------------------------
 static void HspVarAssoc_ObjectMethod(PVal* pval)
 {
-	PVal* const pvInner = VtTraits::getMaster<vtAssoc>(pval);
+	PVal* const pvInner = VtTraits::getAssocInnerVar(pval);
 	if ( !pvInner ) puterror( HSPERR_UNSUPPORTED_FUNCTION );
 
 	// 内部変数の処理に転送
 	getHvp(pvInner->flag)->ObjectMethod( pvInner );
+	return;
+}
+
+//------------------------------------------------
+// Assoc 登録関数
+//------------------------------------------------
+void HspVarAssoc_Init(HspVarProc* p)
+{
+	g_hvpAssoc = p;
+	g_vtAssoc  = p->flag;
+
+	p->GetUsing = HspVarAssoc_GetUsing;
+
+	p->Alloc = HspVarAssoc_Alloc;
+	p->Free  = HspVarAssoc_Free;
+
+	p->GetPtr       = HspVarTemplate_GetPtr<vtAssoc>;
+	p->GetSize      = HspVarTemplate_GetSize<vtAssoc>;
+	p->GetBlockSize = HspVarTemplate_GetBlockSize<vtAssoc>;
+	p->AllocBlock   = HspVarTemplate_AllocBlock<vtAssoc>;
+
+	// 演算関数
+	p->Set = HspVarAssoc_Set;
+
+	HspVarTemplate_InitCmpI_Equality< HspVarAssoc_CmpI >(p);
+
+	p->ObjectMethod    = HspVarAssoc_ObjectMethod;
+
+	// 連想配列用
+	p->ArrayObjectRead = HspVarAssoc_ArrayObjectRead;
+	p->ArrayObject     = HspVarAssoc_ArrayObject;
+	p->ObjectWrite     = HspVarAssoc_ObjectWrite;
+
+	// 拡張データ
+	p->user = reinterpret_cast<char*>(HspVarAssoc_GetMapList);
+
+	// その他設定
+	p->vartype_name = "assoc_k";		// タイプ名 (衝突しないように変な名前にする)
+	p->version = 0x001;			// runtime ver(0x100 = 1.0)
+
+	p->support							// サポート状況フラグ(HSPVAR_SUPPORT_*)
+		= HSPVAR_SUPPORT_STORAGE		// 固定長ストレージ
+		| HSPVAR_SUPPORT_FLEXARRAY		// 可変長配列
+		| HSPVAR_SUPPORT_ARRAYOBJ		// 連想配列サポート
+		| HSPVAR_SUPPORT_NOCONVERT		// ObjectWriteで格納
+		| HSPVAR_SUPPORT_VARUSE			// varuse関数を適用
+		;
+	p->basesize = VtTraits::basesize<vtAssoc>::value;
 	return;
 }
 
@@ -396,9 +389,9 @@ static void HspVarAssoc_ObjectMethod(PVal* pval)
 // @ リストの削除権限は呼び出し元にある。
 //------------------------------------------------
 // [[deprecated]]
-static StAssocMapList* HspVarAssoc_GetMapList( CAssoc* src )
+static StAssocMapList* HspVarAssoc_GetMapList( assoc_t src )
 {
-	if ( !src || src->Empty() ) return nullptr;
+	if ( !src || src->empty() ) return nullptr;
 
 	StAssocMapList* head = nullptr;
 	StAssocMapList* tail = nullptr;
@@ -407,7 +400,7 @@ static StAssocMapList* HspVarAssoc_GetMapList( CAssoc* src )
 		auto const list = reinterpret_cast<StAssocMapList*>(hspmalloc(sizeof(StAssocMapList)));
 
 		lstrcpy( list->key, iter.first.c_str() );
-		list->pval = iter.second;
+		list->pval = iter.second.getVar();
 
 		// 連結
 		if ( !head ) {
@@ -440,14 +433,14 @@ EXPORT void WINAPI knowbugVsw_addValueAssoc(vswriter_t _w, char const* name, PDA
 	}
 
 	// 要素なし
-	if ( src->Empty() ) {
+	if ( src->empty() ) {
 		kvswm->catLeafExtra(_w, name, "empty_assoc");
 		return;
 	}
 
 	for ( auto iter : *src ) {
 		auto const& key = iter.first;
-		auto const pval = iter.second;
+		auto const pval = iter.second.getVar();
 
 		if ( kvswm->isLineformWriter(_w) ) {
 			// pair: 「key: value...」
@@ -460,48 +453,5 @@ EXPORT void WINAPI knowbugVsw_addValueAssoc(vswriter_t _w, char const* name, PDA
 
 	}
 	return;
-
-#if 0
-	if ( !ptr ) {
-		knowbugVsw_catLeafExtra(_w, name, "null_assoc");
-		return;
-	}
-
-	auto const hvp = hpimod::seekHvp(assoc_vartype_name);
-	StAssocMapList* const head = (reinterpret_cast<GetMapList_t>(hvp->user))(src);
-
-	// 要素なし
-	if ( !head ) {
-		knowbugVsw_catLeafExtra(_w, name, "empty_assoc");
-		return;
-	}
-
-	// 全キーのリスト
-	knowbugVsw_catNodeBegin(_w, name, "[");
-	{
-		// 列挙
-		for ( StAssocMapList* list = head; list != nullptr; list = list->next ) {
-			if ( knowbugVsw_isLineformWriter(_w) ) {
-				// pair: 「key: value...」
-				knowbugVsw_catNodeBegin(_w, CStructedStrWriter::stc_strUnused,
-					strf("%s: ", list->key).c_str());
-				knowbugVsw_addVar(_w, CStructedStrWriter::stc_strUnused, list->pval);
-				knowbugVsw_catNodeEnd(_w, "");
-			} else {
-				knowbugVsw_addVar(_w, list->key, list->pval);
-			}
-			//	dbgout("%p: key = %s, pval = %p, next = %p", list, list->key, list->pval, list->next );
-		}
-
-		// リストの解放
-		for ( StAssocMapList* list = head; list != nullptr; ) {
-			StAssocMapList* const next = list->next;
-			exinfo->HspFunc_free(list);
-			list = next;
-		}
-	}
-	knowbugVsw_catNodeEnd(_w, "]");
-	return;
-#endif
 
 }

@@ -115,7 +115,6 @@
     <ClInclude Include="src\call\vt_structWrap.h" />
     <ClInclude Include="src\opex\cmd_opex.h" />
     <ClInclude Include="src\opex\iface_opex.h" />
-    <ClInclude Include="src\var_assoc\CAssoc.h" />
     <ClInclude Include="src\var_assoc\cmd_assoc.h" />
     <ClInclude Include="src\var_assoc\for_knowbug.var_assoc.h" />
     <ClInclude Include="src\var_assoc\iface_assoc.h" />
@@ -153,7 +152,6 @@
     <ClCompile Include="src\call\vt_structWrap.cpp" />
     <ClCompile Include="src\opex\cmd_opex.cpp" />
     <ClCompile Include="src\opex\iface_opex.cpp" />
-    <ClCompile Include="src\var_assoc\CAssoc.cpp" />
     <ClCompile Include="src\var_assoc\cmd_assoc.cpp" />
     <ClCompile Include="src\var_assoc\iface_assoc.cpp" />
     <ClCompile Include="src\var_assoc\vt_assoc.cpp" />
