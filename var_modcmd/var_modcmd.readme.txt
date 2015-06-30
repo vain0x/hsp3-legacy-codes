@@ -1,0 +1,43 @@
+
+	var_modcmd (version 1.0β1)
+
+HSP3専用の拡張プラグインです。
+ユーザ定義コマンドを値に持つ変数型を提供します。
+
+＠使用方法
+
+ランタイム(hsp3.exe)と hspcmp.dll があるフォルダに
+var_modcmd.hpi をコピーしてください。
+
+同梱されている var_modcmd.as を、スクリプトの最初の方で
+#include してください。
+
+	#include "var_modcmd.as"
+
+#deffunc, #defcfunc で定義される命令や関数のことを、
+ユーザ定義コマンドと呼ぶことにします。
+modcmdOf 関数で、ユーザ定義コマンドから modcmd 値を取り出します。
+
+	f = modcmdOf( ユーザ定義コマンド )
+
+modcmd 値を持つ変数を使って、そのコマンドを実行できます。
+
+	modcmd f, ...	// f が命令の場合
+	x = f(...)	// f が関数の場合
+
+＠参照
+
+・プログラ広場
+　意見や感想、バグ報告、最新版のダウンロードなどはここで。
+　http://prograpark.ninja-web.net/
+
+・HSPTV! (HSP本家サイト)
+　http://hsp.tv/
+
+＠更新履歴
+2014.02.16 (Sun)
+	・call.hpi を参考に作成開始。
+	・とりあえずユーザ定義コマンドの呼び出しを行える変数型だけ。
+	・リリース (ver: 1.0β1)。
+
+// uedai 2014.
