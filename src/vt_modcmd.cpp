@@ -1,8 +1,8 @@
 // var_modcmd - VarProc
 
-#include "hsp3plugin_custom.h"
-#include "mod_makepval.h"
-#include "mod_argGetter.h"
+#include "hpimod/hsp3plugin_custom.h"
+#include "hpimod/mod_makepval.h"
+#include "hpimod/mod_argGetter.h"
 
 #include "iface_modcmd.h"
 #include "cmd_modcmd.h"
@@ -10,11 +10,11 @@
 
 using namespace hpimod;
 
-// å¤‰æ•°ã®å®šç¾©
+// •Ï”‚Ì’è‹`
 vartype_t   g_vtModcmd;
 HspVarProc* g_pHvpModcmd;
 
-// é–¢æ•°ã®å®£è¨€
+// ŠÖ”‚ÌéŒ¾
 extern PDAT* HspVarModcmd_GetPtr         ( PVal* pval) ;
 extern int   HspVarModcmd_GetSize        ( const PDAT* pdat );
 extern int   HspVarModcmd_GetUsing       ( const PDAT* pdat );
@@ -22,7 +22,7 @@ extern void* HspVarModcmd_GetBlockSize   ( PVal* pval, PDAT* pdat, int* size );
 extern void  HspVarModcmd_AllocBlock     ( PVal* pval, PDAT* pdat, int  size );
 extern void  HspVarModcmd_Alloc          ( PVal* pval, const PVal* pval2 );
 extern void  HspVarModcmd_Free           ( PVal* pval);
-extern void* HspVarModcmd_ArrayObjectRead( PVal* pval, int* mptype );
+extern PDAT* HspVarModcmd_ArrayObjectRead( PVal* pval, int* mptype );
 extern void  HspVarModcmd_ArrayObject    ( PVal* pval);
 extern void  HspVarModcmd_ObjectWrite    ( PVal* pval, void* data, int vflag );
 extern void  HspVarModcmd_ObjectMethod   ( PVal* pval);
@@ -30,7 +30,7 @@ extern void  HspVarModcmd_ObjectMethod   ( PVal* pval);
 namespace VtModcmd {
 	value_t& at(PVal* pval)
 	{
-		return reinterpret_cast<modcmd_t*>(pval->pt)[pval->offset];
+		return *VtTraits::getValptr<vtModcmd>(pval);
 	}
 }
 
@@ -39,7 +39,7 @@ namespace VtModcmd {
 //------------------------------------------------
 static PDAT* HspVarModcmd_GetPtr( PVal* pval )
 {
-	return reinterpret_cast<PDAT*>( &VtModcmd::at(pval) );
+	return VtTraits::asPDAT<vtModcmd>( &VtModcmd::at(pval) );
 }
 
 //------------------------------------------------
@@ -47,7 +47,7 @@ static PDAT* HspVarModcmd_GetPtr( PVal* pval )
 //------------------------------------------------
 static int HspVarModcmd_GetSize( const PDAT* pdat )
 {
-	return VtModcmd::basesize;
+	return VtTraits::basesize<vtModcmd>::value;
 }
 
 //------------------------------------------------
@@ -55,11 +55,11 @@ static int HspVarModcmd_GetSize( const PDAT* pdat )
 //------------------------------------------------
 static int HspVarModcmd_GetUsing( const PDAT* pdat )
 {
-	return HspBool(*reinterpret_cast<const modcmd_t*>(pdat) != VtModcmd::null);
+	return HspBool(VtTraits::derefValptr<vtModcmd>(pdat) != VtModcmd::null);
 }
 
 //------------------------------------------------
-// ãƒ–ãƒ­ãƒƒã‚¯ãƒ¡ãƒ¢ãƒª
+// ƒuƒƒbƒNƒƒ‚ƒŠ
 //------------------------------------------------
 static void* HspVarModcmd_GetBlockSize( PVal* pval, PDAT* pdat, int* size )
 {
@@ -69,46 +69,46 @@ static void* HspVarModcmd_GetBlockSize( PVal* pval, PDAT* pdat, int* size )
 
 static void HspVarModcmd_AllocBlock( PVal* pval, PDAT* pdat, int size )
 {
-	return;
 }
 
 //------------------------------------------------
-// PValã®å¤‰æ•°ãƒ¡ãƒ¢ãƒªã‚’ç¢ºä¿ã™ã‚‹
+// PVal‚Ì•Ï”ƒƒ‚ƒŠ‚ğŠm•Û‚·‚é
 //
-// @ pval ã¯æœªç¢ºä¿ or è§£æ”¾æ¸ˆã¿ã®çŠ¶æ…‹ã€‚
-// @ pval2 != nullptr ãªã‚‰ã€pval2 ã®å†…å®¹ã‚’å¼•ãç¶™ãã€‚
+// @ pval ‚Í–¢Šm•Û or ‰ğ•úÏ‚İ‚Ìó‘ÔB
+// @ pval2 != nullptr ‚È‚çApval2 ‚Ì“à—e‚ğˆø‚«Œp‚®B
 //------------------------------------------------
-static void HspVarModcmd_Alloc( PVal* pval, const PVal* pval2 )
+static void HspVarModcmd_Alloc(PVal* pval, const PVal* pval2)
 {
-	if ( pval->len[1] < 1 ) pval->len[1] = 1;		// é…åˆ—ã‚’æœ€ä½1ã¯ç¢ºä¿ã™ã‚‹
-	size_t const cntElems = PVal_cntElems( pval );		// å…¨è¦ç´ æ•° (hpimod/mod_makepval)
-	size_t const     size = cntElems * VtModcmd::basesize;
-	size_t const oldSize  = pval2 ? pval2->size : 0;
-	
-	// ãƒãƒƒãƒ•ã‚¡ç¢ºä¿
-	modcmd_t* const pt = reinterpret_cast<modcmd_t*>( hspmalloc(size) );
-	
-	// ç„¡åŠ¹å€¤ã§åŸ‹ã‚ã‚‹
+	if ( pval->len[1] < 1 ) { pval->len[1] = 1; }
+	size_t const cntElems = PVal_cntElems(pval);
+	size_t const     size = cntElems * VtTraits::basesize<vtModcmd>::value;
+	size_t const oldSize = pval2 ? pval2->size : 0;
+
+	// ƒoƒbƒtƒ@Šm•Û
+	modcmd_t* const pt = reinterpret_cast<modcmd_t*>(hspmalloc(size));
+
+	// –³Œø’l‚Å–„‚ß‚é
 	memset(pt + oldSize, 0xFF, size - oldSize);
-//	for( size i = 0; i < cntElems; ++ i ) { pt[i] = VtModcmd::null; }
-	
-	// å¼•ãç¶™ã
+#ifdef _DEBUG
+	for ( size_t i = 0; i < cntElems; ++i ) { assert(pt[i] == VtModcmd::null); }
+#endif
+
+	// ˆø‚«Œp‚¬
 	if ( pval2 ) {
 		memcpy( pt, pval2->pt, pval2->size );
 		hspfree( pval2->pt );
 	}
 	
-	// pval ã¸è¨­å®š
+	// pval ‚Öİ’è
 	pval->flag   = g_vtModcmd;
 	pval->mode   = HSPVAR_MODE_MALLOC;
 	pval->size   = size;
-	pval->pt     = reinterpret_cast<char*>(pt);
-//	pval->master = nullptr;
-	return;
+	pval->pt     = VtTraits::asPDAT<vtModcmd>(pt);
+	pval->master = nullptr;
 }
 
 //------------------------------------------------
-// PValã®å¤‰æ•°ãƒ¡ãƒ¢ãƒªã‚’è§£æ”¾ã™ã‚‹
+// PVal‚Ì•Ï”ƒƒ‚ƒŠ‚ğ‰ğ•ú‚·‚é
 //------------------------------------------------
 static void HspVarModcmd_Free( PVal* pval )
 {
@@ -116,59 +116,50 @@ static void HspVarModcmd_Free( PVal* pval )
 		hspfree( pval->pt );
 	}
 	
-	pval->pt     = nullptr;
-	pval->mode   = HSPVAR_MODE_NONE;
-//	pval->master = nullptr;
-	return;
+	pval->pt   = nullptr;
+	pval->mode = HSPVAR_MODE_NONE;
 }
 
 //------------------------------------------------
-// ä»£å…¥ (=)
-// 
-// @ å‚ç…§å…±æœ‰
+// ‘ã“ü (=)
 //------------------------------------------------
-static void HspVarModcmd_Set( PVal* pval, PDAT* pdat, const void* in )
+static void HspVarModcmd_Set( PVal* pval, PDAT* pdat, const PDAT* in )
 {
-	      modcmd_t& dst = *reinterpret_cast<      modcmd_t*>(pdat);
-	const modcmd_t& src = *reinterpret_cast<const modcmd_t*>(in);
+	auto& dst = VtTraits::derefValptr<vtModcmd>(pdat);
+	auto& src = VtTraits::derefValptr<vtModcmd>(in);
 	
 	dst = src;
-	
 	g_pHvpModcmd->aftertype = g_vtModcmd;
-	return;
 }
 
 //------------------------------------------------
-// æ¯”è¼ƒé–¢æ•° (åŒå€¤æ€§ã®ã¿)
+// ”äŠrŠÖ” (“¯’l«‚Ì‚İ)
 // 
-// @ å‚ç…§ã‚«ã‚¦ãƒ³ã‚¿ã‚’ä½¿ã‚ãªã„ã®ã§ã‚„ã‚„ã“ã—ããªã„ã€‚
+// @ QÆƒJƒEƒ“ƒ^‚ğg‚í‚È‚¢‚Ì‚Å‚â‚â‚±‚µ‚­‚È‚¢B
 //------------------------------------------------
-static void HspVarModcmd_EqI( PDAT* pdat, const void* val )
+static void HspVarModcmd_EqI( PDAT* pdat, const PDAT* val )
 {
-	      modcmd_t& lhs = *reinterpret_cast<      modcmd_t*>(pdat);
-	const modcmd_t& rhs = *reinterpret_cast<const modcmd_t*>(val);
+	auto& lhs = VtTraits::derefValptr<vtModcmd>(pdat);
+	auto& rhs = VtTraits::derefValptr<vtModcmd>(val);
 	
 	*reinterpret_cast<int*>(pdat) = HspBool(lhs == rhs);
 	g_pHvpModcmd->aftertype = HSPVAR_FLAG_INT;
-	return;
 }
 
-static void HspVarModcmd_NeI( PDAT* pdat, const void* val )
+static void HspVarModcmd_NeI( PDAT* pdat, const PDAT* val )
 {
 	HspVarModcmd_EqI(pdat, val);
-	*reinterpret_cast<int*>(pdat) = HspBool( *reinterpret_cast<int*>(pdat) == HspFalse );
-	return;
+	VtTraits::derefValptr<vtInt>(pdat) = HspBool(VtTraits::derefValptr<vtInt>(pdat) == HspFalse);
 }
 
 //------------------------------------------------
-// ç™»éŒ²é–¢æ•°
+// “o˜^ŠÖ”
 //------------------------------------------------
 void HspVarModcmd_Init( HspVarProc* p )
 {
 	g_pHvpModcmd     = p;
 	g_vtModcmd       = p->flag;
 	
-	// é–¢æ•°ãƒã‚¤ãƒ³ã‚¿ã‚’ç™»éŒ²
 	p->GetPtr       = HspVarModcmd_GetPtr;
 	p->GetSize      = HspVarModcmd_GetSize;
 	p->GetUsing     = HspVarModcmd_GetUsing;
@@ -178,84 +169,77 @@ void HspVarModcmd_Init( HspVarProc* p )
 	p->GetBlockSize = HspVarModcmd_GetBlockSize;
 	p->AllocBlock   = HspVarModcmd_AllocBlock;
 	
-	// æ¼”ç®—é–¢æ•°
 	p->Set          = HspVarModcmd_Set;
 //	p->AddI         = HspVarModcmd_AddI;
 	p->EqI          = HspVarModcmd_EqI;
 	p->NeI          = HspVarModcmd_NeI;
 	
-	// é€£æƒ³é…åˆ—ç”¨
-	p->ArrayObjectRead = HspVarModcmd_ArrayObjectRead;	// å‚ç…§(å³)
-	p->ArrayObject     = HspVarModcmd_ArrayObject;		// å‚ç…§(å·¦)
-//	p->ObjectWrite     = HspVarModcmd_ObjectWrite;		// æ ¼ç´
-//	p->ObjectMethod    = HspVarModcmd_ObjectMethod;		// ãƒ¡ã‚½ãƒƒãƒ‰
+	p->ArrayObjectRead = HspVarModcmd_ArrayObjectRead;	// QÆ(‰E)
+	p->ArrayObject     = HspVarModcmd_ArrayObject;		// QÆ(¶)
+//	p->ObjectWrite     = HspVarModcmd_ObjectWrite;		// Ši”[
 	
-	// æ‹¡å¼µãƒ‡ãƒ¼ã‚¿
-//	p->user         = (char*)HspVarModcmd_GetMapList;
-	
-	// ãã®ä»–è¨­å®š
-	p->vartype_name = "modcmd_k";		// ã‚¿ã‚¤ãƒ—å (è¡çªã—ãªã„ã‚ˆã†ã«å¤‰ãªåå‰ã«ã™ã‚‹)
+	// ‚»‚Ì‘¼İ’è
+	p->vartype_name = "modcmd_k";
 	p->version      = 0x001;			// runtime ver(0x100 = 1.0)
 	
-	p->support							// ã‚µãƒãƒ¼ãƒˆçŠ¶æ³ãƒ•ãƒ©ã‚°(HSPVAR_SUPPORT_*)
-		= HSPVAR_SUPPORT_STORAGE		// å›ºå®šé•·ã‚¹ãƒˆãƒ¬ãƒ¼ã‚¸
-		| HSPVAR_SUPPORT_FLEXARRAY		// å¯å¤‰é•·é…åˆ—
-	    | HSPVAR_SUPPORT_ARRAYOBJ		// é€£æƒ³é…åˆ—ã‚µãƒãƒ¼ãƒˆ
-//	    | HSPVAR_SUPPORT_NOCONVERT		// ObjectWriteã§æ ¼ç´
-	    | HSPVAR_SUPPORT_VARUSE			// varuseé–¢æ•°ã‚’é©ç”¨
+	p->support							// ƒTƒ|[ƒgó‹µƒtƒ‰ƒO(HSPVAR_SUPPORT_*)
+		= HSPVAR_SUPPORT_STORAGE		// ŒÅ’è’·ƒXƒgƒŒ[ƒW
+		| HSPVAR_SUPPORT_FLEXARRAY		// ‰Â•Ï’·”z—ñ
+	    | HSPVAR_SUPPORT_ARRAYOBJ		// ˜A‘z”z—ñƒTƒ|[ƒg
+//	    | HSPVAR_SUPPORT_NOCONVERT		// ObjectWrite‚ÅŠi”[
+	    | HSPVAR_SUPPORT_VARUSE			// varuseŠÖ”‚ğ“K—p
 	    ;
-	p->basesize = VtModcmd::basesize;	// size / è¦ç´  (byte)
+	p->basesize = VtModcmd::basesize;	// size / —v‘f (byte)
 	return;
 }
 
 //#########################################################
-//        é€£æƒ³é…åˆ—ç”¨ã®é–¢æ•°ç¾¤
+//        ˜A‘z”z—ñ—p‚ÌŠÖ”ŒQ
 //#########################################################
 //------------------------------------------------
-// é€£æƒ³é…åˆ—::å‚ç…§ (å·¦è¾ºå€¤)
+// ˜A‘z”z—ñ::QÆ (¶•Ó’l)
 //------------------------------------------------
 static void HspVarModcmd_ArrayObject( PVal* pval )
 {
 	code_expand_index_int( pval, false );
-	return;
 }
 
 //------------------------------------------------
-// é€£æƒ³é…åˆ—::å‚ç…§ (å³è¾ºå€¤)
+// ˜A‘z”z—ñ::QÆ (‰E•Ó’l)
 //------------------------------------------------
-static void* HspVarModcmd_ArrayObjectRead( PVal* pval, int* mptype )
+static PDAT* HspVarModcmd_ArrayObjectRead( PVal* pval, int* mptype )
 {
-	// é…åˆ— => æ·»å­—ã«å¯¾å¿œã™ã‚‹è¦ç´ ã®å€¤ã‚’å–ã‚Šå‡ºã™ã€å‘¼ã³å‡ºã—ã¯è¡Œã‚ãªã„
+	// ”z—ñ => “Yš‚É‘Î‰‚·‚é—v‘f‚Ì’l‚ğæ‚èo‚·AŒÄ‚Ño‚µ‚Ís‚í‚È‚¢
 	if ( pval->len[1] != 1 ) {
 		code_expand_index_int( pval, true );
 		
 		*mptype = g_vtModcmd;
-		return &VtModcmd::at(pval);
+		return VtTraits::asPDAT<vtModcmd>(&VtModcmd::at(pval));
 	}
 	
 	auto& modcmd = VtModcmd::at(pval);
 	
-	// å‘¼ã³å‡ºã—ã‚’è¡Œã‚ãªã„ (ãƒã‚°å¯¾ç­–æ©Ÿèƒ½)
+	// ŒÄ‚Ño‚µ‚ğs‚í‚È‚¢ (ƒoƒO‘Îô‹@”\)
 	if ( *type == g_pluginModcmd && *val == ModcmdCmd::NoCall ) {
 		code_next();
 		*mptype = g_vtModcmd;
-		return &modcmd;
+		return VtTraits::asPDAT<vtModcmd>(&modcmd);
 		
-	// å‘¼ã³å‡ºã—
+	// ŒÄ‚Ño‚µ
 	} else {
-		void* pResult = nullptr;
+		PDAT* pResult = nullptr;
 		*mptype = modcmdCall( modcmd, &pResult );
 		return pResult;
 	}
 }
 
 //------------------------------------------------
-// é€£æƒ³é…åˆ—::æ ¼ç´
+// ˜A‘z”z—ñ::Ši”[
 //------------------------------------------------
 /*
 static void HspVarModcmd_ObjectWrite( PVal* pval, void* data, int vflag )
 {
-	// é…åˆ— => æ·»å­—ã«å¯¾å¿œã™ã‚‹è¦ç´ ã¸ä»£å…¥ã™ã‚‹ã€å‘¼ã³å‡ºã—ã¯è¡Œã‚ãªã„
+	// ”z—ñ => “Yš‚É‘Î‰‚·‚é—v‘f‚Ö‘ã“ü‚·‚éAŒÄ‚Ño‚µ‚Ís‚í‚È‚¢
 	if ( pval->len[1] != 1 ) {
 		code_expand_index_int( pval, false );
 		Modcmd::at(pval) = *reinterpret_cast<modcmd_t*>(data);
@@ -264,13 +248,3 @@ static void HspVarModcmd_ObjectWrite( PVal* pval, void* data, int vflag )
 	throw;
 }
 //*/
-
-//------------------------------------------------
-// ãƒ¡ã‚½ãƒƒãƒ‰å‘¼ã³å‡ºã—
-// 
-// @ å†…éƒ¨å¤‰æ•°ã®å‹ã§æä¾›ã•ã‚Œã¦ã„ã‚‹ãƒ¡ã‚½ãƒƒãƒ‰ã‚’ä½¿ã†
-//------------------------------------------------
-static void HspVarModcmd_ObjectMethod(PVal* pval)
-{
-	//
-}

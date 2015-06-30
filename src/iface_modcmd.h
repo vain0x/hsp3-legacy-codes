@@ -3,9 +3,9 @@
 #ifndef IG_VAR_MODCMD_INTERFACE_H
 #define IG_VAR_MODCMD_INTERFACE_H
 
-#include "hsp3plugin_custom.h"
+#include "hpimod/hsp3plugin_custom.h"
 
-extern int g_pluginModcmd;	// ãƒ—ãƒ©ã‚°ã‚¤ãƒ³ID
+extern int g_pluginModcmd;	// ƒvƒ‰ƒOƒCƒ“ID
 
 EXPORT void WINAPI hpi_modcmd( HSP3TYPEINFO* info );
 

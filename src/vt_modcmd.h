@@ -3,25 +3,27 @@
 #ifndef IG_VAR_MODCMD_VARPROC_H
 #define IG_VAR_MODCMD_VARPROC_H
 
-#include "hsp3plugin_custom.h"
+#include "hpimod/hsp3plugin_custom.h"
+#include "hpimod/vartype_traits.h"
 
 extern void HspVarModcmd_Init( HspVarProc* vp );
 
 extern hpimod::vartype_t g_vtModcmd;
 extern HspVarProc* g_pHvpModcmd;
 
+using modcmd_t = int;
+using vtModcmd = hpimod::VtTraits::NativeVartypeTag<modcmd_t>;
+
 namespace VtModcmd
 {
-	typedef int value_t;	// modcmd å‹å¤‰æ•°ã®å®Ÿä½“
+	typedef int value_t;	// modcmd Œ^•Ï”‚ÌÀ‘Ì
 	typedef value_t* valptr_t;
 	const int basesize = sizeof(value_t);
-	const value_t null = -1;		// 0xFF ã§ memset ã—ãŸçŠ¶æ…‹
+	const value_t null = -1;		// 0xFF ‚Å memset ‚µ‚½ó‘Ô
 	
 	inline value_t make(int id) { return static_cast<value_t>(id); }
 	inline bool isValid(const value_t& val) { return 0 <= val && val < ctx->hsphed->max_finfo; }
 	value_t& at(PVal* pval);
 };
-
-typedef VtModcmd::value_t modcmd_t;
 
 #endif

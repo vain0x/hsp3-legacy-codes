@@ -1,16 +1,17 @@
 // var_modcmd - command
 
-#include "hsp3plugin_custom.h"
-#include "mod_func_result.h"
-#include "mod_moddata.h"
+#include "hpimod/hsp3plugin_custom.h"
+#include "hpimod/reffuncResult.h"
+#include "hpimod/mod_moddata.h"
 
+#include "iface_modcmd.h"
 #include "cmd_modcmd.h"
 #include "vt_modcmd.h"
 
 using namespace hpimod;
 
 //------------------------------------------------
-// modcmd Âûã„ÅÆÂºïÊï∞„ÇíÂèñÂæó„Åô„Çã
+// modcmd å^ÇÃà¯êîÇéÊìæÇ∑ÇÈ
 //------------------------------------------------
 modcmd_t code_get_modcmd()
 {
@@ -19,62 +20,90 @@ modcmd_t code_get_modcmd()
 	return VtModcmd::at(mpval);
 }
 
-//##############################################################################
-//        ÂëΩ‰ª§„Ç≥„Éû„É≥„Éâ
-//##############################################################################
 //------------------------------------------------
-// Âëº„Å≥Âá∫„ÅóÂá¶ÁêÜ
+// åƒÇ—èoÇµèàóù
 // 
 // @prm ppResult:
-// @	nullptr „Å™„ÇâÂëΩ‰ª§Âëº„Å≥Âá∫„Åó„Åß„ÄÅ„Åì„ÅÆÈñ¢Êï∞„ÅØÁÑ°ÊÑèÂë≥„Å™ÂÄ§„ÇíËøî„Åô
+// @	nullptr Ç»ÇÁñΩóﬂåƒÇ—èoÇµÇ≈ÅAÇ±ÇÃä÷êîÇÕñ≥à”ñ°Ç»ílÇï‘Ç∑
 //------------------------------------------------
-int modcmdCall( modcmd_t modcmd, void** ppResult )
+int modcmdCall( modcmd_t modcmd, PDAT** ppResult )
 {
 	if ( !VtModcmd::isValid(modcmd) ) puterror(HSPERR_INVALID_ARRAY);
 	
-	stdat_t const stdat = GetSTRUCTDAT(modcmd);
+	stdat_t const stdat = getSTRUCTDAT(modcmd);
 	
-	if ( ppResult && stdat->index == STRUCTDAT_INDEX_FUNC ) {	// ÂëΩ‰ª§„ÅÆÈñ¢Êï∞ÂΩ¢ÂºèÂëº„Å≥Âá∫„Åó„ÇíÁ¶ÅÊ≠¢
+	if ( ppResult && stdat->index == STRUCTDAT_INDEX_FUNC ) {	// ñΩóﬂÇÃä÷êîå`éÆåƒÇ—èoÇµÇã÷é~
 		puterror( HSPERR_SYNTAX);
 	}
 	
-	// ÂºïÊï∞Âàó„ÇíÂèñ„ÇäÂá∫„Åô
-	void* prmstk = hspmalloc( stdat->size );
-	code_expandstruct( prmstk, stdat, CODE_EXPANDSTRUCT_OPT_LOCALVAR );	// local „Çí variant ÂºïÊï∞„Å®„Åó„Å¶Â±ïÈñã„Åô„ÇãË®≠ÂÆö
+	// à¯êîóÒÇéÊÇËèoÇ∑
+	void* const prmstk = hspmalloc( stdat->size );
+	code_expandstruct( prmstk, stdat, CODE_EXPANDSTRUCT_OPT_LOCALVAR );	// local Ç variant à¯êîÇ∆ÇµÇƒìWäJÇ∑ÇÈê›íË
 	
 	if ( !(*exinfo->npexflg & EXFLG_1) && !(*type == TYPE_MARK && *val == ')') ) {
 		puterror(HSPERR_TOO_MANY_PARAMETERS);
 	}
 	
-	// prmstack „ÇíÂ∑Æ„ÅóÊõø„Åà„Å¶ÂÆüË°å
+	// prmstack Çç∑Çµë÷Ç¶Çƒé¿çs
 	{
 		void* const prmstk_bak = ctx->prmstack;
 		ctx->prmstack = prmstk;
 		
-		code_call( GetLabel(stdat->otindex) );
+		code_call( getLabel(stdat->otindex) );
 		
 		ctx->prmstack = prmstk_bak;
 	}
 
-	// prmstack „ÇíËß£‰Ωì
+	// prmstack ÇâëÃ
 	customstack_delete(stdat, prmstk);
 	
-	// ËøîÂÄ§„ÇíË®≠ÂÆö
-	PVal*& real_mpval = *exinfo->mpval;
+	// ï‘ílÇê›íË
+	// return Ç≈ï‘ílÇ™ê›íËÇ≥ÇÍÇ»Ç©Ç¡ÇΩèÍçá Å® HSPERR_NO_RETVAL ; åüímÇ∑ÇÈÇÃÇÕ(çïñÇèpÇ»ÇµÇ≈ÇÕ)ìÔÇµÇ¢ÅH
+	PVal* const mpval = *exinfo->mpval;
 	
 	if ( ppResult ) {
-		*ppResult = real_mpval->pt;
-		return real_mpval->flag;
+		*ppResult = mpval->pt;
+		return mpval->flag;
 	} else {
-		return 0;
+		return 0; //dummy value
 	}
 }
 
-//##############################################################################
-//        Èñ¢Êï∞„Ç≥„Éû„É≥„Éâ
-//##############################################################################
 //------------------------------------------------
-// „É¶„Éº„Ç∂ÂÆöÁæ©ÂëΩ‰ª§„ÉªÈñ¢Êï∞„ÅÆ ID „ÇíÂèñ„ÇäÂá∫„Åô
+// åƒÇ—èoÇµ (forward)
+// 
+// ñΩóﬂå`éÆÅF
+//	call modcmd : call_nocall args...
+// ä÷êîå`éÆÅF
+//	call( modcmd, call_nocall(args...) )
+//------------------------------------------------
+void modcmdCallForwardSttm()
+{
+	modcmd_t const modcmd = code_get_modcmd();
+	if ( !VtModcmd::isValid(modcmd) ) puterror(HSPERR_INVALID_ARRAY);
+	
+	*type = TYPE_MODCMD;
+	*val  = modcmd;
+	*exinfo->npexflg = EXFLG_1;
+	return;
+}
+
+int modcmdCallForwardFunc(PDAT** ppResult)
+{
+	modcmd_t const modcmd = code_get_modcmd();
+	if ( !VtModcmd::isValid(modcmd) ) puterror(HSPERR_INVALID_ARRAY);
+	
+	*type = TYPE_MODCMD;
+	*val  = modcmd;
+	*exinfo->npexflg = 0;
+	if ( code_getprm() <= PARAM_END ) puterror( HSPERR_NO_DEFAULT );
+	
+	*ppResult = mpval->pt;
+	return mpval->flag;
+}
+
+//------------------------------------------------
+// ÉÜÅ[ÉUíËã`ñΩóﬂÅEä÷êîÇÃ ID ÇéÊÇËèoÇ∑
 //------------------------------------------------
 int code_get_modcmdId()
 {
@@ -82,24 +111,12 @@ int code_get_modcmdId()
 	int const modcmdId = *val;
 	code_next();
 	
-	// Ê¨°„ÅåÊñáÈ†≠„ÇÑÂºèÈ†≠„Åß„ÅØ„Å™„Åè„ÄÅ')' „Åß„ÇÇ„Å™„ÅÑ ‚Üí ‰∏é„Åà„Çâ„Çå„ÅüÂºïÊï∞Âºè„Åå2Â≠óÂè•‰ª•‰∏ä„Åß„Åß„Åç„Å¶„ÅÑ„Çã
+	// éüÇ™ï∂ì™Ç‚éÆì™Ç≈ÇÕÇ»Ç≠ÅA')' Ç≈Ç‡Ç»Ç¢ Å® ó^Ç¶ÇÁÇÍÇΩà¯êîéÆÇ™2éöãÂà»è„Ç≈Ç≈Ç´ÇƒÇ¢ÇÈ
 	if ( !((*exinfo->npexflg & (EXFLG_1 | EXFLG_2)) != 0 || (*type == TYPE_MARK && *val == ')')) )
 		puterror(HSPERR_ILLEGAL_FUNCTION);
 	
-	// „É¢„Ç∏„É•„Éº„É´„ÇØ„É©„ÇπË≠òÂà•Â≠ê„ÅØË™ç„ÇÅ„Å™„ÅÑ
-	if ( GetSTRUCTDAT(modcmdId)->index == STRUCTDAT_INDEX_STRUCT ) puterror(HSPERR_ILLEGAL_FUNCTION);
+	// ÉÇÉWÉÖÅ[ÉãÉNÉâÉXéØï éqÇÕîFÇﬂÇ»Ç¢
+	if ( getSTRUCTDAT(modcmdId)->index == STRUCTDAT_INDEX_STRUCT ) puterror(HSPERR_ILLEGAL_FUNCTION);
 	
 	return modcmdId;
 }
-
-//##############################################################################
-//        „Ç∑„Çπ„ÉÜ„É†Â§âÊï∞„Ç≥„Éû„É≥„Éâ
-//##############################################################################
-//------------------------------------------------
-// 
-//------------------------------------------------
-
-//##############################################################################
-//        „Åù„ÅÆ‰ªñ
-//##############################################################################
-
