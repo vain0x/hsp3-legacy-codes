@@ -10,27 +10,26 @@
 //------------------------------------------------
 // 初期化
 // 
-// @upto: hsp3.31b1
+// @upto: hsp3.5b1
 //------------------------------------------------
 #deffunc initialize_hspkeywords
 	// type 値の名前
 	typename      = "TYPE_MARK", "TYPE_VAR", "TYPE_STRING", "TYPE_DNUM", "TYPE_INUM", "TYPE_STRUCT", "TYPE_XLABEL", "TYPE_LABEL", "TYPE_INTCMD", "TYPE_EXTCMD", "TYPE_EXTSYSVAR", "TYPE_CMPCMD", "TYPE_MODCMD", "TYPE_INTFUNC", "TYPE_SYSVAR", "TYPE_PROGCMD", "TYPE_DLLFUNC", "TYPE_DLLCTRL", "TYPE_USERDEF"
 ;	calccode_name = "CALCCODE_ADD", "CALCCODE_SUB", "CALCCODE_MUL", "CALCCODE_DIV", "CALCCODE_MOD", "CALCCODE_AND", "CALCCODE_OR", "CALCCODE_XOR", "CALCCODE_EQ", "CALCCODE_NE", "CALCCODE_GT", "CALCCODE_LT", "CALCCODE_GTEQ", "CALCCODE_LTEQ", "CALCCODE_RR", "CALCCODE_LR", "CALCCODE_MAX"
-	calccode_name    = "+", "-", "*", "/", "\\"
-	calccode_name(5) = "&", "|", "^", "=", "!", ">", "<", ">=", "<=", ">>", "<<", "CALCCODE_MAX"
+	calccode_name    = "+", "-", "*", "/", "\\", "&", "|", "^", "=", "!", ">", "<", ">=", "<=", ">>", "<<", "CALCCODE_MAX"
 ;	calccode_name = "+ (CALCCODE_ADD)", "- (CALCCODE_SUB)", "* (CALCCODE_MUL)", "/ (CALCCODE_DIV)", "\\ (CALCCODE_MOD)", "& (CALCCODE_AND)", "| (CALCCODE_OR)", "^ (CALCCODE_XOR)", "= (CALCCODE_EQ)", "! (CALCCODE_NE)", "> (CALCCODE_GT)", "< (CALCCODE_LT)", ">= (CALCCODE_GTEQ)", "<= (CALCCODE_LTEQ)", ">> (CALCCODE_RR)", "<= (CALCCODE_LR)", "CALCCODE_MAX"
 	
 	// 命令・関数の名前
 	intcmd_name         = "onexit", "onerror", "onkey", "onclick", "oncmd"
-	intcmd_name(0x11)   = "exist", "delete", "mkdir", "chdir", "dirlist", "bload", "bsave", "bcopy", "memfile", "poke", "wpoke", "lpoke", "getstr", "chdpm", "memexpand", "memcpy", "memset", "notesel", "noteadd","notedel", "noteload", "notesave", "randomize", "noteunsel", "noteget", "split", "strrep"
+	intcmd_name(0x11)   = "exist", "delete", "mkdir", "chdir", "dirlist", "bload", "bsave", "bcopy", "memfile", "poke", "wpoke", "lpoke", "getstr", "chdpm", "memexpand", "memcpy", "memset", "notesel", "noteadd","notedel", "noteload", "notesave", "randomize", "noteunsel", "noteget", "split", "strrep", "setease", "sortval", "sortstr", "sortnote", "sortget"
 	extcmd_name         = "button", "chgdisp", "exec", "dialog"
-	extcmd_name(0x08)   = "mmload", "mmplay", "mmstop", "mci","pset", "pget", "syscolor", "mes", "title", "pos", "circle", "cls", "font", "sysfont", "objsize", "picload", "color", "palcolor", "palette", "redraw", "width","gsel", "gcopy", "gzoom", "gmode", "bmpsave", "hsvcolor", "getkey", "listbox", "chkbox", "combox", "input", "mesbox", "buffer", "screen", "bgscr", "mouse", "objsel", "groll", "line", "clrobj", "boxf", "objprm", "objmode", "stick", "grect","grotate", "gsquare", "gradf", "objimage", "objskip", "objenable", "celload", "celdiv", "celput"
+	extcmd_name(0x08)   = "mmload", "mmplay", "mmstop", "mci","pset", "pget", "syscolor", "mes", "title", "pos", "circle", "cls", "font", "sysfont", "objsize", "picload", "color", "palcolor", "palette", "redraw", "width","gsel", "gcopy", "gzoom", "gmode", "bmpsave", "hsvcolor", "getkey", "listbox", "chkbox", "combox", "input", "mesbox", "buffer", "screen", "bgscr", "mouse", "objsel", "groll", "line", "clrobj", "boxf", "objprm", "objmode", "stick", "grect","grotate", "gsquare", "gradf", "objimage", "objskip", "objenable", "celload", "celdiv", "celput", "gfilter", "setreq", "getreq", "mmvol", "mmpan", "mmstat", "mtlist", "mtinfo", "devinfo", "devinfoi", "devprm", "devcontrol", "httpload", "httpinfo"
 	extsysvar_name_0    = "mousex", "mousey", "mousew", "hwnd", "hinstance", "hdc"
 	extsysvar_name_1    = "ginfo", "objinfo", "dirinfo", "sysinfo"
 	cmpcmd_name         = "if", "else"
-	intfunc_name_0      = "int", "rnd", "strlen", "length", "length2", "length3", "length4", "vartype", "gettime", "peek", "wpeek", "lpeek", "varptr", "varuse", "noteinfo", "instr", "abs", "limit"
+	intfunc_name_0      = "int", "rnd", "strlen", "length", "length2", "length3", "length4", "vartype", "gettime", "peek", "wpeek", "lpeek", "varptr", "varuse", "noteinfo", "instr", "abs", "limit", "getease", "notefind"
 	intfunc_name_1      = "str", "strmid", "", "strf", "getpath", "strtrim"
-	intfunc_name_2      = "sin", "cos", "tan", "atan", "sqrt", "double", "absf", "expf", "logf", "limitf", "powf"
+	intfunc_name_2      = "sin", "cos", "tan", "atan", "sqrt", "double", "absf", "expf", "logf", "limitf", "powf", "geteasef"
 	sysvar_name         = "system", "hspstat", "hspver", "stat", "cnt", "err", "strsize", "looplev", "sublev", "iparam", "wparam", "lparam", "refstr", "refdval", ""
 	progcmd_name        = "goto", "gosub", "return", "break", "repeat", "loop", "continue", "wait", "await", "dim", "sdim", "foreach", "(each-chk)", "dimtype", "dup", "dupptr", "end", "stop", "newmod", "setmod", "delmod", "", "mref", "run", "exgoto", "on", "mcall", "assert", "logmes", "newlab", "resume", "yield"
 	dllctrl_name_0      = "newcom", "querycom", "delcom", "cnvstow", "comres", "axobj", "winobj", "sendmsg", "comevent", "comevarg", "sarrayconv"
@@ -108,7 +107,7 @@
 		case MPTYPE_LOCALWSTR   : return "wstr"
 		case MPTYPE_FLEXSPTR    : return "sptr"
 		case MPTYPE_FLEXWPTR    : return "wptr"
-		case MPTYPE_PTR_REFPTR  : return "prefptr"
+		case MPTYPE_PTR_REFSTR  : return "prefstr"
 		case MPTYPE_PTR_EXINFO  : return "pexinfo"
 		case MPTYPE_PTR_DPMINFO : return "pdpminfo"	// ( MPTYPE_PTR_DPMINFO ) #func に 0x20 を指定すると第四引数がこれになる
 		case MPTYPE_NULLPTR     : return "nullptr"

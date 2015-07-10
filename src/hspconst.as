@@ -1,7 +1,5 @@
 // HSPíËêî
 
-// from hsp3struct.h
-
 #ifndef IG_HSP_CONSTANT_NUMBERS_AS
 #define IG_HSP_CONSTANT_NUMBERS_AS
 

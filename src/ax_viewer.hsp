@@ -1,18 +1,22 @@
 // ax-viewer
 
 // @ axファイルからコードを解析して表示する
+// @ base on: http://goo.gl/xV7Y6 (HSP開発wiki OpenHSPのチュートリアル/AXファイル構造)
 
-;#define STR_PATH "H:/Docs/prg/hsp/test.hsp"
-;#define STR_PATH "H:/Docs/prg/cpp/MakeHPI/call/call/call.as"
+// use api, hspcmp.dll :: hsc3_getsym
 
 #include "hspcmp.as"
 
+#include "util/cwhich.as"
 #include "util/LexCmdline.as"
 #include "hspconst.as"
 #include "hspKeywords.as"
 
+#undef to32b_from16b
+#define global ctype to32b_from16b(%1) cond_i( (%1) & 0x8000, 0 - ((%1) ^ 0xFFFF) - 1, (%1) )
+
 // consts for application
-#define global STR_APPNAME "ax_viewer"
+#define global STR_APPNAME "ax-viewer"
 #enum   global IDW_MAIN = 0
 
 #define CmpMode_Debug 1
@@ -20,6 +24,9 @@
 // pack-options
 #packopt name STR_APPNAME
 #packopt hide 1
+
+;#cmpopt optinfo 1
+#cmpopt axiout 0
 
 //------------------------------------------------
 // メイン
@@ -57,7 +64,7 @@
 	}
 	
 	if ( path == "" ) {
-		dialog "hsp;*.as;*.ax", 16, "HSPスクリプト"
+		dialog "hsp;*.as;*.ax;obj", 16, "HSPスクリプト"
 		if ( stat == 0 ) { end }
 		path = refstr
 	} else {
@@ -76,8 +83,11 @@
 // コンパイル
 //------------------------------------------------
 *LCompile
+	if ( getpath(path, 2) == ".ax" || getpath(path, 1|2|8) == "obj" ) {
+		obj_path = path
+		
 	// hspcmp.dll でコンパイルして ax ファイルを開く
-	if ( getpath(path, 2) != ".ax" ) {
+	} else {
 		script_file_name = getpath(path, 8)
 		obj_path         = "obj"
 		hsc_ini     script_file_name
@@ -87,10 +97,9 @@
 			dialog "コンパイルエラー", 1, STR_APPNAME
 			end
 		}
-	} else {
-		obj_path = path
 	}
 	
+	hscx_loadsymbols symbols
 	return
 	
 //------------------------------------------------
@@ -106,7 +115,7 @@
 	// ax を読み込む
 	sdim ax, strsize
 	bload obj_path, ax
-	if ( strmid(ax, 0, 3) != "HSP" ) {	// 0x33505348 ヘッダのマジックナンバー（h1, h2, h3, h4)をチェック
+	if ( strmid(ax, 0, 3) != "HSP" ) {	// 0x33505348 ヘッダのマジックナンバー（h1, h2, h3, h4) をチェック
 		dialog "不正なオブジェクトファイルです"
 		end
 	}
@@ -127,7 +136,7 @@
 	max_minfo = lpeek(ax, 68)
 	pt_hpidat = lpeek(ax, 80)
 	max_hpi   = wpeek(ax, 84)
-;	max_varhpi= wpeek(ax, 86)	// 拡張される変数の個数
+;	max_varhpi= wpeek(ax, 86)	// 拡張される変数型の個数
 	
 	// 各ブロックを取得
 	if ( max_cs ) { dupptr cs, varptr(ax) + pt_cs, max_cs, 2 }
@@ -150,7 +159,7 @@
 //------------------------------------------------
 *LShowCodeSegment
 	output  = "[Code Segment]\n"
-	output  = "位置\tタイプ\t\t値\t文頭\tカンマ\t分岐先\t値の意味\n"
+	output  = "位置\tタイプ\t\t値\t単項\t文頭\tカンマ\t分岐先\t値の意味\n"
 	output += hr + "\n"
 	
 	// Code Segment をなめる
@@ -179,6 +188,7 @@
 		output += getString_type(type) +"\t"	// タイプ
 		output += ""+ code +"\t"				// 値
 		
+		if ( ex0 ) { output += "yes\t" } else { output += "-\t" }	// 単項
 		if ( ex1 ) { output += "yes\t" } else { output += "-\t" }	// 文頭
 		if ( ex2 ) { output += "yes\t" } else { output += "-\t" }	// カンマ
 		
@@ -226,17 +236,16 @@
 		case TYPE_STRING : return strf("\"%s\"", get_cstr(ds, code))
 		case TYPE_DNUM   : return str( get_double(ds, code) )
 		case TYPE_LABEL  : 
-			// TYPE_LABEL の code 値はラベルIDなので、それに対応したコードの位置を返す
-			return strf("*lb[%d]", lpeek(ot, code * 4))
+		;	// TYPE_LABEL の code 値はラベルID(= ot-index)なので、それに対応したコードの位置を返す
+		;	return strf("*lb[%d]", lpeek(ot, code * 4))
+			return "*" + label_name_list(code)
 			
 		case TYPE_STRUCT :
 			if ( code < 0 ) { return "thismod" }
 			
 			// structtag の名称は finfo が持っているので、表示する
-			mptype = wpeek(minfo, (code * SizeOf_STRUCTPRM) + 0)
-			subid  = wpeek(minfo, (code * SizeOf_STRUCTPRM) + 2)
-			mptype = to32b_from16b(mptype)
-			subid  = to32b_from16b(subid)
+			mptype = wpeek(minfo, (code * SizeOf_STRUCTPRM) + 0) : mptype = to32b_from16b(mptype)
+			subid  = wpeek(minfo, (code * SizeOf_STRUCTPRM) + 2) : subid  = to32b_from16b(subid)
 			if ( subid >= 0 ) {
 				nameidx = lpeek(finfo, (subid * SizeOf_STRUCTDAT) + 12)
 				name    = get_cstr( ds, nameidx )
@@ -250,8 +259,14 @@
 					prmidx = lpeek(finfo, (subid * SizeOf_STRUCTDAT) + 4)	// structtag の STRUCTPRM がある位置
 					return "member_var["+ (code - prmidx - 2 + 1) +"]\tof "+ name +""
 				}
+				
+			// parameter
+			} else : if (subid == STRUCTPRM_SUBID_STACK && prm_name_list(code) != "") {
+				return prm_name_list(code)
+			} else {
+				return strf("prm[%d]", code)
 			}
-			swbreak
+			assert_sentinel
 			
 		case TYPE_INTCMD    : return getString_intcmd(code)
 		case TYPE_EXTCMD    : return getString_extcmd(code)
@@ -269,48 +284,95 @@
 	return str(code)
 	
 //------------------------------------------------
-// 変数名のリストを作成する
+// 識別子のリストを作成する
 //------------------------------------------------
 *LCreateVarnameList
-	varmax = lpeek(ax, 8)	// HSPHED::max_val ( 変数の数 )
+	max_var = lpeek(ax, 8)	// HSPHED::max_val ( 変数の数 )
 	
-	sdim varnamelist, 60, varmax
-	
-	cntVar = 0
-	
-	// 名前がない場合の仮名称
-	foreach varnamelist
-		varnamelist(cnt) = strf("var[%03d]", cnt)
-	loop
+	sdim varnamelist, , max_var
+	sdim label_name_list, , max_ot / 4
+	sdim prm_name_list, , max_minfo / 4
 	
 	// Debug Info をなめる
+#enum DsCtx_Default = 0	// 標準の文脈
+#enum DsCtx_LabelName	// ラベル名が並ぶ
+#enum DsCtx_PrmName	// パラメータ名が並ぶ
+#enum DsCtx_End	// 終了している
+	
+	dsctx = DsCtx_Default
 	repeat max_dinfo
 		c    = peek(dinfo, cnt)
 		size = 1
 		
 		// 終端
 		if ( c == 255 ) {
-			break
+			dsctx ++
+			
+			if ( dsctx == DsCtx_End ) {
+				// 末尾の2つの 255 が終了の印
+				assert ((mode == DsCtx_End) == (cnt + 2 == max_dinfo))
+				break
+			}
 			
 		// ソースファイル指定
 		} else : if ( c == 254 ) {
-			// 続く 24 bit がソースファイル名への DS オフセット
-			size += 3
-			
-		// 変数名指定
-		} else : if ( c == 253 ) {
-			// 続く 24 bit が変数名への DS オフセット
-			// その後 16 bit は 0
+			// 続く 3 byte がソースファイル名への DS オフセット (または 0)
+			// 続く 2 byte がソースファイルの行番号
+				_srcfile_ptr = tripeek(dinfo, cnt + 1)
+				_srcfile_line = wpeek(dinfo, cnt + 4)
+				if ( _srcfile_ptr == 0 ) { logmes "# " + _srcfile_line }
+				else { logmes "# \"" + get_cstr(ds, _srcfile_ptr) + "\" " + _srcfile_line }
 			size += 5
 			
-			varnamelist(cntVar) = get_cstr( ds, tripeek(dinfo, cnt + 1) )
-			cntVar ++
+		// 識別子の指定
+		} else : if ( c == 251 || c == 253 ) {
+			// 続く 3 byte が識別子への DS オフセット
+			// 続く 2 byte は識別子に対応する数値情報
+			size += 5
+			ident_str = get_cstr(ds, tripeek(dinfo, cnt + 1))
+			ident_iparam = wpeek(dinfo, cnt + 4)
+			
+			switch dsctx
+				// 変数名, 変数ID
+				case DsCtx_Default:
+					assert c == 253
+					varnamelist(ident_iparam) = ident_str
+					swbreak
+					
+				// ラベル名, otindex
+				case DsCtx_LabelName:
+					assert c == 251
+					label_name_list(ident_iparam) = ident_str
+					swbreak
+					
+				// パラメータ名, subid (minfo の添字)
+				case DsCtx_PrmName:
+					assert c == 251
+					prm_name_list(ident_iparam) = ident_str
+					swbreak
+				default: assert_sentinel
+			swend
 			
 		// 次行までの CS オフセット値
-		} // else
+		} else : if ( c == 252 ) {
+			// 続く 2 byte が CS オフセット値 (8 bit じゃ足りない場合？)
+			size += 2
+			logmes "cs offset:  " + wpeek(dinfo, cnt + 1)
+		} else {
+			logmes "cs offset: " + c
+		}
 		
 		continue cnt + size
 	loop
+	
+	// DS に与えられていない識別子名を補完する
+#define STM_CompleteEmptyIdent(%1, %2) \
+		foreach (%1) : if (%1(cnt) == "") { %1(cnt) = (%2) } loop
+	
+	STM_CompleteEmptyIdent varnamelist,     strf("[var %03d]", cnt)
+	STM_CompleteEmptyIdent label_name_list, strf("[lb  %03d]", cnt)
+	STM_CompleteEmptyIdent prm_name_list,   strf("[prm %03d]", cnt)
+	
 	return
 	
 //------------------------------------------------
@@ -414,6 +476,9 @@
 				if ( cnt != 0 ) { prmlist += ", " }
 				mptype = wpeek(minfo, ( prmidx + cnt ) * SizeOf_STRUCTPRM + 0)
 				prmlist += getString_mptype( mptype )
+				if ( prm_name_list(prmidx) != "" ) {
+					prmlist += " " + trim_scope(prm_name_list(prmidx))
+				}
 			loop
 		}
 		
@@ -474,7 +539,7 @@
 #module
 
 //------------------------------------------------
-// 文字列変数内の指定インデックスからヌル文字終端文字列を取得する
+// 文字列変数内の指定インデックスからヌル終端文字列を取得する
 //------------------------------------------------
 #defcfunc get_cstr var buf, int offset
 	dupptr ret, varptr(buf) + offset, 1, vartype("str")
@@ -488,10 +553,19 @@
 	return ret
 	
 //------------------------------------------------
-// tri-byte peek
+// 3 byte peek
 //------------------------------------------------
 #defcfunc tripeek var buf, int offset
-	return lpeek(buf, offset) & 0x00FFFFFF
-//	return ( peek(buf, offset) | ( peek(buf, offset + 1) << 8 ) | ( peek(buf, offset + 2) << 16 ) )
+//	return lpeek(buf, offset) & 0x00FFFFFF
+	return ( wpeek(buf, offset) | ( peek(buf, offset + 2) << 16 ) )
+
+// スコープ解決を取り除く
+#defcfunc trim_scope var buf,  local iFound
+	iFound = instr(buf, 0, "@")
+	if ( iFound >= 0 ) {
+		return strmid(buf, 0, iFound)
+	} else {
+		return buf
+	}
 	
 #global
