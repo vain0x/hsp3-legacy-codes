@@ -1,0 +1,59 @@
+// 円を描く
+
+#include "complex.as"
+
+	bx = ginfo_winx / 2		// 原点の座標
+	by = ginfo_winy / 2
+	
+	color 128, 128, 128 : drawBaseLine bx, by
+	
+	r    = double(80)		// 半径
+	step = deg2rad(0.5)		// cnt + 1 ごとの角度の増分 [radian]
+	arg  = 0.0				// 偏角
+	
+;	redraw 0
+	color 255, 0, 0
+	mes rad2deg( M_PI / step )
+	repeat rad2deg( M_PI / step )
+		arg += step							// arg = double(cnt) * step
+		z   = complex_polar( r, arg )		// z   = r∠arg
+		complex_pset z, bx, by
+		
+		// ゆっくり描いていく
+		await 5
+	loop
+	
+;	redraw 1
+	stop
+	
+#module
+
+//------------------------------------------------
+// 複素数の座標に点を描画する
+// 
+// @ 原点の (ウィンドウ上での) 座標を (bx, by) とする。
+// @ 描画した位置にカレント・ポジションを移動する。
+// 
+// @ prm p        : 複素数
+// @ prm bx       : 原点の座標 x
+// @ prm by       : 原点の座標 y
+// @ prm multiple : 倍率
+//------------------------------------------------
+#deffunc complex_pset var p, int bx, int by, int _multiple,  local multiple, local x, local y
+	if ( _multiple <= 0 ) { multiple = 1 } else { multiple = _multiple }
+	x = int( complex_re(p) * multiple )
+	y = int( complex_im(p) * multiple )
+	
+	pset bx + x, by + y
+	pos  bx + x, by + y
+	return
+	
+//------------------------------------------------
+// 座標軸を描画する
+//------------------------------------------------
+#deffunc drawBaseLine int bx, int by
+	line -1, by, ginfo_winx, by	 // X軸
+	line bx, -1, bx, ginfo_winy // Y軸
+	return
+	
+#global
