@@ -1,0 +1,23 @@
+// ”CˆÓ‚ÌŒ^‚ðŽó‚¯Žæ‚é
+
+#include "valptr.as"
+
+#module
+
+#define global func \
+	_func . new_valptr
+
+#defcfunc _func int val_valptr,  local val
+	valptr_get val, val_valptr
+	return val
+	
+#global
+
+	mes func( "Hello, world!" )
+	mes func( M_PI )
+	
+	// int ”z—ñ
+	// 0”Ô–Ú‚Ì—v‘f 42 ‚¾‚¯•Ô‚Á‚Ä‚­‚é
+	mes func( 42, 36 )
+	stop
+	
