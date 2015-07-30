@@ -1,0 +1,705 @@
+#include "Renzok.as"
+#packopt name STR_APPNAME
+#packopt hide 1
+
+	#define __ODLB_LISTBOX
+	#define __LOAD_MODE 1		// 0 => TextFromFile, 1 => SelectAll
+
+#include "dll/ODListbox/ODListbox.as"
+#include "dll/Footy2/Footy2.as"
+#include "dll/Footy2/Footy2mod.as"
+#include "dll/Footy2/ClrtxtOptimize.as"
+#include "hpi/hscallbk/hscallbk.as"
+#include "Mo/flexFrame.as"
+#include "Mo/FolderSelectDialog.as"
+#include "Mo/GetFontOfHSP.as"
+#include "Mo/IsBinFile.as"
+#include "Mo/SysCursor.as"
+#include "Mo/MenuBarAPI.as"
+#include "Mo/MCNoteRepeat.as"
+#include "Mo/cond.as"
+
+*main
+	gsel 0, -1
+	
+#ifdef __ODLB_LISTBOX
+	oncmd gosub *OnDrawItem   , 0x002B
+	oncmd gosub *OnMeasureItem, 0x002C
+#endif
+	
+	gosub *SetVariables
+	gosub *SetCallback
+	gosub *CreateWindow
+	gosub *OnRenewal
+	
+	gosub *SetClrtxtLibPath
+	gosub *CreateShortCutMenu
+	
+	gsel wID_Main
+	onkey gosub *OnKeyLabel
+	onexit goto *exit
+	
+	oncmd gosub *OnContextMenu, 0x007B			// WM_CONTEXTMENU 逆クリック
+	oncmd gosub *OnCommand,   0x0111			// WM_COMMAND     ListBox と EditControl の割り込み
+	oncmd gosub *OnResize,    0x0005			// WM_SIZE        サイズ可変用
+	oncmd gosub *OnSizing,    0x0214			// WM_SIZING      サイズ固定用
+	oncmd gosub *OnMouseMove, 0x0200			// WM_MOUSEMOVE   マウス監視用
+	oncmd gosub *OnLBtnDown,  0x0201			// WM_LBUTTONDOWN ドラッグ開始検知用
+;	oncmd gosub *OnLBtnUp,    0x0202			// WM_LBUTTONUP   ドラッグ終了検知用
+	oncmd gosub *OnLoad,      UWM_LOAD
+	oncmd gosub *OnChangePath,UWM_CHANGEPATH
+	oncmd gosub *OnRenewal,   UWM_RENEWAL_LIST
+	oncmd gosub *OnSplitterMove,UWM_SPLITTERMOVE
+	
+	gsel wID_Main, 1
+	Footy2SetFocus footyID, 0
+	stop
+	
+*exit
+	if ( bDragging ) { ClipCursor NULL : bDragging = false }
+	if ( hShortMenu ) { DestroyMenu hShortMenu }
+	gosub *DeleteClrtxtCache
+	
+#ifdef __ODLB_LISTBOX
+	DeleteFont  hFont : hFont = NULL
+;	ODLbDestroy LbInfo(1)
+#endif
+	end : end
+	
+//######## メッセージハンドラ ##################################################
+*OnKeyLabel
+	if ( ginfo(2) == wID_Main ) {
+		
+		// [Ctrl]
+		if ( getkey(17) ) {
+			if ( Footy2GetActiveView(footyID) != FOOTY2ERR_NOACTIVE ) {
+				// アクティブなら
+				switch iparam
+				case 'A' : gosub *Menu_SelAll	: return
+				case 'B' : GobtmOnFooty footyID	: return
+				case 'C' : gosub *Menu_Copy		: return
+				case 'S' : gosub *Save			: return
+				case 'T' : GotopOnFooty footyID	: return
+				case 'V' : gosub *Menu_Paste	: return
+				case 'X' : gosub *Menu_Cut		: return
+				case 'Y' : gosub *Menu_Redo		: return
+				case 'Z'
+					// [Shift] なら Redo
+					if ( getkey(16) ) { gosub *Menu_Redo } else { gosub *Menu_Undo }
+					return
+				swend
+			}
+		}
+		// test
+		if ( wparam == 122 ) {	// F11
+			_ = CanStartDragOnFooty( footyID, 0, 13, ginfo(0), ginfo(1) )
+			logmes ""+ _
+		}
+		
+	}
+	return
+	
+*OnResize
+	// ウィンドウ・サイズ可変
+	MoveWindow  LbInfo,            5,            5,  LBWIDTH,  LBHEIGHT, true
+	MoveWindow BtnInfo,            5, LBHEIGHT + 5,  LBWIDTH,        20, true
+	Footy2Move footyID, LBWIDTH + 10,            5, BOXWIDTH, BOXHEIGHT
+	return
+	
+*OnSizing
+	// ウィンドウ可変の最低サイズを決める
+	OnSizingToFlexFrame 160, 120
+	return
+	
+#ifdef __ODLB_LISTBOX
+*OnDrawItem
+	ODLbProc LbInfo(1), iparam, wparam, lparam
+	return stat
+	
+*OnMeasureItem
+	ODLbProc LbInfo(1), iparam, wparam, lparam
+	return stat
+#endif
+	
+*OnCommand
+	if ( lparam == LbInfo ) {
+		// リストボックスの割り込み
+		wNotifyCode = HIWORD(wparam)
+;		logmes "listbox : "+ logv(wNotifyCode)
+		switch wNotifyCode
+		case 1									// LBN_SELCHANGE
+			sendmsg hMain, UWM_LOAD, 0, 0
+			swbreak
+		case 2									// LBN_DBLCLICK
+			sendmsg hMain, UWM_CHANGEPATH, 0, 0
+			swbreak
+		default
+#ifdef __ODLB_LISTBOX
+			ODLbProc LbInfo(1), iparam, wparam, lparam
+			return stat
+#endif
+		swend
+	}
+	return
+	
+*OnLoad
+	// 読み込むファイル名を取得
+	sendmsg LbInfo, 0x0188, 0, 0 : iList = stat
+	sendmsg LbInfo, 0x0189, iList, varptr(stmp)
+	
+	if ( iList < 0 ) { return }					// 選択アイテムがない場合も無視する
+	
+	// Ｗクリックが必要なものは無視
+	if ( stmp == STR_SEPARATOR ) { return }
+	if ( stmp == STR_DIALOG    ) { return }		// フォルダ移動か？
+	if ( peek(stmp) == '['     ) { return }		// フォルダか？
+	
+	// ファイルなら
+	stmp = path +"\\"+ stmp
+	if ( filepath == stmp ) { return }	// すでに開いている
+	
+	exist stmp
+	if ( strsize < 0 ) { return }		// ない ( IsBinFile が調べてくれる )
+	if ( IsBinFile( stmp ) <= 0 ) {		// 0 = Binary : 1 = Text : -1 = Unknown
+		EnableBox "(bin file)"
+		return
+		
+	} else : if ( bEnable ) {
+		EnableWindow Footy2GetWnd(footyID, 0), true
+		bEnable = false
+	}
+	
+	filepath = stmp				// ファイルを変更した
+	
+	// ファイルを開く
+#if __LOAD_MODE == 0
+	Footy2TextFromFile footyID, filepath, 0
+	gosub *SetFooty
+#else
+ #if __LOAD_MODE == 1
+	gosub *SetFooty
+	sdim     buf
+	notesel  buf
+	noteload filepath
+	noteunsel
+	Footy2SelectAll  footyID, false
+	Footy2SetSelText footyID, buf
+ #else
+	"__LOAD_MODEマクロの値が異常です。"			// コンパイルエラーを起こさせる
+ #endif
+#endif
+	
+	Settitle getpath(filepath, 8)				// 変更フラグをおろす
+	gosub *ResetByEdited						// 編集記憶変数の再初期化
+	return
+	
+*OnChangePath
+	// 読み込む項目を取得
+	sendmsg LbInfo, 0x0188, 0, 0 : iList = stat : if ( iList < 0 ) { return }	// 選択アイテムがない場合は無視
+	sendmsg LbInfo, 0x0189, iList, varptr(stmp)
+	
+	// セパレータか？
+	if ( stmp == STR_SEPARATOR ) { return }
+	
+	// フォルダ移動か？
+	if ( stmp == STR_DIALOG ) {
+		foldlg "", path, 0
+		if ( stat == false ) {			// 成功したとき
+			path = refstr
+			sendmsg hMain, UWM_RENEWAL_LIST, 0, 0
+		}
+		return
+	}
+	
+	// フォルダか？
+	if ( peek(stmp) == '[' ) {
+		
+		if ( stmp == STR_BACK ) {
+			// 最後のフォルダ名と \ を取り除く
+			     path = getpath(path, 32)
+			poke path,   strlen(path) - 1, 0
+			
+		} else {
+			getstr stmp, stmp, 1, ']'
+			path += "/" + stmp
+		}
+		
+		sendmsg hMain, UWM_RENEWAL_LIST, 0, 0
+		return
+	}
+	return
+	
+*OnRenewal
+	// ListBox を再構築する
+#ifdef __ODLB_LISTBOX
+	ODLbClearItem LbInfo(1)
+	sendmsg LbInfo, 0x000B, false, 0			// WM_SETREDRAW ( 再描画禁止 )
+	
+	DirlistEx  filelist, path
+	NoteRepeat filelist
+		note = nrNote
+		
+		if ( note == "" ) { _continue }
+		
+		ODLbInsertItem LbInfo(1), note, nrCnt
+		
+		if ( peek(note) == '[' ) {				// フォルダ
+			ODLbSetItemColor LbInfo(1), nrCnt, 0x808080, cond_i(nrCnt & 1, 0xADFF2F, 0x2FFFAD)
+			_continue
+		} else {
+			exist path + "/" + note
+			if ( /*strsize > MAX_TEXTLEN ||*/ strsize < 0 ) {
+				ODLbSetItemColor LbInfo(1), nrCnt, 0xFFFFFF, 0xA0A0A0
+				_continue
+			}
+		}
+		ODLbSetItemColor LbInfo(1), nrCnt, 0x000000, cond_i(nrCnt & 1, 0xEEEEFF, 0xEEFFEE)
+		
+	NoteLoop
+	
+	ODLbInsertItem   LbInfo(1), STR_DIALOG
+	ODLbSetItemColor LbInfo(1), stat, 0x000000, 0xFFDDDD
+	
+	sendmsg LbInfo, 0x000B, true, 0					// WM_SETREDRAW ( 再描画許可 )
+	return
+	
+#else
+	// ListBox を再構築する
+	sendmsg LbInfo, 0x0184, 0, 0						// LB_RESETCONTENT
+;	sendmsg LbInfo, 0x018D, 0x0010, path +"\\*.*"		// LB_DIR (wparam == DDL_DIRECTORY)
+	sendmsg LbInfo, 0x000B, false, 0					// WM_SETREDRAW ( 再描画禁止 )
+	DirlistEx  filelist, path
+	NoteRepeat filelist
+		sendmsg LbInfo, 0x0180, 0, nrNote
+	NoteLoop
+	sendmsg LbInfo, 0x0180, 0, STR_DIALOG				// LB_ADD
+	sendmsg LbInfo, 0x000B, true, 0						// WM_SETREDRAW ( 再描画許可 )
+	return
+#endif
+	
+*OnContextMenu
+	repeat 4
+		GetWindowRect Footy2GetWnd(footyID, cnt), varptr(rect)
+		if ( boxin(rect(0), rect(1), rect(2), rect(3), ginfo(0), ginfo(1)) == false ) {
+			// 外なら無視
+			continue
+		}
+		bIsSelected = IsSelOnFooty(footyID)
+		EnableMenuItem hShortMenu, CMD_UNDO,	bCanUndo == false
+		EnableMenuItem hShortMenu, CMD_REDO,	bCanRedo == false
+		EnableMenuItem hShortMenu, CMD_CUT,		bIsSelected == 0
+		EnableMenuItem hShortMenu, CMD_COPY,	bIsSelected == 0
+	;	EnableMenuItem hShortMenu, CMD_PASTE,	0
+		EnableMenuItem hShortMenu, CMD_DELETE,	bIsSelected == 0
+	;	EnableMenuItem hShortMenu, CMD_SELALL,	0
+		
+		// メニューをポップアップ
+		TrackPopupMenuEx hShortMenu, 0x0180, ginfo(0), ginfo(1), hMain, 0
+		
+		switch (stat)
+		case CMD_UNDO   : gosub *Menu_Undo   : return
+		case CMD_REDO   : gosub *Menu_Redo   : return
+		case CMD_CUT    : gosub *Menu_Cut    : return
+		case CMD_COPY   : gosub *Menu_Copy   : return
+		case CMD_PASTE  : gosub *Menu_Paste  : return
+		case CMD_DELETE : gosub *Menu_Delete : return
+		case CMD_SELALL : gosub *Menu_SelAll : return
+		swend
+		
+		break
+	loop
+	return
+	
+//#### ドラッグ
+#define CANDRAGPOS boxin( LBWIDTH + 5, 6, LBWIDTH + 10, ginfo(13) - 6 )
+*OnMouseMove
+	if ( CANDRAGPOS ) {
+		// (仮想) スプリッターの上なら
+		SetSystemCursor hMain, IDC_SIZEWE
+		
+	} else {
+		// その他の場所なら
+		SetSystemCursor hMain, IDC_ARROW
+		
+	}
+	return
+	
+*OnLBtnDown
+	if ( CANDRAGPOS ) {
+		bDragging   = true
+		ptDragStart = ginfo(0), ginfo(1)
+		
+		// マウスの移動範囲を制限する
+		dim rc, 4
+		rc(0) = ginfo(4) + ( 10 + 60 )
+		rc(1) = ginfo(5) + 40
+		rc(2) = ginfo(6) - ( 10 + 60 )
+		rc(3) = ginfo(7) - 10
+		ClipCursor varptr(rc)
+		
+		// 無限ループ
+		repeat
+			
+			if ( getkey(1) == false && getkey(2) == false ) {
+				break
+			}
+			
+			await 0
+			if ( boxin(ginfo(4), ginfo(5), ginfo(6), ginfo(7), ginfo(0), ginfo(1)) ) {
+				// ウィンドウの中なら変更し続ける
+				SetCursor LoadCursor(IDC_SIZEWE)
+				
+				ptDragEnd   = ginfo(0), ginfo(1)
+				sendmsg hMain, UWM_SPLITTERMOVE, 0, 0
+				ptDragStart = ptDragEnd(0), ptDragEnd(1)
+			}
+			
+		loop
+		
+		// ドロップされた
+		if ( bDragging ) {
+			ClipCursor NULL
+			bDragging = false
+			ptDragEnd = ginfo(0), ginfo(1)
+			
+			sendmsg hMain, UWM_SPLITTERMOVE, 0, 0
+		}
+	}
+	return
+	
+*OnLBtnUp
+	return
+	
+*OnSplitterMove
+	_LbWidth += ptDragEnd(0) - ptDragStart(0)
+	if ( _LbWidth <= 30 ) {
+		 _LbWidth  = 30
+		
+	} else : if ( _LbWidth >= (ginfo(12) - 60) ) {
+		_LbWidth = ginfo(12) - 60
+	}
+	
+	// 再描画する
+	gosub *OnResize
+	return
+	
+//######## サブルーチン群 ######################################################
+*SetVariables
+	dim hWindow, 2
+	dim rect, 4
+	
+	dim  LbInfo, 2				// ListBox の情報 (hwnd, ID)
+	dim  BtnInfo, 2				// Button  〃
+	dim  iList					// Listbox の選択されているIndex
+	
+	dim _LbWidth				// ListBox の横幅
+		_LbWidth = 120
+	
+	dim bDragging
+	dim ptDragStart, 2
+	dim ptDragEnd  , 2
+	
+	sdim stmp, 256
+	sdim buf,  65535			// 一時的にファイルを開くときのバッファ
+	sdim filepath, MAX_PATH		// 見ているファイルのパス
+	sdim path    , MAX_PATH		// 開いているフォルダのパス
+	path = dirinfo(0)
+	
+	sdim ClrtxtLib, MAX_PATH	// ClrtxtLib パス
+	sdim Clrtxt, 1024
+	
+	dim bModified
+	dim bCanUndo
+	dim bCanRedo
+	dim cntUndoed				// Undo処理を行った回数
+	dim cntModified				// 編集した回数 (Undo 以外)
+	
+	dim bWriteMode				// Insert(真) or Overwrite(偽)
+	dim bHasFocus
+;	dim bSelected
+	
+	return
+	
+*CreateWindow
+	screen wID_Main, ginfo(20), ginfo(21), 2 + 16,,, WIN_DEFAULT_X, WIN_DEFAULT_Y
+	hWindow( wID_Main ) = hwnd
+	title "Renzok"
+	syscolor 15 : boxf : color
+	
+	SetStyle hwnd, -16, 0x00040000 | 0x00010000		// 可変枠＆最大化ボタン
+	
+	objmode 1, 0
+	
+	// リストボックス
+#ifdef __ODLB_LISTBOX
+	ODLbCreate hwnd, 5, 5, LBWIDTH, LBHEIGHT
+	LbInfo(1) = stat
+	LbInfo(0) = ODLbGetHandle( LbInfo(1) )
+	
+	// リストボックスの設定
+	ODLbSetItemHeight  LbInfo(1), 14				// 小さめにしておく
+	ODLbSetItemMargin  LbInfo(1), 1
+	ODLbSetMarginColor LbInfo(1), , 0xFFCCCC
+	
+	hFont = CreateFontByHSP("MS UI Gothic", 13, 0)
+	ODLbSetFont LbInfo(1), hFont
+#else
+	objsize LBWIDTH, LBHEIGHT
+	pos 5, 5 : listbox iList, 0, ""
+	LbInfo = objinfo(stat, 2), stat
+#endif
+	
+	// 保存ボタン
+	objsize LBWIDTH, 20
+	pos 5,  LBHEIGHT + 5 : button gosub "save", *Save
+	BtnInfo = objinfo(stat, 2), stat
+	
+	// FootyControl
+	Footy2Create hMain, LBWIDTH + 10, 5, BOXWIDTH, BOXHEIGHT, 0
+	footyID = stat
+	gosub *SetFootyEditor
+;	gosub *SetFooty
+	
+	gsel wID_Main
+	return
+	
+*Save
+	if ( filepath == STR_DIALOG ) { return }
+	
+	if ( peek(filepath) == 0 ) {
+		// 選べる
+		dialog "*", 17, "保存先"
+		if ( stat == false ) {
+			Footy2SetFocus footyID, 0
+			return
+		}
+		filepath = refstr
+	}
+	
+	// 保存
+	Footy2SaveToFile footyID, filepath, 0, 0
+	
+	// 編集によって行ったことをリセットする
+;	gosub *ResetByEdited			// Undo Redo 情報は残しておく
+	bModified   = false
+	Settitle getpath(filepath, 8)
+	
+	Footy2SetFocus footyID, 0
+	
+	return
+	
+*ResetByEdited
+	bModified   = false
+	bCanUndo    = false
+	bCanRedo    = false
+	cntModified = 0
+	cntUndoed   = 0
+	return
+	
+*CreateShortCutMenu
+	// メイン
+	hShortMenu = CreatePopupMenu()
+		AppendMenu hShortMenu, 0, CMD_UNDO,     "元に戻す(&U)"	+"\t\t\tCtrl+Z"
+		AppendMenu hShortMenu, 0, CMD_REDO,     "やり直す(&R)"	+"\t\t\tCtrl+Y"
+		AddSeparator hShortMenu
+		AppendMenu hShortMenu, 0, CMD_CUT,      "切り取り(&T)"	+"\t\t\tCtrl+X"
+		AppendMenu hShortMenu, 0, CMD_COPY,     "コピー(&C)"	+"\t\t\tCtrl+C"
+		AppendMenu hShortMenu, 0, CMD_PASTE,    "貼り付け(&P)"	+"\t\t\tCtrl+V"
+		AppendMenu hShortMenu, 0, CMD_DELETE,   "削除(&D)"		+"\t\t\t Delete "
+		AddSeparator hShortMenu
+		AppendMenu hShortMenu, 0, CMD_SELALL,   "すべて選択(&A)"+"\t\t\tCtrl+A"
+	return
+	
+*Menu_Undo   : if ( bCanUndo ) { Footy2Undo footyID } : return
+*Menu_Redo   : if ( bCanRedo ) { Footy2Redo footyID } : return
+*Menu_Cut    : Footy2Cut       footyID : return
+*Menu_Copy   : Footy2Copy      footyID : return
+*Menu_Paste  : Footy2Paste     footyID : return
+*Menu_Delete : Footy2DeleteSel footyID : gosub *OnModify : return
+*Menu_SelAll : Footy2SelectAll footyID : return
+
+//######## コールバック関数系のルーチン ################################################################
+*SetCallback
+	setcallbk proc_Focus,             Focus,             *onFocus
+	setcallbk proc_MoveCaret,         MoveCaret,         *onMoveCaret
+	setcallbk proc_TextModified,      TextModified,      *onTextModified
+	setcallbk proc_InsertModeChanged, InsertModeChanged, *onInsertModeChanged
+	return
+	
+*SetCallbackToFooty
+	Footy2SetFuncFocus				footyID, varptr(proc_Focus            ), 0
+	Footy2SetFuncMoveCaret			footyID, varptr(proc_MoveCaret        ), 0
+	Footy2SetFuncTextModified		footyID, varptr(proc_TextModified     ), 0
+	Footy2SetFuncInsertModeChanged	footyID, varptr(proc_InsertModeChanged), 0
+	return
+	
+*onFocus
+	bHasFocus = callbkarg(3) & 0x00FF
+	return
+	
+*onMoveCaret
+	return
+	
+*onTextModified
+	
+	switch callbkarg(2)
+	case MODIFIED_CAUSE_UNDO
+		// Undo 処理
+		cntModified --
+		cntUndoed   ++
+		bCanRedo    = true
+		bCanUndo    = ( cntModified != 0 )	// 編集状態なら Undo 可能
+		
+		if ( cntModified == 0 && bModified ) {
+			bModified = false
+			Settitle getpath(filepath, 8)
+			
+		} else : if ( bModified == false ) {
+			bModified = true
+			Settitle getpath(filepath, 8) +" *"
+		}
+		swbreak
+		
+	case MODIFIED_CAUSE_REDO
+		// Redo 処理
+		cntModified ++
+		cntUndoed   --
+		bCanUndo  = true
+		bCanRedo  = ( cntUndoed != 0 )		// 限界まで取り消したら偽になる
+		
+		if ( cntModified != 0 && bModified == false ) {
+			bModified  = true
+			Settitle getpath(filepath, 8) +" *"
+		}
+		swbreak
+		
+	default
+		// その他の入力
+	*OnModify
+		cntModified ++
+		cntUndoed   = 0
+		
+		bCanUndo = true
+		bCanRedo = false
+		
+		if ( bModified == false ) {
+			bModified  = true
+			Settitle getpath(filepath, 8) +" *"
+		}
+	swend
+	return
+	
+// 挿入/上書モードの変更
+*onInsertModeChanged
+	bWriteMode = callbkarg(2) & 0x00FF
+	return
+	
+//######## Clrtxt 系ルーチン ###########################################################################
+// ClrtxtLib のパスを設定
+*SetClrtxtLibPath
+	ClrtxtLib = "H:/Docs/prg/hsp/Project/だれでもHTML/" + sysinfo(1) + "/ClrtxtLib/"
+	ClrtxtLibIs ClrtxtLib	// ClrtxtOptimize.as のモジュールに登録する
+	return
+	
+// 色分け情報を読み込み、コントロールに反映する
+*ClrtxtLoad
+	exist ClrtxtLib + refstr + "cache"
+	if ( strsize < 0 ) {
+		
+		stmp = ClrtxtLib + refstr			// Clrtxt へのパス
+		ClrtxtOptimize stmp, Clrtxt
+		bsave stmp + "cache", Clrtxt, stat	// キャッシュする
+		
+	} else {
+		// 読み込むだけでいい
+		bload ClrtxtLib + refstr + "cache", Clrtxt, strsize + 1
+	}
+	
+	ClrtxtInput footyID, Clrtxt, true
+	return
+	
+// Clrtxt のキャッシュを削除
+*DeleteClrtxtCache
+	sdim       filelist, MAX_PATH * 5
+	dirlist    filelist, ClrtxtLib + "*.clrtxtcache", 2
+	NoteRepeat filelist
+		remove_file_if_exists ClrtxtLib + nrNote
+	NoteLoop
+	return
+	
+// 拡張子を見て、色分けを決める
+*CheckExt
+	switch getpath(filepath, 2 + 16)
+	case ".hsp" : case ".as"
+		return "HSPbasic.clrtxt"
+	case ".html": case ".htm" : case ".aspx"
+		return "HTMLbasic.clrtxt"
+	case ".c" : case ".cpp" : case ".cxx" : case ".h" : case ".hpp" : case ".hxx"
+		return "CppBasic.clrtxt"
+	case ".js"
+		return "JS_basic.clrtxt"
+	case ".clrtxt"
+		return "ClrtxtBasic.clrtxt"
+	case ".bat"
+		return "BAT_basic.clrtxt"
+	case ".klac"
+		return "KlacBasic.clrtxt"
+	swend
+	return ""
+	
+*SetFooty
+	// Footy コントロールの設定
+	Footy2ClearEmphasis footyID
+	gosub *CheckExt
+	if ( refstr != "" ) {
+		gosub *ClrtxtLoad
+	}
+	return
+	
+*SetFootyEditor
+	gosub *SetCallbackToFooty
+	
+	// Font
+	Footy2SetFontFace footyID, FFM_ANSI_CHARSET, msgothic, false
+	Footy2SetFontSize footyID, 11, false
+	
+	// 数値設定
+		// 記号の可視
+	Footy2SetMetrics footyID, SM_MARK_VISIBLE , EDM_FULL_SPACE | EDM_EOF, false
+	Footy2SetMetrics footyID, SM_LINENUM_WIDTH, -1, false
+	Footy2SetMetrics footyID, SM_RULER_HEIGHT , -1, false
+	
+	// EditColor
+	Footy2SetColor footyID, CP_TEXT				, RGB(255, 255, 255), false
+	Footy2SetColor footyID, CP_BACKGROUND		, RGB(0, 5, 0), false
+;	Footy2SetColor footyID, CP_CRLF				, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_HALFSPACE		, RGB(0, 0, 0), false
+	Footy2SetColor footyID, CP_NORMALSPACE		, RGB(255, 0, 0), false
+;	Footy2SetColor footyID, CP_TAB				, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_EOF				, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_UNDERLINE		, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_LINENUMBORDER	, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_LINENUMTEXT		, RGB(0, 128, 255), false
+	Footy2SetColor footyID, CP_CARETLINE		, RGB(255, 255, 0), false
+;	Footy2SetColor footyID, CP_RULERBACKGROUND	, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_RULERTEXT		, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_RULERLINE		, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_CARETPOS			, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_URLTEXT			, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_UNDERLINE		, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_MAILTEXT			, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_MAILUNDERLINE	, RGB(0, 0, 0), false
+	
+	// TextColor
+	Footy2Refresh footyID
+	return
+
+#deffunc EnableBox str prm_message
+	Footy2SetText footyID, prm_message
+	Settitle "編集不可(Enable)"
+	
+	EnableWindow Footy2GetWnd(footyID, 0), false
+	bEnable  = true
+	filepath = ""
+	return
+	
