@@ -597,7 +597,7 @@
 //######## Clrtxt 系ルーチン ###########################################################################
 // ClrtxtLib のパスを設定
 *SetClrtxtLibPath
-	ClrtxtLib = "H:/Docs/prg/hsp/Project/だれでもHTML/" + sysinfo(1) + "/ClrtxtLib/"
+	ClrtxtLib = "D:/Docs/prg/hsp/Project/Renzok/src/ClrtxtLib/"
 	ClrtxtLibIs ClrtxtLib	// ClrtxtOptimize.as のモジュールに登録する
 	return
 	

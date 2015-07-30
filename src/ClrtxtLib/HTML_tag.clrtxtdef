@@ -1,0 +1,45 @@
+@// HTML のタグを網羅
+
+@//---- ブロック要素のタグ ----
+@(COLOR)HTMLblocktag
+div
+
+@// 基本HTML系
+@(ENTRY)html,head,body,title,link,meta,base,
+@(ENTRY)frameset,frame,iframe,noframes,
+
+@// 文章構成系
+@(ENTRY)h1,h2,h3,h4,h5,h6,p,pre,blockquote,
+@(ENTRY)table,tr,caption,colgroupe,col,thead,tfoot,tbody,
+@(ENTRY)ul,ol,li,dl,dt,dd,
+
+@// 画面装飾系
+@(ENTRY)hr,basefont,img,area,marquee,
+@(ENTRY)form,input,textarea,select,option,optgroup,button,label,fieldset,legend,
+
+@// others
+@(ENTRY)style,script,noscript,bgsound,embed,noembed,object,applet,param,
+
+@//---- インライン要素のタグ ----
+@(COLOR)HTMLinlinetag
+span
+
+@// 画面制御系
+@(ENTRY)br,nobr,wbr,map,
+@(ENTRY)th,td,
+
+@// 文章の論理的な意味づけ
+@(ENTRY)a,sup,sub,bdo,
+@(ENTRY)tt,em,strong,ins,del,
+@(ENTRY)ruby,rb,rt,rp,
+@(ENTRY)code,kbd,samp,var,dfn,address,
+@(ENTRY)q,cite,
+
+@//---- 非推奨タグ ----
+@(COLOR)HTMLnonRcdtag
+
+@// BLOCK
+@(ENTRY)center,plaintext,listing,
+
+@// INLINE
+@(ENTRY)font,b,bold,i,italic,u,under,s,strike,big,small,
