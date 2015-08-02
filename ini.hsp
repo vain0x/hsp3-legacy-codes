@@ -27,9 +27,10 @@
 
 #define BufCapacity_Default 1023
 
-// @static
-	stt_stmp = ""
-	
+#ifdef _DEBUG //警告避け
+	sdim stt_stmp
+#endif
+
 /**
 * INIファイルを開く
 *
