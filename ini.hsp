@@ -247,7 +247,6 @@
 #modcfunc ini_exists_key str sec, str key
 	GetPrivateProfileString sec, key, "__", varptr(stt_stmp), 2, varptr(path_)
 	return ( stat < 2 )
-;	return ( false == ( ini_geti( thismod, sec, key, 0 ) == 0 && ini_geti( thismod, sec, key, 1 ) == 1 ) )
 	
 /*
 GetPrivateProfileString に 既定値("__"), nSize(2) を与えるとき、
