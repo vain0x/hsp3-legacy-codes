@@ -15,16 +15,6 @@
 #define null  0
 #define int_max 0x7FFFFFFF
 
-#enum global IniValtype_None = 0
-#enum global IniValtype_Indeterminate = 0
-#enum global IniValtype_String = 2			// vartype の値と一致
-#enum global IniValtype_Double
-#enum global IniValtype_Int
-#enum global IniValtype_MAX
-
-#define global ctype IniKeyArrayIdx(%1, %2) ((%1) + "#" + (%2))
-#define global ctype IniKeyMember(%1, %2) ((%1) + "." + (%2))
-
 #define BufCapacity_Default 1023
 
 #ifdef _DEBUG //警告避け
@@ -116,49 +106,8 @@
 * @prm key: キー名
 * @prm def: 既定値 (キーがないときはこの値が返される)
 */
-#modcfunc ini_geti_ str sec, str key, int def
+#modcfunc ini_geti str sec, str key, int def
 	return GetPrivateProfileInt( sec, key, def, varptr(path_) )
-	
-/**
-* 任意の型のデータを読み出す
-*
-* @prm (this)
-* @prm sec: セクション名
-* @prm key: キー名
-* @prm def: 既定文字列 (キーがないときはこれが返される)
-*/
-#define global ctype ini_get(%1, %2, %3, %4 = "", %5 = 0) \
-	ini_get_( %1, %2, %3, str(%4), %5 )
-
-#modcfunc ini_get_ str sec, str key, str def, int valtype
-	ini_gets_v thismod, stt_stmp, sec, key, def
-	return CastFromString( stt_stmp, valtype )
-	
-/**
-* 配列データを読み出す
-*
-* ini_putArray 命令によって書き込んだ、配列データを読み込みます。
-*
-* @prm (this)
-* @prm dst: 値が書き込まれる配列変数
-* @prm sec: セクション名
-* @prm key: 配列の名前
-*/
-#modfunc ini_getArray array dst, str sec, str key,  \
-	local len, local valtype
-	
-	len     = ini_geti( thismod, sec, IniKeyMember(key, "$length"),  0 )
-	valtype = ini_geti( thismod, sec, IniKeyMember(key, "$valtype"), IniValtype_Indeterminate )
-	
-	if ( valtype == IniValtype_Indeterminate ) {
-		valtype = ValtypeByString( ini_gets( thismod, sec, IniKeyArrayIdx(key, 0) ) )	// [0] の型で判定する
-	}
-	
-	dimtype dst, valtype, len
-	repeat len
-		dst(cnt) = ini_get( thismod, sec, IniKeyArrayIdx(key, cnt), , valtype )
-	loop
-	return
 	
 /**
 * 文字列データを書き込む
@@ -198,53 +147,6 @@
 */
 #modfunc ini_puti str sec, str key, int data
 	WritePrivateProfileString sec, key, str(data), varptr(path_)
-	return
-	
-/**
-* 指定した型のデータを書き込む
-*
-* @prm (this)
-* @prm sec: セクション名
-* @prm key: キー名
-* @prm value: 書き込むデータ
-* @param valtype: データの型 (省略時は、value の型が使用されます)
-*/
-#define global ini_put(%1, %2, %3, %4, %5 = 0) \
-	stt_tmp@MCIni = (%4) :\
-	ini_putv %1, %2, %3, stt_tmp@MCIni, %5
-
-#modfunc ini_putv str sec, str key, var data, int valtype_,  local valtype
-	if ( valtype_ ) { valtype = valtype_ } else { valtype = ValtypeByString(str(data)) }
-	switch ( valtype )
-		case IniValtype_String: ini_puts thismod, sec, key,       (data) : swbreak
-		case IniValtype_Double: ini_putd thismod, sec, key, double(data) : swbreak
-		case IniValtype_Int:    ini_puti thismod, sec, key,    int(data) : swbreak
-	swend
-	return
-	
-/**
-* 配列データを書き込む
-*
-* 配列変数は、str, double, int 型の1次元配列変数にかぎります。
-* データの読み込みには ini_getArray を使用してください。
-*
-* @prm (this)
-* @prm sec: セクション名
-* @prm key: キー名
-* @prm arr: 書き込む配列変数
-*/
-#modfunc ini_putArray str sec, str key, array src,  \
-	local len, local valtype
-	
-	len     = length(src)
-	valtype = vartype(src)
-	
-	ini_puti thismod, sec, IniKeyMember(key, "$length"),  len
-	ini_puti thismod, sec, IniKeyMember(key, "$valtype"), valtype
-	
-	repeat len
-		ini_putv thismod, sec, IniKeyArrayIdx(key, cnt), src(cnt), valtype
-	loop
 	return
 	
 /**
@@ -385,27 +287,131 @@ GetPrivateProfileString に 既定値("__"), nSize(2) を与えるとき、
 #global
 
 #module
+
+#enum global IniValtype_None = 0
+#enum global IniValtype_Indeterminate = 0
+#enum global IniValtype_String = 2			// vartype の値と一致
+#enum global IniValtype_Double
+#enum global IniValtype_Int
+#enum global IniValtype_MAX
+
+#define stt_stmp stt_stmp@MCIni
+
+/**
+* 指定した型のデータを読み出す
+*
+* @prm (this)
+* @prm sec: セクション名
+* @prm key: キー名
+* @prm def: 既定文字列 (キーがないときはこれが返される)
+*/
+#define global ctype ini_get(%1, %2, %3, %4 = "", %5 = 0) \
+	ini_get_( %1, %2, %3, str(%4), %5 )
+
+#defcfunc ini_get_ var self, str sec, str key, str def, int valtype
+	ini_gets_v self, stt_stmp, sec, key, def
+	return CastFromString@MCIni( stt_stmp, valtype )
+	
+/**
+* 指定した型のデータを書き込む
+*
+* @prm (this)
+* @prm sec: セクション名
+* @prm key: キー名
+* @prm value: 書き込むデータ
+* @param valtype: データの型 (省略時は、value の型が使用されます)
+*/
+#define global ini_put(%1, %2, %3, %4, %5 = 0) \
+	stt_tmp@MCIni = (%4) :\
+	ini_putv %1, %2, %3, stt_tmp@MCIni, %5
+
+#deffunc ini_putv var self, str sec, str key, var data, int valtype_,  local valtype
+	if ( valtype_ ) { valtype = valtype_ } else { valtype = ValtypeByString@MCIni(str(data)) }
+	switch ( valtype )
+		case IniValtype_String: ini_puts self, sec, key,       (data) : swbreak
+		case IniValtype_Double: ini_putd self, sec, key, double(data) : swbreak
+		case IniValtype_Int:    ini_puti self, sec, key,    int(data) : swbreak
+	swend
+	return
+	
 // 文字列が表すデータの型を推定する
 // 16進数形式の整数値などには未対応
 #defcfunc ValtypeByString@MCIni str data
 	if ( data == int(data) ) { return IniValtype_Int }
 	if ( double(data) != 0 ) {
-		if ( IsDoubleImpl(data) ) { return IniValtype_Double }
+		if ( IsDoubleImpl@MCIni(data) ) { return IniValtype_Double }
 	}
 	return IniValtype_String
 	
-#defcfunc IsDoubleImpl str data_, local data
+#defcfunc IsDoubleImpl@MCIni str data_, local data
 	data = data_
 	return ( instr(data, , ".") >= 0 || instr(data, , "e") >= 0 )
 	
 // 文字列から指定した型に型変換する
 #defcfunc CastFromString@MCIni str data, int valtype_,  local valtype
-	if ( valtype_ ) { valtype = valtype_ } else { valtype = ValtypeByString(stt_stmp) }
+	if ( valtype_ ) { valtype = valtype_ } else { valtype = ValtypeByString@MCIni(stt_stmp) }
 	switch ( valtype )
 		case IniValtype_String: return       (data)
 		case IniValtype_Double: return double(data)
 		case IniValtype_Int:    return    int(data)
 	swend
+#global
+
+#module
+
+#define ctype IniKeyArrayIdx(%1, %2) ((%1) + "#" + (%2))
+#define ctype IniKeyMember(%1, %2) ((%1) + "." + (%2))
+
+/**
+* 配列データを読み出す
+*
+* ini_put_array 命令によって書き込んだ、配列データを読み込みます。
+*
+* @prm (this)
+* @prm dst: 値が書き込まれる配列変数
+* @prm sec: セクション名
+* @prm key: 配列の名前
+*/
+#deffunc ini_get_array var self, array dst, str sec, str key,  \
+	local len, local valtype
+	
+	len     = ini_geti( self, sec, IniKeyMember(key, "$length"),  0 )
+	valtype = ini_geti( self, sec, IniKeyMember(key, "$valtype"), IniValtype_Indeterminate )
+	
+	if ( valtype == IniValtype_Indeterminate ) {
+		valtype = ValtypeByString@MCIni( ini_gets( self, sec, IniKeyArrayIdx(key, 0) ) )
+	}
+	
+	dimtype dst, valtype, len
+	repeat len
+		dst(cnt) = ini_get( self, sec, IniKeyArrayIdx(key, cnt), , valtype )
+	loop
+	return
+	
+/**
+* 配列データを書き込む
+*
+* 配列変数は、str, double, int 型の1次元配列変数にかぎります。
+* データの読み込みには ini_get_array を使用してください。
+*
+* @prm (this)
+* @prm sec: セクション名
+* @prm key: キー名
+* @prm arr: 書き込む配列変数
+*/
+#deffunc ini_put_array var self, str sec, str key, array src,  \
+	local len, local valtype
+	
+	len     = length(src)
+	valtype = vartype(src)
+	
+	ini_puti self, sec, IniKeyMember(key, "$length"),  len
+	ini_puti self, sec, IniKeyMember(key, "$valtype"), valtype
+	
+	repeat len
+		ini_putv self, sec, IniKeyArrayIdx(key, cnt), src(cnt), valtype
+	loop
+	return
 	
 #global
 
