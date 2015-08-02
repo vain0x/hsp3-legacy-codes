@@ -59,10 +59,10 @@
 * @prm key: キー名
 * @prm def: 既定文字列 (キーがないときはこれが返される)
 */
-#define global ini_getsv(%1, %2, %3, %4, %5 = "", %6 = 0) \
-	ini_getsv_ %1, %2, %3, %4, %5, %6
+#define global ini_gets_v(%1, %2, %3, %4, %5 = "", %6 = 0) \
+	ini_gets_v_ %1, %2, %3, %4, %5, %6
 
-#modfunc ini_getsv_ var dst, str sec, str key, str def, int maxlen_,  \
+#modfunc ini_gets_v_ var dst, str sec, str key, str def, int maxlen_,  \
 	local maxlen
 	
 	maxlen = limit(maxlen_, BufCapacity_Default, int_max)
@@ -93,7 +93,7 @@
 #modcfunc ini_gets_ str sec, str key, str def, int maxlen
 	if ( maxlen > BufCapacity_Default ) { memexpand stt_stmp, maxlen + 1 }
 	
-	ini_getsv thismod, stt_stmp, sec, key, def, maxlen
+	ini_gets_v thismod, stt_stmp, sec, key, def, maxlen
 	return stt_stmp
 	
 /**
@@ -131,7 +131,7 @@
 	ini_get_( %1, %2, %3, str(%4), %5 )
 
 #modcfunc ini_get_ str sec, str key, str def, int valtype
-	ini_getsv thismod, stt_stmp, sec, key, def
+	ini_gets_v thismod, stt_stmp, sec, key, def
 	return CastFromString( stt_stmp, valtype )
 	
 /**
@@ -254,7 +254,7 @@
 * @prm dst: セクション名の配列になる配列変数
 * @return: セクションの個数
 */
-#define global ini_enumSection(%1, %2, %3 = 0) \
+#define global ini_enum_sections(%1, %2, %3 = 0) \
 	ini_enum_impl %1, %2, "", %3
 	
 /**
@@ -265,7 +265,7 @@
 * @prm sec: セクション名
 * @return: キーの個数
 */
-#define global ini_enumKey(%1, %2, %3, %4 = 0) \
+#define global ini_enum_keys(%1, %2, %3, %4 = 0) \
 	ini_enum_impl %1, %2, (%3) + " ", %4
 	
 // セクション [] のキーを列挙するとき、セクション名の列挙をリクエストしたと誤認されてしまわないように、名前に空白をくっつけている。この空白は無視されるので問題ない。
@@ -316,13 +316,13 @@
 	
 	logmes "\n(ini_dbglog): @" + path_
 	
-	ini_enumSection thismod, seclist
+	ini_enum_sections thismod, seclist
 	repeat stat : sec = seclist(cnt)
 		buf += strf("[%s]\n", sec)
 		
-		ini_enumKey thismod, keylist, sec
+		ini_enum_keys thismod, keylist, sec
 		repeat stat : key = keylist(cnt)
-			ini_getsv thismod, stmp, sec, key, , BufCapacity_Default
+			ini_gets_v thismod, stmp, sec, key, , BufCapacity_Default
 			buf += "\t" + key + " = \"" + stmp + "\"\n"
 		loop
 		
@@ -342,7 +342,7 @@
 * @return: 指定されたキーがあれば真(0以外)を、なければ偽(0)を返す。
 */
 
-#modcfunc ini_existsKey str sec, str key
+#modcfunc ini_exists_key str sec, str key
 	GetPrivateProfileString sec, key, "__", varptr(stt_stmp), 2, varptr(path_)
 	return ( stat < 2 )
 ;	return ( false == ( ini_geti( thismod, sec, key, 0 ) == 0 && ini_geti( thismod, sec, key, 1 ) == 1 ) )
@@ -358,7 +358,7 @@ GetPrivateProfileString に 既定値("__"), nSize(2) を与えるとき、
 * @prm (this)
 * @prm sec: セクション名
 */
-#modfunc ini_removeSection str sec
+#modfunc ini_remove_section str sec
 	WritePrivateProfileString sec, null, null, varptr(path_)
 	return
 	
@@ -369,7 +369,7 @@ GetPrivateProfileString に 既定値("__"), nSize(2) を与えるとき、
 * @prm sec: セクション名
 * @prm key: キー名
 */
-#modfunc ini_removeKey str sec, str key
+#modfunc ini_remove_key str sec, str key
 	WritePrivateProfileString sec, key, null, varptr(path_)
 	return
 	
@@ -379,7 +379,7 @@ GetPrivateProfileString に 既定値("__"), nSize(2) を与えるとき、
 * @prm (this)
 * @return: ini_new で指定されたパス
 */
-#modcfunc ini_getPath
+#modcfunc ini_get_path
 	return path_
 	
 #global
