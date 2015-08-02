@@ -28,96 +28,123 @@
 
 // @static
 	stt_stmp = ""
-
-//**********************************************************
-//        構築・解体
-//**********************************************************
+	
+/**
+* INIファイルを開く
+*
+* @prm this: 新しいインスタンスが入る配列変数。
+*	ほかの ini_ 系命令や関数を使うとき、これを最初の引数に指定する。
+* @prm path: INIファイルのパス。必ず相対パスで指定すること。
+*/
 #define global ini_new(%1, %2) newmod %1, MCIni@, %2
+
 #modinit str fname
 	mfname = fname
 	
+	//なければ空ファイルを作っておく
 	exist fname
-	if ( strsize < 0 ) { bsave fname, mfname, 0 }	// 空ファイルで作っておく
+	if ( strsize < 0 ) { bsave fname, mfname, 0 }
 	return
 	
 #define global ini_delete(%1) delmod %1
-	
-//**********************************************************
-//        データ読み込み
-//**********************************************************
-#define global ctype ini_get(%1, %2, %3, %4 = "", %5 = 0) ini_get_( %1, %2, %3, str(%4), %5 )
 
-//------------------------------------------------
-// 文字列 ( sttm-form )
-// 
-// @prm (this)
-// @prm dst : 受け取り変数
-// @prm sec : セクション名
-// @prm key : キー名
-// @prm def : 既定文字列 ( キーが存在しないとき )
-// @prm max : 最大文字列長 (0 => 拡張可能)
-//------------------------------------------------
-#define global ini_getsv(%1, %2, %3, %4, %5 = "", %6 = 0) ini_getsv_ %1, %2, %3, %4, %5, %6
-#modfunc ini_getsv_ var dst, str sec, str key, str def, int maxlen_,  local maxlen
-	maxlen  = limit(maxlen_, BufCapacity_Default, 0x7FFFFFFF)		// 下限を設定して複写
+/**
+* 文字列データを読み出す (命令形式)
+*
+* @param (this)
+* @prm dst: 値が書き込まれる変数
+* @prm sec: セクション名
+* @prm key: キー名
+* @prm def: 既定文字列 (キーがないときはこれが返される)
+*/
+#define global ini_getsv(%1, %2, %3, %4, %5 = "", %6 = 0) \
+	ini_getsv_ %1, %2, %3, %4, %5, %6
+
+#modfunc ini_getsv_ var dst, str sec, str key, str def, int maxlen_,  \
+	local maxlen
 	
+	maxlen = limit(maxlen_, BufCapacity_Default, 0x7FFFFFFF)
 	do
 		if ( maxlen > BufCapacity_Default ) { memexpand stt_stmp, maxlen + 1 }
 		
 		GetPrivateProfileString sec, key, def, varptr(stt_stmp), maxlen, varptr(mfname)
 		
-		if ( maxlen_ <= 0 && stat == maxlen - 1 ) {		// バッファが足りなかった
-			maxlen += maxlen / 2						// 1.5倍に広げて再チャレンジ
+		if ( maxlen_ <= 0 && stat == maxlen - 1 ) { // バッファが足りなかった
+			maxlen += maxlen / 2
 			_continue
 		}
 	until true
-	
 	dst = stt_stmp
 	return
 	
-//------------------------------------------------
-// 文字列 ( func-form )
-// 
-// @prm (ini_getsv: dst 以外)
-//------------------------------------------------
-#define global ctype ini_gets(%1, %2, %3, %4 = "", %5 = BufCapacity_Default@MCIni) ini_gets_(%1, %2, %3, %4, %5)
+/**
+* 文字列データを読み出す
+*
+* @prm (this)
+* @prm sec: セクション名
+* @prm key: キー名
+* @prm def: 既定文字列 (キーがないときはこれが返される)
+*/
+#define global ctype ini_gets(%1, %2, %3, %4 = "", %5 = BufCapacity_Default@MCIni) \
+	ini_gets_(%1, %2, %3, %4, %5)
+
 #modcfunc ini_gets_ str sec, str key, str def, int maxlen
 	if ( maxlen > BufCapacity_Default ) { memexpand stt_stmp, maxlen + 1 }
 	
 	ini_getsv thismod, stt_stmp, sec, key, def, maxlen
 	return stt_stmp
 	
-//------------------------------------------------
-// 実数 ( func-form )
-//------------------------------------------------
+/**
+* 実数値データを読み出す
+*
+* @prm (this)
+* @prm sec: セクション名
+* @prm key: キー名
+* @prm def: 既定値 (キーがないときはこの値が返される)
+*/
 #modcfunc ini_getd str sec, str key, double def
 	GetPrivateProfileString sec, key, str(def), varptr(stt_stmp), 32, varptr(mfname)
 	return double(stt_stmp)
 	
-//------------------------------------------------
-// 整数 ( func-form )
-//------------------------------------------------
-#define global ctype ini_geti(%1, %2, %3, %4 = 0) ini_geti_( %1, %2, %3, %4 )
+/**
+* 整数値データを読み出す
+*
+* @prm (this)
+* @prm sec: セクション名
+* @prm key: キー名
+* @prm def: 既定値 (キーがないときはこの値が返される)
+*/
 #modcfunc ini_geti_ str sec, str key, int def
 	return GetPrivateProfileInt( sec, key, def, varptr(mfname) )
 	
-//------------------------------------------------
-// any ( func-form )
-//------------------------------------------------
-// ini_get
+/**
+* 任意の型のデータを読み出す
+*
+* @prm (this)
+* @prm sec: セクション名
+* @prm key: キー名
+* @prm def: 既定文字列 (キーがないときはこれが返される)
+*/
+#define global ctype ini_get(%1, %2, %3, %4 = "", %5 = 0) \
+	ini_get_( %1, %2, %3, str(%4), %5 )
+
 #modcfunc ini_get_ str sec, str key, str def, int valtype
 	ini_getsv thismod, stt_stmp, sec, key, def
 	return CastFromString( stt_stmp, valtype )
 	
-//------------------------------------------------
-// 配列
-// 
-// @prm (this)
-// @prm dst : 受け取り変数 (配列として初期化される)
-// @prm sec : セクション名
-// @prm key : キー名 (配列名)
-//------------------------------------------------
-#modfunc ini_getArray array dst, str sec, str key,  local len, local valtype
+/**
+* 配列データを読み出す
+*
+* ini_putArray 命令によって書き込んだ、配列データを読み込みます。
+*
+* @prm (this)
+* @prm dst: 値が書き込まれる配列変数
+* @prm sec: セクション名
+* @prm key: 配列の名前
+*/
+#modfunc ini_getArray array dst, str sec, str key,  \
+	local len, local valtype
+	
 	len     = ini_geti( thismod, sec, IniKeyMember(key, "$length"),  0 )
 	valtype = ini_geti( thismod, sec, IniKeyMember(key, "$valtype"), IniValtype_Indeterminate )
 	
@@ -126,41 +153,64 @@
 	}
 	
 	dimtype dst, valtype, len
-	
 	repeat len
 		dst(cnt) = ini_get( thismod, sec, IniKeyArrayIdx(key, cnt), , valtype )
 	loop
-	
 	return
 	
-//**********************************************************
-//        データ書き込み
-//**********************************************************
-//------------------------------------------------
-// 文字列
-//------------------------------------------------
+/**
+* 文字列データを書き込む
+*
+* データを文字列として書き込みます。
+*
+* @prm (this)
+* @prm sec: セクション名
+* @prm key: キー名
+* @prm value: 書き込むデータ
+*/
 #modfunc ini_puts str sec, str key, str data
 	WritePrivateProfileString sec, key, "\"" + data + "\"", varptr(mfname)
 	return
 	
-//------------------------------------------------
-// 実数 (有効数字16桁)
-//------------------------------------------------
+/**
+* 実数値データを書き込む
+*
+* 有効数字16桁で書き込まれます。
+*
+* @prm (this)
+* @prm sec: セクション名
+* @prm key: キー名
+* @prm value: 書き込むデータ
+*/
 #modfunc ini_putd str sec, str key, double data
 	WritePrivateProfileString sec, key, strf("%.16e", data), varptr(mfname)
 	return
 	
-//------------------------------------------------
-// 整数
-//------------------------------------------------
+/**
+* 整数値データを書き込む
+*
+* @prm (this)
+* @prm sec: セクション名
+* @prm key: キー名
+* @prm value: 書き込むデータ
+*/
 #modfunc ini_puti str sec, str key, int data
 	WritePrivateProfileString sec, key, str(data), varptr(mfname)
 	return
 	
-//------------------------------------------------
-// any
-//------------------------------------------------
-#define global ini_put(%1, %2, %3, %4, %5 = 0) stt_tmp@MCIni = (%4) : ini_putv %1, %2, %3, stt_tmp@MCIni, %5
+/**
+* 指定した型のデータを書き込む
+*
+* @prm (this)
+* @prm sec: セクション名
+* @prm key: キー名
+* @prm value: 書き込むデータ
+* @param valtype: データの型 (省略時は、value の型が使用されます)
+*/
+#define global ini_put(%1, %2, %3, %4, %5 = 0) \
+	stt_tmp@MCIni = (%4) :\
+	ini_putv %1, %2, %3, stt_tmp@MCIni, %5
+
 #modfunc ini_putv str sec, str key, var data, int valtype_,  local valtype
 	if ( valtype_ ) { valtype = valtype_ } else { valtype = ValtypeByString(str(data)) }
 	switch ( valtype )
@@ -170,12 +220,20 @@
 	swend
 	return
 	
-//------------------------------------------------
-// 配列
-// 
-// @ str, double, int 型のみ書き込める。
-//------------------------------------------------
-#modfunc ini_putArray str sec, str key, array src,  local len, local valtype
+/**
+* 配列データを書き込む
+*
+* 配列変数は、str, double, int 型の1次元配列変数にかぎります。
+* データの読み込みには ini_getArray を使用してください。
+*
+* @prm (this)
+* @prm sec: セクション名
+* @prm key: キー名
+* @prm arr: 書き込む配列変数
+*/
+#modfunc ini_putArray str sec, str key, array src,  \
+	local len, local valtype
+	
 	len     = length(src)
 	valtype = vartype(src)
 	
@@ -185,31 +243,37 @@
 	repeat len
 		ini_putv thismod, sec, IniKeyArrayIdx(key, cnt), src(cnt), valtype
 	loop
-	
 	return
 	
-//**********************************************************
-//        列挙
-//**********************************************************
-//------------------------------------------------
-// 列挙
-// 
-// @prm (this)
-// @prm dst      : 受け取り変数 (配列化)
-// @prm [sec]    : セクション名
-// @prm [maxlen] : 最大読み取りサイズ (0 => 拡張可能)
-// @return 列挙子数
-// @ enumKey のセクションに "" を渡した時、enumSection と勘違いされないために、
-// @	末尾に半角スペース " " が自動的に追加される (APIには無視される)。
-//------------------------------------------------
-#define global ini_enumSection(%1, %2, %3 = 0) ini_enum_impl %1, %2, "", %3
-#define global ini_enumKey(%1, %2, %3, %4 = 0) ini_enum_impl %1, %2, (%3) + " ", %4
+/**
+* セクションの列挙
+* 
+* @prm (this)
+* @prm dst: セクション名の配列になる配列変数
+* @return: セクションの個数
+*/
+#define global ini_enumSection(%1, %2, %3 = 0) \
+	ini_enum_impl %1, %2, "", %3
+	
+/**
+* キーの列挙
+*
+* @prm (this)
+* @prm dst: キー名の配列になる配列変数
+* @prm sec: セクション名
+* @return: キーの個数
+*/
+#define global ini_enumKey(%1, %2, %3, %4 = 0) \
+	ini_enum_impl %1, %2, (%3) + " ", %4
+	
+// セクション [] のキーを列挙するとき、セクション名の列挙をリクエストしたと誤認されてしまわないように、名前に空白をくっつけている。この空白は無視されるので問題ない。
 
-#modfunc ini_enum_impl array dst, str sec_, int maxlen_,  local maxlen, local pSec, local sec
-	maxlen = limit(maxlen_, BufCapacity_Default, 0x7FFFFFFF)		// 下限を設定して複写
+#modfunc ini_enum_impl array dst, str sec_, int maxlen_,  \
+	local maxlen, local pSec, local sec
+	
+	maxlen = limit(maxlen_, BufCapacity_Default, 0x7FFFFFFF)
 	
 	if ( sec_ == "" ) { pSec = null } else { sec = sec_ : pSec = varptr(sec) }
-	
 	do
 		if ( maxlen > BufCapacity_Default ) { memexpand stt_stmp, maxlen + 1 }
 		
@@ -221,7 +285,7 @@
 		}
 	until true
 	
-	SplitByNull dst, stt_stmp, stat			// 配列化
+	SplitByNull dst, stt_stmp, stat
 	return ;stat
 	
 // cnv: '\0' 区切り文字列 -> 配列
@@ -237,80 +301,90 @@
 	return length(dst) - (idx <= 1)			// 要素数; ただし dst[0] が空のとき 0
 	
 #ifdef _DEBUG
-// すべてのセクションのキーを列挙しデバッグ出力する
- #modfunc ini_dbglogv var buf,  local seclist, local sec, local keylist, local key, local stmp
+/**
+* すべてのキー・値の対を列挙する。 (デバッグ用)
+*/
+#modfunc ini_dbglog  local buf
+ 	ini_dbglogv thismod, buf
+ 	logmes buf
+ 	return
+ 
+#modfunc ini_dbglogv var buf,  \
+	local seclist, local sec, local keylist, local key, local stmp
+	
 	logmes "\n(ini_dbglog): @" + mfname
 	
-	sdim buf
-	sdim seclist
-	sdim keylist
-	sdim stmp
-	
-	ini_enumSection thismod, seclist			// セクションを列挙
+	ini_enumSection thismod, seclist
 	repeat stat : sec = seclist(cnt)
 		buf += strf("[%s]\n", sec)
 		
-		ini_enumKey thismod, keylist, sec		// キーを列挙
+		ini_enumKey thismod, keylist, sec
 		repeat stat : key = keylist(cnt)
 			ini_getsv thismod, stmp, sec, key, , BufCapacity_Default
 			buf += "\t" + key + " = \"" + stmp + "\"\n"
 		loop
 		
 	loop
-	
 	return
-	
- #modfunc ini_dbglog  local buf
- 	ini_dbglogv thismod, buf
- 	logmes buf
- 	return
 #else
  #define global ini_dbglog :
  #define global ini_dbglogv :
-#endif
-	
-//**********************************************************
-//        その他の操作
-//**********************************************************
-//------------------------------------------------
-// キーの有無
-// 
-// @ GetPrivateProfileString に 既定値("__"), nSize(2) を与えるとき、
-// @	キーが存在すれば返値 1 or 0、しなければ 2 となる。
-//------------------------------------------------
+#endif //defined(_DEBUG)
+
+/**
+* キーが存在するか？
+*
+* @prm (this)
+* @prm sec: セクション名
+* @prm key: キー名
+* @return: 指定されたキーがあれば真(0以外)を、なければ偽(0)を返す。
+*/
+
 #modcfunc ini_existsKey str sec, str key
 	GetPrivateProfileString sec, key, "__", varptr(stt_stmp), 2, varptr(mfname)
 	return ( stat < 2 )
 ;	return ( false == ( ini_geti( thismod, sec, key, 0 ) == 0 && ini_geti( thismod, sec, key, 1 ) == 1 ) )
 	
-//------------------------------------------------
-// セクション除去
-//------------------------------------------------
+/*
+GetPrivateProfileString に 既定値("__"), nSize(2) を与えるとき、
+キーが存在すれば返値 1 or 0、しなければ 2 となる。
+//*/
+
+/**
+* セクションを除去する
+*
+* @prm (this)
+* @prm sec: セクション名
+*/
 #modfunc ini_removeSection str sec
 	WritePrivateProfileString sec, null, null, varptr(mfname)
 	return
 	
-//------------------------------------------------
-// キー除去
-//------------------------------------------------
+/**
+* キーを除去する
+*
+* @prm (this)
+* @prm sec: セクション名
+* @prm key: キー名
+*/
 #modfunc ini_removeKey str sec, str key
 	WritePrivateProfileString sec, key, null, varptr(mfname)
 	return
 	
-//------------------------------------------------
-// ファイルパスを得る
-//------------------------------------------------
+/**
+* INIファイルパス
+*
+* @prm (this)
+* @return: ini_new で指定されたパス
+*/
 #modcfunc ini_getPath
 	return mfname
+	
+#global
 
-//**********************************************************
-//        その他
-//**********************************************************
-//------------------------------------------------
-// 型を判定する (from 文字列)
-// 
-// @ 0x* などには未対応
-//------------------------------------------------
+#module
+// 文字列が表すデータの型を推定する
+// 16進数形式の整数値などには未対応
 #defcfunc ValtypeByString@MCIni str data
 	if ( data == int(data) ) { return IniValtype_Int }
 	if ( double(data) != 0 ) {
@@ -322,9 +396,7 @@
 	data = data_
 	return ( instr(data, , ".") >= 0 || instr(data, , "e") >= 0 )
 	
-//------------------------------------------------
-// 型変換 (from str)
-//------------------------------------------------
+// 文字列から指定した型に型変換する
 #defcfunc CastFromString@MCIni str data, int valtype_,  local valtype
 	if ( valtype_ ) { valtype = valtype_ } else { valtype = ValtypeByString(stt_stmp) }
 	switch ( valtype )
@@ -336,317 +408,5 @@
 #global
 
 	sdim stt_stmp@MCIni, BufCapacity_Default@MCIni + 1
-	
-//##############################################################################
-//                サンプル・スクリプト
-//##############################################################################
-// #1 対話的な簡易 ini エディタ
-#if 0
-	gsel 0, -1
-	gosub *LInitScreen
-	gsel 0, 1
-	
-	gosub *LInitResource
-	
-	// 既定ファイルを開く (必須)
-	textPath = "C:/appdata.ini"
-	gosub *LOpen
-	stop
-	
-*LInitScreen
-	screen 0, 480, 320
-	title "ini-file interactive editor β"
-	syscolor 15 : boxf : color
-	
-	font msgothic, 12
-	objmode 2
-	
-	sdim textPath
-	sdim textSection
-	sdim textKey
-	sdim textVal
-	sdim textMsgbox
-	sdim textDefault
-	
-	y = 5
-	objsize 30, 20
-	pos   5, y : button gosub "...", *LFileSelect
-	pos  40, y : input textPath, ginfo_winx - 45, 20 : objidPath = stat
-	y += 25
-	
-	objsize 60, 20
-	pos   7, y + 4 : mes "Section: [                  ]"
-	pos  70, y : input textSection, 100, 20 : objidSection = stat
-	y += 25
-	
-	pos   7, y + 5 : mes "Key: "
-	pos  60, y : input textKey, 80, 20 : objidKey = stat
-	pos 150, y + 5 : mes "="
-	pos 165, y : input textVal, 150, 20 : objidVal = stat
-	y += 25
-	
-	objsize 40, 20
-	pos   5, y : button gosub "get", *LGet
-	pos  50, y : button gosub "put", *LPut
-	objsize 60, 20
-	pos  95, y : button gosub "exists", *LExistsKey
-	pos 160, y : button gosub "remove", *LRemoveKey
-	pos 225, y : button gosub "dbglog", *LDbglog
-	y += 25
-	
-	y = 5 + 25	// section の右側
-	pos 350, y : button gosub "enum",   *LEnum : objidBtnEnumSection = stat
-	pos 415, y : button gosub "remove", *LRemoveSection
-	
-	y += 25		// key の右側
-	pos 350, y : button gosub "enum",   *LEnum
-	pos 415, y : button gosub "remove", *LRemoveSection
-	
-	y = 5 + 25 * 4
-	pos 5, y : mesbox textMsgbox, ginfo_winx - 5 * 2, ginfo_winy - (y + 5), 4 : objidMsgbox = stat
-	return
-	
-*LInitResource
-	textSucceedOrNot = "失敗", "成功"
-	textExistOrNot = "存在しない", "存在する"
-	textEmptyOrNot   = "非空", "空"
-	return
-	
-*LFileSelect
-	dialog "ini;*.cfg", 16, "構造設定ファイル"
-	if ( stat == 0 ) { return }
-	textPath = refstr
-	
-	gosub *LClose
-	gosub *LOpen
-	return
-	
-*LOpen
-	ini_new cfg, textPath
-	bEmpty = (strsize <= 0)
-	AddLog "open { Path: \"" + textPath + "\" }", textEmptyOrNot(bEmpty)
-	objprm objidPath, textPath
-	
-	if ( bEmpty == 0 ) { gosub *LDbglog }		// 中身があるなら出力する
-	return
-	
-*LClose
-	AddLog "close { Path: \"" + ini_getPath(cfg) + "\" }", ""
-	ini_delete cfg
-	return
-	
-*LPut
-	ini_put cfg, textSection, textKey, textVal
-	
-	AddLog "put { Section: [" + textSection + "], Key: \"" + textKey + "\" }", textVal
-	return
-	
-*LGet
-	bExists = ini_existsKey(cfg, textSection, textKey)
-	if ( bExists ) {
-		textVal = ini_gets(cfg, textSection, textKey)
-	} else {
-		textVal = "(存在しない)"
-	}
-	objprm objidVal, textVal
-	
-	AddLog "get { Section: [" + textSection + "], Key: \"" + textKey + "\" }", textVal
-	return
-	
-*LExistsKey
-	bExists = ini_existsKey(cfg, textSection, textKey)
-	AddLog "existsKey { Section: [" + textSection + "], Key: \"" + textKey + "\" }", textExistOrNot(bExists)
-	return
-	
-*LRemoveSection
-	ini_removeSection cfg, textSection
-	dialog "removeSection { Section: [" + textSection + "] }", textSucceedOrNot(stat == 0)
-	return
-	
-*LRemoveKey
-	bExists = ini_existsKey(cfg, textSection, textKey)
-	
-	ini_removeKey cfg, textSection, textKey
-	AddLog "removeKey { Section: [" + textSection + "], Key: \"" + textKey + "\" }", textExistOrNot(bExists)
-	return
-	
-*LEnum
-	bSection = (stat == objidBtnEnumSection)
-	
-	buf = ""
-	if ( bSection ) {
-		ini_enumSection cfg, list
-	} else {
-		ini_enumKey cfg, list, textSection
-	}
-	if ( stat == 0 ) {
-		buf = "(none)"
-	} else {
-		repeat stat : buf += list(cnt) + "\n" : loop
-	}
-	
-	if ( bSection ) {
-		AddLog "enumSection", buf
-	} else {
-		AddLog "enumKey { Section: [" + textSection + "] }", buf
-	}
-	return
-	
-*LDbglog
-	ini_dbglogv cfg, buf
-	AddLog "dbglog", buf
-	return
-	
-#deffunc AddLog str cmd, str text
-	textMsgbox += ">> " + cmd + "\n"
-	if ( text != "" ) {
-		textMsgbox += text
-		if ( strmid(textMsgbox, strlen(textMsgbox) - 2, 2) != "\n" ) {
-			textMsgbox += "\n"
-		}
-	}
-	objprm objidMsgbox, textMsgbox
-	
-	// 一番下までスクロールする
-	sendmsg objinfo(objidMsgbox, 2), 0x00BA, 0, 0		// EM_GETLINECOUNT (行数を得る)
-	sendmsg objinfo(objidMsgbox, 2), 0x00B6, 0, stat 	// EM_LINESCROLL (指定行数だけスクロールする)
-	return
-	
-#endif
 
-// #2 読み書き
-#if 0
-
-	ini_new cfg, "C:/appdata.ini"	// 開く ini ファイルをパスで指定します。なかったら作成します。
-//	( strsize = 開いたiniファイルのサイズ ; 負数 => なかったので作った )
-	
-	// 読み込みのサンプル
-	
-		x = ini_geti( cfg, "appdata", "x" )		// [appdata] のキー x の値を取り出す
-		mes "x = " + x
-	
-	// 書き込みのサンプル
-	
-		ini_puti cfg, "appdata", "WinX", ginfo_winx	// [appdata] のキー WinX に ginfo_winx の値を書き込む
-		ini_puti cfg, "appdata", "WinY", ginfo_winy
-		
-		ini_puts cfg, "appdata", "Text", "Hello, world!"	// 文字列を書き込む
-		
-		ini_putd cfg, "constance", "pi", M_PI		// 実数値(double)を書き込む
-		
-	// 配列の読み書き
-		srcArr = 1, 2, 3, 4, 5
-		ini_putArray cfg, "array", "test", srcArr	// srcArr を書き込む
-		
-		ini_getArray cfg, dstArr, "Array", "test"	// dstArr に読み込む
-		repeat stat
-			mes IniKeyArrayIdx("test", cnt) + " = " + dstArr(cnt)
-		loop
-		
-	// デバッグ用の出力命令を試す
-		
-		ini_dbglog cfg			// logmes に全ての情報が書き出される
-		
-	stop
-	
-#endif
-
-/***
-
-＠リファレンス
-
-＊INIに関して
-	・セクション名、キー名、ファイルパスは、半角アルファベットの大文字・小文字を区別しません。
-	・キー名や値の、先頭および末尾にある空白は無視されます (改行を除く)。
-		ただし、キー名や値の全体を "" で括ると、その内部の空白は維持されます (キーは " " を含みます)。
-		ex: { x = 3 } ⇔ (key: 'x', value: '3')
-		ex: { " x " = " string " } ⇔ (key: '" x "', value: ' string ')
-	・整数値 0x... は、16進数として扱います。
-		ただし、0... としてこれを8進数とする機能はありません。
-	・行末コメントはセミコロン ; だけです。ナンバーサイン # やＷスラッシュ // は有効な記号です。
-		まぁ、セクションでもキーでもない場所は意味ないわけですが。
-	・拡張子は .ini か .cfg が一般的です。
-	
-	・Win32 API の関数を用いて操作すると楽。
-		WritePrivateProfileString
-		GetPrivateProfileString
-		GetPrivateProfileInt
-	
-＊生成、解体
-	・ini_new self, "ファイルパス"
-	
-	ini ファイルを開きます (比喩)。なかったら空のファイルを作ります。
-	パスにはファイル名ではなく、絶対パスか相対パスを指定してください
-	(例："./cfg.ini", "D:/application/config.ini", etc)。
-	
-	直後の strsize の値は、そのファイルのファイルサイズを示します。
-	
-	・ini_delete self
-	
-	ini ファイルを閉じます。
-	ファイルを削除するわけではありせん。
-	普通、使用する必要はありません。
-	
-＊書き込み
-	・ini_puts self, "sec", "key", "value"
-	
-	セクション "sec" のキー "key" の値を、文字列 value に設定します。
-	
-	・ini_puti self, "sec", "key", value
-	・ini_putd self, "sec", "key", value
-	
-	セクション "sec" のキー "key" の値を、value の文字列表記に設定します。
-	value の型は問いませんが、必ず文字列として書き込まれます。
-	
-	・ini_put self, "sec", "key", value
-	
-	この命令は、value の型によらず使用することができます。
-	
-＊読み込み
-	・ini_getsv self, dst, "sec", "key", "default", maxlen
-	
-	セクション "sec" のキー "key" の値を、文字列として変数 dst に格納します。
-	( 内容が int でも、文字列型のまま格納されます。 )
-	maxlen は、読み込む文字列の最大の長さです。通常は 1023 [byte] ですが、それ以上が必要な
-	場合は省略せずに指定してください。
-	指定したキーが存在しない場合は、"default"の値が返ります。省略すると "" (空文字列)です。
-	
-	・ini_geti( self, "sec", "key", default )
-	
-	セクション "sec" のキー "key" の値を、数値として読み出して返します。
-	指定したキーが存在しない場合、default の値が返ります。省略すると 0 です。
-	
-	・ini_gets( self, "sec", "key", "default", maxlen )
-	
-	ini_getsv の関数形式です。maxlen は、省略すると 1023 [byte] になります。
-	
-	・ini_get( self, "sec", "key", value )
-	
-	この命令は、value の型によらず使用することができます。
-	値に適切な型を自動的に判定し、それに変換して返却されます。
-	例えば "42" なら int(42) 、"3.14159" なら double(3.14159) が返却されます。
-	
-＊INIデータの削除
-	・ini_removeSection self, "sec"
-	
-	セクション "sec" を削除します。元に戻せません。
-	
-	・ini_removeKey self, "sec", "key"
-	
-	セクション "sec" のキー "key" を削除します。元に戻せません。
-	
-＊その他
-	・ini_existsKey( self, "sec", "key" )
-	
-	セクション "sec" のキー "key" が存在するかどうか。存在するなら真を返します。
-	@ 値のないキー ("key=" だけ) は、存在しないものとして扱われます。
-	
-	・ini_putArray self,      "sec", "key", arr
-	・ini_getArray self, dst, "sec", "key"
-	
-	配列変数を ini で読み書きする命令です。
-	各要素を読み書きする場合は、この "key" に対して IniKeyArrayIdx("key", idx) という名前のキーを用いて
-	通常の ini_put や ini_get を利用してください。
-	
-***/
 #endif
