@@ -3,7 +3,7 @@
 #ifndef IG_MODULECLASS_INI_AS
 #define IG_MODULECLASS_INI_AS
 
-#module MCIni mfname
+#module MCIni path_
 
 #uselib "kernel32.dll"
 #func   WritePrivateProfileString "WritePrivateProfileStringA" sptr,sptr,sptr,sptr
@@ -41,11 +41,11 @@
 #define global ini_new(%1, %2) newmod %1, MCIni@, %2
 
 #modinit str fname
-	mfname = fname
+	path_ = fname
 	
 	//なければ空ファイルを作っておく
 	exist fname
-	if ( strsize < 0 ) { bsave fname, mfname, 0 }
+	if ( strsize < 0 ) { bsave fname, path_, 0 }
 	return
 	
 #define global ini_delete(%1) delmod %1
@@ -69,7 +69,7 @@
 	do
 		if ( maxlen > BufCapacity_Default ) { memexpand stt_stmp, maxlen + 1 }
 		
-		GetPrivateProfileString sec, key, def, varptr(stt_stmp), maxlen, varptr(mfname)
+		GetPrivateProfileString sec, key, def, varptr(stt_stmp), maxlen, varptr(path_)
 		
 		if ( maxlen_ <= 0 && stat == maxlen - 1 ) { // バッファが足りなかった
 			maxlen += maxlen / 2
@@ -105,7 +105,7 @@
 * @prm def: 既定値 (キーがないときはこの値が返される)
 */
 #modcfunc ini_getd str sec, str key, double def
-	GetPrivateProfileString sec, key, str(def), varptr(stt_stmp), 32, varptr(mfname)
+	GetPrivateProfileString sec, key, str(def), varptr(stt_stmp), 32, varptr(path_)
 	return double(stt_stmp)
 	
 /**
@@ -117,7 +117,7 @@
 * @prm def: 既定値 (キーがないときはこの値が返される)
 */
 #modcfunc ini_geti_ str sec, str key, int def
-	return GetPrivateProfileInt( sec, key, def, varptr(mfname) )
+	return GetPrivateProfileInt( sec, key, def, varptr(path_) )
 	
 /**
 * 任意の型のデータを読み出す
@@ -171,7 +171,7 @@
 * @prm value: 書き込むデータ
 */
 #modfunc ini_puts str sec, str key, str data
-	WritePrivateProfileString sec, key, "\"" + data + "\"", varptr(mfname)
+	WritePrivateProfileString sec, key, "\"" + data + "\"", varptr(path_)
 	return
 	
 /**
@@ -185,7 +185,7 @@
 * @prm value: 書き込むデータ
 */
 #modfunc ini_putd str sec, str key, double data
-	WritePrivateProfileString sec, key, strf("%.16e", data), varptr(mfname)
+	WritePrivateProfileString sec, key, strf("%.16e", data), varptr(path_)
 	return
 	
 /**
@@ -197,7 +197,7 @@
 * @prm value: 書き込むデータ
 */
 #modfunc ini_puti str sec, str key, int data
-	WritePrivateProfileString sec, key, str(data), varptr(mfname)
+	WritePrivateProfileString sec, key, str(data), varptr(path_)
 	return
 	
 /**
@@ -279,7 +279,7 @@
 	do
 		if ( maxlen > BufCapacity_Default ) { memexpand stt_stmp, maxlen + 1 }
 		
-		GetPrivateProfileString pSec, null, null, varptr(stt_stmp), maxlen, varptr(mfname)
+		GetPrivateProfileString pSec, null, null, varptr(stt_stmp), maxlen, varptr(path_)
 		
 		if ( maxlen_ <= 0 && stat == maxlen - 2 ) {		// バッファが足りなかった
 			maxlen += maxlen / 2						// 1.5倍に広げて再チャレンジ
@@ -314,7 +314,7 @@
 #modfunc ini_dbglogv var buf,  \
 	local seclist, local sec, local keylist, local key, local stmp
 	
-	logmes "\n(ini_dbglog): @" + mfname
+	logmes "\n(ini_dbglog): @" + path_
 	
 	ini_enumSection thismod, seclist
 	repeat stat : sec = seclist(cnt)
@@ -343,7 +343,7 @@
 */
 
 #modcfunc ini_existsKey str sec, str key
-	GetPrivateProfileString sec, key, "__", varptr(stt_stmp), 2, varptr(mfname)
+	GetPrivateProfileString sec, key, "__", varptr(stt_stmp), 2, varptr(path_)
 	return ( stat < 2 )
 ;	return ( false == ( ini_geti( thismod, sec, key, 0 ) == 0 && ini_geti( thismod, sec, key, 1 ) == 1 ) )
 	
@@ -359,7 +359,7 @@ GetPrivateProfileString に 既定値("__"), nSize(2) を与えるとき、
 * @prm sec: セクション名
 */
 #modfunc ini_removeSection str sec
-	WritePrivateProfileString sec, null, null, varptr(mfname)
+	WritePrivateProfileString sec, null, null, varptr(path_)
 	return
 	
 /**
@@ -370,7 +370,7 @@ GetPrivateProfileString に 既定値("__"), nSize(2) を与えるとき、
 * @prm key: キー名
 */
 #modfunc ini_removeKey str sec, str key
-	WritePrivateProfileString sec, key, null, varptr(mfname)
+	WritePrivateProfileString sec, key, null, varptr(path_)
 	return
 	
 /**
@@ -380,7 +380,7 @@ GetPrivateProfileString に 既定値("__"), nSize(2) を与えるとき、
 * @return: ini_new で指定されたパス
 */
 #modcfunc ini_getPath
-	return mfname
+	return path_
 	
 #global
 
