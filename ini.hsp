@@ -13,6 +13,7 @@
 #define true  1
 #define false 0
 #define null  0
+#define int_max 0x7FFFFFFF
 
 #enum global IniValtype_None = 0
 #enum global IniValtype_Indeterminate = 0
@@ -63,7 +64,7 @@
 #modfunc ini_getsv_ var dst, str sec, str key, str def, int maxlen_,  \
 	local maxlen
 	
-	maxlen = limit(maxlen_, BufCapacity_Default, 0x7FFFFFFF)
+	maxlen = limit(maxlen_, BufCapacity_Default, int_max)
 	do
 		if ( maxlen > BufCapacity_Default ) { memexpand stt_stmp, maxlen + 1 }
 		
@@ -271,7 +272,7 @@
 #modfunc ini_enum_impl array dst, str sec_, int maxlen_,  \
 	local maxlen, local pSec, local sec
 	
-	maxlen = limit(maxlen_, BufCapacity_Default, 0x7FFFFFFF)
+	maxlen = limit(maxlen_, BufCapacity_Default, int_max)
 	
 	if ( sec_ == "" ) { pSec = null } else { sec = sec_ : pSec = varptr(sec) }
 	do
@@ -392,7 +393,7 @@ GetPrivateProfileString に 既定値("__"), nSize(2) を与えるとき、
 	}
 	return IniValtype_String
 	
-#defcfunc IsDoubleImpl@MCIni str data_, local data
+#defcfunc IsDoubleImpl str data_, local data
 	data = data_
 	return ( instr(data, , ".") >= 0 || instr(data, , "e") >= 0 )
 	
