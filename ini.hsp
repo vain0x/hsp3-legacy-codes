@@ -1,7 +1,7 @@
 // ini 管理モジュールクラス
 
-#ifndef IG_MODULECLASS_INI_AS
-#define IG_MODULECLASS_INI_AS
+#ifndef IG_MODULECLASS_INI_HSP
+#define IG_MODULECLASS_INI_HSP
 
 #module MCIni path_
 
