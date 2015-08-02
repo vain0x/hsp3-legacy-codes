@@ -221,13 +221,12 @@
 */
 #modfunc ini_dbglog  local buf
  	ini_dbglogv thismod, buf
+	logmes "\n(ini_dbglog): @" + path_
  	logmes buf
  	return
  
 #modfunc ini_dbglogv var buf,  \
 	local seclist, local sec, local keylist, local key, local stmp
-	
-	logmes "\n(ini_dbglog): @" + path_
 	
 	ini_enum_sections thismod, seclist
 	repeat stat : sec = seclist(cnt)
