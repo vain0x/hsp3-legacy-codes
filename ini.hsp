@@ -17,6 +17,17 @@
 
 #define BufCapacity_Default 1023
 
+//下位互換用
+#define global ini_getsv         ini_gets_v
+#define global ini_existsKey     ini_exists_key
+#define global ini_enumSection   ini_enum_sections
+#define global ini_enumKey       ini_enum_keys
+#define global ini_removeSection ini_remove_section
+#define global ini_removekey     ini_remove_key
+#define global ini_getPath       ini_get_path
+#define global ini_getArray      ini_get_array
+#define global ini_putArray      ini_put_array
+
 #ifdef _DEBUG //警告避け
 	sdim stt_stmp
 #endif
