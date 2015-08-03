@@ -33,7 +33,7 @@
 	
 	//無視リスト
 	declvar paths_ignored
-	ini_get_sorted_array cfg, paths_ignored, "Setting", "paths_ignored"
+	ini_get_array cfg, paths_ignored, "Setting", "paths_ignored"
 	
 	//アップデート起動前のフォルダ構成を記憶
 	declvar paths_old_files

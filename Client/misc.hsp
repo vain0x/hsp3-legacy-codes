@@ -50,22 +50,6 @@
 		return -1
 	}
 	
-#deffunc ini_get_sorted_array var self, array arr, str sec, str name,  \
-	local n
-	
-	ini_get_array self, arr, sec, name
-	sortstr arr
-	
-	//–¢®—ñ‚¾‚Á‚½‚ç®—ñÏ‚İ‚Ì”z—ñ‚Åã‘‚«
-	repeat length(arr)
-		sortget n, cnt
-		if ( n != cnt ) {
-			ini_put_array self, sec, name, arr
-			break
-		}
-	loop
-	return
-	
 #global
 
 #endif
