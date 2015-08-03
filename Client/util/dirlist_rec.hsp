@@ -1,0 +1,44 @@
+#ifndef IG_DIRLIST_REC_HSP
+#define IG_DIRLIST_REC_HSP
+
+#module
+
+/**
+* 再帰的にファイルを検索する
+*
+* ファイル名はすべて dir からの相対パスで記録される。
+*
+* @prm arr: ファイル名の一覧を保存する配列
+* @prm dir: 検索するディレクトリ
+* @prm wild_card: ファイルを検索するときのワイルドカード
+*/
+#deffunc dirlist_rec array res, str dir_root, str wild_card
+	sdim res
+	dirlist_rec_impl res, 0, dir_root + "/", "", wild_card
+	return
+	
+#deffunc dirlist_rec_impl array res, int _len, str dir_root, str subdir, str wild_card, \
+	local len, local ls, local name, local index
+	
+	len = _len
+	
+	//ファイル
+	dirlist ls, dir_root + subdir + wild_card, 3
+	repeat stat
+		getstr name, ls, index : index += strsize
+		
+		res(len) = subdir + name
+		len ++
+	loop
+	
+	//サブディレクトリ
+	index = 0
+	dirlist ls, dir_root + subdir + wild_card, 5
+	repeat stat
+		getstr name, ls, index : index += strsize
+		
+		dirlist_rec_impl res, len, dir_root, subdir + name + "/", wild_card
+		len = stat
+	loop
+	return len
+#global

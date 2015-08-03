@@ -1,0 +1,27 @@
+#ifndef IG_MKDIR_REC_HSP
+#define IG_MKDIR_REC_HSP
+
+#module
+
+#defcfunc dir_exists str path,  local dummy
+	dirlist dummy, path, 5
+	return (stat != 0)
+
+#deffunc mkdir_rec str _path,  \
+	local path, local dirs, local dir
+	
+	path = _path
+	strrep path, "\\", "/"
+	split  path, "/", dirs
+	dir = dirs(0)
+	repeat stat - 1, 1
+		dir += "/" + dirs(cnt)
+		if ( dir_exists(dir) == 0 ) {
+			mkdir dir
+		}
+	loop
+	return
+
+#global
+
+#endif

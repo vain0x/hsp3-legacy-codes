@@ -1,0 +1,61 @@
+#ifndef IG_HEADER_HSP
+#define IG_HEADER_HSP
+
+#include "hspinet.as"
+#include "hspext.as"
+#include "util/MCIni.as"
+#include "util/dirlist_rec.hsp"
+#include "util/mkdir_rec.hsp"
+
+#module
+
+#deffunc copy_file str path_src, str path_dst
+	mkdir_rec getpath(path_dst, 32) //ディレクトリのみ
+
+#if __DRY_RUN
+	logmes "bcopy " + path_src + "\t\t-> " + path_dst
+#else
+	bcopy path_src, path_dst
+#endif
+	return
+	
+#defcfunc path_flatten str _path,  local path
+	path = _path
+	strrep path, "/", "-$-"
+	return path
+	
+#defcfunc arrayStr_find_index array self, str value,  \
+	local lb, local ub, local mid, local cmp
+	
+	lb = 0 : ub = length(self)
+	repeat
+		if ( ub - lb <= 1 ) { break }
+		mid = lb + (ub - lb) / 2
+		cmp = (self(mid) != value)
+		if ( cmp <= 0 ) { lb = mid } else { ub = mid }
+	loop
+	if ( self(lb) == value ) {
+		return lb
+	} else {
+		return -1
+	}
+	
+#deffunc ini_get_sorted_array var self, array arr, str sec, str name,  \
+	local n
+	
+	ini_get_array self, arr, sec, name
+	sortstr arr
+	
+	//未整列だったら整列済みの配列で上書き
+	repeat length(arr)
+		sortget n, cnt
+		if ( n != cnt ) {
+			ini_put_array self, sec, name, arr
+			break
+		}
+	loop
+	return
+	
+#global
+
+#endif
