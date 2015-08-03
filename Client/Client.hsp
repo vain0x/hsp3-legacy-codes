@@ -69,8 +69,7 @@
 	sdim paths_bak_files, , length(paths_old_files)
 	repeat length(paths_old_files)
 		//無視リストに入っているか確認
-		index = arrayStr_find_index(paths_ignored, paths_old_files(cnt))
-		if ( index >= 0 ) {
+		if ( is_ignored(paths_old_files(cnt), paths_ignored) ) {
 			continue
 		}
 		

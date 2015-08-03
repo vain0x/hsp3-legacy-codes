@@ -3,6 +3,7 @@
 
 #include "hspinet.as"
 #include "hspext.as"
+#include "mod_regexp.as"
 #include "util/MCIni.as"
 #include "util/dirlist_rec.hsp"
 #include "util/mkdir_rec.hsp"
@@ -23,6 +24,16 @@
 	path = _path
 	strrep path, "/", "-$-"
 	return path
+	
+#defcfunc is_ignored str path, array paths_ignored,  \
+	local ms, local result
+	assert
+	result = false
+	foreach paths_ignored
+		matches ms, path, paths_ignored(cnt), , true //Å‰‚ÌŒ‹‰Ê‚¾‚¯Žæ“¾‚·‚é
+		if ( stat > 0 ) { result = true : break }
+	loop
+	return result
 	
 #defcfunc arrayStr_find_index array self, str value,  \
 	local lb, local ub, local mid, local cmp
