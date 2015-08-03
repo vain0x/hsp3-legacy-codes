@@ -39,8 +39,10 @@
 	declvar paths_old_files
 	dirlist_rec paths_old_files, dir_root, "*"
 	
+#if __DRY_RUN == 0
 	mkdir_rec dir_new_files
 	mkdir_rec dir_bak_files
+#endif
 	
 	;onerror *LRestore
 	return
