@@ -2,7 +2,6 @@
 #define IG_HEADER_HSP
 
 #include "hspinet.as"
-#include "hspext.as"
 #include "mod_regexp.as"
 #include "util/MCIni.as"
 #include "util/dirlist_rec.hsp"
