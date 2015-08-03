@@ -26,7 +26,7 @@
 	
 #defcfunc is_ignored str path, array paths_ignored,  \
 	local ms, local result
-	assert
+	
 	result = false
 	foreach paths_ignored
 		matches ms, path, paths_ignored(cnt), , true //Å‰‚ÌŒ‹‰Ê‚¾‚¯æ“¾‚·‚é
