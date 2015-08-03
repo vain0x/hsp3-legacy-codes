@@ -80,7 +80,7 @@
 			//一時フォルダに移動
 			file_name              = paths_new_files(index)
 			paths_bak_files(index) = path_flatten(file_name)
-			bcopy dir_root + "/" + file_name, dir_bak_files + "/" + paths_bak_files(index)
+			copy_file dir_root + "/" + file_name, dir_bak_files + "/" + paths_bak_files(index)
 			
 		} else {
 			// 未確認のファイルを警告する
