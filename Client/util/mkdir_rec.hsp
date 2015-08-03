@@ -3,7 +3,7 @@
 
 #module
 
-#defcfunc dir_exists str path,  local dummy
+#defcfunc dir_exists str path,  local dummy, local index
 	dirlist dummy, path, 5
 	return (stat != 0)
 
@@ -13,15 +13,21 @@
 	path = _path
 	strrep path, "\\", "/"
 	split  path, "/", dirs
-	dir = dirs(0)
+	
+	sdim dir, strlen(path) + 1
+	poke dir, 0, dirs(0)
+	index = strsize
 	repeat stat - 1, 1
-		dir += "/" + dirs(cnt)
+		if ( dirs(cnt) == "" ) { continue }
+		
+		poke dir, index, '/'       : index ++
+		poke dir, index, dirs(cnt) : index += strsize
 		if ( dir_exists(dir) == 0 ) {
 			mkdir dir
 		}
 	loop
 	return
-
+	
 #global
 
 #endif
