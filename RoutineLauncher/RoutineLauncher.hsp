@@ -26,13 +26,6 @@
 #func   SetWindowLong       "SetWindowLongA"      int, int, int
 #cfunc  GetWindowLong       "GetWindowLongA"      int, int
 
-#ifndef __UserDefHeader__
- #define ctype BITOFF(%1 = 0, %2 = 0) ( (%1) & (0xFFFFFFFF ^ (%2)) )
- #define MAX_PATH 260
- #define true  1
- #define false 0
-#endif
-
 #define MAX_CMD 60
 #define ctype ItemIdOf(%1) strf("%%02d", (%1))
 
