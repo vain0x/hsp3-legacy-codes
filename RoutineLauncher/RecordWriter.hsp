@@ -27,7 +27,6 @@
 #include "Mo/Lvmod.as"
 #include "Mo/MenubarAPI.as"
 
-// Win32 API
 #uselib "user32.dll"
 #func   global SetWindowLong  "SetWindowLongA" int,int,int
 #cfunc  global GetWindowLong  "GetWindowLongA" int,int
@@ -38,8 +37,8 @@
 // applycation consts
 #enum global IDW_Main = 0
 #enum global IDW_TableList = 0
-#enum global IDW_Listview	// リストビューウィンドウ
-#enum global IDW_Edit		// レコード編集ウィンドウ
+#enum global IDW_Listview
+#enum global IDW_RecordEdit
 
 #enum global IDM_None = 0
 #enum global IDM_Edit
@@ -56,11 +55,7 @@
 	gsel IDW_TableList, 1
 	stop
 	
-//##############################################################################
-//                前処理
-//##############################################################################
 *LInitialize
-;	randomize
 	gsel 0, -1
 	
 	gosub *LOpenDb
@@ -155,23 +150,17 @@
 			AppendMenu   hListviewPopupMenu, 0, IDM_MoveUp,   "一つ上に(&A)"
 			AppendMenu   hListviewPopupMenu, 0, IDM_MoveDown, "一つ下に(&D)"
 		
-		// イベントハンドラ設定
 		oncmd gosub *OnNotify, 0x004E		// WM_NOTIFY
 		oncmd gosub *OnSize,   0x0005		// WM_SIZE
 		oncmd gosub *OnSizing, 0x0214		// WM_SIZING
-		
-		// リサイズ
 		gosub *OnSize
 		
-	screen IDW_Edit, ginfo_dispx, ginfo_dispy, (1 | 2 | 4 | 8)
+	screen IDW_RecordEdit, ginfo_dispx, ginfo_dispy, (1 | 2 | 4 | 8)
 		title Str_AppName + ": Record"
 		objmode 2
 		
 	return
 	
-//##############################################################################
-//                イベントハンドラ
-//##############################################################################
 //------------------------------------------------
 // 終了時
 //------------------------------------------------
@@ -244,11 +233,11 @@
 			dupptr nmItemActivate, lparam, 48			// NMITEMACTIVATE 構造体
 			if ( nmItemActivate(3) >= 0 ) {				// .iItem : アイテム上で右クリック
 				gosub *LListviewTrackPopupMenu
-			} elsif ( cntRecords == 0 ) {				// 空っぽ
+			} elsif ( cntRecords == 0 ) { // レコードがなければ新規要素をすぐに追加する
 				textAttr(0) = "0"
 				iLvCur = -1
 				gosub *LBeginInsert
-				gosub *LInsertEditRecord				// 即挿入
+				gosub *LInsertEditRecord
 			}
 			
 		// Ｗクリック
@@ -272,16 +261,11 @@
 	return
 	
 *OnKeyOnEdit
-	// @ レコード編集ウィンドウのキー入力
-	if ( wparam == 27 ) {		// [Esc]
+	if ( wparam == 27 ) { // [Esc]
 		gosub *LCloseEditRecord
 	}
-	
 	return
 	
-//##############################################################################
-//                サブルーチン
-//##############################################################################
 //------------------------------------------------
 // 設定保存
 //------------------------------------------------
@@ -303,10 +287,9 @@
 	ini_puti cfg, "Listview", "Pos.Y", ginfo_wy1
 	
 	repeat cntColumns
-		sendmsg infLv, 0x101D, cnt, 0		// LVM_GETCOLUMNWIDTH
+		sendmsg infLv, 0x101D, cnt, 0 // LVM_GETCOLUMNWIDTH
 		ini_puti cfg, "Listview", curTable + "." + columns(cnt) + ".Size", stat
 	loop
-	
 	return
 	
 //##########################################################
@@ -322,11 +305,10 @@
 	
 	gosub *LRenewScreenToTable		// ウィンドウ調整
 	gsel IDW_Listview, 1
-	
 	return
 	
 *LEndTableEdit
-	gsel IDW_Edit, -1
+	gsel IDW_RecordEdit, -1
 	gsel IDW_Listview, -1
 	gosub *LSaveWindowListview
 	
@@ -338,7 +320,6 @@
 	gosub *LSaveTable
 	
 	gsel IDW_TableList, 1
-	
 	return
 	
 //------------------------------------------------
@@ -387,7 +368,6 @@
 	recordDefault("Name") = ""		// '$_Default_$' になっているため
 	sql_q "DELETE FROM " + curTable + " WHERE Name = '$_Default_$'"	// 邪魔なのですぐに削除
 	//*/
-	
 	return
 	
 //------------------------------------------------
@@ -432,7 +412,7 @@
 			record_insertListview cnt, -1
 		loop
 		
-	gsel IDW_Edit
+	gsel IDW_RecordEdit
 		winsize = 330, ( cntColumns + 1 ) * 25 + 10 - 5
 		winpos  = (ginfo_dispx - winsize(0)) / 2, (ginfo_dispy - winsize(1)) / 2	// 中央配置
 		
@@ -496,14 +476,13 @@
 		default:
 			swbreak
 	swend
-	
 	return
 	
 //------------------------------------------------
 // 新たなレコードの挿入を準備する
 //------------------------------------------------
 *LBeginInsert
-	gsel IDW_Edit, 1
+	gsel IDW_RecordEdit, 1
 	assert // recordDefaultの初期化は未実装
 	
 	// 既定値をボックスに格納しておく
@@ -518,7 +497,7 @@
 // レコードの編集を開始する
 //------------------------------------------------
 *LBeginEdit
-	gsel IDW_Edit, 1
+	gsel IDW_RecordEdit, 1
 	
 	// 選択されたレコードの情報をボックスに格納しておく
 	repeat cntColumns
@@ -573,7 +552,7 @@
 // 「レコード編集」ウィンドウを閉じる
 //------------------------------------------------
 *LCloseEditRecord
-	gsel IDW_Edit, -1
+	gsel IDW_RecordEdit, -1
 	gsel IDW_Listview, 1
 	return
 	
@@ -588,9 +567,6 @@
 	}
 	return
 	
-//##############################################################################
-//                アプリケーション関数
-//##############################################################################
 //------------------------------------------------
 // レコードをリストビューに挿入する
 // 

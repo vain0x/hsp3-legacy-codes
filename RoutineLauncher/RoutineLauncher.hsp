@@ -6,17 +6,17 @@
 ;#define global USING_INI (true)
 
 #ifdef USING_INI
- #include "Mo/MCIni.as"			// for ini
+ #include "Mo/MCIni.as"
 #else
- #include "hpi/sqle/sqlele.as"	// for SQLite
+ #include "hpi/sqle/sqlele.as"
  #include "use_table_as_assoc.as"
 #endif
 
-#include "Mo/GetOwnpath.as"		// 実行ファイルのパスを取得する
-#include "Mo/MenuBarAPI.as"		// メニュー作成用 API の呼び出し
-#include "Mo/Trayicon.as"		// タスクトレイにアイコンを格納するため
-#include "Mo/refEnvar.as"		// 環境変数処理
-#include "Mo/mod_replace.as"	// 文字列置換
+#include "Mo/GetOwnpath.as"
+#include "Mo/MenuBarAPI.as"
+#include "Mo/Trayicon.as"
+#include "Mo/refEnvar.as"
+#include "Mo/mod_replace.as"
 
 #uselib "user32.dll"
 #func   SetForegroundWindow "SetForegroundWindow" int
@@ -38,25 +38,20 @@
 
 #enum IDW_MAIN = 0
 
-//##############################################################################
-//                メインコード
-//##############################################################################
 //------------------------------------------------
 // エントリーポイント
 //------------------------------------------------
 *main
-	;gsel 0, -1
-	
 	sdim ownpath, MAX_PATH
 		 ownpath = GetOwnpath("H:/Tool/AutoStarter/RoutineStarter")
 	
 #ifdef USING_INI
-	ini_new ini, ownpath + "/config.ini"	// INI 名
+	ini_new ini, ownpath + "/config.ini"
 #else
 	exist "routine.db"
 	bNeedInitialize = ( strsize <= 0 )
 	sql_open "routine.db"
-	if ( bNeedInitialize ) {		// 初期化
+	if ( bNeedInitialize ) {
 		dialog "データベースが存在しないので初期化します。プログラムを再起動してください。", 0, Str_AppName
 		exec "RoutineConfigInitializer.exe"
 		end : end
@@ -69,7 +64,7 @@
 	if ( cntItems == 0 ) { end }
 	
 	// タスクトレイに格納
-	CreateTrayIcon app_name + "\nWaiting..."	// アイコン生成
+	CreateTrayIcon "RoutineStarter.exe\nWaiting..."
 	
 	// タイマーを設置
 	repeat cntItems
@@ -104,14 +99,14 @@
 		// 指定時間を過ぎているか確認
 		_now = GetTimeSpanFromWeekTop_Now()
 		logmes dbgpair(_now, date_t(n))
-		if ( GetTimeSpanFromWeekTop_Now() >= date_t(n) - 3 ) {		// 3[s]までなら早くても許容
-			ExecFile  n		// ファイルを実行する
+		if ( GetTimeSpanFromWeekTop_Now() >= date_t(n) - 3 ) { // 3[s]までなら早くても許容
+			ExecFile n
 			wait 300
 		}
 		
-		MakeTimer n			// タイマーを再設定
+		// タイマー再設定
+		MakeTimer n
 	}
-	
 	return
 	
 //------------------------------------------------
@@ -119,7 +114,7 @@
 //------------------------------------------------
 *exit
 	DestroyTrayIcon
-	if ( hmenu ) { DestroyMenu hmenu }	// メニュー削除
+	if ( hmenu ) { DestroyMenu hmenu }
 	gosub *FreeTimerAll					// タイマー削除
 	onexit false
 	PostMessage hwnd, 0x0010, 0, 0
@@ -136,9 +131,6 @@
 	loop
 	return
 	
-//##############################################################################
-//                サブルーチン
-//##############################################################################
 //------------------------------------------------
 // 設定の読み出し
 //------------------------------------------------
@@ -168,7 +160,6 @@
 	dim  timerId, cntItems
 	
 	gosub *LoadFiles	// ファイルを読み込む (実行可能になる)
-	
 	return
 	
 //------------------------------------------------
@@ -216,7 +207,7 @@
 		}
 		
 		// 成功したら、Failure のところを消しておく
-		ini_puts ini, "Failure", "Entry." + sCnt, ""		// 成功
+		ini_puts ini, "Failure", "Entry." + sCnt, ""
 		i ++
 	loop
 #else
@@ -239,7 +230,7 @@
 		if ( runmode(cnt) != 16 ) {
 			exist dirFile(cnt)
 			if ( strsize < 0 ) {
-				sql_q "UPDATE TFailure SET Pred = 1 WHERE Id = " + taskId(cnt)	// 読み込み失敗のサイン
+				sql_q "UPDATE TFailure SET Pred = 1 WHERE Id = " + taskId(cnt)
 				times(cnt) = 0
 				continue
 			}
@@ -247,7 +238,7 @@
 		}
 		
 		// 成功
-		sql_q "UPDATE TFailure SET Pred = 0 WHERE Id = " + taskId(cnt)	// 読み込み成功
+		sql_q "UPDATE TFailure SET Pred = 0 WHERE Id = " + taskId(cnt)
 	loop
 #endif
 	
@@ -259,9 +250,6 @@
 #endif
 	return
 	
-//##############################################################################
-//                モジュール
-//##############################################################################
 //------------------------------------------------
 // タイマーの作成
 // 
@@ -369,13 +357,12 @@
 	span = date - nowtime
 	
 	if ( span <= 0 ) {
-		span += TimeSpanOfWeek	// 来週
+		span += TimeSpanOfWeek
 	}
 	
 	logmes "now  = " + nowtime
 	logmes "date = " + date
 	logmes "span = " + span
-	
 	return span
 	
 //------------------------------------------------
@@ -434,7 +421,6 @@
 	
 	getstr temp, timeString, idx;, ',' : idx += strsize
 	dstSecond = int(temp)
-	
 	return
 	
 //------------------------------------------------
@@ -454,9 +440,6 @@
 	dialog MakeTaskInfo(id), 0, "タスク詳細 - " + taskname(id)
 	return
 	
-//##############################################################################
-//                メニュー関連
-//##############################################################################
 //------------------------------------------------
 // ポップアップ・メニュー作成
 //------------------------------------------------
@@ -465,10 +448,10 @@
 #enum CMD_TASK
 
 *SettingMenu
-	hmenu = CreatePopupMenu()		// メニュー・ハンドル
-		AppendMenu hmenu, 0, CMD_END,	"終了する(&Q)"
-			AddSeparator hmenu		//-----------
-	;	AppendMenu hmenu, 0, CMD_NONE,	"なにもしない(& )"
+	hmenu = CreatePopupMenu()
+		AppendMenu hmenu, 0, CMD_END, "終了する(&Q)"
+			AddSeparator hmenu
+	;	AppendMenu hmenu, 0, CMD_NONE, "なにもしない(& )"
 		
 	// 各タスクごとに要素を追加
 	repeat cntItems
@@ -505,4 +488,3 @@
 		swend
 	}
 	return
-	
