@@ -1,0 +1,326 @@
+// AutoStarter
+
+#packopt name "AutoStarter"
+#packopt hide    1
+#packopt orgpath 1
+
+#include "Mo/GetOwnpath.as"		// 実行ファイルのパスを取得する
+#include "Mo/MCIni.as"			// INI ファイルを弄るため
+#include "Mo/MenuBarAPI.as"		// メニュー作成用 API の呼び出し
+#include "Mo/Trayicon.as"		// タスクトレイにアイコンを格納するため
+#include "Mo/refEnvar.as"		// 環境変数処理
+
+#uselib "user32.dll"
+#func   SetForegroundWindow "SetForegroundWindow" int
+#func   PostMessage         "PostMessageA"        int,int,int,sptr
+#func   SetTimer            "SetTimer"            int,int,int,nullptr
+#func   KillTimer           "KillTimer"           int,int
+#func   SetWindowLong       "SetWindowLongA"      int,int,int
+#cfunc  GetWindowLong       "GetWindowLongA"      int,int
+
+#module
+
+#defcfunc RemoveQuotes str src_,  local src, local len
+	src = src_
+	if ( peek(src) == '"' ) {
+		len = strlen(src)
+		if ( peek(src, len - 1) == '"' ) {
+			src = strmid(src, 1, len - 2)
+		}
+	}
+	return src
+	
+#global
+
+#ifndef __UserDefHeader__
+ #define ctype BITOFF(%1 = 0, %2 = 0) ( (%1) & (0xFFFFFFFF ^ (%2)) )
+ #define MAX_PATH 260
+ #define true  1
+ #define false 0
+#endif
+
+#define MAX_CMD 60
+
+#enum IDW_PASSWORD = 0
+#enum IDW_EXIT
+#enum IDW_MAX
+
+*main
+	gsel 0, -1
+	
+	sdim ownpath, MAX_PATH
+		 ownpath = GetOwnpath("C:/Tool/AutoStarter")
+	
+	ini_new ini, ownpath + "/AutoStarterSet.ini"	// INI 名
+	
+	gosub *SettingScreen	// スクリーンを準備する
+	gosub *LoadSetting		// 設定を読み込む
+	gosub *LoadFiles		// ファイルを読み込む (実行可能になる)
+	gosub *SettingMenu		// メニューを作成
+	
+	if ( cntItems == 0 ) { end }
+	
+	// パスワード確認
+	if ( bPass == false ) {
+		gsel IDW_PASSWORD, 1			// パスワードを求める
+		onkey gosub *Key
+		do
+			wait 20
+		until ( bPass )
+		onkey false
+		gsel IDW_PASSWORD, -1			// 隠す
+		gsel 0, 0
+	}
+	
+	// タスクトレイに格納
+	CreateTrayIcon "AutoStarter.exe\nWaiting..."	// アイコン生成
+	
+	// 時間を空ける
+	timerID = 1
+	SetTimer hwnd, timerID, lag * 1000	// 秒 → ミリ秒
+	timerID = stat
+	
+	oncmd  gosub *OnTimer, 0x0113		// WM_TIMER
+	onexit gosub *exit					// 終了割り込み
+	stop
+	
+*OnTimer
+	if ( wparam != timerID ) { return }
+	gosub *FreeTimer			// タイマーを解放する
+	
+	DestroyTrayIcon				// トレイのアイコンを削除
+	
+	// 起動処理
+	gosub *ExecFiles			// ファイルを実行する
+	
+	if ( last ) {
+		gsel IDW_EXIT, 1		// スクリーンを公開
+		wait (100 * last)		// 待機 ( 単位は秒 )
+		gsel IDW_EXIT, -1		// スクリーンを隠す
+	}
+	
+	PostMessage hwnd, 0x0010, 0, 0
+	return
+	
+// 終了ラベル
+*exit
+	if ( hmenu ) { DestroyMenu hmenu }	// メニュー削除
+	gosub *FreeTimer					// タイマー削除
+	end : end
+	
+// タイマー削除
+*FreeTimer
+	if ( timerID ) { KillTimer hwnd, timerID : timerID = 0 }	// タイマー削除
+	return
+	
+//######## サブルーチン ########################################################
+// スクリーン作成
+*SettingScreen
+	sdim in_password, 64
+	
+	screen IDW_PASSWORD, 180, 80, (2 | 16), (ginfo(20) - 200) /2, (ginfo(21) - 80) /2
+	SetWindowLong hwnd, -16, BITOFF( GetWindowLong(hwnd, -16), 0x00080000 )
+	title "AutoStarter - password"
+	syscolor 15 : boxf : color
+	sysfont 17  : objsize 60, 20 
+	pos  10,  5 : mes "パスワードを入力してください"
+	pos  10, 20 : input in_password, 150, 20, 24
+	            : sendmsg objinfo(stat, 2), 0x00CC, '*', 0	// EM_SETPASSWORDCHAR (パスワード化)
+	pos  30, 50 : button gosub "OK",     *pass_check
+	pos 100, 50 : button gosub "ignore", *pass_ignore
+	
+	screen IDW_EXIT, 200, 80, (2 | 16), (ginfo(20) - 200) / 2, (ginfo(21) - 80) / 2
+	title "AutoStarter"
+	syscolor 15 : boxf : color
+	pos  30, 20 : mes "正常に終了しました"
+	pos  60, 50 : button "閉じる", *exit
+	
+	return
+	
+*pass_check		// *LoadSetting よりも後に呼ばれる
+	if ( in_password == password ) {
+		bPass = true
+		
+	} else {
+		cntPassWrong ++
+		
+		// 5回失敗したらシャットダウン
+		if ( cntPassWrong >= 5 ) {
+			exec "shutdown.exe -s -t 0"
+		}
+	}
+	return
+	
+*pass_ignore
+	PostMessage hwnd, 0x0010, 0, 0		// WM_CLOSE
+	return
+	
+*Key
+	if ( iparam == 13 ) {
+		objsel -1
+		if ( stat == 0 ) {
+			gosub *pass_check
+		}
+	}
+	return
+	
+// 設定の読み出し
+*LoadSetting
+	sdim password, 32
+	sdim tmp, 64
+	dim  skip
+	
+	cntItems = ini_geti(ini, "Data", "CntEntries")	// 登録されているアイテムの数
+	sdim dirFile, MAX_PATH, cntItems					// ファイルパス
+	sdim cmdline, MAX_CMD , cntItems					// コマンドライン
+	sdim dirExec, MAX_PATH, cntItems					// 起動ディレクトリ
+	dim  runmode,           cntItems					// 実行モード(exec の p2)
+	
+	sdim username, 128
+	username = ini_gets(ini, "Data", "UserName")		// ユーザ名
+	password = ini_gets(ini, "Data", "Password")		// パスワード
+	
+	if ( username != sysinfo(1) && username != "" ) {	// 別のユーザがログオンしているなら
+		ini_puts ini, "Failure", "Data.UserName", sysinfo(1)
+		end												// 違ったらだめ
+	} else {
+		ini_puts ini, "Failure", "Data.UserName", ""
+	}
+	
+	lag  = ini_geti(ini, "Data", "TimeLag" )		// ずらす時間 (単位は秒)
+	span = ini_geti(ini, "Data", "ExecSpan")		// 実行するスパン 単位はミリ秒 ( 1/1000 秒 )
+	last = ini_geti(ini, "Data", "LastSeeTime")		// 最後のウィンドウの時間 単位は秒
+	
+	// パスワードを復号化
+	if ( peek(password) ) {
+		getstr password, password, 1		// 先頭 1byte を無視する
+	} else {
+		bPass = true
+	}
+	return
+	
+// ファイル読み込み
+*LoadFiles
+	i = 0
+	sdim str_mode
+	sdim temp, MAX_PATH + MAX_CMD + 15
+	
+	repeat cntItems
+	;	idx  = 0
+		sCnt = strf("%02d", cnt)
+		
+		// 実行パス
+		ini_getsv ini, temp, "Entry", sCnt, "", MAX_PATH + MAX_CMD + 14
+		getstr dirFile(i), temp, 0, ',', MAX_PATH  : idx = strsize
+		dirFile(i) = ExpandEnvar( dirFile(i) )
+		exist RemoveQuotes( dirFile(i) )
+		if ( strsize < 0 || temp == "" ) {
+			ini_puts ini, "Failure", "Entry." + sCnt, "Failed Loading"	// 読み込み失敗のサイン
+			logmes "Failed Loading #" + cnt + ": " + dirFile(i) + ", " + temp
+			memset dirFile(i), 0x00, MAX_PATH
+			continue
+		}
+		
+		if ( peek(temp, idx - 1) != ',' ) {		// , で止まっていなかったら
+			temp += ",,,0"
+			ini_puts ini, "Entry", sCnt, temp
+		}
+		
+		// コマンドライン
+		getstr cmdline(i), temp, idx, ',', MAX_CMD : idx += strsize
+		cmdline(i) = ExpandEnvar( cmdline(i) )
+		
+		if ( peek(temp, idx - 1) != ',' ) {		// , で止まっていなかったら
+			temp += ",,0"
+			ini_puts ini, "Entry", sCnt, temp
+			idx ++
+		}
+		
+		// 起動ディレクトリ
+		getstr dirExec(i), temp, idx, ',', MAX_PATH : idx += strsize
+		dirExec(i) = ExpandEnvar( dirExec(i) )
+		
+		if ( peek(temp, idx - 1) != ',' ) {		// , で止まっていなかったら
+			temp += ",0"
+			ini_puts ini, "Entry", sCnt, temp
+			idx ++
+		}
+		
+		// 実行モード
+		getstr str_mode, temp, idx : idx += strsize
+		if ( str_mode == "" ) {
+			temp += "0"
+			ini_puts ini, "Entry", sCnt, temp
+			runmode(cnt) = 0
+		} else {
+			runmode(cnt) = int(str_mode)		// モード
+		}
+		
+		// 成功したら、Failure のところを消しておく
+		ini_puts ini, "Failure", "Entry." + sCnt, ""		// 成功
+		i ++
+	loop
+	
+	return
+	
+// ポップアップ・メニュー作成
+#enum CMD_NONE = 0
+#enum CMD_SKIP
+#enum CMD_END
+*SettingMenu
+	hmenu = CreatePopupMenu()		// メニュー・ハンドル
+		AppendMenu hmenu, 0, CMD_SKIP,	"今すぐ実行する"
+		AppendMenu hmenu, 0, CMD_END,	"終了する"
+			AddSeparator hmenu		//-----------
+		AppendMenu hmenu, 0, CMD_NONE,	"なにもしない"
+	return
+	
+// ファイルを実行する
+*ExecFiles
+	foreach  dirFile
+		if ( dirFile(cnt) != "" ) {
+			if ( dirExec(cnt) == "" ) {
+				dirExec(cnt) = getpath( dirFile(cnt), 32 )
+			}
+			chdir dirExec(cnt)
+			exec  dirFile(cnt) + " " + cmdline(cnt), runmode(cnt)
+		}
+		await span
+	loop
+	return
+	
+//######## トレイアイコンからの割り込み ########################################
+*OnTrayIconEvent
+	// wparam = IconID, lparam = EventData
+	
+	// Single クリック (押下)
+	if ( (lparam == 0x0201) || (lparam == 0x0204) ) {
+		
+		// メニューをポップアップ
+		SetForegroundWindow hwnd
+		TrackPopupMenuEx    hmenu, 0x0180, ginfo(0), ginfo(1), hwnd, NULL
+		
+		// stat に MenuID が返される
+		switch (stat)
+		case CMD_SKIP
+			gosub *LSkip						// 即実行
+			swbreak
+			
+		case CMD_END
+			gosub *FreeTimer					// タイマー削除
+			PostMessage hwnd, 0x0010, 0, 0		// WM_CLOSE (終了させる)
+			swbreak
+			
+		swend
+		
+	// 正Ｗクリック
+	} else : if ( lparam == 0x203 ) {
+		gosub *LSkip		// 即実行
+	}
+	return
+	
+*LSkip
+	gosub *FreeTimer		// タイマー削除
+	gosub *OnTimer			// 実行する
+	return
+	
