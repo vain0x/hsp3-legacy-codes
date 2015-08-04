@@ -1,18 +1,9 @@
 #packopt name "AutoLauncherEntry"
-#packopt hide    1
-#packopt orgpath 1
+#packopt hide 1
 
-#include "Mo/ini.as"
-#include "Mo/GetOwnpath.as"
+#include "Mo/MCIni.as"
 
-	ownpath = GetOwnpath("H:/Tool/AutoLauncher")
-	SetINIname ownpath +"/AutoLauncherSet.ini"	// INI –¼
-	
-	exist _ininame
-	if ( strsize < 0 ) { end }
-	
-	sdim cmd, MAX_PATH
-	cmd = dirinfo(4)
+	cmd = dir_cmdline
 	if (cmd == "") {
 		dialog "*", 16, "EntryFile"
 		if ( stat == 0 ) { end }
@@ -22,36 +13,9 @@
 	exist cmd
 	if ( strsize == -1 ) { end }
 	
-	// •Ï”‚ÌŠm•ÛE‘ã“ü
-	sdim tmp, 320
-	EntryNum = GetIntINI("Data", "EntryFileNum")
+	ini_new cfg, dir_exe + "/AutoLauncher.ini"
+	count = ini_geti(cfg, "Data", "CountEntries")
 	
-	// “o˜^‘O‚Ìˆ— ( “o˜^ˆÊ’u‚ð‹ó‚¯‚é )
-	for i, FileMax, 0, -1
-	
-		if ( i <= EntryNum ) {
-			_break
-		}
-		GetINI   "Entry", strf("%02d", i - 1), tmp		// ‘O‚Ìƒtƒ@ƒCƒ‹
-		WriteINI "Entry", strf("%02d", i    ), tmp		// Œã‚ë‚É‚¸‚ç‚·
-	next
-	
-	// “o˜^
-	WriteINI "Entry", strf("%02d", i), cmd				// o‚Ä‚«‚½ˆÊ’u‚É‘‚«ž‚Þ
-	WriteINI "Data", "EntryFileNum", EntryNum + 1		//
-	
+	ini_puts cfg, "Entry", strf("%02d", count), cmd
+	ini_puts cfg, "Data", "CountEntries", count + 1
 	end : end
-	
-// SendTo ‚Ö‚Ì“üo—Í
-//	MakeLink "AutoStartEntry", dirinfo(1) +"\\AutoStartEntry.exe", dirinfo(0x10009), True 
-	
-//--------------------------------------
-//		- ‚ÍŽÀs‚µ‚È‚¢ƒtƒ@ƒCƒ‹B
-//	EntryNum=2
-//
-//	00=0+ (0+)
-//	01=1+ (1+)
-//	02=2- (x+)	// “o˜^‚·‚é
-//	03=3- (2-)
-//:	04=   (3-)	// ‚±‚ê‚ÍV‹K‚É’Ç‰Á‚³‚ê‚é
-//--------------------------------------
