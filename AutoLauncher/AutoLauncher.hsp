@@ -261,10 +261,10 @@
 #enum CMD_END
 *LSettingMenu
 	hmenu = CreatePopupMenu()
-		AppendMenu hmenu, 0, CMD_SKIP,	"今すぐ実行する"
-		AppendMenu hmenu, 0, CMD_END,	"終了する"
+		AppendMenu hmenu, 0, CMD_SKIP,	"今すぐ実行する (&I)"
+		AppendMenu hmenu, 0, CMD_END,	"終了する (&Q)"
 			AddSeparator hmenu
-		AppendMenu hmenu, 0, CMD_NONE,	"なにもしない"
+		AppendMenu hmenu, 0, CMD_NONE,	"なにもしない (& )"
 	return
 	
 *LExecFiles
