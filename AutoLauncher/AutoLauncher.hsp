@@ -137,9 +137,9 @@
 		
 	} else {
 		cntPassWrong ++
-		// 5回失敗したらシャットダウン
+		//5回失敗したら終了
 		if ( cntPassWrong >= 5 ) {
-			exec "shutdown.exe -s -t 0"
+			end //exec "shutdown.exe -s -t 0"
 		}
 	}
 	return
