@@ -41,7 +41,7 @@
 //------------------------------------------------
 // エントリーポイント
 //------------------------------------------------
-*main
+*LMain
 	sdim ownpath, MAX_PATH
 		 ownpath = GetOwnpath("H:/Tool/AutoStarter/RoutineStarter")
 	
@@ -58,8 +58,8 @@
 	}
 #endif
 
-	gosub *LoadSetting		// 設定を読み込む
-	gosub *SettingMenu		// メニューを作成
+	gosub *LLoadSetting
+	gosub *LSettingMenu
 	
 	if ( cntItems == 0 ) { end }
 	
@@ -71,14 +71,14 @@
 		MakeTimer cnt
 	loop
 	
-	oncmd  gosub *OnTimer, 0x0113		// WM_TIMER
-	onexit gosub *exit					// 終了割り込み
+	oncmd  gosub *LOnTimer, 0x0113 // WM_TIMER
+	onexit gosub *LExit
 	stop
 	
 //------------------------------------------------
 // タイマー実行
 //------------------------------------------------
-*OnTimer
+*LOnTimer
 	logmes dbgstr(stat)
 	logmes dbgstr(iparam)
 	logmes dbgstr(wparam)
@@ -112,10 +112,10 @@
 //------------------------------------------------
 // 終了ラベル
 //------------------------------------------------
-*exit
+*LExit
 	DestroyTrayIcon
 	if ( hmenu ) { DestroyMenu hmenu }
-	gosub *FreeTimerAll					// タイマー削除
+	gosub *LFreeTimerAll
 	onexit false
 	PostMessage hwnd, 0x0010, 0, 0
 	return
@@ -124,7 +124,7 @@
 //------------------------------------------------
 // 全タイマー削除
 //------------------------------------------------
-*FreeTimerAll
+*LFreeTimerAll
 	foreach timerId
 		KillTimer hwnd, timerId(cnt)
 		timerId(cnt) = 0
@@ -134,7 +134,7 @@
 //------------------------------------------------
 // 設定の読み出し
 //------------------------------------------------
-*LoadSetting
+*LLoadSetting
 	sdim tmp, 64
 	
 #ifdef USING_INI
@@ -159,13 +159,13 @@
 	dim  date_t,  cntItems		// タイマーが仕掛けられた実行時刻 (タイマーがないとき 0)
 	dim  timerId, cntItems
 	
-	gosub *LoadFiles	// ファイルを読み込む (実行可能になる)
+	gosub *LLoadFiles	// ファイルを読み込む (実行可能になる)
 	return
 	
 //------------------------------------------------
 // ファイル読み込み
 //------------------------------------------------
-*LoadFiles
+*LLoadFiles
 #ifdef USING_INI
 	i = 0
 	repeat cntItems
@@ -447,7 +447,7 @@
 #enum CMD_END
 #enum CMD_TASK
 
-*SettingMenu
+*LSettingMenu
 	hmenu = CreatePopupMenu()
 		AppendMenu hmenu, 0, CMD_END, "終了する(&Q)"
 			AddSeparator hmenu
@@ -464,7 +464,7 @@
 //------------------------------------------------
 // トレイアイコンからの割り込み
 //------------------------------------------------
-*OnTrayIconEvent
+*LOnTrayIconEvent
 	// wparam = IconID, lparam = EventData
 	
 	// Single クリック (押下)
