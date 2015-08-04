@@ -101,7 +101,7 @@
 		logmes dbgpair(_now, date_t(n))
 		if ( GetTimeSpanFromWeekTop_Now() >= date_t(n) - 3 ) { // 3[s]までなら早くても許容
 			ExecFile n
-			wait 300
+			await 3000
 		}
 		
 		// タイマー再設定
