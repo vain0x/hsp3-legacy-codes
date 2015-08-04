@@ -44,7 +44,7 @@
 #enum IDW_EXIT
 #enum IDW_MAX
 
-*main
+*LMain
 	gsel 0, -1
 	
 	sdim ownpath, MAX_PATH
@@ -52,17 +52,17 @@
 	
 	ini_new ini, ownpath + "/" + app_name + ".ini"
 	
-	gosub *SettingScreen	// スクリーンを準備する
-	gosub *LoadSetting		// 設定を読み込む
-	gosub *LoadFiles		// ファイルを読み込む (実行可能になる)
-	gosub *SettingMenu		// メニューを作成
+	gosub *LSettingScreen	
+	gosub *LLoadSetting
+	gosub *LLoadFiles
+	gosub *LSettingMenu
 	
 	if ( cntItems == 0 ) { end }
 	
 	// パスワード確認
 	if ( bPass == false ) {
 		gsel IDW_PASSWORD, 1			// パスワードを求める
-		onkey gosub *Key
+		onkey gosub *LKey
 		do
 			wait 20
 		until ( bPass )
@@ -79,19 +79,19 @@
 	SetTimer hwnd, timerID, lag * 1000	// 秒 → ミリ秒
 	timerID = stat
 	
-	oncmd  gosub *OnTimer, 0x0113		// WM_TIMER
-	onexit gosub *exit					// 終了割り込み
+	oncmd  gosub *LOnTimer, 0x0113 // WM_TIMER
+	onexit gosub *LExit
 	stop
 	
-*OnTimer
+*LOnTimer
 	if ( wparam != timerID ) { return }
-	gosub *FreeTimer			// タイマーを解放する
+	gosub *LFreeTimer
 	
 	DestroyTrayIcon				// トレイのアイコンを削除
 	
 	// 起動処理
-	gosub *ExecFiles			// ファイルを実行する
 	
+	gosub *LExecFiles
 	if ( last ) {
 		gsel IDW_EXIT, 1		// スクリーンを公開
 		wait (100 * last)		// 待機 ( 単位は秒 )
@@ -102,19 +102,19 @@
 	return
 	
 // 終了ラベル
-*exit
+*LExit
 	if ( hmenu ) { DestroyMenu hmenu }	// メニュー削除
-	gosub *FreeTimer					// タイマー削除
+	gosub *LFreeTimer
 	end : end
 	
 // タイマー削除
-*FreeTimer
+*LFreeTimer
 	if ( timerID ) { KillTimer hwnd, timerID : timerID = 0 }	// タイマー削除
 	return
 	
 //######## サブルーチン ########################################################
 // スクリーン作成
-*SettingScreen
+*LSettingScreen
 	sdim in_password, 64
 	
 	screen IDW_PASSWORD, 180, 80, (2 | 16), (ginfo(20) - 200) /2, (ginfo(21) - 80) /2
@@ -125,18 +125,18 @@
 	pos  10,  5 : mes "パスワードを入力してください"
 	pos  10, 20 : input in_password, 150, 20, 24
 	            : sendmsg objinfo(stat, 2), 0x00CC, '*', 0	// EM_SETPASSWORDCHAR (パスワード化)
-	pos  30, 50 : button gosub "OK",     *pass_check
-	pos 100, 50 : button gosub "ignore", *pass_ignore
+	pos  30, 50 : button gosub "OK",     *LCheckPass
+	pos 100, 50 : button gosub "ignore", *LIgnorePass
 	
 	screen IDW_EXIT, 200, 80, (2 | 16), (ginfo(20) - 200) / 2, (ginfo(21) - 80) / 2
 	title app_name
 	syscolor 15 : boxf : color
 	pos  30, 20 : mes "正常に終了しました"
-	pos  60, 50 : button "閉じる", *exit
+	pos  60, 50 : button "閉じる", *LExit
 	
 	return
 	
-*pass_check		// *LoadSetting よりも後に呼ばれる
+*LCheckPass
 	if ( in_password == password ) {
 		bPass = true
 		
@@ -150,21 +150,21 @@
 	}
 	return
 	
-*pass_ignore
+*LIgnorePass
 	PostMessage hwnd, 0x0010, 0, 0		// WM_CLOSE
 	return
 	
-*Key
+*LKey
 	if ( iparam == 13 ) {
 		objsel -1
 		if ( stat == 0 ) {
-			gosub *pass_check
+			gosub *LCheckPass
 		}
 	}
 	return
 	
 // 設定の読み出し
-*LoadSetting
+*LLoadSetting
 	sdim password, 32
 	sdim tmp, 64
 	dim  skip
@@ -199,7 +199,7 @@
 	return
 	
 // ファイル読み込み
-*LoadFiles
+*LLoadFiles
 	i = 0
 	sdim str_mode
 	sdim temp, MAX_PATH + MAX_CMD + 15
@@ -266,7 +266,7 @@
 #enum CMD_NONE = 0
 #enum CMD_SKIP
 #enum CMD_END
-*SettingMenu
+*LSettingMenu
 	hmenu = CreatePopupMenu()		// メニュー・ハンドル
 		AppendMenu hmenu, 0, CMD_SKIP,	"今すぐ実行する"
 		AppendMenu hmenu, 0, CMD_END,	"終了する"
@@ -275,7 +275,7 @@
 	return
 	
 // ファイルを実行する
-*ExecFiles
+*LExecFiles
 	foreach  dirFile
 		if ( dirFile(cnt) != "" ) {
 			if ( dirExec(cnt) == "" ) {
@@ -289,7 +289,7 @@
 	return
 	
 //######## トレイアイコンからの割り込み ########################################
-*OnTrayIconEvent
+*OnTrayIconEvent@
 	// wparam = IconID, lparam = EventData
 	
 	// Single クリック (押下)
@@ -301,25 +301,23 @@
 		
 		// stat に MenuID が返される
 		switch (stat)
-		case CMD_SKIP
-			gosub *LSkip						// 即実行
-			swbreak
-			
-		case CMD_END
-			gosub *FreeTimer					// タイマー削除
-			PostMessage hwnd, 0x0010, 0, 0		// WM_CLOSE (終了させる)
-			swbreak
-			
+			case CMD_SKIP
+				gosub *LLSkip
+				swbreak
+				
+			case CMD_END
+				gosub *LFreeTimer
+				PostMessage hwnd, 0x0010, 0, 0 // WM_CLOSE
+				swbreak
 		swend
 		
 	// 正Ｗクリック
 	} else : if ( lparam == 0x203 ) {
-		gosub *LSkip		// 即実行
+		gosub *LLSkip
 	}
 	return
 	
-*LSkip
-	gosub *FreeTimer		// タイマー削除
-	gosub *OnTimer			// 実行する
+*LLSkip
+	gosub *LFreeTimer
+	gosub *LOnTimer
 	return
-	
