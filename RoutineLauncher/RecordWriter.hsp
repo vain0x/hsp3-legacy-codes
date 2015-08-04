@@ -604,20 +604,20 @@
 // @prm idx : 上下のアイテムの有無等は事前に判定しておく
 // @prm dir : 方向 (正: 上, 負: 下)
 //------------------------------------------------
-#deffunc record_moveUpOrDown int idx, int dir,  local idxDst;, local tmp
+#deffunc record_moveUpOrDown int idx, int dir,  local idxDst
 	if ( idx < 0 || dir == 0 ) { return }
 	idxDst = idx - (dir / abs(dir))
 	
 	if ( IsRange(idxDst, 0, cntRecords - 1) == false ) { return }
 	
-	;{
-		tmp             = records(idx)
-		records(idx)    = records(idxDst)
-		records(idxDst) = tmp
-	;}
+	swap_var record(idx), record(idxDst)
 	
 	LvDelete mLv, idx
 	record_insertListview idxDst, idxDst
-	
 	return
 	
+#deffunc swap_var var x, var y,  local t
+	t = x
+	x = y
+	y = t
+	return
