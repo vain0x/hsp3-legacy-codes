@@ -1,6 +1,5 @@
-// AutoStarter
-
-#packopt name "AutoStarter"
+#define global app_name "AutoLauncher"
+#packopt name app_name
 #packopt hide    1
 #packopt orgpath 1
 
@@ -49,9 +48,9 @@
 	gsel 0, -1
 	
 	sdim ownpath, MAX_PATH
-		 ownpath = GetOwnpath("C:/Tool/AutoStarter")
+		 ownpath = GetOwnpath("C:/Tool/" + app_name)
 	
-	ini_new ini, ownpath + "/AutoStarterSet.ini"	// INI 名
+	ini_new ini, ownpath + "/" + app_name + ".ini"
 	
 	gosub *SettingScreen	// スクリーンを準備する
 	gosub *LoadSetting		// 設定を読み込む
@@ -73,7 +72,7 @@
 	}
 	
 	// タスクトレイに格納
-	CreateTrayIcon "AutoStarter.exe\nWaiting..."	// アイコン生成
+	CreateTrayIcon app_name + "\nWaiting..."	// アイコン生成
 	
 	// 時間を空ける
 	timerID = 1
@@ -120,7 +119,7 @@
 	
 	screen IDW_PASSWORD, 180, 80, (2 | 16), (ginfo(20) - 200) /2, (ginfo(21) - 80) /2
 	SetWindowLong hwnd, -16, BITOFF( GetWindowLong(hwnd, -16), 0x00080000 )
-	title "AutoStarter - password"
+	title app_name + " - password"
 	syscolor 15 : boxf : color
 	sysfont 17  : objsize 60, 20 
 	pos  10,  5 : mes "パスワードを入力してください"
@@ -130,7 +129,7 @@
 	pos 100, 50 : button gosub "ignore", *pass_ignore
 	
 	screen IDW_EXIT, 200, 80, (2 | 16), (ginfo(20) - 200) / 2, (ginfo(21) - 80) / 2
-	title "AutoStarter"
+	title app_name
 	syscolor 15 : boxf : color
 	pos  30, 20 : mes "正常に終了しました"
 	pos  60, 50 : button "閉じる", *exit

@@ -1,12 +1,12 @@
-#packopt name "AutoStartEntry"
+#packopt name "AutoLauncherEntry"
 #packopt hide    1
 #packopt orgpath 1
 
 #include "Mo/ini.as"
 #include "Mo/GetOwnpath.as"
 
-	ownpath = GetOwnpath("H:/Tool/AutoStarter")
-	SetINIname ownpath +"/AutoStarterSet.ini"	// INI –¼
+	ownpath = GetOwnpath("H:/Tool/AutoLauncher")
+	SetINIname ownpath +"/AutoLauncherSet.ini"	// INI –¼
 	
 	exist _ininame
 	if ( strsize < 0 ) { end }

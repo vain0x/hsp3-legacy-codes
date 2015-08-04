@@ -1,5 +1,5 @@
 
-#packopt name "AutoStarterRegister"
+#packopt name "AutoLauncherRegister"
 #packopt hide    1
 #packopt orgpath 1
 
@@ -13,17 +13,17 @@
 	StartUpDir = dirinfo(0x10007)			// ユーザのスタートアップ
 	
 	chdir StartUpDir
-	dirlist list, "AutoStarter.exe.lnk", 0		// リンクがあるかどうか
+	dirlist list, "AutoLauncher.exe.lnk", 0		// リンクがあるかどうか
 	
 	if ( stat == 0 ) {						// リンクがない
 		dialog "自動実行を設定しますか？", 2, "確認"
 		if (stat == 7) { goto *exit }	// no
 		
 		// ショートカット作成
-		LinkName = "AutoStarter.exe"
-		fxlink LinkName, dirinfo(1) +"\\AutoStarter.exe"
+		LinkName = "AutoLauncher.exe"
+		fxlink LinkName, dirinfo(1) +"\\AutoLauncher.exe"
 		if ( stat ) {			// 失敗
-			dialog "自動実行の設定に失敗しました。\nAutoStarter が ["+ dirinfo(1) +"\\AutoStarter.exe] \nにあることを確認してください。", 1, "Error"
+			dialog "自動実行の設定に失敗しました。\nAutoLauncher が ["+ dirinfo(1) +"\\AutoLauncher.exe] \nにあることを確認してください。", 1, "Error"
 		} else {
 			dialog "自動実行の設定が完了しました。", 0, "Non-Error"
 		}
@@ -32,7 +32,7 @@
 		if (stat == 7) { goto *exit }	// no
 		
 		// ショートカット削除
-		exdel ""+ StartUpDir +"\\AutoStarter.exe.lnk"
+		exdel ""+ StartUpDir +"\\AutoLauncher.exe.lnk"
 		dialog "自動実行設定を解除しました。", 0, "Non-Error"
 	}
 	
