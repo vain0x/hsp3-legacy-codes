@@ -1,13 +1,16 @@
+// AutoLauncher
+
 #define global app_name "AutoLauncher"
+
 #packopt name app_name
 #packopt hide    1
 #packopt orgpath 1
 
 #include "Mo/GetOwnpath.as"		// 実行ファイルのパスを取得する
-#include "Mo/MCIni.as"			// INI ファイルを弄るため
-#include "Mo/MenuBarAPI.as"		// メニュー作成用 API の呼び出し
-#include "Mo/Trayicon.as"		// タスクトレイにアイコンを格納するため
-#include "Mo/refEnvar.as"		// 環境変数処理
+#include "Mo/MCIni.as"
+#include "Mo/MenuBarAPI.as"
+#include "Mo/Trayicon.as"
+#include "Mo/refEnvar.as"
 
 #uselib "user32.dll"
 #func   SetForegroundWindow "SetForegroundWindow" int
@@ -59,24 +62,23 @@
 	
 	if ( cntItems == 0 ) { end }
 	
-	// パスワード確認
 	if ( bPass == false ) {
-		gsel IDW_PASSWORD, 1			// パスワードを求める
+		gsel IDW_PASSWORD, 1
 		onkey gosub *LKey
 		do
-			wait 20
+			await 200
 		until ( bPass )
 		onkey false
-		gsel IDW_PASSWORD, -1			// 隠す
+		gsel IDW_PASSWORD, -1
 		gsel 0, 0
 	}
 	
 	// タスクトレイに格納
-	CreateTrayIcon app_name + "\nWaiting..."	// アイコン生成
+	CreateTrayIcon app_name + "\nWaiting..."
 	
 	// 時間を空ける
 	timerID = 1
-	SetTimer hwnd, timerID, lag * 1000	// 秒 → ミリ秒
+	SetTimer hwnd, timerID, lag * 1000
 	timerID = stat
 	
 	oncmd  gosub *LOnTimer, 0x0113 // WM_TIMER
@@ -87,33 +89,26 @@
 	if ( wparam != timerID ) { return }
 	gosub *LFreeTimer
 	
-	DestroyTrayIcon				// トレイのアイコンを削除
-	
-	// 起動処理
+	DestroyTrayIcon
 	
 	gosub *LExecFiles
 	if ( last ) {
-		gsel IDW_EXIT, 1		// スクリーンを公開
-		wait (100 * last)		// 待機 ( 単位は秒 )
-		gsel IDW_EXIT, -1		// スクリーンを隠す
+		gsel IDW_EXIT, 1
+		await (1000 * last)
+		gsel IDW_EXIT, -1
 	}
-	
 	PostMessage hwnd, 0x0010, 0, 0
 	return
 	
-// 終了ラベル
 *LExit
-	if ( hmenu ) { DestroyMenu hmenu }	// メニュー削除
+	if ( hmenu ) { DestroyMenu hmenu }
 	gosub *LFreeTimer
 	end : end
 	
-// タイマー削除
 *LFreeTimer
-	if ( timerID ) { KillTimer hwnd, timerID : timerID = 0 }	// タイマー削除
+	if ( timerID ) { KillTimer hwnd, timerID : timerID = 0 }
 	return
 	
-//######## サブルーチン ########################################################
-// スクリーン作成
 *LSettingScreen
 	sdim in_password, 64
 	
@@ -124,7 +119,7 @@
 	sysfont 17  : objsize 60, 20 
 	pos  10,  5 : mes "パスワードを入力してください"
 	pos  10, 20 : input in_password, 150, 20, 24
-	            : sendmsg objinfo(stat, 2), 0x00CC, '*', 0	// EM_SETPASSWORDCHAR (パスワード化)
+	            : sendmsg objinfo(stat, 2), 0x00CC, '*', 0 // EM_SETPASSWORDCHAR (パスワード化)
 	pos  30, 50 : button gosub "OK",     *LCheckPass
 	pos 100, 50 : button gosub "ignore", *LIgnorePass
 	
@@ -142,7 +137,6 @@
 		
 	} else {
 		cntPassWrong ++
-		
 		// 5回失敗したらシャットダウン
 		if ( cntPassWrong >= 5 ) {
 			exec "shutdown.exe -s -t 0"
@@ -151,7 +145,7 @@
 	return
 	
 *LIgnorePass
-	PostMessage hwnd, 0x0010, 0, 0		// WM_CLOSE
+	PostMessage hwnd, 0x0010, 0, 0 // WM_CLOSE
 	return
 	
 *LKey
@@ -169,36 +163,35 @@
 	sdim tmp, 64
 	dim  skip
 	
-	cntItems = ini_geti(ini, "Data", "CntEntries")	// 登録されているアイテムの数
-	sdim dirFile, MAX_PATH, cntItems					// ファイルパス
-	sdim cmdline, MAX_CMD , cntItems					// コマンドライン
-	sdim dirExec, MAX_PATH, cntItems					// 起動ディレクトリ
-	dim  runmode,           cntItems					// 実行モード(exec の p2)
+	cntItems = ini_geti(ini, "Data", "CntEntries")
+	sdim dirFile, MAX_PATH, cntItems
+	sdim cmdline, MAX_CMD , cntItems
+	sdim dirExec, MAX_PATH, cntItems
+	dim  runmode,           cntItems
 	
 	sdim username, 128
-	username = ini_gets(ini, "Data", "UserName")		// ユーザ名
-	password = ini_gets(ini, "Data", "Password")		// パスワード
+	username = ini_gets(ini, "Data", "UserName")
+	password = ini_gets(ini, "Data", "Password")
 	
-	if ( username != sysinfo(1) && username != "" ) {	// 別のユーザがログオンしているなら
+	if ( username != sysinfo(1) && username != "" ) {
 		ini_puts ini, "Failure", "Data.UserName", sysinfo(1)
-		end												// 違ったらだめ
+		end
 	} else {
 		ini_puts ini, "Failure", "Data.UserName", ""
 	}
 	
-	lag  = ini_geti(ini, "Data", "TimeLag" )		// ずらす時間 (単位は秒)
-	span = ini_geti(ini, "Data", "ExecSpan")		// 実行するスパン 単位はミリ秒 ( 1/1000 秒 )
-	last = ini_geti(ini, "Data", "LastSeeTime")		// 最後のウィンドウの時間 単位は秒
+	lag  = ini_geti(ini, "Data", "TimeLag" )
+	span = ini_geti(ini, "Data", "ExecSpan")
+	last = ini_geti(ini, "Data", "LastSeeTime")
 	
 	// パスワードを復号化
 	if ( peek(password) ) {
-		getstr password, password, 1		// 先頭 1byte を無視する
+		getstr password, password, 1 // 先頭 1byte を無視する
 	} else {
 		bPass = true
 	}
 	return
 	
-// ファイル読み込み
 *LLoadFiles
 	i = 0
 	sdim str_mode
@@ -214,13 +207,13 @@
 		dirFile(i) = ExpandEnvar( dirFile(i) )
 		exist RemoveQuotes( dirFile(i) )
 		if ( strsize < 0 || temp == "" ) {
-			ini_puts ini, "Failure", "Entry." + sCnt, "Failed Loading"	// 読み込み失敗のサイン
+			ini_puts ini, "Failure", "Entry." + sCnt, "Failed Loading"
 			logmes "Failed Loading #" + cnt + ": " + dirFile(i) + ", " + temp
 			memset dirFile(i), 0x00, MAX_PATH
 			continue
 		}
 		
-		if ( peek(temp, idx - 1) != ',' ) {		// , で止まっていなかったら
+		if ( peek(temp, idx - 1) != ',' ) {
 			temp += ",,,0"
 			ini_puts ini, "Entry", sCnt, temp
 		}
@@ -229,7 +222,7 @@
 		getstr cmdline(i), temp, idx, ',', MAX_CMD : idx += strsize
 		cmdline(i) = ExpandEnvar( cmdline(i) )
 		
-		if ( peek(temp, idx - 1) != ',' ) {		// , で止まっていなかったら
+		if ( peek(temp, idx - 1) != ',' ) {
 			temp += ",,0"
 			ini_puts ini, "Entry", sCnt, temp
 			idx ++
@@ -239,7 +232,7 @@
 		getstr dirExec(i), temp, idx, ',', MAX_PATH : idx += strsize
 		dirExec(i) = ExpandEnvar( dirExec(i) )
 		
-		if ( peek(temp, idx - 1) != ',' ) {		// , で止まっていなかったら
+		if ( peek(temp, idx - 1) != ',' ) {
 			temp += ",0"
 			ini_puts ini, "Entry", sCnt, temp
 			idx ++
@@ -252,11 +245,11 @@
 			ini_puts ini, "Entry", sCnt, temp
 			runmode(cnt) = 0
 		} else {
-			runmode(cnt) = int(str_mode)		// モード
+			runmode(cnt) = int(str_mode)
 		}
 		
 		// 成功したら、Failure のところを消しておく
-		ini_puts ini, "Failure", "Entry." + sCnt, ""		// 成功
+		ini_puts ini, "Failure", "Entry." + sCnt, ""
 		i ++
 	loop
 	
@@ -267,16 +260,15 @@
 #enum CMD_SKIP
 #enum CMD_END
 *LSettingMenu
-	hmenu = CreatePopupMenu()		// メニュー・ハンドル
+	hmenu = CreatePopupMenu()
 		AppendMenu hmenu, 0, CMD_SKIP,	"今すぐ実行する"
 		AppendMenu hmenu, 0, CMD_END,	"終了する"
-			AddSeparator hmenu		//-----------
+			AddSeparator hmenu
 		AppendMenu hmenu, 0, CMD_NONE,	"なにもしない"
 	return
 	
-// ファイルを実行する
 *LExecFiles
-	foreach  dirFile
+	foreach dirFile
 		if ( dirFile(cnt) != "" ) {
 			if ( dirExec(cnt) == "" ) {
 				dirExec(cnt) = getpath( dirFile(cnt), 32 )
@@ -288,13 +280,11 @@
 	loop
 	return
 	
-//######## トレイアイコンからの割り込み ########################################
 *OnTrayIconEvent@
 	// wparam = IconID, lparam = EventData
 	
-	// Single クリック (押下)
+	// クリック (押下)
 	if ( (lparam == 0x0201) || (lparam == 0x0204) ) {
-		
 		// メニューをポップアップ
 		SetForegroundWindow hwnd
 		TrackPopupMenuEx    hmenu, 0x0180, ginfo(0), ginfo(1), hwnd, NULL
@@ -311,7 +301,7 @@
 				swbreak
 		swend
 		
-	// 正Ｗクリック
+	// ダブルクリック
 	} else : if ( lparam == 0x203 ) {
 		gosub *LLSkip
 	}
