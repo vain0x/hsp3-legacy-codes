@@ -3,10 +3,8 @@
 #define global app_name "AutoLauncher"
 
 #packopt name app_name
-#packopt hide    1
-#packopt orgpath 1
+#packopt hide 1
 
-#include "Mo/GetOwnpath.as"		// 実行ファイルのパスを取得する
 #include "Mo/MCIni.as"
 #include "Mo/MenuBarAPI.as"
 #include "Mo/Trayicon.as"
@@ -34,11 +32,15 @@
 	
 #global
 
-#ifndef __UserDefHeader__
+#ifndef __userdef__
  #define ctype BITOFF(%1 = 0, %2 = 0) ( (%1) & (0xFFFFFFFF ^ (%2)) )
  #define MAX_PATH 260
  #define true  1
  #define false 0
+#endif
+#ifdef _DEBUG
+ #undef  dir_exe
+ #define global dir_exe "C:/Users/Owner/Source/Repos/AutoLauncher/AutoLauncher"
 #endif
 
 #define MAX_CMD 60
@@ -48,12 +50,10 @@
 #enum IDW_MAX
 
 *LMain
+#ifdef _DEBUG
 	gsel 0, -1
-	
-	sdim ownpath, MAX_PATH
-		 ownpath = GetOwnpath("C:/Tool/" + app_name)
-	
-	ini_new ini, ownpath + "/" + app_name + ".ini"
+#endif
+	ini_new ini, dir_exe + "/" + app_name + ".ini"
 	
 	gosub *LSettingScreen	
 	gosub *LLoadSetting
