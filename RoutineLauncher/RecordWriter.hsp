@@ -22,7 +22,6 @@
 #include "Mo/abdata/mod_shiftArray.as"
 
 #include "Mo/GetFontOfHSP.as"
-#include "Mo/GetOwnpath.as"
 #include "Mo/flexFrame.as"
 #include "Mo/Lvmod.as"
 #include "Mo/MenubarAPI.as"
@@ -76,9 +75,7 @@
 	return
 	
 *LInitVar
-	ownpath = GetOwnpath("D:/Tool/AutoStarter/RoutineStarter")
-	
-	ini_new cfg, (ownpath + "/" + Str_IniName)
+	ini_new cfg, (dir_exe2 + "/" + Str_IniName)
 	
 	sql_open fnameDb
 	return
