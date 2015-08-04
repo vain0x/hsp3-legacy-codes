@@ -1,10 +1,10 @@
 
-	Routine Starter
+	Routine Launcher
 	
 ＊概要
 	任意の曜日・時刻にプログラムを実行するソフトウェアです。
 	
-＊RoutineStarter
+＊RoutineLauncher
 
 link: 実行するリンク。exe ファイルのパスなど。
 mode: 実行モード

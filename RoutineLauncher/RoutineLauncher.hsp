@@ -1,6 +1,5 @@
-// RoutineStarter
-
-#packopt name "RoutineStarter"
+#define global app_name "RoutineLauncher"
+#packopt name app_name
 #packopt hide    1
 #packopt orgpath 1
 
@@ -70,7 +69,7 @@
 	if ( cntItems == 0 ) { end }
 	
 	// タスクトレイに格納
-	CreateTrayIcon "RoutineStarter.exe\nWaiting..."	// アイコン生成
+	CreateTrayIcon app_name + "\nWaiting..."	// アイコン生成
 	
 	// タイマーを設置
 	repeat cntItems
