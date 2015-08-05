@@ -35,6 +35,12 @@
 #func   global PostMessage    "PostMessageA"   int,int,int,sptr
 #func   global GetClientRect  "GetClientRect"  int,int
 
+#module
+#deffunc SetStyle int p1, int p2, int p3, int p4
+	SetWindowLong p1, p2, bit_sub(GetWindowLong(p1, p2 | p3), p4)
+	return
+#global
+
 // applycation consts
 #enum global IDW_Main = 0
 #enum global IDW_TableList = 0
