@@ -1,0 +1,13 @@
+#ifndef        IG_UEDAI_META_FUNCTIONS_HSP
+#define global IG_UEDAI_META_FUNCTIONS_HSP
+
+#define global _empty// empty
+#define global ctype _rm(%1)/*%1*/
+#define global ctype _cat(%1,%2)%1%2
+#define global ctype _cat3(%1,%2,%3)%1%2%3
+#define global ctype _cat_scope(%1,%2)_cat3(%1,@,%2)
+
+#define global _comma ,
+#define global _colon :
+
+#endif
