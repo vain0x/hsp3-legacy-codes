@@ -6,6 +6,8 @@
 // テーブルを作成・削除する機能がない。(用途を考えると十分だが)
 // assoc の使い方が雑？
 
+#include "uedai_userdef/all.hsp"
+
 #define global Str_AppName "RecordWriter"
 #define global Str_AppVer  "1.0"
 #define global Str_IniName (Str_AppName + ".ini")

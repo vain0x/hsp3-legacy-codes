@@ -2,6 +2,7 @@
 #packopt name app_name
 #packopt hide 1
 
+#include "uedai_userdef/all.hsp
 ;#define global USING_INI (true)
 
 #ifdef USING_INI

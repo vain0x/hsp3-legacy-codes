@@ -1,7 +1,8 @@
 // ルーチン設定初期化プログラム
 
-#define global Str_AppName "RoutineConfigInitializer"
+#include "uedai_userdef/all.hsp"
 
+#define global Str_AppName "RoutineConfigInitializer"
 #packopt name Str_AppName
 #packopt hide true
 
