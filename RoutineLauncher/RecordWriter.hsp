@@ -65,7 +65,6 @@
 *LInitialize
 	gsel 0, -1
 	
-	gosub *LOpenDb
 	gosub *LInitVar
 	gosub *LInitScreen
 	
@@ -73,18 +72,23 @@
 	return
 	
 *LOpenDb
-;#ifdef _DEBUG
-	fnameDb = "routine.db"
-;#else
-;	dialog "db", 16, Str_AppName  + ": Open"
-;	if ( stat == 0 ) { end : end }
-;	fnameDb = refstr
-;#endif
+	if ( dir_cmdline != "" ) {
+		fnameDb = dir_cmdline
+		return
+	}
+	
+	fnameDb = ini_gets(cfg, "Init", "DefaultDb")
+	if ( fnameDb != "" ) { return }
+	
+	dialog "db", 16, Str_AppName  + ": Open"
+	if ( stat == 0 ) { end }
+	fnameDb = refstr
 	return
 	
 *LInitVar
 	ini_new cfg, (dir_exe2 + "/" + Str_IniName)
 	
+	gosub *LOpenDb
 	sql_open fnameDb
 	return
 	
