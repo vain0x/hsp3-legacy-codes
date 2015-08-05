@@ -613,7 +613,7 @@
 	if ( idx < 0 || dir == 0 ) { return }
 	idxDst = idx - (dir / abs(dir))
 	
-	if ( IsRange(idxDst, 0, cntRecords - 1) == false ) { return }
+	if ( in_interval(idxDst, 0, cntRecords) == false ) { return }
 	
 	swap_var record(idx), record(idxDst)
 	
