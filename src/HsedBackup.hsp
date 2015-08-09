@@ -58,12 +58,12 @@
 	
 *LInitSetting
 	ini_new cfg, dir_exe2 + "/" + Str_IniName
-	bakpath = ini_gets(cfg, "backup", "dir_bak", dir_exe2 + "/_bak")
+	dir_bak = ini_gets(cfg, "backup", "dir_bak", dir_exe2 + "/_bak")
 	spnTime = ini_geti(cfg, "backup", "span", 60 * 1000)
 	
 	max_cnt_bak_files = ini_geti(cfg, "backup", "max_cnt_bak_files", 30)
 	
-	mkdir_if_able bakpath
+	mkdir_if_able dir_bak
 	return
 	
 *LInitTimer
@@ -110,7 +110,7 @@
 	if ( stat ) { return }
 	if ( path == "" ) { path = "_" + cnt } //–¢•Û‘¶ƒ^ƒu
 	path        = path_flatten(path)
-	path_bakdir = bakpath@ + "/" + path
+	path_bakdir = dir_bak@ + "/" + path
 	mkdir_if_able path_bakdir
 	
 	//•Û‘¶
