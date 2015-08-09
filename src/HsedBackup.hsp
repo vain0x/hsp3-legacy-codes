@@ -7,7 +7,7 @@
 #packopt hide true
 
 #include "hsedsdk.as"
-#include "Mo/ExistsDir.as"
+#include "util/dir_exists.hsp"
 #include "Mo/MCIni.as"
 #include "Mo/trayicon.as"
 #include "Mo/MCTimer.as"
@@ -56,10 +56,9 @@
 	bakpath = dir_exe2 + "/" + ini_gets(cfg, "bakfile", "dir_bak", "bak")
 	spnTime = ini_geti(cfg, "backup", "span", 120)
 	
-	if ( existsDir(bakpath) == false ) {
+	if ( dir_exists(bakpath) == false ) {
 		mkdir bakpath
 	}
-	
 	return
 	
 *LInitTimer

@@ -1,0 +1,12 @@
+#ifndef IG_DIR_EXISTS_HSP
+#define IG_DIR_EXISTS_HSP
+
+#module
+
+#defcfunc dir_exists str path,  local dummy, local index
+	dirlist dummy, path, dirlist_dirs
+	return (stat > 0)
+
+#global
+
+#endif
