@@ -120,6 +120,7 @@
 	//テキスト取得
 	hsed_gettext content, id_footy
 	content_size = strlen(content) + 1
+	if ( content_size == 1 ) { return }
 	
 	//ハッシュ値を比較
 	varmd5@ hash, content, content_size
