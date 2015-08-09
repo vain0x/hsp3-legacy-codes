@@ -1,5 +1,3 @@
-// hsed 自動バックアップ
-
 #include "uedai_userdef/all.hsp"
 #define global Str_AppName "HsedBackup"
 
@@ -15,9 +13,6 @@
 
 #define global success true
 #define global failure false
-
-#define global WM_TIMER          0x0113		// タイマーの周期通知
-#define global WM_TRAYEVENTSTART 0x0900		// トレイアイコン処理
 
 #define Str_IniName (Str_AppName + ".ini")
 
@@ -45,11 +40,7 @@
 	gosub *LInitialize
 	stop
 	
-//------------------------------------------------
-// 前処理
-//------------------------------------------------
 *LInitialize
-;	gsel 0, -1
 	gosub *LInitSetting
 	gosub *LInitTimer
 	gosub *LInitIcon
@@ -70,28 +61,20 @@
 	
 *LInitTimer
 	timer_new timerBackup, , spnTime
-	oncmd gosub *OnTimer, WM_TIMER
+	oncmd gosub *OnTimer, WM_TIMER@MCTimer
 	return
 	
 *LInitIcon
 	SetTrayIconFile ""
 	CreateTrayIcon Str_AppName
-	oncmd gosub *OnTrayIconEvent@, WM_TRAYEVENTSTART
+	oncmd gosub *OnTrayIconEvent@, WM_TRAYEVENTSTART@trayicon
 	return
 	
-//------------------------------------------------
-// タイマー処理
-//------------------------------------------------
 *OnTimer
-	gosub *LCheckExist		// hsed がない => 終了
-	if ( stat == failure ) { return }
-	
+	gosub *LHsedExists
 	gosub *LBackup
 	return
 	
-//------------------------------------------------
-// バックアップの実行
-//------------------------------------------------
 *LBackup
 	hsed_gettabcount cntTab
 ;	logmes strf( "(cntTab: %d) %s", cntTab, GetTmpFileName("") )
@@ -99,45 +82,35 @@
 		hsed_getfootyid idFooty, cnt
 		
 		hsed_getmodify bModify, idFooty
-		if ( bModify == false ) { continue }		// 未変更ならバックアップしない
+		if ( bModify == false ) { continue }
+		
+		hsed_getpath path, cnt
+		if ( stat ) { continue }
+		if ( path == "" ) { path = "_" + cnt }
+		path = path_flatten(path)
 		
 		hsed_gettext text, idFooty
-		hsed_getpath path, cnt
-		if ( stat == 0 ) {
-			if ( path == "" ) { path = "_" + cnt }
-			path = path_flatten(path)
-			bsave bakpath + "/" + GetTmpFileName(path), text, strlen(text)
-			cntBakFile ++
-		}
+		bsave bakpath + "/" + GetTmpFileName(path), text, strlen(text)
+		cntBakFile ++
 	loop
-	
 	return
 	
-//------------------------------------------------
-// 終了チェック
-// 
-// @ hsed が起動していない => 終了
-//------------------------------------------------
-*LCheckExist
+*LHsedExists
 	hsed_exist
+	if ( stat == false ) { end }
+	return
 	
-	if ( stat == false ) {
-		RegularQuit
-		return failure
-	}
-	return success
-	
-//------------------------------------------------
-// トレイアイコン処理
-//------------------------------------------------
 *OnTrayIconEvent@
-;	idIcon = wparam
+	// wparam = idIcon
+	
 	switch ( lparam )
-	;	case 0x0201:	// 正側ボタン 押下
-	;	case 0x0204:	// 逆側ボタン 押下
-	;		swbreak
-		case 0x0203:	// 正側ボタン W-Click
+		case 0x0201: //正クリック 押下
+			gosub *LBackup
+			timer_reset timerBackup
+			swbreak
+		case 0x0203: //正クリック W-Click
 			RegularQuit
 			swbreak	
+		;case 0x0204: //逆クリック 押下
 	swend
 	return
