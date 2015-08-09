@@ -60,8 +60,8 @@
 	
 *LInitSetting
 	ini_new cfg, dir_exe2 + "/" + Str_IniName
-	bakpath = dir_exe2 + "/" + ini_gets(cfg, "bakfile", "dir_bak", "bak")
-	spnTime = ini_geti(cfg, "backup", "span", 120)
+	bakpath = ini_gets(cfg, "backup", "dir_bak", dir_exe2 + "/_bak")
+	spnTime = ini_geti(cfg, "backup", "span", 60 * 1000)
 	
 	if ( dir_exists(bakpath) == false ) {
 		mkdir bakpath
@@ -141,4 +141,3 @@
 			swbreak	
 	swend
 	return
-	
