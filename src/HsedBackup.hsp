@@ -29,8 +29,14 @@
 	PostMessage hwnd, 0x0010, 0, 0
 	return
 	
+#defcfunc getpath_without_ext str _path,  local path, local ext
+	path = _path
+	ext = getpath(path, getpath_ext)
+	poke path, strlen(path) - strlen(ext), 0
+	return path
+	
 #defcfunc GetTmpFileName str path
-	return strf("%s.%02d-%02d-%02d %02d-%02d.bak.hsp", path, gettime(0) \ 100, gettime(1), gettime(3), gettime(4), gettime(5))
+	return strf("%s@%02d-%02d-%02d-%02d-%02d-%02d%s", getpath_without_ext(path), gettime_year \ 100, gettime_month, gettime_mday, gettime_hour, gettime_min, gettime_sec, getpath(path, getpath_ext))
 	
 #global
 
