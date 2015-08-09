@@ -9,7 +9,7 @@
 #include "hsedsdk.as"
 #include "util/dir_exists.hsp"
 #include "util/MCIni.hsp"
-#include "Mo/trayicon.as"
+#include "util/trayicon.hsp"
 #include "Mo/MCTimer.as"
 
 #define global success true
