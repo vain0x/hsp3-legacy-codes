@@ -4,6 +4,7 @@
 #packopt name Str_AppName
 #packopt hide true
 
+#include "hspinet.as"
 #include "hsedsdk.as"
 #include "util/note_each.hsp"
 #include "util/dir_exists.hsp"
@@ -52,8 +53,6 @@
 	gosub *LInitSetting
 	gosub *LInitTimer
 	gosub *LInitIcon
-	
-	sdim path, MAX_PATH
 	return
 	
 *LInitSetting
@@ -95,32 +94,45 @@
 	
 	repeat cnt_tabs
 		hsed_getfootyid id_footy, cnt
-		backup_tab id_footy
+		backup_tab id_footy, cnt
 	loop
 	return
 	
-#deffunc backup_tab int id_footy,  local is_modified, local path, local path_bakdir, local content
+#deffunc backup_tab int id_footy, int id_tab,  \
+	local is_modified, \
+	local path_new_bak, local path_tar, local path_bakdir, \
+	local content, local content_size, local hash
 	
 	hsed_getmodify is_modified, id_footy
 	if ( is_modified == false ) { return }
 	
 	//パスを取得
 	//一時ファイル用のディレクトリを用意
-	hsed_getpath path, cnt
+	hsed_getpath path_tar, id_tab
 	if ( stat ) { return }
-	if ( path == "" ) { path = "_" + cnt } //未保存タブ
-	path        = path_flatten(path)
-	path_bakdir = dir_bak@ + "/" + path
+	if ( path_tar == "" ) { path_tar = "_" + id_tab } //未保存タブ
+	path_tar    = path_flatten(path_tar)
+	path_bakdir = dir_bak@ + "/" + path_tar
 	mkdir_if_able path_bakdir
 	
-	//保存
+	path_new_bak = path_bakdir + "/" + new_temp_file_name(getpath(path_tar, getpath_ext))
+	
+	//テキスト取得
 	hsed_gettext content, id_footy
-	backup_save path, path_bakdir, content
+	content_size = strlen(content) + 1
+	
+	//ハッシュ値を比較
+	varmd5@ hash, content, content_size
+	if ( hash == ini_gets(cfg, path_tar, "latest_hash") ) { return }
+	ini_puts cfg, path_tar, "latest_hash", hash
+	
+	//保存
+	backup_save path_new_bak, path_tar, path_bakdir, content, content_size
 	return
 	
-#deffunc backup_save var path_tar, var path_bakdir, var content,  local cnt_bak_files, local path_bak_files, local path_bak
+#deffunc backup_save var path_new_bak, var path_tar, var path_bakdir, var content, int content_size,  local cnt_bak_files, local path_bak_files, local path_bak
 
-	bsave path_bakdir + "/" + new_temp_file_name(getpath(path_tar, getpath_ext)), content, strlen(content)
+	bsave path_new_bak, content, content_size
 	cnt_bak_files = ini_geti(cfg, path_tar, "count") + 1
 	
 	//バックアップが多すぎる場合は、古いものから削除
@@ -158,3 +170,6 @@
 		;case 0x0204: //逆クリック 押下
 	swend
 	return
+
+//最適化対策
+	varmd5
