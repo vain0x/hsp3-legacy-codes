@@ -8,6 +8,7 @@
 
 #include "hsedsdk.as"
 #include "util/dir_exists.hsp"
+#include "util/path_flatten.hsp"
 #include "util/MCIni.hsp"
 #include "util/trayicon.hsp"
 #include "util/MCTimer.hsp"
@@ -104,6 +105,7 @@
 		hsed_getpath path, cnt
 		if ( stat == 0 ) {
 			if ( path == "" ) { path = "_" + cnt }
+			path = path_flatten(path)
 			bsave bakpath + "/" + GetTmpFileName(path), text, strlen(text)
 			cntBakFile ++
 		}

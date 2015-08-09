@@ -1,0 +1,13 @@
+#ifndef IG_PATH_FLATTEN_HSP
+#define IG_PATH_FLATTEN_HSP
+
+#module
+#defcfunc path_flatten str _path,  local path
+	path = _path
+	if ( peek(path, 1) == ':' ) { poke path, 1, '$' }
+	strrep path, "\\", "/"
+	strrep path, "/", "$"
+	return path
+#global
+
+#endif
