@@ -1,0 +1,138 @@
+// hsed 自動バックアップ
+
+#define global Str_AppName "HseBackup"
+
+#packopt name Str_AppName
+#packopt hide true
+
+#include "hsedsdk.as"
+#include "Mo/ExistsDir.as"
+#include "Mo/GetOwnpath.as"
+#include "Mo/MCIni.as"
+#include "Mo/trayicon.as"
+#include "Mo/MCTimer.as"
+
+#define global WM_TIMER          0x0113		// タイマーの周期通知
+#define global WM_TRAYEVENTSTART 0x0900		// トレイアイコン処理
+
+#const  Span_Backup (120 * 1000)		// Backup 間隔 [ms]
+#define Str_IniName (Str_AppName + ".ini")
+
+#module
+
+#uselib "user32.dll"
+#func   PostMessage "PostMessageA" int,int,int,sptr
+
+#deffunc RegularQuit
+	PostMessage hwnd, 0x0010, 0, 0
+	return
+	
+#defcfunc GetTmpFileName str path
+	return strf("%s.%02d-%02d-%02d %02d-%02d.bak.hsp", path, gettime(0) \ 100, gettime(1), gettime(3), gettime(4), gettime(5))
+	
+#global
+
+*main
+	gosub *LInitialize
+	stop
+	
+//------------------------------------------------
+// 前処理
+//------------------------------------------------
+*LInitialize
+;	gsel 0, -1
+	gosub *LInitSetting
+	gosub *LInitTimer
+	gosub *LInitIcon
+	
+	cntBakFile = 0
+	sdim path, MAX_PATH
+	return
+	
+*LInitSetting
+	ownpath = GetOwnpath("D:/Docs/prg/hsp/Misc")
+	
+	ini_new cfg, (ownpath + "/" + Str_IniName)
+	bakpath = ownpath + "/" + ini_gets(cfg, "bakfile", "dir_bak", , "bak")
+	spnTime = ini_geti(cfg, "backup", "span", Span_Backup)
+	
+	if ( existsDir(bakpath) == false ) {
+		mkdir bakpath
+	}
+	
+	return
+	
+*LInitTimer
+	timer_new timerBackup, , spnTime
+	oncmd gosub *OnTimer, WM_TIMER
+	return
+	
+*LInitIcon
+	SetTrayIconFile ""
+	CreateTrayIcon Str_AppName
+	oncmd gosub *OnTrayIconEvent@, WM_TRAYEVENTSTART
+	return
+	
+//------------------------------------------------
+// タイマー処理
+//------------------------------------------------
+*OnTimer
+	gosub *LCheckExist		// hsed がない => 終了
+	if ( stat == failure ) { return }
+	
+	gosub *LBackup
+	return
+	
+//------------------------------------------------
+// バックアップの実行
+//------------------------------------------------
+*LBackup
+	hsed_gettabcount cntTab
+;	logmes strf( "(cntTab: %d) %s", cntTab, GetTmpFileName("") )
+	
+	repeat cntTab
+		hsed_getfootyid idFooty, cnt
+		
+		hsed_getmodify bModify, idFooty
+		if ( bModify == false ) { continue }		// 未変更ならバックアップしない
+		
+		hsed_gettext text, idFooty
+		hsed_getpath path, cnt
+		if ( stat == 0 ) {
+			if ( path == "" ) { path = "_" + cnt }
+			bsave bakpath + "/" + GetTmpFileName(path), text, strlen(text)
+			cntBakFile ++
+		}
+	loop
+	
+	return
+	
+//------------------------------------------------
+// 終了チェック
+// 
+// @ hsed が起動していない => 終了
+//------------------------------------------------
+*LCheckExist
+	hsed_exist
+	
+	if ( stat == false ) {
+		RegularQuit
+		return failure
+	}
+	return success
+	
+//------------------------------------------------
+// トレイアイコン処理
+//------------------------------------------------
+*OnTrayIconEvent@
+;	idIcon = wparam
+	switch ( lparam )
+	;	case 0x0201:	// 正側ボタン 押下
+	;	case 0x0204:	// 逆側ボタン 押下
+	;		swbreak
+		case 0x0203:	// 正側ボタン W-Click
+			RegularQuit
+			swbreak	
+	swend
+	return
+	
