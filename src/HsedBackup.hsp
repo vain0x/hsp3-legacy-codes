@@ -1,7 +1,7 @@
 // hsed 自動バックアップ
 
 #include "uedai_userdef/all.hsp"
-#define global Str_AppName "HseBackup"
+#define global Str_AppName "HsedBackup"
 
 #packopt name Str_AppName
 #packopt hide true
