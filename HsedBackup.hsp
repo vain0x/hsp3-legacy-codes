@@ -1,5 +1,6 @@
 // hsed 自動バックアップ
 
+#include "uedai_userdef/all.hsp"
 #define global Str_AppName "HseBackup"
 
 #packopt name Str_AppName
@@ -11,6 +12,9 @@
 #include "Mo/MCIni.as"
 #include "Mo/trayicon.as"
 #include "Mo/MCTimer.as"
+
+#define global success true
+#define global failure false
 
 #define global WM_TIMER          0x0113		// タイマーの周期通知
 #define global WM_TRAYEVENTSTART 0x0900		// トレイアイコン処理
@@ -50,10 +54,8 @@
 	return
 	
 *LInitSetting
-	ownpath = GetOwnpath("D:/Docs/prg/hsp/Misc")
-	
-	ini_new cfg, (ownpath + "/" + Str_IniName)
-	bakpath = ownpath + "/" + ini_gets(cfg, "bakfile", "dir_bak", , "bak")
+	ini_new cfg, dir_exe2 + "/" + Str_IniName
+	bakpath = dir_exe2 + "/" + ini_gets(cfg, "bakfile", "dir_bak", "bak")
 	spnTime = ini_geti(cfg, "backup", "span", Span_Backup)
 	
 	if ( existsDir(bakpath) == false ) {
