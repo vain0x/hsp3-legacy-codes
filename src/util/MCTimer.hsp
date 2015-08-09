@@ -1,0 +1,101 @@
+#ifndef IG_MODULE_CLASS_TIMER_HSP
+#define IG_MODULE_CLASS_TIMER_HSP
+
+// タイマーオブジェクト管理クラス
+
+#module MCTimer mhWnd, mTimerId, mSpan, mpfCallbk
+
+#define WM_TIMER 0x0113
+
+#uselib "user32.dll"
+#func   SetTimer@MCTimer  "SetTimer"  int,int,int,int
+#func   KillTimer@MCTimer "KillTimer" int,int
+
+#deffunc _init@MCTimer
+	stt_timerId = 1
+	return
+	
+/*
+%index
+timer_reset
+タイマーを設定し直す
+%inst
+現在のタイマーを停止し、改めて起動する。待ち時間は timer_resetSpan で指定されたもの。
+%*/
+#modfunc timer_reset
+	KillTimer mhWnd, mTimerId
+	SetTimer  mhWnd, mTimerId, mSpan, mpfCallbk
+	return
+	
+/*
+%index
+timer_resetSpan
+待ち時間を変更する
+%inst
+タイマーの待ち時間を再設定する。現在のタイマーを破棄し、新しい待ち時間をもつタイマーを起動する。
+%*/
+#modfunc timer_resetSpan int span
+	mSpan = span
+	timer_reset thismod
+	return
+	
+/*
+%index
+timer_getId
+タイマーID
+%*/
+#modcfunc timer_getId
+	return mTimerId
+	
+/*
+%index
+timer_getFunc
+タイマーのコールバック関数ポインタ
+%*/
+#modcfunc timer_getFunc
+	return mpfCallbk
+
+/*
+%index
+timer_new
+タイマーオブジェクトを作成する
+%prm
+this, hWnd, span_ms, callback
+window [hwnd]: タイマーに紐づけられるウィンドウ
+span_ms: タイマーの待ち時間 (ミリ秒)
+callback [nullptr]: タイマーに渡されるコールバック関数
+%inst
+タイマーは即座に起動する。
+%*/
+#define global timer_new(%1, %2 = hwnd, %3, %4 = 0) newmod %1, MCTimer@, %2, %3, %4
+#modinit int hWindow, int span, int pfCallbk
+	// メンバ変数の設定
+	mhWnd     = hWindow
+	mSpan     = span
+	mpfCallbk = pfCallbk
+	
+	// タイマーをセット
+	SetTimer mhWnd, stt_timerId, mSpan, mpfCallbk
+	mTimerId    = stat
+	stt_timerId ++
+	return
+	
+/*
+%index
+timer_delete
+タイマーオブジェクトを破棄する
+%prm
+this
+%inst
+タイマーを停止して、オブジェクトを解体する。delmod と同じく、通常は自動で実行されるので、明示的に呼び出す必要はない。
+%*/
+#define global timer_delete(%1) delmod %1
+#modterm
+	KillTimer mhWnd, mTimerID
+	return
+	
+#global
+
+	_init@MCTimer
+
+#endif

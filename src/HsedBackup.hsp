@@ -10,7 +10,7 @@
 #include "util/dir_exists.hsp"
 #include "util/MCIni.hsp"
 #include "util/trayicon.hsp"
-#include "Mo/MCTimer.as"
+#include "util/MCTimer.hsp"
 
 #define global success true
 #define global failure false
