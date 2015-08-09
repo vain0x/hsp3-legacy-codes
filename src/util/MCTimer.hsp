@@ -3,9 +3,12 @@
 
 // タイマーオブジェクト管理クラス
 
-#module MCTimer mhWnd, mTimerId, mSpan, mpfCallbk
+#module MCTimer mhWnd, mTimerId, mSpan, mpfCallbk, mIsRunning
 
 #define WM_TIMER 0x0113
+
+#define true 1
+#define false 0
 
 #uselib "user32.dll"
 #func   SetTimer@MCTimer  "SetTimer"  int,int,int,int
@@ -17,28 +20,50 @@
 	
 /*
 %index
-timer_reset
-タイマーを設定し直す
+timer_start
+タイマーを起動する
 %inst
-現在のタイマーを停止し、改めて起動する。待ち時間は timer_resetSpan で指定されたもの。
+既に起動中の場合は失敗する。
 %*/
-#modfunc timer_reset
-	KillTimer mhWnd, mTimerId
-	SetTimer  mhWnd, mTimerId, mSpan, mpfCallbk
+#modfunc timer_start
+	if ( mIsRunning == false ) {
+		SetTimer mhWnd, mTimerId, mSpan, mpfCallbk
+		assert mTimerId == stat
+		mIsRunning = true
+	}
 	return
-	
+
 /*
 %index
-timer_resetSpan
-待ち時間を変更する
+timer_stop
+タイマーを停止する
 %inst
-タイマーの待ち時間を再設定する。現在のタイマーを破棄し、新しい待ち時間をもつタイマーを起動する。
+起動中でなければ何もしない。
 %*/
-#modfunc timer_resetSpan int span
-	mSpan = span
-	timer_reset thismod
+#modfunc timer_stop
+	if ( mIsRunning ) {
+		KillTimer mhWnd, mTimerId
+		mIsRunning = false
+	}
+	return
+
+/*
+%index
+timer_reset
+タイマーを設定し直す
+%prm
+new_span_ms
+%inst
+現在のタイマーを停止し、改めて起動する。
+%*/
+#modfunc timer_reset int new_span_ms
+	timer_stop thismod
+	if ( new_span_ms >= 0 ) { mSpan = new_span_ms }
+	timer_start thismod
 	return
 	
+#define global timer_resetSpan(%1, %2) timer_reset (%1), (%2)
+
 /*
 %index
 timer_getId
@@ -65,19 +90,22 @@ window [hwnd]: タイマーに紐づけられるウィンドウ
 span_ms: タイマーの待ち時間 (ミリ秒)
 callback [nullptr]: タイマーに渡されるコールバック関数
 %inst
-タイマーは即座に起動する。
+タイマーは自動的に起動する。
+
+callback に関数ポインタを指定すると、タイマーの終了時にそれが呼び出される。
+省略した場合は、window に WM_TIMER メッセージが送信される。
+
+内部的に SetTimer 関数を使う。タイマーIDの重複に注意。
 %*/
 #define global timer_new(%1, %2 = hwnd, %3, %4 = 0) newmod %1, MCTimer@, %2, %3, %4
 #modinit int hWindow, int span, int pfCallbk
-	// メンバ変数の設定
 	mhWnd     = hWindow
 	mSpan     = span
 	mpfCallbk = pfCallbk
-	
-	// タイマーをセット
-	SetTimer mhWnd, stt_timerId, mSpan, mpfCallbk
-	mTimerId    = stat
+	mTimerId  = stt_timerId
 	stt_timerId ++
+	
+	timer_start thismod
 	return
 	
 /*
@@ -91,7 +119,7 @@ this
 %*/
 #define global timer_delete(%1) delmod %1
 #modterm
-	KillTimer mhWnd, mTimerID
+	timer_stop thismod
 	return
 	
 #global
