@@ -1,0 +1,13 @@
+hsptmp
+hsptmp.i
+obj
+packfile
+start.ax
+
+bak
+_bak
+HsedBackup.exe
+*.dll
+src/*.exe
+src/*.dll
+src/HsedBackup.ini
