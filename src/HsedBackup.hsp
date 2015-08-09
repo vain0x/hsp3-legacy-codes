@@ -8,7 +8,7 @@
 
 #include "hsedsdk.as"
 #include "util/dir_exists.hsp"
-#include "Mo/MCIni.as"
+#include "util/MCIni.hsp"
 #include "Mo/trayicon.as"
 #include "Mo/MCTimer.as"
 
