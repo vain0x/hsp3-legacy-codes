@@ -5,6 +5,7 @@
 #packopt hide true
 
 #include "hsedsdk.as"
+#include "util/note_each.hsp"
 #include "util/dir_exists.hsp"
 #include "util/path_flatten.hsp"
 #include "util/MCIni.hsp"
@@ -15,6 +16,7 @@
 #define global failure false
 
 #define Str_IniName (Str_AppName + ".ini")
+#define global cfg cfg_global@
 
 #module
 
@@ -51,7 +53,6 @@
 	gosub *LInitTimer
 	gosub *LInitIcon
 	
-	cntBakFile = 0
 	sdim path, MAX_PATH
 	return
 	
@@ -59,6 +60,8 @@
 	ini_new cfg, dir_exe2 + "/" + Str_IniName
 	bakpath = ini_gets(cfg, "backup", "dir_bak", dir_exe2 + "/_bak")
 	spnTime = ini_geti(cfg, "backup", "span", 60 * 1000)
+	
+	max_cnt_bak_files = ini_geti(cfg, "backup", "max_cnt_bak_files", 30)
 	
 	mkdir_if_able bakpath
 	return
@@ -88,7 +91,8 @@
 		hsed_getmodify bModify, idFooty
 		if ( bModify == false ) { continue }
 		
-		//パスを取得し、一時ファイル用のディレクトリを用意
+		//パスを取得
+		//一時ファイル用のディレクトリを用意
 		hsed_getpath path, cnt
 		if ( stat ) { continue }
 		if ( path == "" ) { path = "_" + cnt } //未保存タブ
@@ -97,12 +101,33 @@
 		mkdir_if_able path_bakdir
 		
 		hsed_gettext text, idFooty
-		
-		bsave path_bakdir + "/" + new_temp_file_name(getpath(path, getpath_ext)), text, strlen(text)
-		cntBakFile ++
+		backup_save path, path_bakdir, text
 	loop
 	return
 	
+#module
+
+#deffunc backup_save var path_tar, var path_bakdir, var content,  local cnt_bak_files, local path_bak_files, local path_bak
+
+	bsave path_bakdir + "/" + new_temp_file_name(getpath(path_tar, getpath_ext)), content, strlen(content)
+	cnt_bak_files = ini_geti(cfg, path_tar, "count") + 1
+	
+	//バックアップが多すぎる場合は、古いものから削除
+	if ( cnt_bak_files > max_cnt_bak_files@ ) {
+		dirlist path_bak_files, path_bakdir + "/*", dirlist_files
+		cnt_bak_files = stat
+		note_each path_bak, path_bak_files
+			if ( cnt >= (cnt_bak_files - max_cnt_bak_files@ / 2) ) { break }
+			delfile path_bakdir + "/" + path_bak
+		note_each_end
+		
+		cnt_bak_files = max_cnt_bak_files@ / 2
+	}
+	
+	ini_puti cfg, path_tar, "count", cnt_bak_files
+	return
+#global
+
 *LHsedExists
 	hsed_exist
 	if ( stat == false ) { end }
