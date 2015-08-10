@@ -97,13 +97,21 @@ callback に関数ポインタを指定すると、タイマーの終了時にそれが呼び出される。
 
 内部的に SetTimer 関数を使う。タイマーIDの重複に注意。
 %*/
-#define global timer_new(%1, %2 = hwnd, %3, %4 = 0) newmod %1, MCTimer@, %2, %3, %4
-#modinit int hWindow, int span, int pfCallbk
+#define global timer_new(%1, %2 = hwnd, %3, %4 = 0) %tMCTimer \
+	%i@__ = %4 :\
+	newmod %1, MCTimer@, %2, %3, %o@__
+
+#modinit int hWindow, int span, var callback
 	mhWnd     = hWindow
 	mSpan     = span
-	mpfCallbk = pfCallbk
 	mTimerId  = stt_timerId
 	stt_timerId ++
+	
+	if ( vartype(callback) == vartype("label") ) {
+		oncmd gosub callback, WM_TIMER
+	} else {
+		mpfCallbk = callback
+	}
 	
 	timer_start thismod
 	return

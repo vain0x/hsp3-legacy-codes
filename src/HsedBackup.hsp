@@ -66,8 +66,7 @@
 	return
 	
 *LInitTimer
-	timer_new timerBackup, , spnTime
-	oncmd gosub *OnTimer, WM_TIMER@MCTimer
+	timer_new timerBackup, , spnTime, *OnTimer
 	return
 	
 *LInitIcon
