@@ -111,7 +111,7 @@
 	//一時ファイル用のディレクトリを用意
 	hsed_getpath path_tar, id_tab
 	if ( stat ) { return }
-	if ( path_tar == "" ) { path_tar = "_" + id_tab } //未保存タブ
+	if ( path_tar == "" ) { path_tar = strf("_%02d.hsp", id_tab) } //未保存タブ
 	path_tar    = path_flatten(path_tar)
 	path_bakdir = dir_bak@ + "/" + path_tar
 	mkdir_if_able path_bakdir
