@@ -25,14 +25,20 @@
 	PostMessage hwnd, 0x0010, 0, 0
 	return
 	
+#deffunc mkdir_if_able str dir
+	if ( dir_exists(dir) == false ) {
+		mkdir dir
+	}
+	return
+	
 #defcfunc getpath_without_ext str _path,  local path, local ext
 	path = _path
 	ext = getpath(path, getpath_ext)
 	poke path, strlen(path) - strlen(ext), 0
 	return path
 	
-#defcfunc GetTmpFileName str path
-	return strf("%s@%02d-%02d-%02d-%02d-%02d-%02d%s", getpath_without_ext(path), gettime_year \ 100, gettime_month, gettime_mday, gettime_hour, gettime_min, gettime_sec, getpath(path, getpath_ext))
+#defcfunc new_temp_file_name str ext
+	return strf("%02d-%02d-%02d-%02d-%02d-%02d%s", gettime_year \ 100, gettime_month, gettime_mday, gettime_hour, gettime_min, gettime_sec, ext)
 	
 #global
 
@@ -54,9 +60,7 @@
 	bakpath = ini_gets(cfg, "backup", "dir_bak", dir_exe2 + "/_bak")
 	spnTime = ini_geti(cfg, "backup", "span", 60 * 1000)
 	
-	if ( dir_exists(bakpath) == false ) {
-		mkdir bakpath
-	}
+	mkdir_if_able bakpath
 	return
 	
 *LInitTimer
@@ -77,20 +81,24 @@
 	
 *LBackup
 	hsed_gettabcount cntTab
-;	logmes strf( "(cntTab: %d) %s", cntTab, GetTmpFileName("") )
+	logmes strf("Backup (cntTab: %d) %s", cntTab, new_temp_file_name(""))
 	repeat cntTab
 		hsed_getfootyid idFooty, cnt
 		
 		hsed_getmodify bModify, idFooty
 		if ( bModify == false ) { continue }
 		
+		//パスを取得し、一時ファイル用のディレクトリを用意
 		hsed_getpath path, cnt
 		if ( stat ) { continue }
-		if ( path == "" ) { path = "_" + cnt }
-		path = path_flatten(path)
+		if ( path == "" ) { path = "_" + cnt } //未保存タブ
+		path        = path_flatten(path)
+		path_bakdir = bakpath + "/" + path
+		mkdir_if_able path_bakdir
 		
 		hsed_gettext text, idFooty
-		bsave bakpath + "/" + GetTmpFileName(path), text, strlen(text)
+		
+		bsave path_bakdir + "/" + new_temp_file_name(getpath(path, getpath_ext)), text, strlen(text)
 		cntBakFile ++
 	loop
 	return
