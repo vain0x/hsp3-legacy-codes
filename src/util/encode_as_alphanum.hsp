@@ -1,0 +1,35 @@
+#ifndef IG_ENCODE_AS_ALPHANUM_HSP
+#define IG_ENCODE_AS_ALPHANUM_HSP
+#module
+
+/*
+%index
+encode_as_alphanum
+数値を52進数(固定長アルファベット列)で表記する
+%prm
+(n, d)
+n: 元の数値 (正)
+d: 桁数
+%inst
+0 = AA, 1 = AB, ..., 25 = AZ, 26 = Aa, ...
+%*/
+#defcfunc encode_as_alphanum int _n, int d,  \
+	local s, local n, local c, local i
+	
+	n = _n
+	sdim s
+	repeat d : i = d - 1 - cnt
+		c = n \ 52
+		if ( c < 26 ) {
+			c += 'A'
+		} else {
+			c = (c \ 26) + 'a'
+		}
+		poke s, i, c
+		n /= 52
+	loop
+	return s
+	
+#global
+#endif
+

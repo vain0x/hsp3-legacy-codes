@@ -9,6 +9,7 @@
 #include "util/note_each.hsp"
 #include "util/dir_exists.hsp"
 #include "util/path_flatten.hsp"
+#include "util/encode_as_alphanum.hsp"
 #include "util/MCIni.hsp"
 #include "util/trayicon.hsp"
 #include "util/MCTimer.hsp"
@@ -40,8 +41,11 @@
 	poke path, strlen(path) - strlen(ext), 0
 	return path
 	
+#defcfunc gettime_ymd
+	return (((gettime_year \ 100) * 12) + gettime_month) * 31 + gettime_mday
+	
 #defcfunc new_temp_file_name str ext
-	return strf("%02d-%02d-%02d-%02d-%02d-%02d%s", gettime_year \ 100, gettime_month, gettime_mday, gettime_hour, gettime_min, gettime_sec, ext)
+	return strf("%3s-%02d-%02d-%02d-%04d%s", encode_as_alphanum(gettime_ymd(), 3), gettime_hour, gettime_min, gettime_sec, gettime_millsec, ext)
 	
 #global
 
