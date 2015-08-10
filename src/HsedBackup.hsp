@@ -70,9 +70,7 @@
 	return
 	
 *LInitIcon
-	SetTrayIconFile ""
 	CreateTrayIcon Str_AppName
-	oncmd gosub *OnTrayIconEvent@, WM_TRAYEVENTSTART@trayicon
 	return
 	
 *OnTimer
