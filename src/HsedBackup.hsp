@@ -83,30 +83,41 @@
 	return
 	
 *LBackup
-	hsed_gettabcount cntTab
-	logmes strf("Backup (cntTab: %d) %s", cntTab, new_temp_file_name(""))
-	repeat cntTab
-		hsed_getfootyid idFooty, cnt
-		
-		hsed_getmodify bModify, idFooty
-		if ( bModify == false ) { continue }
-		
-		//パスを取得
-		//一時ファイル用のディレクトリを用意
-		hsed_getpath path, cnt
-		if ( stat ) { continue }
-		if ( path == "" ) { path = "_" + cnt } //未保存タブ
-		path        = path_flatten(path)
-		path_bakdir = bakpath + "/" + path
-		mkdir_if_able path_bakdir
-		
-		hsed_gettext text, idFooty
-		backup_save path, path_bakdir, text
-	loop
+	backup_all
 	return
 	
 #module
 
+#deffunc backup_all  local cnt_tabs, local id_footy
+	
+	hsed_gettabcount cnt_tabs
+	logmes strf("Backup (%d tabs) %s", cnt_tabs, new_temp_file_name(""))
+	
+	repeat cnt_tabs
+		hsed_getfootyid id_footy, cnt
+		backup_tab id_footy
+	loop
+	return
+	
+#deffunc backup_tab int id_footy,  local is_modified, local path, local path_bakdir, local content
+	
+	hsed_getmodify is_modified, id_footy
+	if ( is_modified == false ) { return }
+	
+	//パスを取得
+	//一時ファイル用のディレクトリを用意
+	hsed_getpath path, cnt
+	if ( stat ) { return }
+	if ( path == "" ) { path = "_" + cnt } //未保存タブ
+	path        = path_flatten(path)
+	path_bakdir = bakpath@ + "/" + path
+	mkdir_if_able path_bakdir
+	
+	//保存
+	hsed_gettext content, id_footy
+	backup_save path, path_bakdir, content
+	return
+	
 #deffunc backup_save var path_tar, var path_bakdir, var content,  local cnt_bak_files, local path_bak_files, local path_bak
 
 	bsave path_bakdir + "/" + new_temp_file_name(getpath(path_tar, getpath_ext)), content, strlen(content)
