@@ -1,7 +1,7 @@
 // 定義から hs を自動生成
 
 // ＠TODO
-// ・「埋め込みヘッダ情報」に対応
+// ・「埋め込みヘッダ情報」への対応
 
 #packopt name "autohs.exe"
 #packopt hide    1
@@ -93,6 +93,9 @@
 		} else : if ( inFile == "" && outFile != "" ) {
 			inFile  = outFile
 		}
+		
+		// 出力ファイルは必ず .hs
+		outFile = getpath( outFile, 1 ) +".hs"
 	}
 	
 	return

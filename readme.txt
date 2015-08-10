@@ -2,12 +2,12 @@
 	★ autohs ★
 
 【　名称　】autohs (automatic hs file creator)
-【Version 】1.0
+【Version 】1.1
 【開発環境】Windows XP SP3 HomeEdition
-【 更新日 】2009年 8月29日(土)
+【 更新日 】2009年 9月 1日 (火)
 【　種別　】フリーソフトウェア
 【 開発者 】上大
-【DownLoad】http://prograpark.ninja-web.net/ -> たまり場
+【DownLoad】http://prograpark.ninja-web.net/ → たまり場
 
 ＠目次
 　・概要
@@ -35,7 +35,6 @@
 	
 ＠パッケージ
 	[autohs]
-	┣ [src]        : スクリプト。不要なら削除してください。
 	┣ autohs.exe   : ソフト本体。
 	┣ autohs.ini   : 設定ファイル。
 	┗ readme.txt   : このファイル。説明書です。
@@ -56,6 +55,62 @@
 	
 	※コマンドラインで、output を省略した、と見なされるため。
 	
+　・埋め込みドキュメント情報
+	コメント内部に埋め込まれたファイル自身のデータを自動的に処理する機能を、
+	埋め込みドキュメント情報とよびます。
+	
+	(ex)
+	/**+
+	 * @name   : mod_hoge
+	 * @author : Mr.author man II
+	 * @date   : 2009 08/29 (Sat) -- 作成
+	 * @       : 2009 09/02 (Tue) -- 修整
+	 * @version: 1.02δ
+	 * @type   : アプリケーション補佐命令
+	 * @group  : 
+	 * @note   : #include "mod_hogehoge.as" が必要です。
+	 * @url    : http://website.hogehoge.net/日本語/ (※無効なURL)
+	 * @port
+	 * @	Win
+	 * @	Cli
+	 * @	Let
+	 * @portinfo : Windows API を用いているため、Mac では動きません。たぶん。
+	 **/
+	
+	埋め込みドキュメント情報を書くコメントの開始は、「/**+」＋「改行」です。
+	
+	埋め込みドキュメント情報は各行に1つずつ指定します。省略することも可能です。
+	
+	* @識別子 [:] 情報
+	
+	まず、'*' が必要です。その後ろにある「@識別子」で、情報の種類を選択します。
+	
+	@name     : モジュールの名称
+	@author   : 著作者名
+	@date     : 日付
+	@version  : バージョン番号
+	@type     : ユーザ定義命令・関数
+	@group    : 命令、関数の種類の既定値
+	@note     : 備考や注意書き
+	@url      : 関連するWebページへの url
+	@port     : 対応環境。
+	@         : Win := Windows版 HSP
+	@         : Mac := Macintosh版 HSP
+	@         : Cli := コンソール版 HSP
+	@         : Let := HSP Let
+	@portinfo : プラットホーム間の移植のヒント
+	
+	この後には、いくつかの空白文字をおき ( 途中に一回だけ : が置けます )、
+	それ以降・行末までの文字列を「情報」として扱います。ただし、「情報」の部分が
+	空になっている場合で、かつ途中に : がない限り、その行は無視されます。
+	
+	一つのファイル内に、同じ種類のドキュメント情報が複数ある場合は、それらをすべ
+	てを複数行にして連結します ( 順番は、書かれているものと同じ )。
+	
+	@ の次の識別子を省略した場合、その直前に指定された種類と同じだと解釈します。
+	
+	これにより取得された情報は、.hs ファイルのヘッダになります。
+	
 ＠関連URL
 	・プログラ広場
 		[http://prograpark.ninja-web.net/]
@@ -66,8 +121,12 @@
 		[http://hsp.tv/]
 	
 ＠更新履歴
+2009 09/01 (Tue)
+	・(力技的な文字列操作で) 埋め込みドキュメント情報に対応した。
+	
 2009 08/29 (Sat)
 	・新規作成。ver 1.00。
 	・mod_autohs が autohs によって死亡 (hs化上書き)。書き直し。
+	・モジュール内で閉じている定義を無視するように変更。
 	
-Copyright(C) 2008 - 2009 uedai.
+Copyright(C) 2009 uedai.
