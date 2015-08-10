@@ -40,11 +40,11 @@
 //------------------------------------------------
 *LInitialize
 	sdim curpath, MAX_PATH : curpath = dir_cur
-	sdim ownpath, MAX_PATH : ownpath = GetOwnpath("D:\\D_MyDocuments\\Programming\\HSP\\ProjSmall\\autohs")
+	sdim ownpath, MAX_PATH : ownpath = GetOwnpath("H:/MyDocs/prg/hsp/ProjSmall/autohs")
 	
 	chdir ownpath
 	
-	SetIniName ownpath +"\\autohs.ini"
+	SetIniName ownpath + "/autohs.ini"
 	SetHsHeader GetStrIni("Resource", "hsHeader")
 	
 	return
@@ -65,7 +65,7 @@
 		if ( stat == 0 ) { end }
 		inFile  = refstr
 		outFile = getpath(inFile, 1) + ".hs"
-		logmes logv(outFile)
+		logmes dbgstr(outFile)
 #else
 		PutErrorMessage Error_NeedCmdline
 		end

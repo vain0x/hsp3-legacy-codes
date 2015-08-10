@@ -1,7 +1,7 @@
 // autohs - header and module
 
-#ifndef __AUTO_HS_AS__
-#define __AUTO_HS_AS__
+#ifndef IG_AUTO_HS_AS
+#define IG_AUTO_HS_AS
 
 #define global HSED_TEMPFILE_DIR (ownpath +"\\"+ HSED_TEMPFILE_NAME)
 #define global HSED_TEMPFILE_HSP (ownpath +"\\"+ HSED_TEMPFILE_NAME +".hsp")
@@ -35,10 +35,11 @@
 		case Error_NeedCmdline : return "Cmdline:\n\t\"output-file-name\" \"input-file-name\""
 		case Error_NoExists    : return "The file is not exists."
 		case Error_NoHsed      : return "Basic Script Editor 'hsed3' is not executed."
+		default:
+			logmes "GetErrorMessage\n無効なエラー定数が使われている\n"+ error
+			assert
+			return ""
 	swend
-	logmes "GetErrorMessage\n無効なエラー定数が使われている\n"+ error
-	assert
-	return ""
 	
 #global
 

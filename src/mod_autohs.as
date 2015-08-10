@@ -1,7 +1,7 @@
 // hs 自動生成モジュール
 
-#ifndef __MODULE_AUTO_HS_AS__
-#define __MODULE_AUTO_HS_AS__
+#ifndef IG_MODULE_AUTO_HS_AS
+#define IG_MODULE_AUTO_HS_AS
 
 #include "Mo/HPM_split.as"
 
@@ -97,6 +97,7 @@
 	hpm_split tktypelist, tkstrlist, script, fSplit
 	cntToken = stat
 	
+	// hs 生成
 	dim deftype
 	dim idx
 	dim bInModule
@@ -331,7 +332,7 @@
 	switch ( nowTkType )
 		case TKTYPE_COMMENT
 			// 埋め込みドキュメント情報の場合
-			if ( lpeek(nowTkStr) == 0x2B2A2A2F ) {	// /**+
+			if ( lpeek(nowTkStr) == 0x2B2A2A2F ) {	// long("/**+")
 				index       = 4
 				len_max     = strlen(nowTkStr)
 				typeDocdata = -1
@@ -357,7 +358,7 @@
 					if ( peek(nowTkStr, index) == ':' ) {
 						index ++
 						index += CntSpaces(nowTkStr, index)
-						stt_bPermitEmptyLine = true
+						stt_bPermitEmptyLine = true			// 空行でも無視されない
 					} else {
 						stt_bPermitEmptyLine = false
 					}
@@ -378,8 +379,9 @@
 					// ドキュメント情報の配列に追加
 					if ( typeDocdata < 0 ) {
 						break
+						
 					} else {
-						// コロン(:)がない場合、空の行は無視する。
+						// コロン(:)がない＆空の行 ⇒ 無視する
 						if ( stt_bPermitEmptyLine == false && stt_sData == "" ) {
 							continue
 						}
@@ -411,6 +413,7 @@
 	return
 	
 #global
-AutohsInitialize
+
+	AutohsInitialize
 
 #endif
