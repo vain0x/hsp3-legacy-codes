@@ -1,0 +1,90 @@
+#ifndef IG_MODULE_MENU_HSP
+#define IG_MODULE_MENU_HSP
+
+#uselib "user32.dll"
+#cfunc  CreateMenu         "CreateMenu"
+#cfunc  CreatePopupMenu    "CreatePopupMenu"
+#func   AppendMenu         "AppendMenuA"        int,int,int,sptr
+#func   SetMenuItemInfo    "SetMenuItemInfoA"   int,int,int,int
+#func   GetMenuItemInfo    "GetMenuItemInfoA"   int,int,int,int
+#func   EnableMenuItem     "EnableMenuItem"     int,int,int
+#func   CheckMenuItem      "CheckMenuItem"      int,int,int
+#func   CheckMenuRadioItem "CheckMenuRadioItem" int,int,int,int,int
+#func   SetMenuItemBitmaps "SetMenuItemBitmaps" int,int,int,int,int
+#func   SetMenu            "SetMenu"            int,int
+#func   DrawMenuBar        "DrawMenuBar"        int
+#func   DestroyMenu        "DestroyMenu"        int
+#func   TrackPopupMenuEx   "TrackPopupMenuEx"   int,int,int,int,int,int
+#func   SetForegroundWindow "SetForegroundWindow" int
+
+#define menu_append_separator(%1) AppendMenu@ (%1), 0x0800, 0, /* nullptr */ 0
+
+//メニューバーハンドルを自動で解体するクラス
+#module menuHandle h_
+
+#ifdef _DEBUG // 警告避け
+	dim stt_menu_handles@__menu	
+#endif
+
+#modinit var h, int is_popup_menu
+	if ( is_popup_menu ) {
+		h_ = CreatePopupMenu@()
+	} else {
+		h_ = CreateMenu@()
+	}
+	h = h_
+	return
+	
+#modterm
+	DestroyMenu@ h_ : h_ = 0
+	return
+	
+//ファクトリ関数
+#defcfunc menuHandle_make int is_popup_menu, \
+	local h
+	
+	newmod stt_menu_handles@__menu, menuHandle@, h, is_popup_menu
+	return h
+#global
+
+#define global menu_make_menubar(%1) menuHandle_make(0)
+#define global menu_make_popup(%1)   menuHandle_make(1)
+
+#module
+#deffunc menu_tie int h_menu
+	SetMenu@ hwnd, h_menu
+	DrawMenuBar@ hwnd
+	return
+#global
+
+#module
+#deffunc menu_popup int h_menu
+	SetForegroundWindow@ hwnd
+	TrackPopupMenuEx@    h_menu, 0x0180, ginfo_mx, ginfo_my, hwnd, 0
+	return
+#global
+
+#module
+#deffunc menu_set_string int h_menu, int item_id, str _text,  \
+	local text
+
+	text = _text
+	dim mii, 12
+	mii = 48, 0x0040
+	mii(9) = varptr(text)
+	SetMenuItemInfo@ h_menu, item_id, 0, varptr(mii)
+	return
+#global
+
+#module
+// 3(Grayed) | 8(Checked)
+#deffunc menu_change_item_state int h_menu, int item_id, int is_able, int state_type,  \
+	local mii
+	
+	dim mii, 12 // MENUITEMINFO 構造体
+	mii = 48, 1, 0, ((is_able != 0) * state_type) // fState
+	SetMenuItemInfo@ h_menu, item_id, 0, varptr(mii)
+	return
+#global
+
+#endif
