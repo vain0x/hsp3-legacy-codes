@@ -11,7 +11,7 @@
 #include "util/path_flatten.hsp"
 #include "util/encode_as_alphanum.hsp"
 #include "util/mutex.hsp"
-#include "util/MCIni.hsp"
+#include "util/ini.hsp"
 #include "util/trayicon.hsp"
 #include "util/MCTimer.hsp"
 
