@@ -162,10 +162,6 @@
 	// wparam = idIcon
 	
 	switch ( lparam )
-		case 0x0201: //正クリック 押下
-			backup_all
-			timer_reset timerBackup
-			swbreak
 		case 0x0203: //正クリック W-Click
 			end
 			
