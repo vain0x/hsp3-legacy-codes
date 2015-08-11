@@ -6,6 +6,7 @@
 
 #include "hspinet.as"
 #include "hsedsdk.as"
+#include "mod_menu.hsp"
 #include "util/note_each.hsp"
 #include "util/dir_exists.hsp"
 #include "util/path_flatten.hsp"
@@ -38,8 +39,8 @@
 #defcfunc gettime_ymd
 	return (((gettime_year \ 100) * 12) + gettime_month) * 31 + gettime_mday
 	
-#defcfunc new_temp_file_name str ext
-	return strf("%3s-%02d-%02d-%02d-%04d%s", encode_as_alphanum(gettime_ymd(), 3), gettime_hour, gettime_min, gettime_sec, gettime_millsec, ext)
+#defcfunc string_now
+	return strf("%3s-%02d-%02d-%02d-%04d", encode_as_alphanum(gettime_ymd(), 3), gettime_hour, gettime_min, gettime_sec, gettime_millsec)
 	
 #global
 
@@ -88,7 +89,7 @@
 #deffunc backup_all  local cnt_tabs, local id_footy
 	
 	hsed_gettabcount cnt_tabs
-	logmes strf("Backup (%d tabs) %s", cnt_tabs, new_temp_file_name(""))
+	logmes strf("Backup (%d tabs) %s", cnt_tabs, string_now())
 	
 	repeat cnt_tabs
 		hsed_getfootyid id_footy, cnt
@@ -113,7 +114,7 @@
 	path_bakdir = dir_bak@ + "/" + path_tar
 	mkdir_if_able path_bakdir
 	
-	path_new_bak = path_bakdir + "/" + new_temp_file_name(getpath(path_tar, getpath_ext))
+	path_new_bak = path_bakdir + "/" + string_now() + getpath(path_tar, getpath_ext)
 	
 	//テキスト取得
 	hsed_gettext content, id_footy
