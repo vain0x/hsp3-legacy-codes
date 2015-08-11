@@ -89,8 +89,12 @@
 	
 #module
 
-#deffunc backup_all  local cnt_tabs, local id_footy
-
+#deffunc backup_all  \
+	local cnt_tabs, local id_footy
+	
+	stt_is_making_backup ++ //”r‘¼§Œä
+	if ( stt_is_making_backup > 1 ) { return }
+	
 	verify_hsed_exists
 	
 	hsed_gettabcount cnt_tabs
@@ -100,6 +104,8 @@
 		hsed_getfootyid id_footy, cnt
 		backup_tab id_footy, cnt
 	loop
+	
+	stt_is_making_backup --
 	return
 	
 #deffunc backup_tab int id_footy, int id_tab,  \
