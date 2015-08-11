@@ -23,13 +23,6 @@
 
 #module
 
-#uselib "user32.dll"
-#func   PostMessage "PostMessageA" int,int,int,sptr
-
-#deffunc RegularQuit
-	PostMessage hwnd, 0x0010, 0, 0
-	return
-	
 #deffunc mkdir_if_able str dir
 	if ( dir_exists(dir) == false ) {
 		mkdir dir
@@ -171,8 +164,7 @@
 			timer_reset timerBackup
 			swbreak
 		case 0x0203: //正クリック W-Click
-			RegularQuit
-			swbreak	
+			end
 		;case 0x0204: //逆クリック 押下
 	swend
 	return
