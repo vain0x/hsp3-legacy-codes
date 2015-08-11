@@ -6,7 +6,6 @@
 
 #include "hspinet.as"
 #include "hsedsdk.as"
-#include "mod_menu.hsp"
 #include "util/note_each.hsp"
 #include "util/dir_exists.hsp"
 #include "util/path_flatten.hsp"
@@ -63,6 +62,7 @@
 	spnTime = ini_geti(cfg, "backup", "span", 60 * 1000)
 	
 	max_cnt_bak_files = ini_geti(cfg, "backup", "max_cnt_bak_files", 30)
+	makes_backup_of_unmodified_tabs = ini_geti(cfg, "backup", "makes_backup_of_unmodified_tabs", true)
 	
 	mkdir_if_able dir_bak
 	return
@@ -102,8 +102,10 @@
 	local path_new_bak, local path_tar, local path_bakdir, \
 	local content, local content_size, local hash
 	
-	hsed_getmodify is_modified, id_footy
-	if ( is_modified == false ) { return }
+	if ( makes_backup_of_unmodified_tabs@ == false ) {
+		hsed_getmodify is_modified, id_footy
+		if ( is_modified == false ) { return }
+	}
 	
 	//パスを取得
 	//一時ファイル用のディレクトリを用意
