@@ -23,6 +23,12 @@
 
 #module
 
+#deffunc verify_hsed_exists
+	
+	hsed_exist
+	if ( stat == false ) { end }
+	return
+	
 #deffunc mkdir_if_able str dir
 	if ( dir_exists(dir) == false ) {
 		mkdir dir
@@ -76,17 +82,14 @@
 	return
 	
 *OnTimer
-	gosub *LHsedExists
-	gosub *LBackup
-	return
-	
-*LBackup
 	backup_all
 	return
 	
 #module
 
 #deffunc backup_all  local cnt_tabs, local id_footy
+
+	verify_hsed_exists
 	
 	hsed_gettabcount cnt_tabs
 	logmes strf("Backup (%d tabs) %s", cnt_tabs, string_now())
@@ -153,17 +156,12 @@
 	return
 #global
 
-*LHsedExists
-	hsed_exist
-	if ( stat == false ) { end }
-	return
-	
 *OnTrayIconEvent@
 	// wparam = idIcon
 	
 	switch ( lparam )
 		case 0x0201: //正クリック 押下
-			gosub *LBackup
+			backup_all
 			timer_reset timerBackup
 			swbreak
 		case 0x0203: //正クリック W-Click
