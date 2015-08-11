@@ -15,6 +15,8 @@
 #include "util/trayicon.hsp"
 #include "util/MCTimer.hsp"
 
+#include "menu.hsp"
+
 #define global success true
 #define global failure false
 
@@ -166,7 +168,10 @@
 			swbreak
 		case 0x0203: //正クリック W-Click
 			end
-		;case 0x0204: //逆クリック 押下
+			
+		case 0x0204: //逆クリック 押下
+			trayMenu_popup
+			swbreak
 	swend
 	return
 

@@ -1,0 +1,30 @@
+
+#include "util/menu.hsp"
+
+#module trayMenu
+
+#enum IDM_none = 0
+#enum IDM_quit
+#enum IDM_backup
+
+#deffunc _init@trayMenu
+	h_menu = menu_make_popup()
+	
+	AppendMenu@ h_menu, 0, IDM_backup, "バックアップする(&B)"
+	menu_append_separator@ h_menu
+	AppendMenu@ h_menu, 0, IDM_quit, "終了する(&Q)"
+	return
+	
+#deffunc trayMenu_popup
+	menu_popup h_menu
+	switch (stat) //メニューID
+		case IDM_quit: end
+		case IDM_backup
+			backup_all
+			swbreak
+	swend
+	return
+	
+#global
+
+	_init@traymenu
