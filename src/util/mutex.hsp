@@ -1,0 +1,34 @@
+#ifndef IG_MUTEX_MODULE_HSP
+#define IG_MUTEX_MODULE_HSP
+
+#module
+
+#define true  1
+#define false 0
+#define null  0
+
+#uselib "kernel32.dll"
+#func   CreateMutex  "CreateMutexA" nullptr,int,sptr
+#cfunc  GetLastError "GetLastError"
+#func   CloseHandle  "CloseHandle"  int
+
+#ifdef _DEBUG // åxçêîÇØ
+	dim stt_mutex_handle
+#endif
+
+#deffunc mutex_create str name
+	assert stt_mutex_handle == null
+	CreateMutex false, name
+	stt_mutex_handle = stat
+	if ( stt_mutex_handle != null && GetLastError() == 183 ) { // ERROR_ALREADY_EXISTS
+		return true
+	}
+	return false
+	
+#deffunc mutex_close@__mutex onexit
+	if ( stt_mutex_handle ) { CloseHandle stt_mutex_handle }
+	return
+	
+#global
+
+#endif

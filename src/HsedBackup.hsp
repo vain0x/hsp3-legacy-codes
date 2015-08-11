@@ -10,6 +10,7 @@
 #include "util/dir_exists.hsp"
 #include "util/path_flatten.hsp"
 #include "util/encode_as_alphanum.hsp"
+#include "util/mutex.hsp"
 #include "util/MCIni.hsp"
 #include "util/trayicon.hsp"
 #include "util/MCTimer.hsp"
@@ -54,6 +55,9 @@
 	stop
 	
 *LInitialize
+	mutex_create Str_AppName
+	if ( stat ) { end }
+	
 	gosub *LInitSetting
 	gosub *LInitTimer
 	gosub *LInitIcon
