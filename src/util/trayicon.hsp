@@ -6,6 +6,8 @@
 trayicon.hsp
 %note
 参考: 月影とも氏のタスクトレイアイコンモジュール <http://tu3.jp/0108>
+%group
+タスクトレイアイコン操作命令
 %*/
 
 #module trayicon
@@ -116,6 +118,7 @@ id_icon は、trayicon モジュールがアイコンを区別するための番号。ユーザが #enum な
 trayicon_destroy
 タスクトレイアイコンを削除する
 %prm
+icon_id
 icon_id: アイコンの管理ID
 */
 #deffunc trayicon_destroy int icon_id
@@ -142,7 +145,7 @@ text:    バルーンチップの本文。最大255バイト。
 icon_type: バルーンにつけるアイコンの種類。(NIIF_*)
 icon_id: アイコンの管理ID
 %inst
-icon_type は以下の通り。
+icon_type は以下の通り。@trayicon をつける必要がある。
 html{
 <table>
 <tr><td>NIIF_NONE</td><td>(なし)</td></tr>
