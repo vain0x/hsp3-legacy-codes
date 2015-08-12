@@ -33,13 +33,13 @@
 	
 *LInitSetting
 	ini_new cfg, dir_exe2 + "/" + Str_AppName + ".ini"
-	dir_bak = ini_gets(cfg, "backup", "dir_bak", dir_exe2 + "/_bak")
+	dir_bak = dir_baks()
 	spnTime = ini_geti(cfg, "backup", "span", 60 * 1000)
 	
 	max_cnt_bak_files = ini_geti(cfg, "backup", "max_cnt_bak_files", 30)
 	makes_backup_of_unmodified_tabs = ini_geti(cfg, "backup", "makes_backup_of_unmodified_tabs", true)
 	
-	mkdir_if_able dir_bak
+	mkdir_if_able dir_baks()
 	return
 	
 *LInitTimer
