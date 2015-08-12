@@ -28,6 +28,7 @@
 	gosub *LInitSetting
 	gosub *LInitTimer
 	gosub *LInitIcon
+	backup_all
 	return
 	
 *LInitSetting
