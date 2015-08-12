@@ -4,7 +4,7 @@
 
 #include "appMisc.hsp"
 #include "util/note_each.hsp"
-#include "util/l_radiobtn.as"
+#include "util/CheckListBox.as"
 #include "util/ini.hsp"
 
 #enum global IDW_main = 0
@@ -54,7 +54,7 @@
 #cfunc  GetWindowLong "GetWindowLongA" int,int
 #func   MoveWindow    "MoveWindow"     int,int,int,int,int,int
 
-#const size_x_left_pane 170 //ファイル名が固定長のため
+#const size_x_left_pane 190 //ファイル名が固定長のため
 #const size_y_radio_button 15
 #const size_x_button 80
 #const size_y_button 20
@@ -84,14 +84,8 @@
 	title "diffView " + getpath(path_tar, getpath_filename | getpath_ext)
 	width size_x_left_pane + 640, win_y
 	
-	repeat 2 : i = cnt
-		repeat count_
-			// 右が最新、左は最新の1つ前にチェックを入れる
-			// 左側のラジオボタンはラベルなし
-			radio_text = cond_s(i == 0, "", getpath(files_(cnt), getpath_filename | getpath_ext))
-			radiobtn radio_text, (cnt == count_ + i - 2), (cnt == 0)
-		loop
-	loop
+	CL_SetObject size_x_left_pane, ginfo_dispy, path_note
+	ido_listbox_ = stat
 	
 	font msgothic, 11
 	objsize size_x_button, size_y_button
@@ -102,27 +96,21 @@
 	axobj ie_, "Shell.Explorer.2", ginfo_dispx - size_x_left_pane, ginfo_winy
 	ido_browser_ = stat
 	
+	//最新の2つにチェックを付ける
+	repeat 2
+		CL_SetCheckState ido_listbox_, count_ - 1 - cnt, true
+	loop
+	
 	diffView_resize
 	diffView_diff
 	gsel IDW_main, gsel_show
 	return
 	
-#defcfunc diffView_ido_radio_button int i_row, int i_button
-	return i_row * count_ + i_button
-	
 #deffunc diffView_resize \
 	local i, local h
 	
-	repeat 2 : i = cnt
-		repeat count_
-			h = objinfo_hwnd(diffView_ido_radio_button(i, cnt))
-			if ( i == 0 ) {
-				MoveWindow h,  0, cnt * 15, 15, 15, true
-			} else {
-				MoveWindow h, 15, cnt * 15, size_x_left_pane - 15, 15, true
-			}
-		loop
-	loop
+	h = objinfo_hwnd(ido_listbox_)
+	MoveWindow h, 0, 0, size_x_left_pane, ginfo_winy - size_y_button, true
 	
 	h = objinfo_hwnd(ido_diff_button_)
 	MoveWindow h, 0, ginfo_winy - size_y_button, size_x_button, size_y_button, true
@@ -131,22 +119,26 @@
 	MoveWindow h, size_x_left_pane, 0, ginfo_winx - size_x_left_pane, ginfo_winy, true
 	return
 	
-#deffunc diffView_diff \
-	local ido, local ido_begin, local path, local content, local content_size
+#deffunc diffView_diff  \
+	local checked_indexes, local count_checks, \
+	local path, local content, local content_size
 	
-	//ラジオボタンの状態を確認
-	repeat 2
-		ido_begin = diffView_ido_radio_button(cnt, 0)
-		prmbtn ido_begin, ido_begin + count_
-		ido(cnt) = stat
+	CL_GetItemCount ido_listbox_
+	repeat stat
+		CL_GetCheckState ido_listbox_, cnt
+		if ( stat ) {
+			checked_indexes(count_checks) = cnt
+			count_checks ++
+		}
 	loop
-	
-	//どちらかのバージョンが未選択、または同じバージョン同士なら比較しない
-	if ( ido(0) < 0 || ido(1) < 0 || ido(0) == (ido(1) \ count_) ) { return }
+	if ( count_checks != 2 ) {
+		dialog "ちょうど2個だけチェックしてください。", dialog_ok, app_name
+		return
+	}
 	
 	sdim content, , 2
 	repeat 2
-		path = bakdir_ + "/" + files_(ido(cnt) \ count_)
+		path = bakdir_ + "/" + files_(checked_indexes(cnt))
 		
 		exist path
 		if ( strsize < 0 ) { break }
