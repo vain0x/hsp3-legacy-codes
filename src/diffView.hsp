@@ -2,7 +2,6 @@
 #packopt name app_name
 #packopt hide true
 
-#include "util/CommandLineToArgv.hsp"
 #include "util/note_each.hsp"
 #include "util/l_radiobtn.as"
 #include "util/ini.hsp"
@@ -165,21 +164,19 @@
 #module
 
 #deffunc main  \
-	local file_name, local dir_bak, \
-	local argv
+	local cmdline
 	
-	CommandLineToArgv argv
-	if ( stat != 3 ) {
+	cmdline = dir_cmdline
+	if ( cmdline == "" ) {
 	#ifdef _DEBUG
-		argv(1) = "HsedBackup.hsp"
-		argv(2) = "D:/Docs/prg/hsp/Misc/HsedBackup/src/_bak/D$$Docs$prg$hsp$Misc$HsedBackup$src$HsedBackup.hsp"
+		cmdline = "D:/Docs/prg/hsp/Misc/HsedBackup/src/HsedBackup.hsp"
 	#else
-		dialog "コマンドラインの引数が足りません。\nargc = " + stat, dialog_warn, app_name
+		dialog "コマンドライン引数が間違っています。\nargc = " + stat, dialog_warn, app_name
 		end
 	#endif //defined(_DEBUG)
 	}
 	
-	diffView_init argv(1), argv(2)
+	diffView_init cmdline
 	return
 
 #global
