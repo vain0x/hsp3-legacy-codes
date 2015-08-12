@@ -124,6 +124,26 @@
 	
 	ini_puti cfg, path_tar, "count", cnt_bak_files
 	return
+	
+#global
+
+#module
+
+#deffunc diffView_exec_active_tab  \
+	local id_tab, local path_tar
+	
+	verify_hsed_exists
+	hsed_getacttabid id_tab
+	hsed_getpath path_tar, id_tab
+	if ( stat ) { return }
+	regularize_path path_tar, id_tab
+	diffView_exec path_tar
+	return
+	
+#deffunc diffView_exec str path_tar
+	exec "diffView " + path_tar
+	return
+	
 #global
 
 *OnTrayIconEvent@
