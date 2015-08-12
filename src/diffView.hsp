@@ -2,8 +2,10 @@
 #packopt name app_name
 #packopt hide true
 
+#include "util/CommandLineToArgv.hsp"
 #include "util/note_each.hsp"
 #include "util/l_radiobtn.as"
+#include "util/ini.hsp"
 
 #enum global IDW_main = 0
 
@@ -67,7 +69,7 @@
 	count_ = stat
 	if ( count_ <= 1 ) {
 		dialog "ファイルの差分がありません。\n対象: " + path_tar, dialog_warn
-		return
+		end
 	}
 	note_each path, path_note
 		files_(cnt) = path
@@ -160,13 +162,26 @@
 	
 #global
 
-*LMain
-#ifdef _DEBUG
-	file_name = "HsedBackup.hsp"
-	dir_bak = "D:/Docs/prg/hsp/Misc/HsedBackup/src/_bak/D$$Docs$prg$hsp$Misc$HsedBackup$src$HsedBackup.hsp"
-#else //defined(_DEBUG)
-	end
-#endif //defined(_DEBUG)
+#module
+
+#deffunc main  \
+	local file_name, local dir_bak, \
+	local argv
 	
-	diffView_init file_name, dir_bak
-	stop
+	CommandLineToArgv argv
+	if ( stat != 3 ) {
+	#ifdef _DEBUG
+		argv(1) = "HsedBackup.hsp"
+		argv(2) = "D:/Docs/prg/hsp/Misc/HsedBackup/src/_bak/D$$Docs$prg$hsp$Misc$HsedBackup$src$HsedBackup.hsp"
+	#else
+		dialog "コマンドラインの引数が足りません。\nargc = " + stat, dialog_warn, app_name
+		end
+	#endif //defined(_DEBUG)
+	}
+	
+	diffView_init argv(1), argv(2)
+	return
+
+#global
+
+	main
