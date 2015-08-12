@@ -24,4 +24,11 @@
 #defcfunc string_now
 	return strf("%04d-%02d-%02d=%02d-%02d-%02d", gettime_year, gettime_month, gettime_mday, gettime_hour, gettime_min, gettime_sec)
 	
+#deffunc regularize_path var path, int id_tab
+	
+	if ( path == "" ) { //–¢•Û‘¶ƒ^ƒu
+		path = strf("_%02d.hsp", id_tab)
+	}
+	return
+	
 #global
