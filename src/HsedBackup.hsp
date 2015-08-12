@@ -14,13 +14,9 @@
 #include "util/trayicon.hsp"
 #include "util/MCTimer.hsp"
 
-#include "trayMenu.hsp"
-
-#define global success true
-#define global failure false
-
-#define Str_IniName (Str_AppName + ".ini")
 #define global cfg cfg_global@
+
+#include "trayMenu.hsp"
 
 #module
 
@@ -61,7 +57,7 @@
 	return
 	
 *LInitSetting
-	ini_new cfg, dir_exe2 + "/" + Str_IniName
+	ini_new cfg, dir_exe2 + "/" + Str_AppName + ".ini"
 	dir_bak = ini_gets(cfg, "backup", "dir_bak", dir_exe2 + "/_bak")
 	spnTime = ini_geti(cfg, "backup", "span", 60 * 1000)
 	
