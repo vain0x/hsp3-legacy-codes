@@ -105,6 +105,8 @@
 	
 	//•Û‘¶
 	backup_save path_new_bak, path_tar, path_bakdir, content, content_size
+	
+	ini_puts cfg, "backup", "latest_backup", path_new_bak
 	return
 	
 #deffunc backup_save var path_new_bak, var path_tar, var path_bakdir, var content, int content_size,  local cnt_bak_files, local path_bak_files, local path_bak
