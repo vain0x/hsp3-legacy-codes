@@ -21,6 +21,7 @@
 		case IDM_quit: end
 		case IDM_backup
 			backup_all
+			timer_reset timerBackup@
 			swbreak
 	swend
 	return
