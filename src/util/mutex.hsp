@@ -1,7 +1,7 @@
 #ifndef IG_MUTEX_MODULE_HSP
 #define IG_MUTEX_MODULE_HSP
 
-#module
+#module mutex h_
 
 #define true  1
 #define false 0
@@ -12,22 +12,19 @@
 #cfunc  GetLastError "GetLastError"
 #func   CloseHandle  "CloseHandle"  int
 
-#ifdef _DEBUG // åxçêîÇØ
-	dim stt_mutex_handle
-#endif
-
-#deffunc mutex_create str name
-	assert stt_mutex_handle == null
+#modinit str name
 	CreateMutex false, name
-	stt_mutex_handle = stat
-	if ( stt_mutex_handle != null && GetLastError() == 183 ) { // ERROR_ALREADY_EXISTS
-		return true
-	}
-	return false
+	h_ = stat
 	
-#deffunc mutex_close@__mutex onexit
-	if ( stt_mutex_handle ) { CloseHandle stt_mutex_handle }
+	return ( h_ != null && GetLastError() == 183 ) // ERROR_ALREADY_EXISTS
+	
+#modterm
+	if ( h_ ) { CloseHandle h_ }
 	return
+	
+#defcfunc is_unique_run array self, str name
+	newmod self, mutex@, name
+	return stat == false
 	
 #global
 

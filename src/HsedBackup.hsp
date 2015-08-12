@@ -52,8 +52,8 @@
 	stop
 	
 *LInitialize
-	mutex_create Str_AppName
-	if ( stat ) { end }
+	declvar stt_mutex@
+	if ( is_unique_run(stt_mutex@, Str_AppName) == false ) { end }
 	
 	gosub *LInitSetting
 	gosub *LInitTimer
@@ -86,10 +86,9 @@
 #module
 
 #deffunc backup_all  \
-	local cnt_tabs, local id_footy
+	local cnt_tabs, local id_footy, local mutex_backup
 	
-	stt_is_making_backup ++ //”r‘¼§Œä
-	if ( stt_is_making_backup > 1 ) { return }
+	if ( is_unique_run(mutex_backup, Str_AppName + "_is_making_backup") == false ) { return }
 	
 	verify_hsed_exists
 	
@@ -100,8 +99,6 @@
 		hsed_getfootyid id_footy, cnt
 		backup_tab id_footy, cnt
 	loop
-	
-	stt_is_making_backup --
 	return
 	
 #deffunc backup_tab int id_footy, int id_tab,  \
