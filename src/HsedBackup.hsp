@@ -14,7 +14,7 @@
 #include "util/trayicon.hsp"
 #include "util/MCTimer.hsp"
 
-#include "menu.hsp"
+#include "trayMenu.hsp"
 
 #define global success true
 #define global failure false
