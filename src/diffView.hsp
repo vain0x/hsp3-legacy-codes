@@ -1,0 +1,172 @@
+#define global app_name "diffView"
+#packopt name app_name
+#packopt hide true
+
+#include "util/note_each.hsp"
+#include "util/l_radiobtn.as"
+
+#enum global IDW_main = 0
+
+#module difff
+
+#define url "http://difff.jp"
+
+#deffunc difff_submit array ie, var content_a, var content_b,  \
+	local o_doc, local o_difff, local o_seqA, local o_seqB
+	
+	ie->"navigate" url
+	while ( ie("busy") || ie("readyState") != 4 )
+		await 17
+	wend
+	
+	o_doc = ie("document")
+	o_difff = o_doc("difff")
+	o_seqA = o_difff("sequenceA")
+	o_seqA("value") = content_a
+	o_seqB = o_difff("sequenceB")
+	o_seqB("value") = content_b
+	o_difff->"submit"
+	
+	//「結果だけ表示」ボタンを押す
+	repeat 1000
+		await 60
+		
+		declvar o_inputs
+		comres  o_inputs
+		o_doc->"getElementsByTagName" "input"
+		if( varuse(o_inputs) == false ) { continue }
+		o_hide = o_inputs("item", 1)
+		
+		if ( varuse(o_hide) == false ) { continue }
+		o_hide->"onclick"
+		break
+	loop
+	return
+	
+#global
+
+#module diffView
+
+#uselib "user32.dll"
+#func   SetWindowLong "SetWindowLongA" int,int,int
+#cfunc  GetWindowLong "GetWindowLongA" int,int
+#func   MoveWindow    "MoveWindow"     int,int,int,int,int,int
+
+#const size_x_left_pane 170 //ファイル名が固定長のため
+#const size_y_radio_button 15
+#const size_x_button 80
+#const size_y_button 20
+
+#deffunc diffView_init str path_tar, str dir_bak, \
+	local path, local path_note, \
+	local win_y, \
+	local i, local radio_text
+	
+	//バックアップファイルを収集
+	dirlist path_note, dir_bak + "/*", dirlist_files
+	count_ = stat
+	if ( count_ <= 1 ) {
+		dialog "ファイルの差分がありません。\n対象: " + path_tar, dialog_warn
+		return
+	}
+	note_each path, path_note
+		files_(cnt) = path
+	note_each_end
+	
+	path_ = path_tar
+	dir_bak_ = dir_bak
+	
+	win_y = limit(count_ * size_y_radio_button + size_y_button, 480, ginfo_dispy)
+	screen IDW_main, ginfo_dispx, ginfo_dispy, screen_hide
+	title "diffView " + getpath(path_tar, getpath_filename | getpath_ext)
+	width size_x_left_pane + 640, win_y
+	
+	repeat 2 : i = cnt
+		repeat count_
+			// 最新の2つにチェックを入れる
+			// 左側のラジオボタンはパラメータなし
+			radio_text = cond_s(i == 0, "", getpath(files_(cnt), getpath_filename | getpath_ext))
+			radiobtn radio_text, (cnt == count_ - i - 1), (cnt == 0)
+		loop
+	loop
+	
+	font msgothic, 11
+	objsize size_x_button, size_y_button
+	button gosub "diff", *LDiff
+	ido_diff_button_ = stat
+	
+	declvar ie_
+	axobj ie_, "Shell.Explorer.2", ginfo_dispx - size_x_left_pane, ginfo_winy
+	ido_browser_ = stat
+	
+	diffView_resize
+	diffView_diff
+	gsel IDW_main, gsel_show
+	return
+	
+#defcfunc diffView_ido_radio_button int i_row, int i_button
+	return i_row * count_ + i_button
+	
+#deffunc diffView_resize \
+	local i, local h
+	
+	repeat 2 : i = cnt
+		repeat count_
+			h = objinfo_hwnd(diffView_ido_radio_button(i, cnt))
+			if ( i == 0 ) {
+				MoveWindow h,  0, cnt * 15, 15, 15, true
+			} else {
+				MoveWindow h, 15, cnt * 15, size_x_left_pane - 15, 15, true
+			}
+		loop
+	loop
+	
+	h = objinfo_hwnd(ido_diff_button_)
+	MoveWindow h, 0, ginfo_winy - size_y_button, size_x_button, size_y_button, true
+	
+	h = objinfo_hwnd(ido_browser_)
+	MoveWindow h, size_x_left_pane, 0, ginfo_winx - size_x_left_pane, ginfo_winy, true
+	return
+	
+#deffunc diffView_diff \
+	local ido, local ido_begin, local path, local content, local content_size
+	
+	//ラジオボタンの状態を確認
+	repeat 2
+		ido_begin = diffView_ido_radio_button(cnt, 0)
+		prmbtn ido_begin, ido_begin + count_
+		ido(cnt) = stat
+	loop
+	
+	//どちらかのバージョンが未選択、または同じバージョン同士なら比較しない
+	if ( ido(0) < 0 || ido(1) < 0 || ido(0) == (ido(1) \ count_) ) { return }
+	
+	sdim content, , 2
+	repeat 2
+		path = dir_bak_ + "/" + files_(ido(cnt) \ count_)
+		
+		exist path
+		if ( strsize < 0 ) { break }
+		memexpand content(cnt), strsize + 1
+		bload path, content(cnt), strsize
+	loop
+	
+	difff_submit ie_, content(0), content(1)
+	return
+	
+*LDiff
+	diffView_diff
+	return
+	
+#global
+
+*LMain
+#ifdef _DEBUG
+	file_name = "HsedBackup.hsp"
+	dir_bak = "D:/Docs/prg/hsp/Misc/HsedBackup/src/_bak/D$$Docs$prg$hsp$Misc$HsedBackup$src$HsedBackup.hsp"
+#else //defined(_DEBUG)
+	end
+#endif //defined(_DEBUG)
+	
+	diffView_init file_name, dir_bak
+	stop
