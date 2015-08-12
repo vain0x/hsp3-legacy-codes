@@ -43,7 +43,7 @@
 	return
 	
 *LInitTimer
-	timer_new timerBackup, , spnTime, *OnTimer
+	timer_new backup_timer, , spnTime, *OnTimer
 	return
 	
 *LInitIcon
