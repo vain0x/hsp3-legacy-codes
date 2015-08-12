@@ -33,7 +33,6 @@
 	
 *LInitSetting
 	ini_new cfg, dir_exe2 + "/" + Str_AppName + ".ini"
-	dir_bak = dir_baks()
 	spnTime = ini_geti(cfg, "backup", "span", 60 * 1000)
 	
 	max_cnt_bak_files = ini_geti(cfg, "backup", "max_cnt_bak_files", 30)
@@ -88,7 +87,7 @@
 	if ( stat ) { return }
 	regularize_path path_tar, id_tab
 	path_tar    = path_flatten(path_tar)
-	path_bakdir = dir_bak@ + "/" + path_tar
+	path_bakdir = bakdir_from_path_tar(path_tar)
 	mkdir_if_able path_bakdir
 	
 	path_new_bak = path_bakdir + "/" + string_now() + getpath(path_tar, getpath_ext)

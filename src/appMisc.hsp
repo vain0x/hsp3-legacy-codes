@@ -34,4 +34,7 @@
 	}
 	return
 	
+#defcfunc bakdir_from_path_tar str path_tar
+	return dir_baks() + "/" + path_flatten(path_tar)
+	
 #global
