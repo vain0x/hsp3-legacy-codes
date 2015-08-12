@@ -2,6 +2,7 @@
 #packopt name app_name
 #packopt hide true
 
+#include "appMisc.hsp"
 #include "util/note_each.hsp"
 #include "util/l_radiobtn.as"
 #include "util/ini.hsp"
@@ -58,13 +59,15 @@
 #const size_x_button 80
 #const size_y_button 20
 
-#deffunc diffView_init str path_tar, str dir_bak, \
-	local path, local path_note, \
+#deffunc diffView_init str path_tar, \
+	local bakdir, local path, local path_note, \
 	local win_y, \
 	local i, local radio_text
 	
+	bakdir_ = bakdir_from_path_tar(path_tar)
+	
 	//バックアップファイルを収集
-	dirlist path_note, dir_bak + "/*", dirlist_files
+	dirlist path_note, bakdir_ + "/*", dirlist_files
 	count_ = stat
 	if ( count_ <= 1 ) {
 		dialog "ファイルの差分がありません。\n対象: " + path_tar, dialog_warn
@@ -75,7 +78,6 @@
 	note_each_end
 	
 	path_ = path_tar
-	dir_bak_ = dir_bak
 	
 	win_y = limit(count_ * size_y_radio_button + size_y_button, 480, ginfo_dispy)
 	screen IDW_main, ginfo_dispx, ginfo_dispy, screen_hide
@@ -144,7 +146,7 @@
 	
 	sdim content, , 2
 	repeat 2
-		path = dir_bak_ + "/" + files_(ido(cnt) \ count_)
+		path = bakdir_ + "/" + files_(ido(cnt) \ count_)
 		
 		exist path
 		if ( strsize < 0 ) { break }
