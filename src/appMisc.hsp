@@ -1,0 +1,27 @@
+
+#define global cfg cfg_global@
+
+#module
+
+#deffunc verify_hsed_exists
+	
+	hsed_exist
+	if ( stat == false ) { end }
+	return
+	
+#deffunc mkdir_if_able str dir
+	if ( dir_exists(dir) == false ) {
+		mkdir dir
+	}
+	return
+	
+#defcfunc getpath_without_ext str _path,  local path, local ext
+	path = _path
+	ext = getpath(path, getpath_ext)
+	poke path, strlen(path) - strlen(ext), 0
+	return path
+	
+#defcfunc string_now
+	return strf("%04d-%02d-%02d=%02d-%02d-%02d", gettime_year, gettime_month, gettime_mday, gettime_hour, gettime_min, gettime_sec)
+	
+#global
