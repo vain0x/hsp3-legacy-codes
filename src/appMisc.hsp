@@ -1,4 +1,8 @@
 
+#include "hsedsdk.as"
+#include "util/dir_exists.hsp"
+#include "util/path_flatten.hsp"
+
 #define global cfg cfg_global@
 
 #module
