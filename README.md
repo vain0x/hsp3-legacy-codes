@@ -37,6 +37,6 @@ HSPスクリプトエディタ (hsed3) の作業中のデータを自動でバックアップします。
 * HSPTV! <http://hsp.tv>
   * HSP3の公式サイト
 * Let's HSP <http://lhsp.s206.xrea.com/>
-  * HSPに関する情報参考にしました。また、モジュールをお借りしています。
+  * HSPに関する情報を参考にしました。また、モジュールをお借りしています。
 * HSED3Backup! <http://www.vector.co.jp/soft/dl/winnt/prog/se488981.html>
   * 類似ツール
