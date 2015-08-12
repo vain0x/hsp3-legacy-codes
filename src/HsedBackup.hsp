@@ -9,7 +9,6 @@
 #include "util/note_each.hsp"
 #include "util/dir_exists.hsp"
 #include "util/path_flatten.hsp"
-#include "util/encode_as_alphanum.hsp"
 #include "util/mutex.hsp"
 #include "util/ini.hsp"
 #include "util/trayicon.hsp"
@@ -43,11 +42,8 @@
 	poke path, strlen(path) - strlen(ext), 0
 	return path
 	
-#defcfunc gettime_ymd
-	return (((gettime_year \ 100) * 12) + gettime_month) * 31 + gettime_mday
-	
 #defcfunc string_now
-	return strf("%3s-%02d-%02d-%02d-%04d", encode_as_alphanum(gettime_ymd(), 3), gettime_hour, gettime_min, gettime_sec, gettime_millsec)
+	return strf("%04d-%02d-%02d=%02d-%02d-%02d", gettime_year, gettime_month, gettime_mday, gettime_hour, gettime_min, gettime_sec)
 	
 #global
 
