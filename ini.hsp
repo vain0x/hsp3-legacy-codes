@@ -88,7 +88,7 @@ def: 既定文字列 (キーがないときはこれが返される)
 		GetPrivateProfileString sec, key, def, varptr(stt_stmp), maxlen, varptr(path_)
 		
 		if ( maxlen_ <= 0 && stat == maxlen - 1 ) { // バッファが足りなかった
-			maxlen += maxlen / 2
+			maxlen *= 2
 			_continue
 		}
 	until true
@@ -231,8 +231,8 @@ return stat: キーの個数
 		
 		GetPrivateProfileString pSec, null, null, varptr(stt_stmp), maxlen, varptr(path_)
 		
-		if ( maxlen_ <= 0 && stat == maxlen - 2 ) {		// バッファが足りなかった
-			maxlen += maxlen / 2						// 1.5倍に広げて再チャレンジ
+		if ( maxlen_ <= 0 && stat == maxlen - 2 ) { // バッファが足りなかった
+			maxlen *= 2
 			_continue
 		}
 	until true
