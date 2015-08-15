@@ -263,16 +263,18 @@ return stat: ƒL[‚ÌŒÂ”
 #modfunc ini_dbglogv var buf,  \
 	local seclist, local sec, local keylist, local key, local stmp
 	
+	buf = ""
 	ini_enum_sections thismod, seclist
-	repeat stat : sec = seclist(cnt)
+	repeat stat
+		sec = seclist(cnt)
 		buf += strf("[%s]\n", sec)
 		
 		ini_enum_keys thismod, keylist, sec
-		repeat stat : key = keylist(cnt)
+		repeat stat
+			key = keylist(cnt)
 			ini_gets_v thismod, stmp, sec, key, , BufCapacity_Default
 			buf += "\t" + key + " = \"" + stmp + "\"\n"
 		loop
-		
 	loop
 	return
 #else
