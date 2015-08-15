@@ -1,0 +1,174 @@
+// #01 対話的な簡易 ini エディタ
+
+#include "ini.hsp"
+
+	gsel 0, -1
+	gosub *LInitScreen
+	gsel 0, 1
+	
+	gosub *LInitResource
+	
+	// 既定ファイルを開く (必須)
+	textPath = "C:/appdata.ini"
+	gosub *LOpen
+	stop
+	
+*LInitScreen
+	screen 0, 480, 320
+	title "ini-file interactive editor β"
+	syscolor 15 : boxf : color
+	
+	font msgothic, 12
+	objmode 2
+	
+	sdim textPath
+	sdim textSection
+	sdim textKey
+	sdim textVal
+	sdim textMsgbox
+	sdim textDefault
+	
+	y = 5
+	objsize 30, 20
+	pos   5, y : button gosub "...", *LFileSelect
+	pos  40, y : input textPath, ginfo_winx - 45, 20 : objidPath = stat
+	y += 25
+	
+	objsize 60, 20
+	pos   7, y + 4 : mes "Section: [                  ]"
+	pos  70, y : input textSection, 100, 20 : objidSection = stat
+	y += 25
+	
+	pos   7, y + 5 : mes "Key: "
+	pos  60, y : input textKey, 80, 20 : objidKey = stat
+	pos 150, y + 5 : mes "="
+	pos 165, y : input textVal, 150, 20 : objidVal = stat
+	y += 25
+	
+	objsize 40, 20
+	pos   5, y : button gosub "get", *LGet
+	pos  50, y : button gosub "put", *LPut
+	objsize 60, 20
+	pos  95, y : button gosub "exists", *LExistsKey
+	pos 160, y : button gosub "remove", *LRemoveKey
+	pos 225, y : button gosub "dbglog", *LDbglog
+	y += 25
+	
+	y = 5 + 25	// section の右側
+	pos 350, y : button gosub "enum",   *LEnum : objidBtnEnumSection = stat
+	pos 415, y : button gosub "remove", *LRemoveSection
+	
+	y += 25		// key の右側
+	pos 350, y : button gosub "enum",   *LEnum
+	pos 415, y : button gosub "remove", *LRemoveSection
+	
+	y = 5 + 25 * 4
+	pos 5, y : mesbox textMsgbox, ginfo_winx - 5 * 2, ginfo_winy - (y + 5), 4 : objidMsgbox = stat
+	return
+	
+*LInitResource
+	textSucceedOrNot = "失敗", "成功"
+	textExistOrNot = "存在しない", "存在する"
+	textEmptyOrNot = "非空", "空"
+	return
+	
+*LFileSelect
+	dialog "ini;*.cfg", 16, "構造設定ファイル"
+	if ( stat == 0 ) { return }
+	textPath = refstr
+	
+	gosub *LClose
+	gosub *LOpen
+	return
+	
+*LOpen
+	ini_new cfg, textPath
+	bEmpty = (strsize <= 0)
+	AddLog "open { Path: \"" + textPath + "\" }", textEmptyOrNot(bEmpty)
+	objprm objidPath, textPath
+	
+	if ( bEmpty == 0 ) { gosub *LDbglog }		// 中身があるなら出力する
+	return
+	
+*LClose
+	AddLog "close { Path: \"" + ini_getPath(cfg) + "\" }", ""
+	ini_delete cfg
+	return
+	
+*LPut
+	ini_put cfg, textSection, textKey, textVal
+	
+	AddLog "put { Section: [" + textSection + "], Key: \"" + textKey + "\" }", textVal
+	return
+	
+*LGet
+	bExists = ini_existsKey(cfg, textSection, textKey)
+	if ( bExists ) {
+		textVal = ini_gets(cfg, textSection, textKey)
+	} else {
+		textVal = "(存在しない)"
+	}
+	objprm objidVal, textVal
+	
+	AddLog "get { Section: [" + textSection + "], Key: \"" + textKey + "\" }", textVal
+	return
+	
+*LExistsKey
+	bExists = ini_existsKey(cfg, textSection, textKey)
+	AddLog "existsKey { Section: [" + textSection + "], Key: \"" + textKey + "\" }", textExistOrNot(bExists)
+	return
+	
+*LRemoveSection
+	ini_removeSection cfg, textSection
+	dialog "removeSection { Section: [" + textSection + "] }", 0, textSucceedOrNot(stat == 0)
+	return
+	
+*LRemoveKey
+	bExists = ini_existsKey(cfg, textSection, textKey)
+	
+	ini_removeKey cfg, textSection, textKey
+	AddLog "removeKey { Section: [" + textSection + "], Key: \"" + textKey + "\" }", textExistOrNot(bExists)
+	return
+	
+*LEnum
+	bSection = (stat == objidBtnEnumSection)
+	
+	buf = ""
+	if ( bSection ) {
+		ini_enumSection cfg, list
+	} else {
+		ini_enumKey cfg, list, textSection
+	}
+	if ( stat == 0 ) {
+		buf = "(none)"
+	} else {
+		repeat stat : buf += list(cnt) + "\n" : loop
+	}
+	
+	if ( bSection ) {
+		AddLog "enumSection", buf
+	} else {
+		AddLog "enumKey { Section: [" + textSection + "] }", buf
+	}
+	return
+	
+*LDbglog
+	ini_dbglogv cfg, buf
+	AddLog "dbglog", buf
+	return
+	
+#deffunc AddLog str cmd, str text
+	textMsgbox += ">> " + cmd + "\n"
+	if ( text != "" ) {
+		textMsgbox += text
+		if ( strmid(textMsgbox, strlen(textMsgbox) - 2, 2) != "\n" ) {
+			textMsgbox += "\n"
+		}
+	}
+	objprm objidMsgbox, textMsgbox
+	
+	// 一番下までスクロールする
+	sendmsg objinfo(objidMsgbox, 2), 0x00BA, 0, 0		// EM_GETLINECOUNT (行数を得る)
+	sendmsg objinfo(objidMsgbox, 2), 0x00B6, 0, stat 	// EM_LINESCROLL (指定行数だけスクロールする)
+	return
+	
