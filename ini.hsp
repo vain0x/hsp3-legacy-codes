@@ -245,12 +245,11 @@ return stat: キーの個数
 	idx = 0
 	sdim dst
 	repeat
+		if ( idx >= maxsize ) { break }
 		getstr dst(cnt), buf, idx, , maxsize
-	;	logmes dst(cnt)
 		idx += strsize + 1
-		if ( peek(buf, idx) == 0 ) { break }		// '\0' の2連続は終端フラグ
 	loop
-	return length(dst) - (idx <= 1)			// 要素数; ただし dst[0] が空のとき 0
+	return length(dst) - (idx <= 1) // 要素数; ただし dst[0] が空のとき 0
 	
 #ifdef _DEBUG
 // すべてのキー・値の対を列挙する (デバッグ用)
