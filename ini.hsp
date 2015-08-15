@@ -5,7 +5,7 @@
 %dll
 ini.hsp
 %group
-INIãƒ•ã‚¡ã‚¤ãƒ«æ“ä½œã‚³ãƒãƒ³ãƒ‰
+INIƒtƒ@ƒCƒ‹‘€ìƒRƒ}ƒ“ƒh
 %port
 Win
 %*/
@@ -24,7 +24,7 @@ Win
 
 #define BufCapacity_Default 1023
 
-//ä¸‹ä½äº’æ›ç”¨
+//‰ºˆÊŒİŠ·—p
 #define global ini_getsv         ini_gets_v
 #define global ini_existsKey     ini_exists_key
 #define global ini_enumSection   ini_enum_sections
@@ -35,29 +35,29 @@ Win
 #define global ini_getArray      ini_get_array
 #define global ini_putArray      ini_put_array
 
-#ifdef _DEBUG //è­¦å‘Šé¿ã‘
+#ifdef _DEBUG //Œx”ğ‚¯
 	sdim stt_stmp
 #endif
 
 /*
 %index
 ini_new
-INIãƒ•ã‚¡ã‚¤ãƒ«ã‚’é–‹ã
+INIƒtƒ@ƒCƒ‹‚ğŠJ‚­
 %prm
 this, path
 this:
-  æ–°ã—ã„ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ãŒå…¥ã‚‹é…åˆ—å¤‰æ•°ã€‚
-  ã»ã‹ã® ini_ ç³»å‘½ä»¤ã‚„é–¢æ•°ã‚’ä½¿ã†ã¨ãã€ã“ã‚Œã‚’æœ€åˆã®å¼•æ•°ã«æŒ‡å®šã™ã‚‹ã€‚
-path: INIãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒ‘ã‚¹ã€‚å¿…ãšç›¸å¯¾ãƒ‘ã‚¹ã§æŒ‡å®šã™ã‚‹ã“ã¨ã€‚
+  V‚µ‚¢ƒCƒ“ƒXƒ^ƒ“ƒX‚ª“ü‚é”z—ñ•Ï”B
+  ‚Ù‚©‚Ì ini_ Œn–½—ß‚âŠÖ”‚ğg‚¤‚Æ‚«A‚±‚ê‚ğÅ‰‚Ìˆø”‚Éw’è‚·‚éB
+path: INIƒtƒ@ƒCƒ‹‚ÌƒpƒXB•K‚¸‘Š‘ÎƒpƒX‚Åw’è‚·‚é‚±‚ÆB
 %inst
-å†…éƒ¨çš„ã«ã¯ newmod ã§ã‚ã‚‹ã€‚
+“à•”“I‚É‚Í newmod ‚Å‚ ‚éB
 %*/
 #define global ini_new(%1, %2) newmod %1, MCIni@, %2
 
 #modinit str fname
 	path_ = fname
 	
-	//ãªã‘ã‚Œã°ç©ºãƒ•ã‚¡ã‚¤ãƒ«ã‚’ä½œã£ã¦ãŠã
+	//‚È‚¯‚ê‚Î‹óƒtƒ@ƒCƒ‹‚ğì‚Á‚Ä‚¨‚­
 	exist fname
 	if ( strsize < 0 ) { bsave fname, path_, 0 }
 	return
@@ -66,14 +66,14 @@ path: INIãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒ‘ã‚¹ã€‚å¿…ãšç›¸å¯¾ãƒ‘ã‚¹ã§æŒ‡å®šã™ã‚‹ã“ã¨ã€‚
 
 /*
 ini_gets_v
-æ–‡å­—åˆ—ãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿å‡ºã™ (å‘½ä»¤å½¢å¼)
+•¶š—ñƒf[ƒ^‚ğ“Ç‚İo‚· (–½—ßŒ`®)
 %prm
 this, dst, sec, key, def
 (this)
-dst: å€¤ãŒæ›¸ãè¾¼ã¾ã‚Œã‚‹å¤‰æ•°
-sec: ã‚»ã‚¯ã‚·ãƒ§ãƒ³å
-key: ã‚­ãƒ¼å
-def: æ—¢å®šæ–‡å­—åˆ— (ã‚­ãƒ¼ãŒãªã„ã¨ãã¯ã“ã‚ŒãŒè¿”ã•ã‚Œã‚‹)
+dst: ’l‚ª‘‚«‚Ü‚ê‚é•Ï”
+sec: ƒZƒNƒVƒ‡ƒ“–¼
+key: ƒL[–¼
+def: Šù’è•¶š—ñ (ƒL[‚ª‚È‚¢‚Æ‚«‚Í‚±‚ê‚ª•Ô‚³‚ê‚é)
 %*/
 #define global ini_gets_v(%1, %2, %3, %4, %5 = "", %6 = 0) \
 	ini_gets_v_ %1, %2, %3, %4, %5, %6
@@ -87,7 +87,7 @@ def: æ—¢å®šæ–‡å­—åˆ— (ã‚­ãƒ¼ãŒãªã„ã¨ãã¯ã“ã‚ŒãŒè¿”ã•ã‚Œã‚‹)
 		
 		GetPrivateProfileString sec, key, def, varptr(stt_stmp), maxlen, varptr(path_)
 		
-		if ( maxlen_ <= 0 && stat == maxlen - 1 ) { // ãƒãƒƒãƒ•ã‚¡ãŒè¶³ã‚Šãªã‹ã£ãŸ
+		if ( maxlen_ <= 0 && stat == maxlen - 1 ) { // ƒoƒbƒtƒ@‚ª‘«‚è‚È‚©‚Á‚½
 			maxlen += maxlen / 2
 			_continue
 		}
@@ -98,12 +98,12 @@ def: æ—¢å®šæ–‡å­—åˆ— (ã‚­ãƒ¼ãŒãªã„ã¨ãã¯ã“ã‚ŒãŒè¿”ã•ã‚Œã‚‹)
 /*
 %index
 ini_gets
-æ–‡å­—åˆ—ãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿å‡ºã™
+•¶š—ñƒf[ƒ^‚ğ“Ç‚İo‚·
 %prm
 (this, sec, key, def)
-sec: ã‚»ã‚¯ã‚·ãƒ§ãƒ³å
-key: ã‚­ãƒ¼å
-def: æ—¢å®šæ–‡å­—åˆ— (ã‚­ãƒ¼ãŒãªã„ã¨ãã¯ã“ã‚ŒãŒè¿”ã•ã‚Œã‚‹)
+sec: ƒZƒNƒVƒ‡ƒ“–¼
+key: ƒL[–¼
+def: Šù’è•¶š—ñ (ƒL[‚ª‚È‚¢‚Æ‚«‚Í‚±‚ê‚ª•Ô‚³‚ê‚é)
 %*/
 #define global ctype ini_gets(%1, %2, %3, %4 = "", %5 = BufCapacity_Default@MCIni) \
 	ini_gets_(%1, %2, %3, %4, %5)
@@ -117,12 +117,12 @@ def: æ—¢å®šæ–‡å­—åˆ— (ã‚­ãƒ¼ãŒãªã„ã¨ãã¯ã“ã‚ŒãŒè¿”ã•ã‚Œã‚‹)
 /*
 %index
 ini_getd
-å®Ÿæ•°å€¤ãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿å‡ºã™
+À”’lƒf[ƒ^‚ğ“Ç‚İo‚·
 %prm
 (this, sec, key, def)
-sec: ã‚»ã‚¯ã‚·ãƒ§ãƒ³å
-key: ã‚­ãƒ¼å
-def: æ—¢å®šå€¤ (ã‚­ãƒ¼ãŒãªã„ã¨ãã¯ã“ã®å€¤ãŒè¿”ã•ã‚Œã‚‹)
+sec: ƒZƒNƒVƒ‡ƒ“–¼
+key: ƒL[–¼
+def: Šù’è’l (ƒL[‚ª‚È‚¢‚Æ‚«‚Í‚±‚Ì’l‚ª•Ô‚³‚ê‚é)
 %*/
 #modcfunc ini_getd str sec, str key, double def
 	GetPrivateProfileString sec, key, str(def), varptr(stt_stmp), 32, varptr(path_)
@@ -131,13 +131,13 @@ def: æ—¢å®šå€¤ (ã‚­ãƒ¼ãŒãªã„ã¨ãã¯ã“ã®å€¤ãŒè¿”ã•ã‚Œã‚‹)
 /*
 %index
 ini_geti
-æ•´æ•°å€¤ãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿å‡ºã™
+®”’lƒf[ƒ^‚ğ“Ç‚İo‚·
 %prm
 (this, sec, key, def)
 %prm
-sec: ã‚»ã‚¯ã‚·ãƒ§ãƒ³å
-key: ã‚­ãƒ¼å
-def: æ—¢å®šå€¤ (ã‚­ãƒ¼ãŒãªã„ã¨ãã¯ã“ã®å€¤ãŒè¿”ã•ã‚Œã‚‹)
+sec: ƒZƒNƒVƒ‡ƒ“–¼
+key: ƒL[–¼
+def: Šù’è’l (ƒL[‚ª‚È‚¢‚Æ‚«‚Í‚±‚Ì’l‚ª•Ô‚³‚ê‚é)
 %*/
 #modcfunc ini_geti str sec, str key, int def
 	return GetPrivateProfileInt( sec, key, def, varptr(path_) )
@@ -145,16 +145,16 @@ def: æ—¢å®šå€¤ (ã‚­ãƒ¼ãŒãªã„ã¨ãã¯ã“ã®å€¤ãŒè¿”ã•ã‚Œã‚‹)
 /*
 %index
 ini_puts
-æ–‡å­—åˆ—ãƒ‡ãƒ¼ã‚¿ã‚’æ›¸ãè¾¼ã‚€
+•¶š—ñƒf[ƒ^‚ğ‘‚«‚Ş
 %prm
 this, sec, key, value
-sec: ã‚»ã‚¯ã‚·ãƒ§ãƒ³å
-key: ã‚­ãƒ¼å
-value: æ›¸ãè¾¼ã‚€ãƒ‡ãƒ¼ã‚¿
+sec: ƒZƒNƒVƒ‡ƒ“–¼
+key: ƒL[–¼
+value: ‘‚«‚Şƒf[ƒ^
 %inst
-ãƒ‡ãƒ¼ã‚¿ã‚’æ–‡å­—åˆ—ã¨ã—ã¦æ›¸ãè¾¼ã¿ã¾ã™ã€‚è‡ªå‹•çš„ã« "" ã§æ‹¬ã‚‰ã‚Œã‚‹ã®ã§ã€ã‚¹ãƒšãƒ¼ã‚¹ãªã©ã‚‚ç¶­æŒã•ã‚Œã¾ã™ã€‚
+ƒf[ƒ^‚ğ•¶š—ñ‚Æ‚µ‚Ä‘‚«‚İ‚Ü‚·B©“®“I‚É "" ‚ÅŠ‡‚ç‚ê‚é‚Ì‚ÅAƒXƒy[ƒX‚È‚Ç‚àˆÛ‚³‚ê‚Ü‚·B
 
-æ”¹è¡Œã‚’å«ã‚€æ–‡å­—åˆ—ã¯æ›¸ãè¾¼ã‚ã¾ã›ã‚“ã€‚
+‰üs‚ğŠÜ‚Ş•¶š—ñ‚Í‘‚«‚ß‚Ü‚¹‚ñB
 %*/
 #modfunc ini_puts str sec, str key, str data
 	WritePrivateProfileString sec, key, "\"" + data + "\"", varptr(path_)
@@ -163,14 +163,14 @@ value: æ›¸ãè¾¼ã‚€ãƒ‡ãƒ¼ã‚¿
 /*
 %index
 ini_putd
-å®Ÿæ•°å€¤ãƒ‡ãƒ¼ã‚¿ã‚’æ›¸ãè¾¼ã‚€
+À”’lƒf[ƒ^‚ğ‘‚«‚Ş
 %prm
 this, sec, key, value
-sec: ã‚»ã‚¯ã‚·ãƒ§ãƒ³å
-key: ã‚­ãƒ¼å
-value: æ›¸ãè¾¼ã‚€ãƒ‡ãƒ¼ã‚¿
+sec: ƒZƒNƒVƒ‡ƒ“–¼
+key: ƒL[–¼
+value: ‘‚«‚Şƒf[ƒ^
 %inst
-æœ‰åŠ¹æ•°å­—16æ¡ã§æ›¸ãè¾¼ã¾ã‚Œã¾ã™ã€‚
+—LŒø”š16Œ…‚Å‘‚«‚Ü‚ê‚Ü‚·B
 %*/
 #modfunc ini_putd str sec, str key, double data
 	WritePrivateProfileString sec, key, strf("%.16e", data), varptr(path_)
@@ -179,12 +179,12 @@ value: æ›¸ãè¾¼ã‚€ãƒ‡ãƒ¼ã‚¿
 /*
 %index
 ini_puti
-æ•´æ•°å€¤ãƒ‡ãƒ¼ã‚¿ã‚’æ›¸ãè¾¼ã‚€
+®”’lƒf[ƒ^‚ğ‘‚«‚Ş
 %prm
 this, sec, key, value
-sec: ã‚»ã‚¯ã‚·ãƒ§ãƒ³å
-key: ã‚­ãƒ¼å
-value: æ›¸ãè¾¼ã‚€ãƒ‡ãƒ¼ã‚¿
+sec: ƒZƒNƒVƒ‡ƒ“–¼
+key: ƒL[–¼
+value: ‘‚«‚Şƒf[ƒ^
 %*/
 #modfunc ini_puti str sec, str key, int data
 	WritePrivateProfileString sec, key, str(data), varptr(path_)
@@ -193,11 +193,11 @@ value: æ›¸ãè¾¼ã‚€ãƒ‡ãƒ¼ã‚¿
 /*
 %index
 ini_enum_sections
-ã‚»ã‚¯ã‚·ãƒ§ãƒ³ã®åˆ—æŒ™
+ƒZƒNƒVƒ‡ƒ“‚Ì—ñ‹“
 %prm
 this, dst
-dst: ã‚»ã‚¯ã‚·ãƒ§ãƒ³åã®é…åˆ—ã«ãªã‚‹é…åˆ—å¤‰æ•°
-return stat: ã‚»ã‚¯ã‚·ãƒ§ãƒ³ã®å€‹æ•°
+dst: ƒZƒNƒVƒ‡ƒ“–¼‚Ì”z—ñ‚É‚È‚é”z—ñ•Ï”
+return stat: ƒZƒNƒVƒ‡ƒ“‚ÌŒÂ”
 %*/
 #define global ini_enum_sections(%1, %2, %3 = 0) \
 	ini_enum_impl %1, %2, "", %3
@@ -205,19 +205,19 @@ return stat: ã‚»ã‚¯ã‚·ãƒ§ãƒ³ã®å€‹æ•°
 /*
 %index
 ini_enum_keys
-ã‚­ãƒ¼ã®åˆ—æŒ™
+ƒL[‚Ì—ñ‹“
 %prm
 this, dst, sec
-dst: ã‚­ãƒ¼åã®é…åˆ—ã«ãªã‚‹é…åˆ—å¤‰æ•°
-sec: ã‚»ã‚¯ã‚·ãƒ§ãƒ³å
-return stat: ã‚­ãƒ¼ã®å€‹æ•°
+dst: ƒL[–¼‚Ì”z—ñ‚É‚È‚é”z—ñ•Ï”
+sec: ƒZƒNƒVƒ‡ƒ“–¼
+return stat: ƒL[‚ÌŒÂ”
 %*/
 #define global ini_enum_keys(%1, %2, %3, %4 = 0) \
 	ini_enum_impl %1, %2, (%3) + " ", %4
 	
 /*
-ã‚»ã‚¯ã‚·ãƒ§ãƒ³ [] ã®ã‚­ãƒ¼ã‚’åˆ—æŒ™ã™ã‚‹ã¨ãã€ã‚»ã‚¯ã‚·ãƒ§ãƒ³åã®åˆ—æŒ™ã‚’ãƒªã‚¯ã‚¨ã‚¹ãƒˆã—ãŸã¨èª¤èªã•ã‚Œã¦ã—ã¾ã‚ãªã„ã‚ˆã†ã«ã€
-åå‰ã«ç©ºç™½ã‚’ãã£ã¤ã‘ã¦ã„ã‚‹ã€‚ã“ã®ç©ºç™½ã¯ç„¡è¦–ã•ã‚Œã‚‹ã®ã§å•é¡Œãªã„ã€‚
+ƒZƒNƒVƒ‡ƒ“ [] ‚ÌƒL[‚ğ—ñ‹“‚·‚é‚Æ‚«AƒZƒNƒVƒ‡ƒ“–¼‚Ì—ñ‹“‚ğƒŠƒNƒGƒXƒg‚µ‚½‚ÆŒë”F‚³‚ê‚Ä‚µ‚Ü‚í‚È‚¢‚æ‚¤‚ÉA
+–¼‘O‚É‹ó”’‚ğ‚­‚Á‚Â‚¯‚Ä‚¢‚éB‚±‚Ì‹ó”’‚Í–³‹‚³‚ê‚é‚Ì‚Å–â‘è‚È‚¢B
 //*/
 
 #modfunc ini_enum_impl array dst, str sec_, int maxlen_,  \
@@ -231,8 +231,8 @@ return stat: ã‚­ãƒ¼ã®å€‹æ•°
 		
 		GetPrivateProfileString pSec, null, null, varptr(stt_stmp), maxlen, varptr(path_)
 		
-		if ( maxlen_ <= 0 && stat == maxlen - 2 ) {		// ãƒãƒƒãƒ•ã‚¡ãŒè¶³ã‚Šãªã‹ã£ãŸ
-			maxlen += maxlen / 2						// 1.5å€ã«åºƒã’ã¦å†ãƒãƒ£ãƒ¬ãƒ³ã‚¸
+		if ( maxlen_ <= 0 && stat == maxlen - 2 ) {		// ƒoƒbƒtƒ@‚ª‘«‚è‚È‚©‚Á‚½
+			maxlen += maxlen / 2						// 1.5”{‚ÉL‚°‚ÄÄƒ`ƒƒƒŒƒ“ƒW
 			_continue
 		}
 	until true
@@ -240,7 +240,7 @@ return stat: ã‚­ãƒ¼ã®å€‹æ•°
 	SplitByNull dst, stt_stmp, stat
 	return ;stat
 	
-// cnv: '\0' åŒºåˆ‡ã‚Šæ–‡å­—åˆ— -> é…åˆ—
+// cnv: '\0' ‹æØ‚è•¶š—ñ -> ”z—ñ
 #deffunc SplitByNull@MCIni array dst, var buf, int maxsize,  local idx
 	idx = 0
 	sdim dst
@@ -248,12 +248,12 @@ return stat: ã‚­ãƒ¼ã®å€‹æ•°
 		getstr dst(cnt), buf, idx, , maxsize
 	;	logmes dst(cnt)
 		idx += strsize + 1
-		if ( peek(buf, idx) == 0 ) { break }		// '\0' ã®2é€£ç¶šã¯çµ‚ç«¯ãƒ•ãƒ©ã‚°
+		if ( peek(buf, idx) == 0 ) { break }		// '\0' ‚Ì2˜A‘±‚ÍI’[ƒtƒ‰ƒO
 	loop
-	return length(dst) - (idx <= 1)			// è¦ç´ æ•°; ãŸã ã— dst[0] ãŒç©ºã®ã¨ã 0
+	return length(dst) - (idx <= 1)			// —v‘f”; ‚½‚¾‚µ dst[0] ‚ª‹ó‚Ì‚Æ‚« 0
 	
 #ifdef _DEBUG
-// ã™ã¹ã¦ã®ã‚­ãƒ¼ãƒ»å€¤ã®å¯¾ã‚’åˆ—æŒ™ã™ã‚‹ (ãƒ‡ãƒãƒƒã‚°ç”¨)
+// ‚·‚×‚Ä‚ÌƒL[E’l‚Ì‘Î‚ğ—ñ‹“‚·‚é (ƒfƒoƒbƒO—p)
 #modfunc ini_dbglog  local buf
  	ini_dbglogv thismod, buf
 	logmes "\n(ini_dbglog): @" + path_
@@ -283,29 +283,29 @@ return stat: ã‚­ãƒ¼ã®å€‹æ•°
 /*
 %index
 ini_exists_key
-ã‚­ãƒ¼ãŒå­˜åœ¨ã™ã‚‹ã‹ï¼Ÿ
+ƒL[‚ª‘¶İ‚·‚é‚©H
 %prm
 this, sec, key
-sec: ã‚»ã‚¯ã‚·ãƒ§ãƒ³å
-key: ã‚­ãƒ¼å
-return stat: æŒ‡å®šã•ã‚ŒãŸã‚­ãƒ¼ãŒã‚ã‚Œã°çœŸ(0ä»¥å¤–)ã‚’ã€ãªã‘ã‚Œã°å½(0)ã‚’è¿”ã™ã€‚
+sec: ƒZƒNƒVƒ‡ƒ“–¼
+key: ƒL[–¼
+return stat: w’è‚³‚ê‚½ƒL[‚ª‚ ‚ê‚Î^(0ˆÈŠO)‚ğA‚È‚¯‚ê‚Î‹U(0)‚ğ•Ô‚·B
 %*/
 #modcfunc ini_exists_key str sec, str key
 	GetPrivateProfileString sec, key, "__", varptr(stt_stmp), 2, varptr(path_)
 	return ( stat < 2 )
 	
 /*
-GetPrivateProfileString ã« æ—¢å®šå€¤("__"), nSize(2) ã‚’ä¸ãˆã‚‹ã¨ãã€
-ã‚­ãƒ¼ãŒå­˜åœ¨ã™ã‚Œã°è¿”å€¤ 1 or 0ã€ã—ãªã‘ã‚Œã° 2 ã¨ãªã‚‹ã€‚
+GetPrivateProfileString ‚É Šù’è’l("__"), nSize(2) ‚ğ—^‚¦‚é‚Æ‚«A
+ƒL[‚ª‘¶İ‚·‚ê‚Î•Ô’l 1 or 0A‚µ‚È‚¯‚ê‚Î 2 ‚Æ‚È‚éB
 //*/
 
 /*
 %index
 ini_remove_section
-ã‚»ã‚¯ã‚·ãƒ§ãƒ³ã‚’é™¤å»ã™ã‚‹
+ƒZƒNƒVƒ‡ƒ“‚ğœ‹‚·‚é
 %prm
 this, sec
-sec: ã‚»ã‚¯ã‚·ãƒ§ãƒ³å
+sec: ƒZƒNƒVƒ‡ƒ“–¼
 %*/
 #modfunc ini_remove_section str sec
 	WritePrivateProfileString sec, null, null, varptr(path_)
@@ -313,11 +313,11 @@ sec: ã‚»ã‚¯ã‚·ãƒ§ãƒ³å
 	
 /*
 %index
-ã‚­ãƒ¼ã‚’é™¤å»ã™ã‚‹
+ƒL[‚ğœ‹‚·‚é
 %prm
 this, sec, key
-sec: ã‚»ã‚¯ã‚·ãƒ§ãƒ³å
-key: ã‚­ãƒ¼å
+sec: ƒZƒNƒVƒ‡ƒ“–¼
+key: ƒL[–¼
 %*/
 #modfunc ini_remove_key str sec, str key
 	WritePrivateProfileString sec, key, null, varptr(path_)
@@ -326,10 +326,10 @@ key: ã‚­ãƒ¼å
 /*
 %index
 ini_get_path
-INIãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹
+INIƒtƒ@ƒCƒ‹ƒpƒX
 %prm
 (this)
-return: ini_new ã§æŒ‡å®šã•ã‚ŒãŸãƒ‘ã‚¹
+return: ini_new ‚Åw’è‚³‚ê‚½ƒpƒX
 %*/
 #modcfunc ini_get_path
 	return path_
@@ -340,7 +340,7 @@ return: ini_new ã§æŒ‡å®šã•ã‚ŒãŸãƒ‘ã‚¹
 
 #enum global IniValtype_None = 0
 #enum global IniValtype_Indeterminate = 0
-#enum global IniValtype_String = 2			// vartype ã®å€¤ã¨ä¸€è‡´
+#enum global IniValtype_String = 2			// vartype ‚Ì’l‚Æˆê’v
 #enum global IniValtype_Double
 #enum global IniValtype_Int
 #enum global IniValtype_MAX
@@ -350,16 +350,16 @@ return: ini_new ã§æŒ‡å®šã•ã‚ŒãŸãƒ‘ã‚¹
 /*
 %index
 ini_get
-æŒ‡å®šã—ãŸå‹ã®ãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿å‡ºã™
+w’è‚µ‚½Œ^‚Ìƒf[ƒ^‚ğ“Ç‚İo‚·
 %prm
 (this, sec, key, def)
-sec: ã‚»ã‚¯ã‚·ãƒ§ãƒ³å
-key: ã‚­ãƒ¼å
-def: æ—¢å®šæ–‡å­—åˆ— (ã‚­ãƒ¼ãŒãªã„ã¨ãã¯ã“ã‚ŒãŒè¿”ã•ã‚Œã‚‹)
-valtype [IniValtype_Indeterminate]: å‹ã‚¿ã‚¤ãƒ—å€¤
-return: ã‚­ãƒ¼ã«å¯¾å¿œã™ã‚‹å€¤ã‚’æ–‡å­—åˆ—ã¨ã—ã¦èª­ã¿å‡ºã—ã€valtype ã®å‹ã«ã‚­ãƒ£ã‚¹ãƒˆã—ã¦è¿”ã™ã€‚
+sec: ƒZƒNƒVƒ‡ƒ“–¼
+key: ƒL[–¼
+def: Šù’è•¶š—ñ (ƒL[‚ª‚È‚¢‚Æ‚«‚Í‚±‚ê‚ª•Ô‚³‚ê‚é)
+valtype [IniValtype_Indeterminate]: Œ^ƒ^ƒCƒv’l
+return: ƒL[‚É‘Î‰‚·‚é’l‚ğ•¶š—ñ‚Æ‚µ‚Ä“Ç‚İo‚µAvaltype ‚ÌŒ^‚ÉƒLƒƒƒXƒg‚µ‚Ä•Ô‚·B
 %inst
-valtype ãŒçœç•¥ã•ã‚ŒãŸã¨ãã¯ã€æ–‡å­—åˆ—ãƒ‡ãƒ¼ã‚¿ã‹ã‚‰å‹ã‚’æ¨æ¸¬ã—ã¦è¿”ã™ã€‚
+valtype ‚ªÈ—ª‚³‚ê‚½‚Æ‚«‚ÍA•¶š—ñƒf[ƒ^‚©‚çŒ^‚ğ„‘ª‚µ‚Ä•Ô‚·B
 %*/
 #define global ctype ini_get(%1, %2, %3, %4 = "", %5 = 0) \
 	ini_get_( %1, %2, %3, str(%4), %5 )
@@ -371,14 +371,14 @@ valtype ãŒçœç•¥ã•ã‚ŒãŸã¨ãã¯ã€æ–‡å­—åˆ—ãƒ‡ãƒ¼ã‚¿ã‹ã‚‰å‹ã‚’æ¨æ¸¬ã—ã¦
 /*
 %index
 ini_put
-æŒ‡å®šã—ãŸå‹ã®ãƒ‡ãƒ¼ã‚¿ã‚’æ›¸ãè¾¼ã‚€
+w’è‚µ‚½Œ^‚Ìƒf[ƒ^‚ğ‘‚«‚Ş
 %prm
-sec: ã‚»ã‚¯ã‚·ãƒ§ãƒ³å
-key: ã‚­ãƒ¼å
-value: æ›¸ãè¾¼ã‚€ãƒ‡ãƒ¼ã‚¿
-valtype [IniValtype_Indeterminate]: å‹ã‚¿ã‚¤ãƒ—å€¤
+sec: ƒZƒNƒVƒ‡ƒ“–¼
+key: ƒL[–¼
+value: ‘‚«‚Şƒf[ƒ^
+valtype [IniValtype_Indeterminate]: Œ^ƒ^ƒCƒv’l
 %inst
-valtype ãŒçœç•¥ã•ã‚ŒãŸã¨ãã¯ã€value ã‚’æ–‡å­—åˆ—ã«ã‚­ãƒ£ã‚¹ãƒˆã—ã¦ã€å‹ã‚’æ¨æ¸¬ã™ã‚‹ã€‚
+valtype ‚ªÈ—ª‚³‚ê‚½‚Æ‚«‚ÍAvalue ‚ğ•¶š—ñ‚ÉƒLƒƒƒXƒg‚µ‚ÄAŒ^‚ğ„‘ª‚·‚éB
 %*/
 #define global ini_put(%1, %2, %3, %4, %5 = 0) \
 	stt_tmp@MCIni = (%4) :\
@@ -393,8 +393,8 @@ valtype ãŒçœç•¥ã•ã‚ŒãŸã¨ãã¯ã€value ã‚’æ–‡å­—åˆ—ã«ã‚­ãƒ£ã‚¹ãƒˆã—ã¦ã€
 	swend
 	return
 	
-// æ–‡å­—åˆ—ãŒè¡¨ã™ãƒ‡ãƒ¼ã‚¿ã®å‹ã‚’æ¨å®šã™ã‚‹
-// 16é€²æ•°å½¢å¼ã®æ•´æ•°å€¤ãªã©ã«ã¯æœªå¯¾å¿œ
+// •¶š—ñ‚ª•\‚·ƒf[ƒ^‚ÌŒ^‚ğ„’è‚·‚é
+// 16i”Œ`®‚Ì®”’l‚È‚Ç‚É‚Í–¢‘Î‰
 #defcfunc ValtypeByString@MCIni str data
 	if ( data == int(data) ) { return IniValtype_Int }
 	if ( double(data) != 0 ) {
@@ -406,7 +406,7 @@ valtype ãŒçœç•¥ã•ã‚ŒãŸã¨ãã¯ã€value ã‚’æ–‡å­—åˆ—ã«ã‚­ãƒ£ã‚¹ãƒˆã—ã¦ã€
 	data = data_
 	return ( instr(data, , ".") >= 0 || instr(data, , "e") >= 0 )
 	
-// æ–‡å­—åˆ—ã‹ã‚‰æŒ‡å®šã—ãŸå‹ã«å‹å¤‰æ›ã™ã‚‹
+// •¶š—ñ‚©‚çw’è‚µ‚½Œ^‚ÉŒ^•ÏŠ·‚·‚é
 #defcfunc CastFromString@MCIni str data, int valtype_,  local valtype
 	if ( valtype_ ) { valtype = valtype_ } else { valtype = ValtypeByString@MCIni(stt_stmp) }
 	switch ( valtype )
@@ -424,14 +424,14 @@ valtype ãŒçœç•¥ã•ã‚ŒãŸã¨ãã¯ã€value ã‚’æ–‡å­—åˆ—ã«ã‚­ãƒ£ã‚¹ãƒˆã—ã¦ã€
 /*
 %index
 ini_get_array
-é…åˆ—ãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿å‡ºã™
+”z—ñƒf[ƒ^‚ğ“Ç‚İo‚·
 %prm
 this, dst, sec, key
-dst: å€¤ãŒæ›¸ãè¾¼ã¾ã‚Œã‚‹é…åˆ—å¤‰æ•°
-sec: ã‚»ã‚¯ã‚·ãƒ§ãƒ³å
-key: é…åˆ—ã®åå‰
+dst: ’l‚ª‘‚«‚Ü‚ê‚é”z—ñ•Ï”
+sec: ƒZƒNƒVƒ‡ƒ“–¼
+key: ”z—ñ‚Ì–¼‘O
 %inst
-ini_put_array å‘½ä»¤ã«ã‚ˆã£ã¦æ›¸ãè¾¼ã‚“ã ã€é…åˆ—ãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿è¾¼ã¿ã¾ã™ã€‚
+ini_put_array –½—ß‚É‚æ‚Á‚Ä‘‚«‚ñ‚¾A”z—ñƒf[ƒ^‚ğ“Ç‚İ‚İ‚Ü‚·B
 %*/
 #deffunc ini_get_array var self, array dst, str sec, str key,  \
 	local len, local valtype
@@ -452,15 +452,15 @@ ini_put_array å‘½ä»¤ã«ã‚ˆã£ã¦æ›¸ãè¾¼ã‚“ã ã€é…åˆ—ãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿è¾¼ã¿
 /*
 %index
 ini_put_array
-é…åˆ—ãƒ‡ãƒ¼ã‚¿ã‚’æ›¸ãè¾¼ã‚€
+”z—ñƒf[ƒ^‚ğ‘‚«‚Ş
 %prm
 this, sec, key, arr
-sec: ã‚»ã‚¯ã‚·ãƒ§ãƒ³å
-key: ã‚­ãƒ¼å
-arr: æ›¸ãè¾¼ã‚€é…åˆ—å¤‰æ•°
+sec: ƒZƒNƒVƒ‡ƒ“–¼
+key: ƒL[–¼
+arr: ‘‚«‚Ş”z—ñ•Ï”
 %inst
-é…åˆ—å¤‰æ•°ã¯ã€str, double, int å‹ã®1æ¬¡å…ƒé…åˆ—å¤‰æ•°ã«ã‹ãã‚Šã¾ã™ã€‚
-ãƒ‡ãƒ¼ã‚¿ã®èª­ã¿è¾¼ã¿ã«ã¯ ini_get_array ã‚’ä½¿ç”¨ã—ã¦ãã ã•ã„ã€‚
+”z—ñ•Ï”‚ÍAstr, double, int Œ^‚Ì1ŸŒ³”z—ñ•Ï”‚É‚©‚¬‚è‚Ü‚·B
+ƒf[ƒ^‚Ì“Ç‚İ‚İ‚É‚Í ini_get_array ‚ğg—p‚µ‚Ä‚­‚¾‚³‚¢B
 %*/
 #deffunc ini_put_array var self, str sec, str key, array src,  \
 	local len, local valtype
