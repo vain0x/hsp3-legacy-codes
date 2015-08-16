@@ -35,8 +35,9 @@ Win
 #define global ini_getArray      ini_get_array
 #define global ini_putArray      ini_put_array
 
+#define stt_stmp stt_stmp@__ini
 #ifdef _DEBUG //警告避け
-	sdim stt_stmp
+	sdim stt_stmp@__ini
 #endif
 
 /*
@@ -346,7 +347,7 @@ return: ini_new で指定されたパス
 #enum global IniValtype_Int
 #enum global IniValtype_MAX
 
-#define stt_stmp stt_stmp@MCIni
+#define stt_stmp stt_stmp@__ini
 
 /*
 %index
@@ -381,9 +382,9 @@ valtype [IniValtype_Indeterminate]: 型タイプ値
 %inst
 valtype が省略されたときは、value を文字列にキャストして、型を推測する。
 %*/
-#define global ini_put(%1, %2, %3, %4, %5 = 0) \
-	stt_tmp@MCIni = (%4) :\
-	ini_putv %1, %2, %3, stt_tmp@MCIni, %5
+#define global ini_put(%1, %2, %3, %4, %5 = 0) %tMCIni \
+	%i@__ini = (%4) :\
+	ini_putv %1, %2, %3, %i@__ini, %5
 
 #deffunc ini_putv var self, str sec, str key, var data, int valtype_,  local valtype
 	if ( valtype_ ) { valtype = valtype_ } else { valtype = ValtypeByString@MCIni(str(data)) }
@@ -479,6 +480,6 @@ arr: 書き込む配列変数
 	
 #global
 
-	sdim stt_stmp@MCIni, BufCapacity_Default@MCIni + 1
+	sdim stt_stmp@__ini, BufCapacity_Default@MCIni + 1
 
 #endif
