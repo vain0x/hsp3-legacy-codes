@@ -82,6 +82,7 @@
 	//一時ファイル用のディレクトリを用意
 	hsed_getpath path_tar, id_tab
 	if ( stat ) { return }
+	if ( str_begins_with(path_tar, dir_baks()) ) { return }
 	regularize_path path_tar, id_tab
 	path_tar    = path_flatten(path_tar)
 	path_bakdir = bakdir_from_path_tar(path_tar)
