@@ -37,30 +37,32 @@
 //------------------------------------------------
 #modfunc StrBuilder_append str src, int src_len
 	
-	if ( src_len ) { tmpLen = src_len } else { tmpLen = strlen(src) }
+	if ( src_len ) { stt_strsize = src_len } else { stt_strsize = strlen(src) }
 	
-	StrBuilder_ensure_capacity thismod, len_ + tmpLen
+	StrBuilder_ensure_capacity thismod, len_ + stt_strsize
 	
 	// ‘‚«‚Ş (poke ‘¤‚ª src ‚ğ strlen ‚·‚é•ª–³‘Ê‚ª‚ ‚é)
 	poke buf_, len_, src
 	len_ += strsize
-	assert (strsize == tmpLen)
+	assert (strsize == stt_strsize)
 	return
 	
 #modfunc StrBuilder_append_v var src, int src_len
 
-	if ( src_len ) { tmpLen = src_len } else { tmpLen = strlen(src) }
+	if ( src_len ) { stt_strsize = src_len } else { stt_strsize = strlen(src) }
 	
-	StrBuilder_ensure_capacity thismod, len_ + tmpLen
+	StrBuilder_ensure_capacity thismod, len_ + stt_strsize
 	
 	// ‘‚«‚Ş ('\0' ‚ğŠÜ‚ß‚é)
-	memcpy buf_, src, tmpLen + 1, len_
-	len_ += tmpLen
+	memcpy buf_, src, stt_strsize + 1, len_
+	len_ += stt_strsize
 	return
 	
-// ÅŒã‚É’Ç‰Á‚³‚ê‚½•¶š—ñ‚Ì’·‚³
+//------------------------------------------------
+// ÅŒã‚É append ‚³‚ê‚½•¶š—ñ‚Ì’·‚³
+//------------------------------------------------
 #defcfunc StrBuilder_strsize
-	return tmpLen
+	return stt_strsize
 
 //------------------------------------------------
 // •¶š‚ğ˜AŒ‹‚·‚é
