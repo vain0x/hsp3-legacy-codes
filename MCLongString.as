@@ -14,7 +14,6 @@
 #define global LongStr_addchar    StrBuilder_append_char
 #define global LongStr_erase_back StrBuilder_erase_back
 #define global LongStr_reserve    StrBuilder_ensure_capacity
-#define global LongStr_expand     StrBuilder_expand_capacity
 #define global LongStr_tobuf      StrBuilder_copy_to
 #define global LongStr_length     StrBuilder_length
 #define global LongStr_bufSize    StrBuilder_capacity
@@ -24,5 +23,7 @@
 #define global LongStr_copy       StrBuilder_copy
 
 #define global LongStr_lengthLastAddition StrBuilder_strsize
+
+#define global LongStr_expand(%1, %2 = 0) StrBuilder_ensure_capacity %1, StrBuilder_capacity(%1) + (%2)
 
 #endif

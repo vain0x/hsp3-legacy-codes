@@ -95,11 +95,6 @@
 	}
 	return
 	
-#modfunc StrBuilder_expand_capacity int size
-	capacity_ +=size
-	memexpand buf_, capacity_ + 1
-	return
-	
 //------------------------------------------------
 // 文字列を変数バッファに複写する
 //------------------------------------------------
