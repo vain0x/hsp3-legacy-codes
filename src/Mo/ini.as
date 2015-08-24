@@ -1,0 +1,90 @@
+// ini管理モジュール
+
+#ifndef __INI_FILE_AS__
+#define __INI_FILE_AS__
+
+#uselib "kernel32.dll"
+#func   global WritePrivateProfileString_mod_ini "WritePrivateProfileStringA" sptr,sptr,sptr,sptr
+#func   global GetPrivateProfileString_mod_ini   "GetPrivateProfileStringA"   sptr,sptr,sptr,int,int,sptr
+#cfunc  global GetPrivateProfileInt_mod_ini      "GetPrivateProfileIntA"      sptr,sptr,int,sptr
+
+#define global SetIniName(%1) sdim INIPATH, 260 : INIPATH = str(%1)
+#define global INIPATH _ininame@
+
+#define global WriteIni(%1,%2,%3,%4=INIPATH) WritePrivateProfileString_mod_ini %1,%2,str(%3),%4
+
+#define global GetIni(%1,%2,%3,%4=64,%5="",%6=INIPATH) GetPrivateProfileString_mod_ini %1,%2,str(%5),varptr(%3),%4,%6
+#define global ctype GetIntIni(%1,%2,%3=0,%4=INIPATH)  GetPrivateProfileInt_mod_ini(%1,%2,%3,%4)
+
+#define global DelSectionIni(%1,%2=INIPATH) WritePrivateProfileString_mod_ini %1,0,0,%2
+#define global DelKeyIni(%1,%2,%3=INIPATH) WritePrivateProfileString_mod_ini %1,%2,0,%3
+
+#define global ctype IsExistKeyIni(%1,%2,%3=INIPATH) ( GetIntIni(%1,%2,0,%3) != 0 && GetIntIni(%1,%2,1,%3) != 1 )
+
+#module mod_ini
+
+//------------------------------------------------
+// INI から読み込む ( 関数形式 )
+//------------------------------------------------
+#define global ctype IniLoad(%1,%2,%3=3200,%4="",%5=INIPATH) _IniLoad_mod_ini(%1,%2,%3,%4,%5)
+#defcfunc _IniLoad_mod_ini str p1, str p2, int p3, str p4, str p5
+	GetIni p1, p2, stmp_mod_ini@, p3, p4, p5
+	return stmp_mod_ini@
+	
+#global
+sdim stmp_mod_ini@, 3201
+
+/***
+
+＠リファレンス
+
+＊すべてに関して
+	・セクション名、キー名、ファイルパスは、半角アルファベットの大文字・小文字を区別しません。
+	・行末コメントはセミコロン ; だけです。ナンバープレース # やＷスラッシュ // は有効な記号です。
+	
+＊INIの設定
+	・SetIniName "ファイルパス"
+	
+	カレント・INIファイルを設定します。パスにはファイル名ではなく、絶対パスか相対パスを指定してください。
+	
+＊INIへの書き込み
+	・WriteIni "sec", "key", "value", maxlen, ["inipath"]
+	
+	セクション "sec" のキー "key" の値を "value" に設定します。str/int 問いません。
+	maxlen は、登録する文字列の長さ(最大)です。通常は 64 ですが、それ以上の場合は
+	指定してください。文字列長とぴったりである必要はありません。
+	
+＊INIからの読み込み
+	・GetIni "sec", "key", variable, maxlen, "default", ["inipath"]
+	
+	セクション "sec" のキー "key" の値を、文字列として variable に返します。int にも使えます。
+	maxlen は、読み込む文字列の最大の長さです。通常は 64 ですが、それ以上の場合は
+	指定してください。文字列長とぴったりである必要はありません。
+	指定したキーが存在しない場合は、"default"の値が返ります。省略すると "" (空文字列)です。
+	
+	・GetIntIni("sec", "key", default, ["inipath"])
+	
+	セクション "sec" のキー "key" の値を、数値として読み出して返します。str だと使えません。
+	指定したキーが存在しない場合、default の値が返ります。省略すると 0 です。
+	
+	・IniLoad("sec", "key", maxlen, "default", ["inipath"])
+	
+	GetIni の関数バージョンです。若干低速になります。maxlen は、省略すると 3200 になります。
+	
+＊INIデータの削除
+	・DelSectionIni "sec", ["inipath"]
+	
+	セクション "sec" を削除します。元に戻せません。
+	
+	・DelKeyIni "sec", "key", ["inipath"]
+	
+	セクション "sec" のキー "key" を削除します。元に戻せません。
+	
+＊その他
+	・IsExistKeyIni("sec", "key", ["inipath"])
+	
+	セクション "sec" のキー "key" が存在するかどうか。存在するなら真を返します。
+	※値のないキー( "key=" だけ )は、存在しないものとして扱われます。
+	
+***/
+#endif

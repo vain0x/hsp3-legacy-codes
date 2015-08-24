@@ -123,28 +123,38 @@
 #define __IF_LPARAM_USE_ON__
 #endif
 
-#module Lvmod LvInfo, ExStyle, nItem, nColumn, fCustom, bGroup, textClr, backClr, LPRM
+#module Lvmod minfLv, mExStyle, mnItem, mnColumn, mbCustom, mbGroup, mcText, mcBack, LPRM
 
+//------------------------------------------------
 // マクロ
-#define ArrayDel(%1,%2,%3=0,%4=4) memcpy %1,%1,(length(%2) - (%3) -1)*(%4),(%3)*(%4),((%3)+1)*(%4):memset %1,0,%4,((%3)*(%4))+((length(%2)-(%3)-1)*(%4))
+//------------------------------------------------
 #define ArrayIns(%1,%2=0,%3=4)    memcpy %1,%1,(length(%1) - (%2) -1)*(%3),((%2)+1)*(%3),(%2)*(%3)
+#define ArrayDel(%1,%2,%3=0,%4=4) memcpy %1,%1,(length(%2) - (%3) -1)*(%4),(%3)*(%4),((%3)+1)*(%4):memset %1,0,%4,((%3)*(%4))+((length(%2)-(%3)-1)*(%4))
+
 #define ctype RGB(%1,%2,%3) ((%1) | (%2) << 8 | (%3) << 16)
-#define ctype Lim(%1,%2,%3) (((%2) <= (%1)) && ((%1) <= (%3)))
+#define ctype numrg(%1,%2,%3) (((%2) <= (%1)) && ((%1) <= (%3)))
 
 #define mv modvar Lvmod@
 
-#deffunc initmize_of_lvmod
+//------------------------------------------------
+// モジュール初期化
+//------------------------------------------------
+#deffunc local _initialize@Lvmod
 	dim  lvcolumn, 8		// LVCOLUMN 構造体
 	dim  lvitem  , 15		// LVITEM   構造体
 	dim  lvgroup , 10		// LVGROUP  構造体
 	dim  hditem  , 11		// HDITEM   構造体
-	sdim pszText, 320		// pszText
+	sdim pszText, 512		// pszText
 	return
 	
-//######## 内部処理用関数 ##########################################################################
-// 使用禁止！！
+//##############################################################################
+//                内部処理用関数
+//##############################################################################
+// 外部からの使用禁止！！
 
+//------------------------------------------------
 // int型一次元配列を拡張
+//------------------------------------------------
 #define RedimInt __RedimInt@Lvmod
 #deffunc local __RedimInt@Lvmod array p1, int p2, local temp
 	if ( length(p1) >= p2 ) { return }	// 増えない場合は無視
@@ -154,171 +164,251 @@
 	memcpy p1, temp, length(temp) * 4	// 戻す
 	return
 	
+//------------------------------------------------
 // 挿入後の処理
-#modfunc Inserted int p2
-	#ifdef __IF_LV_LPARAM_USE_ON__
-		RedimInt LPRM   , nItem + 1 : ArrayIns LPRM   , p2		// 挿入
-	#endif
-	if ( fCustom ) {
-		RedimInt textClr, nItem + 1 : ArrayIns textClr, p2
-		RedimInt backClr, nItem + 1 : ArrayIns backClr, p2
-	}
-	nItem ++
-	return
+//------------------------------------------------
+#modfunc Inserted@Lvmod int p2
+	if ( p2 < 0 ) { return }
 	
+ #ifdef __IF_LV_LPARAM_USE_ON__
+		RedimInt   LPRM, mnItem + 1 : ArrayIns   LPRM, p2
+ #endif
+	if ( mbCustom ) {
+		RedimInt mcText, mnItem + 1 : ArrayIns mcText, p2 : mcText(p2) = 0
+		RedimInt mcBack, mnItem + 1 : ArrayIns mcBack, p2 : mcBack(p2) = 0xFFFFFF
+	}
+	mnItem ++
+	return p2
+	
+//------------------------------------------------
 // 削除後の処理
-#modfunc Deleted int p2
-	#ifdef __IF_LV_LPARAM_USE_ON__
-		ArrayDel LPRM   , LPRM   , p2	// 削除してシフトさせる
-	#endif
-	if ( fCustom ) {
-		ArrayDel textClr, textClr, p2
-		ArrayDel backClr, backClr, p2
+//------------------------------------------------
+#modfunc Deleted@Lvmod int p2
+	if ( p2 < 0 ) { return }
+ #ifdef __IF_LV_LPARAM_USE_ON__
+	ArrayDel       LPRM,   LPRM, p2		// 削除してシフトさせる
+ #endif
+	if ( mbCustom ) {
+		ArrayDel mcText, mcText, p2
+		ArrayDel mcBack, mcBack, p2
 	}
-	nItem --
-	return
+	mnItem --
+	return p2
 	
-//######## アイテムの文字列を設定・取得 ############################################################
+//##########################################################
+//        アイテムの文字列を設定・取得
+//##########################################################
+//------------------------------------------------
+// アイテム文字列の設定
 // modvar, "new str", iItem, iSubitem
-#modfunc LvSetItemStr str p2, int p3, int p4
+//------------------------------------------------
+#modfunc LvSetStr str p2, int p3, int p4
 	pszText = p2
 	lvitem  = 0x01, p3, p4, 0, 0, varptr(pszText)
-	sendmsg LvInfo,    0x1006, 0, varptr(lvitem)	// LVM_SETITEM
+	sendmsg minfLv,    0x1006, 0, varptr(lvitem)	// LVM_SETITEM
 	return (stat)
 	
+//------------------------------------------------
+// アイテム文字列の取得
+//------------------------------------------------
 #define global ctype LvGetStr(%1,%2=0,%3=0,%4=520) _LvGetStr(%1,%2,%3,%4)
-#defcfunc _LvGetItemStr mv, int p2, int p3, int p4
+#defcfunc _LvGetStr mv, int p2, int p3, int p4
 	sdim  pszText, p4 + 1								// 取得バッファ
 	lvitem = 0x01, p2, p3, 0, 0, varptr(pszText), p4
-	sendmsg LvInfo,   0x1005, 0, varptr(lvitem)			// LVM_GETITEM
+	sendmsg minfLv,   0x1005, 0, varptr(lvitem)			// LVM_GETITEM
 	if ( stat ) {
 		return pszText	// 成功時
 	}
 	return ""			// 失敗時
 	
+//------------------------------------------------
+// カラム文字列の設定
 // modvar, "new str", index
+//------------------------------------------------
 #modfunc LvSetColumnStr str p2, int p3
 	pszText = p2
 	hditem  = 0x02, 0, varptr(pszText)
-	sendmsg LvInfo, 0x101F, 0, 0				// LVM_GETHEADER
+	sendmsg minfLv, 0x101F, 0, 0				// LVM_GETHEADER
 	sendmsg   stat, 0x1204, p3, varptr(hditem)	// HDM_SETITEM
 	return    stat
 	
-//######## リストビューを生成 ##################################################
+//##########################################################
+//        リストビューを生成
+//##########################################################
+//------------------------------------------------
+// コンストラクタ
+//------------------------------------------------
 #define global CreateListview(%1,%2,%3,%4=1) newmod %1,Lvmod@,%2,%3,%4
 #modinit int p2, int p3, int p4
 	winobj "SysListView32", "", 0, 0x50000000 | p4, p2, p3
-	LvInfo = objinfo(stat, 2), stat
+	minfLv = objinfo(stat, 2), stat
 	
 	// メンバ変数を作成
-	dim ExStyle				// 拡張スタイル
-	dim nColumn				// カラムの数
-	dim nItem  				// カラム 0 のアイテムの数
-	dim fCustom				// カスタムモードかのフラグ
-	dim bGroup 				// グループビューかのフラグ
-	dim textClr, 2			// 文字色
-	dim backClr, 2			// 背景色
+	dim mExStyle		// 拡張スタイル
+	dim mnColumn		// カラムの数
+	dim mnItem  		// カラム 0 のアイテムの数
+	dim mbCustom		// カスタムモードかのフラグ
+	dim mbGroup 		// グループビューかのフラグ
+	dim mcText, 2		// 文字色
+	dim mcBack, 2		// 背景色
 	
-	return LvInfo(1)	// oID を返す
+	return minfLv(1)	// oID を返す
 	
-//######## カラム・アイテムの追加 ##############################################
-
-// カラム (m,"", index, cx, iSubItem)
+//##########################################################
+//        カラム・アイテムの追加
+//##########################################################
+//------------------------------------------------
+// カラムの追加
+// @prmlist: m,"", index, cx, iSubItem
+//------------------------------------------------
 #define global LvInsertColumn(%1,%2,%3=-1,%4,%5) _LvInsertColumn %1,%2,%3,%4,%5
 #modfunc _LvInsertColumn str p2, int p3, int p4, int p5
 	pszText  = p2
 	lvcolumn = 0x0F, 0x0000, p4, varptr(pszText), 0, p5
-	sendmsg  LvInfo, 0x101B, p3, varptr(lvcolumn)		// LVM_INSERTCOLUMN (カラムを追加)
-	nColumn ++
+	sendmsg  minfLv, 0x101B, p3, varptr(lvcolumn)		// LVM_INSERTCOLUMN (カラムを追加)
+	mnColumn ++
 	return (stat)
 	
-// アイテム(文字列) (m, "", index)
+//------------------------------------------------
+// 文字列アイテムを挿入
+// @prmlist: m, "", index
+//------------------------------------------------
 #define global LvInsertItem(%1,%2,%3=-1) _LvInsertItem %1,%2,%3
 #modfunc _LvInsertItem str p2, int p3
-	if ( p3 < 0 ) { n = nItem } else { n = p3 }
+	if ( p3 < 0 ) { n = mnItem } else { n = p3 }
 	
 	pszText = p2
 	lvitem  = 0x01, n, 0, 0, 0, varptr(pszText)
-	sendmsg LvInfo, 0x1007, 0,  varptr(lvitem)		// LVM_INSERTITEM (アイテムを挿入)
-	Inserted thismod
+	sendmsg minfLv, 0x1007, 0,  varptr(lvitem)		// LVM_INSERTITEM (アイテムを挿入)
+	Inserted thismod, stat
 	return (stat)
 	
-// イメージアイテム
+//------------------------------------------------
+// イメージアイテムを挿入
+//------------------------------------------------
 #define global LvInsertImgItem(%1,%2,%3=-1) _LvInsertImgItem %1,%2,%3
 #modfunc _LvInsertImgItem int p2, int p3
-	if ( p3 < 0 ) { n = nItem } else { n = p3 }
+	if ( p3 < 0 ) { n = mnItem } else { n = p3 }
 	
 	lvitem  = 0x02, n, 0, 0, 0, 0, p2
-	sendmsg LvInfo, 0x1007, 0, varptr(lvitem)		// LVM_INSERTITEM
-	Inserted thismod
+	sendmsg minfLv, 0x1007, 0, varptr(lvitem)		// LVM_INSERTITEM
+	Inserted thismod, stat
 	return (stat)
 	
-// サブアイテムを設定 (m, "", index, iSubItem)
+//------------------------------------------------
+// サブアイテムを設定
+// @prmlist: m, "", index, iSubItem
+//------------------------------------------------
 #modfunc LvSetSub str p2, int p3, int p4
 	pszText = p2
 	lvitem  = 0x01, p3, p4, 0, 0, varptr(pszText)
-	sendmsg LvInfo, 0x1006, 0,    varptr(lvitem)	// LVM_SETITEM
+	sendmsg minfLv, 0x1006, 0,    varptr(lvitem)	// LVM_SETITEM
 	return (stat)
 	
-//######## アイテムの削除 ######################################################
+//##########################################################
+//        アイテムの削除
+//##########################################################
+//------------------------------------------------
+// アイテムを削除
+//------------------------------------------------
 #modfunc LvDelete int p2
-	sendmsg LvInfo, 0x1008, p2, 0	// LVM_DELETEITEM
+	sendmsg minfLv, 0x1008, p2, 0	// LVM_DELETEITEM
 	if ( stat == 0 ) {				// 削除に失敗した
 		return 1
 	}
 	Deleted thismod
 	return 0
 	
+//------------------------------------------------
+// アイテムをすべて削除
+//------------------------------------------------
 #modfunc LvDeleteAll
-	sendmsg LvInfo, 0x1009, 0, 0	// LVM_DELETEALLITEMS
-	if ( fCustom ) {
-		dim textClr, 2		// 文字色
-		dim backClr, 2		// 背景色
+	sendmsg minfLv, 0x1009, 0, 0	// LVM_DELETEALLITEMS
+	if ( mbCustom ) {
+		dim mcText, 2		// 文字色
+		dim mcBack, 2		// 背景色
 	}
 	dim LPRM
 	return
 	
-//######## アイテムの設定 ######################################################
-#modfunc LvSetExStyle int p2
-	ExStyle |= p2
-	sendmsg LvInfo, 0x1036, 0, ExStyle
-	return
-	
-//######## 状態の取得関数 ######################################################
-#defcfunc LvSelected mv, int p2
-	sendmsg LvInfo, 0x100C, p2, 0x0002			// LVM_GETNEXTITEM
+//##########################################################
+//        アイテムの取得
+//##########################################################
+//------------------------------------------------
+// アイテムの探索
+//------------------------------------------------
+#defcfunc LvGetTarget mv, int p2, int p3
+	sendmsg minfLv, 0x100C, p2, p3		// LVM_GETNEXTITEM
 	return stat
 	
-//######## イメージリスト関係 ##################################################
+#define global ctype LvGetFocus(%1,%2=-1)    LvGetTarget(%1,%2,LVNI_FOCUSED)
+#define global ctype LvGetSelected(%1,%2=-1) LvGetTarget(%1,%2,LVNI_SELECTED)
+#define global ctype LvGetCut(%1,%2=-1)      LvGetTarget(%1,%2,LVNI_CUT)
+#define global ctype LvGetDropped(%1,%2=-1)  LvGetTarget(%1,%2,LVNI_DROPHILIGHT)
+
+#define global ctype LvGetNext(%1,%2=-1)  LvGetTarget(%1,%2,LVNI_ALL)
+#define global ctype LvGetAbove(%1,%2=-1) LvGetTarget(%1,%2,LVNI_ABOVE)
+#define global ctype LvGetBelow(%1,%2=-1) LvGetTarget(%1,%2,LVNI_BELOW)
+#define global ctype LvGetLeft(%1,%2=-1)  LvGetTarget(%1,%2,LVNI_TOLEFT)
+#define global ctype LvGetRight(%1,%2=-1) LvGetTarget(%1,%2,LVNI_TORIGHT)
+
+//##########################################################
+//        アイテムの設定
+//##########################################################
+#modfunc LvSetExStyle int p2
+	mExStyle |= p2
+	sendmsg minfLv, 0x1036, 0, mExStyle
+	return
+	
+//##########################################################
+//        アイテムの状態取得関数
+//##########################################################
+#defcfunc LvSelected mv, int p2
+	sendmsg minfLv, 0x100C, p2, 0x0002			// LVM_GETNEXTITEM
+	return stat
+	
+//##########################################################
+//        イメージリスト関係
+//##########################################################
 #modfunc LvSetImgList int hIml
-	sendmsg LvInfo, 0x1001, hIml, 0				// LVM_SETIMAGELIST
+	sendmsg minfLv, 0x1001, hIml, 0				// LVM_SETIMAGELIST
 	return
 	
 #modfunc LvSetImage int p2, int p3
 	lvitem  = 0x02, p3, 0, 0, 0, 0, p2
-	sendmsg LvInfo, 0x1006, 0, varptr(lvitem)	// LVM_SETITEM
+	sendmsg minfLv, 0x1006, 0, varptr(lvitem)	// LVM_SETITEM
 	return
 	
-//######## グループ化関係 ######################################################
+//##########################################################
+//        グループ化関係
+//##########################################################
+//------------------------------------------------
 // GroupView にする
+//------------------------------------------------
 #modfunc LvEnbleGroupView int bEnable
 	// wparam が真なら、グループビュー
-	bGroup = bEnable				// 記憶しておく
-	sendmsg LvInfo, 0x109D, 1, 0	// LVM_ENABLEGROUPVIEW
+	mbGroup = bEnable				// 記憶しておく
+	sendmsg minfLv, 0x109D, 1, 0	// LVM_ENABLEGROUPVIEW
 	return stat						// 0 = 設定済み, 正数 = 成功, 負数 = 失敗
 	
+//------------------------------------------------
 // Group 追加
+//------------------------------------------------
 #define global LvInsertGroup(%1,%2,%3,%4=-1) _LvInsertGroup %1,%2,%3,%4
 #modfunc _LvInsertGroup str sGroupName, int gID
 	cnvstow pszText, sGroupName						// Unicode 文字列じゃないとダメらしい
 	lvgroup = 40, 0x11, varptr(pszText), 319		// 設定
-	sendmsg LvInfo, 0x1091, gID, varptr(lvgroup)	// LVM_INSERTGROUP
+	sendmsg minfLv, 0x1091, gID, varptr(lvgroup)	// LVM_INSERTGROUP
 	return stat
 	
-//######## その他系列 ##########################################################
+//##########################################################
+//        その他
+//##########################################################
+//------------------------------------------------
 // ヘッダに▲▼を表示する
+//------------------------------------------------
 #modfunc LvSetSortMark int iCol, int dir
-	sendmsg LvInfo, 0x101F, 0, 0			// LVM_GETHEADER ( カラムヘッダのハンドルを取得 )
+	sendmsg minfLv, 0x101F, 0, 0			// LVM_GETHEADER ( カラムヘッダのハンドルを取得 )
 	hHDR = stat								// ヘッダのハンドル
 	sendmsg hHDR, 0x1200, 0, 0				// HDM_GETITEMCOUNT ( アイテム数を取得 )
 	cntHDItem = stat						// アイテム数
@@ -346,40 +436,66 @@
 	swend
 	return
 	
-//######## カスタムドロー・モード ##############################################
+//##########################################################
+//        カスタムドロー・モード
+//##########################################################
+//------------------------------------------------
+// カスタムドロー・モードに設定する
+//------------------------------------------------
 #modfunc LvUseCustomMode
 	LvSetExStyle thismod, 0x0020	// LVS_EX_FULLROWSELECT (一行選択モード)
-	fCustom = 1
+	mbCustom = 1
 	return
 	
+//------------------------------------------------
+// カスタムドロー・モードか？
+//------------------------------------------------
 #defcfunc LvIsCustom mv, int p2
-	return fCustom
+	return mbCustom
 	
+//------------------------------------------------
+// 項目の文字色を設定
+//------------------------------------------------
 #modfunc LvCtTextColor int iItem, int cref
-	textClr(iItem) = cref
+	mcText(iItem) = cref
 	return
 	
+//------------------------------------------------
+// 項目の背景色を設定
+//------------------------------------------------
 #modfunc LvCtBackColor int iItem, int cref
-	backClr(iItem) = cref
+	mcBack(iItem) = cref
 	return
 	
+//------------------------------------------------
+// 項目の文字色を取得
+//------------------------------------------------
 #defcfunc LvTextColor mv, int iItem
-	return textClr( iItem )
+	return mcText( iItem )
 	
+//------------------------------------------------
+// 項目の背景色を取得
+//------------------------------------------------
 #defcfunc LvBackColor mv, int iItem
-	return backClr( iItem )
+	return mcBack( iItem )
 	
 // 使用方法はサンプルの *Notify 参照
 	
-//######## 関連int操作命令 #####################################################
+//##########################################################
+//        関連int操作命令
+//##########################################################
+//------------------------------------------------
 // 設定関数
+//------------------------------------------------
 #modfunc LvIntSet int p2, int p3
  #ifdef __IF_LV_LPARAM_USE_ON__
 	LPRM( p2 ) = p3
  #endif
 	return
 	
+//------------------------------------------------
 // 取得関数
+//------------------------------------------------
 #defcfunc LvInt mv, int p2
  #ifdef __IF_LV_LPARAM_USE_ON__
 	return LPRM( p2 )
@@ -387,24 +503,24 @@
 	return 0	// 一応 0 を返す
  #endif
 
-//######## 内部参照関数 ########################################################
+//##########################################################
+//        内部参照関数
+//##########################################################
 #defcfunc LvHandle mv
-	return LvInfo
+	return minfLv
 	
 #defcfunc LvColumnNum mv
-	return nColumn
+	return mnColumn
 	
 #defcfunc LvItemNum mv
-	return nItem
+	return mnItem
 	
 #global
-initmize_of_lvmod
+_initialize@Lvmod
 
-// 不要な内部用関数を削除
-#undef Inserted
-#undef Deleted
-
-//######## サンプル・プログラム ########################################################################################
+//##############################################################################
+//                サンプル・プログラム
+//##############################################################################
 #if 0
 #undef RGB
 #define ctype RGB(%1,%2,%3) ((%1) | (%2) << 8 | (%3) << 16)

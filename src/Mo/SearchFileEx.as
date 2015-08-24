@@ -3,7 +3,7 @@
 #ifndef __SEARCH_FILE_EX_MODULE_AS__
 #define __SEARCH_FILE_EX_MODULE_AS__
 
-#include "StrSet.as"
+#include "MCStrSet.as"
 
 #module SearchFileEx_mod
 
@@ -13,9 +13,9 @@
 #define MAX_PATH 260
 
 #deffunc SearchFileEx str p1, str fname
-	newmod pathset, strset, p1, ";"
+	newmod pathset, MCStrSet, p1, ";"
 	sdim   filepath, MAX_PATH
-	sdim   firstpart, 320
+	sdim   curdir, 320
 	
 	curdir = dirinfo(0)
 	
@@ -27,10 +27,7 @@
 			path = StrSet_getnext(pathset)		// éüÇÃåüçıÉpÉX
 		}
 		
-		if ( peek(path) == 0 ) { continue }
-		if ( peek(path, strlen(path) - 1) != '\\' ) {
-			path += "\\"
-		}
+		if ( path == "" ) { continue }
 		
 		chdir path
 		exist fname

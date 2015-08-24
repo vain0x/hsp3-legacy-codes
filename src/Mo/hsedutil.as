@@ -4,7 +4,7 @@
 #define __HSED_UTILITY_MODULE_AS__
 
 #include "hsedsdk.as"
-#include "ProcMemory.as"
+#include "MCProcMemory.as"
 
 #module hsedutil
 
@@ -16,7 +16,9 @@
 #define NULL  0
 #define MAX_PATH 260
 
+//------------------------------------------------
 // Win32 API 関数群
+//------------------------------------------------
 #uselib "psapi.dll"
 #func   global EnumProcessModules  "EnumProcessModules"   int,sptr,int,sptr
 #func   global GetModuleFileNameEx "GetModuleFileNameExA" int,int,sptr,int
@@ -24,12 +26,14 @@
 //##################################################################################################
 //        [define] 命令群
 //##################################################################################################
+//------------------------------------------------
 // スクリプトエディタのフルパスを得る
-#defcfunc hsed_GetHsedPath local hHsed, local mTabPcm, local path, local hModule, local retSize
+//------------------------------------------------
+#defcfunc hsed_GetHsedPath local hHsed, local mHsedPcm, local path, local hModule, local retSize
 	sdim path, MAX_PATH
 	
-	hsed_getwnd             hHsed, HGW_MAIN
-	newmod mHsedPcm, pcmem, hHsed
+	hsed_getwnd               hHsed, HGW_MAIN
+	newmod mHsedPcm, MCPcMem, hHsed
 	
 	EnumProcessModules  PCM_hProc(mHsedPcm), varptr(hModule), 4, varptr(retSize)
 	GetModuleFileNameEx PCM_hProc(mHsedPcm), hModule, varptr(path), MAX_PATH
@@ -37,14 +41,16 @@
 	delmod mHsedPcm
 	return path
 	
-// 指定されたタブが開いているファイルパスを取得する
+//------------------------------------------------
+// 指定タブが開いているファイルのパスを取得する
+//------------------------------------------------
 #deffunc hsed_GetFilePath int nTabID, local mTabPcm, local tci, local path, local hTab
 	dim  tci, 7				// TCITEM 構造体
 	sdim path, MAX_PATH
 	tci(0) = 0x08			// TCIF_PARAM ( lparam )
 	
-	hsed_getwnd               hTab, HGW_TAB
-	newmod    mTabPcm, pcmem, hTab
+	hsed_getwnd                 hTab, HGW_TAB
+	newmod    mTabPcm, MCPcMem, hTab
 	PCM_Alloc mTabPcm, 7 * 4
 	PCM_Write mTabPcm, varptr(tci), 7 * 4
 	
@@ -62,6 +68,10 @@
 	
 #global
 
+
+//##################################################################################################
+//        サンプル・スクリプト
+//##################################################################################################
 #if 0
 
 	mes hsed_GetHsedPath()

@@ -113,13 +113,19 @@
 	mref ref@DialogEx_mod, 65		// refstr Š„‚è“–‚Ä
 	
 #if 0
-	FileSelDlg "1@*@2@*@3@*@4@*@5@*@", NULL, False
-	num = stat
+
+#undef false
+#undef NULL
+#define false 0
+#define NULL 0
+
+	FileSelDlg "1@*@2@*@3@*@4@*@5@*@", NULL, false
+	pofn = stat
 	mes "stat == "+ stat
 	mes "refs == "+ refstr
 	
-	if (num) {
-		dupptr ofn, num, 88, vartype("int")
+	if ( pofn != NULL ) {
+		dupptr ofn, pofn, 22 * 4
 		mes "index == "+ ofn(6)
 	}
 	stop

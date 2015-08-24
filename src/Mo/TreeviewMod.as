@@ -1,8 +1,9 @@
-#ifndef        __TREEVIEW_MODULE_AS__
-#define global __TREEVIEW_MODULE_AS__
+// Treeview module
 
-//######## ツリービュー操作モジュール ##############################################################
-#module Tvmod
+#ifndef __TREEVIEW_MODULE_AS__
+#define __TREEVIEW_MODULE_AS__
+
+#module Treeview_mod
 
 #include "h/Treeview.as"
 

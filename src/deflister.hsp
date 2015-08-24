@@ -6,13 +6,13 @@
 
 #runtime "hsp3mt"
 
-	#define global __LISTUP_INCLUDE__
-	#define global __LV_CUSTOMDRAW__
-
 #include "hsedsdk.as"
 #include "Mo/DialogEx.as"
 #include "Mo/flexFrame.as"
 #include "Mo/GetFontOfHSP.as"
+#include "Mo/GetOwnpath.as"
+#include "Mo/hsedutil.as"
+#include "Mo/ini.as"
 #include "Mo/IsMouseButtonSwapped.as"
 #include "Mo/SysCursor.as"
 #include "Mo/Lvmod.as"
@@ -51,7 +51,8 @@
 	stop
 	
 *exit
-	gosub *SettleProgram
+	gosub *WriteSetOfEnd		// 終了時の設定を書き込む
+	gosub *SettleProgram		// 後始末
 	oncmd   false
 	onexit  false
 	onerror false
@@ -60,7 +61,7 @@
 	
 // エラー発生時
 *error
-	onerror false		// 無限割り込みを防ぐ
+	onerror false			// 無限割り込みを防ぐ
 	gosub *SettleProgram
 	end : end
 	
@@ -71,6 +72,19 @@
 	if ( peek(curdir) ) { chdir curdir }						// カレントポジションを起動時のモノに戻す
 	if ( bDragging )    { ClipCursor NULL : bDragging = false }	// マウスの移動範囲を解放する
 	if ( bHsed )        { exdel HSED_TEMPFILE }					// 一時ファイルの削除
+	return
+	
+// 設定を保存する
+*WriteSetOfEnd
+	GetClientRect hwnd, varptr(rc)
+	
+	WriteIni "Window", "cx", rc(2) - rc(0)
+	WriteIni "Window", "cy", rc(3) - rc(1)
+	WriteIni "Window", "px", rc(0)
+	WriteIni "Window", "py", rc(1)
+	
+	WriteIni "Editbox", "Height", EditHeight
+	
 	return
 	
 //##################################################################################################
@@ -103,9 +117,8 @@
 	
 	if ( nmhdr(0) == infLv ) {
 		
-#ifdef __LV_CUSTOMDRAW__
 		// NM_CUSTOMDRAW (これはカスタムドローの処理)
-		if ( nmhdr(2) == -12 ) {
+		if ( bCustomDraw && nmhdr(2) == (-12) ) {
 			
 			if ( LvIsCustom( mLv ) ) {
 				dupptr NMLVCUSTOMDRAW, lparam, 60		// NMLVCUSTOMDRAW 構造体
@@ -121,9 +134,9 @@
 				}
 			}
 		}
-#endif
+		
 		// カラムがクリックされた
-		if ( nmhdr(2) == 0xFFFFFF94 ) {	// LVN_COLUMNCLICK
+		if ( nmhdr(2) == 0xFFFFFF94 ) {				// LVN_COLUMNCLICK
 			dupptr   NMLISTVIEW, lparam, 12 + 32		// NMLISTVIEW 構造体
 			lviCol = NMLISTVIEW(4)						// クリックされたカラムのインデックス
 			if ( lviCol == lvSortcol ) {				// マークつきカラムなら
@@ -158,7 +171,7 @@
 	
 	// カレントディレクトリを取得する
 	sdim curdir, MAX_PATH
-	curdir = dirinfo(0)
+	     curdir = dirinfo(0)
 	
 	// 一意な文字列メッセージを作成しておく
 	UWM_ALREADY_USED = RegisterWindowMessage("deflister_UWM_ALREADY_USED")
@@ -177,7 +190,7 @@
 *ProcCmdline
 	sdim cmdline, MAX_PATH
 	cmdline = dirinfo(4)
-	cmdline = "hsed"
+;	cmdline = "hsed"
 	
 	if ( strmid(cmdline, 0, 4) == "hsed" ) {
 		// hsed からの外部ツール呼び出し
@@ -189,13 +202,13 @@
 		
 	} else : if ( peek(cmdline) == 0 ) {
 		// 通常の起動
-		FileSelDlg "HSP3 Script File (*.hsp;*.as)@*.hsp;*.as;hsptmp@@", NULL, false, OFN_HIDEREADONLY | OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NONETWORKBUTTON
+		FileSelDlg "HSP3 Script File (*.hsp;*.as)@*.hsp;*.as;hsptmp@すべてのファイル (*.*)@*.*@", NULL, false, OFN_HIDEREADONLY | OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NONETWORKBUTTON
 ;		dialog "hsp;*.as", 16, "HSP3 Script File"
 		if ( stat == 0 ) { end }
 		cmdline = refstr
 		
 	} else {
-		// DOSからの引数付き呼び出し
+		// コマンドライン付き呼び出し
 		if ( peek( cmdline ) == '"' ) {			// ホントは空白入りパスなんて無視してやりたいが……
 			getstr cmdline, cmdline, 1, '"'
 		}
@@ -207,43 +220,57 @@
 	
 // 変数の初期化
 *ClearVariable
+	sdim ownpath, MAX_PATH
+		 ownpath = GetOwnpath("D:\\D_MyDocuments\\Programming\\HSP\\ProjSmall\\deflister")
+	
+	SetIniName STR_INIPATH
+	
 	dim  rc, 4
 	dim  infScript, 2
 	dim  infBtns, 2, 2			// 各種ボタン
 	dim  infLv, 2
 	dim  iLv
-	dim  iDL					// Index of Definition List
-	EditHeight = 100
+	dim  iDL					// Index of Active Definition List
+	EditHeight = GetIntIni("Editbox", "Height", 100)
 	
-	sdim script, 0x1FFFF		// スクリプト
+	sdim script, 0x1FFF			// スクリプト表示部分のバッファ
 	dim  deflistLn				// 定義がある行番号
 	sdim deflistIdent			// 定義される識別子
 	dim  deflistType			// 定義される種類
 	sdim deflistScope			// 定義されるスコープ
 	dim  deflistCount			// 定義の数
+	dim  deflistItemTop			// 定義の項目番号の先頭
 	sdim stype
 	sdim filepath, MAX_PATH
 	sdim filename, MAX_PATH
 	
-#ifdef __LISTUP_INCLUDE__
-	if ( bHsed ) { gosub *GetCommonPath }
-#endif
+	sFormatLineNumber = IniLoad("String", "FormatLineNumber", , "%3d|")
+	
+	bInclude    = GetIntIni("Opt", "bInclude",    false)
+	bCustomDraw = GetIntIni("Opt", "bCustomDraw", true)
+	
+	if ( bInclude ) {
+		if ( bHsed ) { gosub *GetCommonPath }
+	}
 	
 	return
 	
 // ウィンドウの準備
 *SetWindow
-	screen wID_Main, ginfo(20), ginfo(21), 2 + 8,,, 380, 360
+	winsize(0) = GetIntIni("Window", "cx", 380)
+	winsize(1) = GetIntIni("Window", "cy", 360)
+	
+	screen wID_Main, ginfo(20), ginfo(21), 2 + 8, ,, winsize(0), winsize(1)
 		title "deflister"
 		SetStyle hwnd, -16, 0x40000		// 可変枠
 		syscolor 15 : boxf : color
 		
 		// エディットボックス
-		font "MS Gothic", 12
+		font IniLoad("Editbox", "FontFamily", , "MS Gothic"), GetIntIni("Editbox", "FontSize", 12)
 		objmode 2
 		pos 5, 5 : mesbox script, ginfo(20), EditHeight, 4 : infScript = objinfo(stat, 2), stat
 		
-		tabstops = (12 / 4) * 4
+		tabstops = (12 + 1) / 4 * 4						// (fontpt + 1) / 4 * tabsize
 		sendmsg infScript, 0x00CB, 1, varptr(tabstops)	// EM_SETTABSTOPS
 		objmode 1
 		
@@ -280,74 +307,96 @@
 ;	lvSortcol = 0
 	
 	// フォントの変更
-	ChangeControlFont infLv, "MS Gothic", 13
+	ChangeControlFont infLv, IniLoad("Listview", "FontFamily", , "MS Gothic"), GetIntIni("Listview", "FontSize", 13)
 	hFont = stat
 	
-#ifdef __LV_CUSTOMDRAW__
-	LvUseCustomMode mLv		// カスタムドローをする
-#endif
+	if ( bCustomDraw ) {
+		LvUseCustomMode mLv		// カスタムドローをする
+	}
 	
 	return
 	
 // 識別子が選択された( iLv は与えられる )
 *LvSelectedIdent
-	if ( numrg(iLv, 0, DefList_GetCount(mdeflist(iDL)) - 1 ) == false ) { return }
+	if ( bInclude ) {
+		
+		// どのファイルにある宣言か調べる
+		bSelected = false
+		foreach deflistItemTop
+			if ( numrg( iLv, deflistItemTop(cnt), deflistItemTop(cnt) + DefList_GetCount( mdeflist(cnt) ) - 1 ) ) {
+				iDL       = cnt
+				bSelected = true
+				gosub *ResetScriptBox
+				break
+			}
+		loop
+		if ( bSelected == false ) { return }
+		
+	} else {
+		// 指定したファイルにある宣言かどうか調べる
+		if ( numrg( iLv, 0, DefList_GetCount(mdeflist(iDL)) - 1 ) == false ) { return }
+	}
 	
 	// 位置を保存
-	posLn = DefList_GetLn( mdeflist(iDL), iLv )
+	posLn = DefList_GetLn( mdeflist(iDL), iLv - deflistItemTop(iDL) )
 	
-	// スクロールする
+	// 宣言の位置までスクロールする
 	ScrollWindow infScript, 1, limit(posLn - 1, 0, MAX_INT)		// SB_VERT
 	return
 	
-// common フォルダのフルパスを取得
+// common フォルダのパスを検索パスに登録する
 *GetCommonPath
-#ifdef __LISTUP_INCLUDE__
-	if ( bHsed ) {
-		// hsed のフルパスに common をくっつける
-		AppendSearchPath getpath(hsed_GetHsedPath(), 32) +"common"
+	if ( bInclude ) {
+		if ( bHsed ) {
+			// hsed のフルパスに common をくっつける
+			pathToCommon = getpath( hsed_GetHsedPath(), 32 ) +"common"
+			AppendSearchPath pathToCommon
+		}
 	}
-#endif
 	return
 	
 // 対象のスクリプトのパスを取得する
 *GetTargetFilePath
 	if ( bHsed ) {
-		hsed_GetActText                script		// アクティブな Footy のテキストを取得
-		bsave           HSED_TEMPFILE, script		// 一時ファイルを作る
-		GetFullPathName HSED_TEMPFILE, filepath		// フルパスとして取得する
+		filepath(0) = HSED_TEMPFILE			// フルパス
+		filepath(1) = "userdef.as"
+		hsed_GetActText script				// アクティブな Footy のテキストを取得
+		bsave filepath, script				// 一時ファイルを作る
 	} else {
 		GetFullPathName cmdline, filepath	// フルパスとして取得する
 	}
-	
 	return
 	
 // 定義リストを更新する
 *UpdateDefinitionList
+	if ( bInclude ) {
+		
+		// 検索パスに追加
+		AppendSearchPath getpath(filepath, 32)
+		
+		// 再帰的に定義リストを作成
+		CreateDefinitionList mdeflist, filepath, true
+		
+	} else {
+		
+		// 定義リストを作成する
+		newmod mdeflist, deflist, filepath
+		
+	}
 	
-#ifdef __LISTUP_INCLUDE__
-	// 検索パスに追加
-	AppendSearchPath getpath(filepath, 32)
-	
-	// 再帰的に定義リストを作成
-	CreateDefinitionList mdeflist, filepath
-#else
-	// 定義リストを作成する
-	newmod mdeflist, deflist, filepath
-#endif
-	
+	// スクリプト・ボックスの内容を更新
 	gosub *ResetScriptBox
 	
 	// 位置を設定
 	posLn = 0
 	return
 	
-// スクリプトを更新する
+// スクリプト・ボックスを更新する
 *ResetScriptBox
 	DefList_GetScript mdeflist(iDL), script
 	
 	// 行番号を埋め込む
-	SetLinenum script, script, "%3d "
+	SetLinenum script, script, sFormatLineNumber
 	
 	// スクリプトを更新
 	objprm infScript(1), script
@@ -355,29 +404,49 @@
 	
 // リストをリセットする
 *ResetListview
-	sendmsg infLv, 0x000B, false, 0		// WM_SETREDRAW
-	
 	// すべて除去
 	LvDeleteAll mLv
-	
 	return
 	
 // リストを更新する
 *UpdateListview
 	
-#ifdef __LISTUP_INCLUDE__
-	old_iDL = iDL
-	foreach mdeflist
-		iDL = cnt
-#endif
+	sendmsg infLv, 0x000B, false, 0		// WM_SETREDRAW
 	
+	if ( bInclude ) {
+		// すべてのファイルの宣言を一気に追加する
+		old_iDL = iDL
+		iLvItem = -1
+		foreach mdeflist
+			iDL = cnt
+			deflistItemTop(cnt) = iLvItem + 1	// 前の周の iLvItem の次に挿入されるハズ
+			
+			gosub *AddItemsToListview
+			
+		loop
+		iDL = old_iDL
+		
+	} else {
+		// 宣言を追加
+		gosub *AddItemsToListview
+	}
+	
+	// カラムの幅を適正にする
+	repeat 5
+		sendmsg infLv, 0x101E, cnt, -2	// LVM_SETCOLUMNWIDTH::lp = LVSCW_AUTOSIZE_USEHEADER
+	loop
+	
+	// 更新再開
+	sendmsg infLv, 0x000B, true, 0		// WM_SETREDRAW
+	return
+	
+// リストビューに項目を追加する
+*AddItemsToListview
 	// 項目をすべて追加
 	filename     = DefList_GetFileName( mdeflist(iDL) )
 	deflistCount = DefList_GetCount   ( mdeflist(iDL) )
 	
 	if ( deflistCount <= 0 ) { return }
-	
-	sendmsg infLv, 0x000B, false, 0		// WM_SETREDRAW
 	
 	repeat deflistCount
 		DefList_Get mdeflist(iDL), cnt, deflistIdent, deflistLn, deflistType, deflistScope
@@ -388,27 +457,12 @@
 		LvSetSub      mLv,        stype, iLvItem, 2
 		LvSetSub      mLv, deflistScope, iLvItem, 3
 		LvSetSub      mLv,     filename, iLvItem, 4
+		
+		if ( bCustomDraw ) {
+			LvCtTextColor mLv, iLvItem, 0x000000
+			LvCtBackColor mLv, iLvItem, cwhich_int(iLvItem & 1, 0xFFF2F2, 0xF2F2FF)
+		}
 	loop
-	
-#ifdef __LISTUP_INCLUDE__
-	loop
-	iDL = old_iDL
-#endif
-	
-#ifdef __LV_CUSTOMDRAW__
-	sendmsg infLv, 0x1004, 0, 0		// LVM_GETITEMCOUNT
-	repeat stat
-		LvCtTextColor mLv, cnt, 0x000000
-		LvCtBackColor mLv, cnt, cwhich_int(cnt & 1, 0xFFF2F2, 0xF2F2FF)
-	loop
-#endif
-	
-	// カラムの幅を適正にする
-	repeat 5
-		sendmsg infLv, 0x101E, cnt, -2	// LVM_SETCOLUMNWIDTH::lp = LVSCW_AUTOSIZE_USEHEADER
-	loop
-	
-	sendmsg infLv, 0x000B, true, 0		// WM_SETREDRAW
 	return
 	
 // ジャンプする
@@ -418,18 +472,18 @@
 		return
 	}
 	
-#ifdef __LISTUP_INCLUDE__
-	// 他のファイルならだめ
-	if ( DefList_GetFileName( deflist(iDL) ) != HSED_TEMPFILE ) {
-		dialog "include 先のファイルにはジャンプできません。", 1, "deflister"
-		return
+	if ( bInclude ) {
+		// 他のファイルならだめ
+		if ( numrg(iLv, 0, DefList_GetCount( mDeflist(0) ) - 1) == false ) {
+			dialog "#include 先のファイルにはジャンプできません。", 1, "deflister"
+			return
+		}
 	}
-#endif
 	
 	gsel wID_Main, -1	// 動きが俊敏なように見せる
 	
 	// 指定行に移動( hsed の行番号は１ベース )
-	hsed_setcaretline hsed_activeFootyID(), DefList_GetLn( mdeflist(iDL), iLv ) + 1
+	hsed_setcaretline hsed_activeFootyID(), DefList_GetLn( mdeflist(iDL), iLv - deflistItemTop(iDL) ) + 1
 	
 	// 終了する
 	PostMessage hwnd, 0x0010, 0, 0
@@ -439,9 +493,9 @@
 *BtnRenew
 	delmodall mdeflist
 	
-	gosub *ResetListview
 	gosub *GetTargetFilePath
 	gosub *UpdateDefinitionList
+	gosub *ResetListview
 	gosub *UpdateListview
 	return
 	
@@ -464,16 +518,16 @@
 		
 		// マウスの移動範囲を制限する
 		rc(0) = ginfo(4) + 10
-		rc(1) = ginfo(5) + ( 10 + 60 )
+		rc(1) = ginfo(5) + ( 10 + 80 )
 		rc(2) = ginfo(6) - 10
 		rc(3) = ginfo(7) - ( 40 + 80 )
 		ClipCursor varptr(rc)
 		
 		// 無限ループ
-		while
+		repeat
 			getkey bLBtnDown, GETKEY_LBTN
 			if ( bLBtnDown == false ) {
-				_break
+				break
 			}
 			
 			await 0
@@ -485,7 +539,7 @@
 			sendmsg hwnd, UWM_SPLITTERMOVE, 0, 0		// 通知する
 			ptDragStart = ptDragEnd(0), ptDragEnd(1)	// 始点を変更する
 			
-		wend
+		loop
 		
 		// ドロップされた
 		if ( bDragging ) {			// ドロップ

@@ -3,7 +3,7 @@
 #ifndef __HSP_PARSE_MODULE_GET_TOKEN_AS__
 #define __HSP_PARSE_MODULE_GET_TOKEN_AS__
 
-#include "HPM_TookToken.as"	// 識別子取り出し
+#include "HPM_CutToken.as"	// 識別子取り出し
 #include "HPM_Sub.as"		// モジュール
 
 // 主要モジュール
@@ -14,33 +14,39 @@
 #uselib "user32.dll"
 #func   _ChrLow "CharLowerA" int
 
+//------------------------------------------------
 // マクロ
+//------------------------------------------------
 #define ctype IsWOp(%1) ((%1) == '<' || (%1) == '=' || (%1) == '>' || (%1) == '&' || (%1) == '|' || (%1) == '+' || (%1) == '-')
 
+#define NULL 0
+
+//------------------------------------------------
 // 次のトークンを取得する
+//------------------------------------------------
 #deffunc GetNextToken var p1, var p2, int p3, int p_befTT, int bPreLine
 	c = peek(p2, p3)
 	
 	// Name (識別子)
-	if ( IsIdentTop(c) ) {
-		p1 = TookName(p2, p3)
+	if ( IsIdentTop(c) || c == '`' || IsSJIS1st(c) ) {
+		p1 = CutName(p2, p3)
 		return TOKENTYPE_NAME
 	}
 	
 	// Preprocessor
 	if ( c == '#' ) {
 		iFound = 1 + CntSpaces(p2, p3 + 1)		// 空白
-		p1     = strmid(p2, p3, iFound) + TookName(p2, p3 + iFound)
+		p1     = strmid(p2, p3, iFound) + CutName(p2, p3 + iFound)
 		return TOKENTYPE_PREPROC
 	}
 	
 	// String
 	if ( c == '"' ) {
-		p1 = TookStr(p2, p3)		// 文字列を取り出す (""を含む)
+		p1 = CutStr(p2, p3)		// 文字列を取り出す (""を含む)
 		return TOKENTYPE_STRING
 	}
 	if ( wpeek(p2, p3) == 0x227B ) {	// {"
-		p1 = TookStrMulti(p2, p3)		// 複数行文字列を取り出す ({" "} 含む)
+		p1 = CutStrMulti(p2, p3)		// 複数行文字列を取り出す ({" "} 含む)
 		return TOKENTYPE_STRING
 	}
 	
@@ -63,13 +69,17 @@
 	if ( c == ')' ) { p1 = ")" : return TOKENTYPE_CIRCLE_R }
 	if ( c == '.' ) { p1 = "." : return TOKENTYPE_PERIOD   }
 	
-	// Label ( * から始まり、次が、文の終端、カンマ、) のうちのどれかのとき )
+	// Label ( * から始まり、次が、文の終端、カンマ、')' のうちのどれかのとき )
 	if ( c == '*' ) {
-		if ( IsLabel(p2, p3, p_befTT) ) {	// ラベルか？
-			if ( peek(p2, p3 + 1) == '@' ) {
-				p1 = "*@"+ TookName(p2, p3 + 2)	// *@ の後は好きなだけ取り出す
+		// ラベルか？
+		if ( IsLabel(p2, p3, p_befTT, bPreline) ) {
+			c2 = peek(p2, p3 + 1)
+			if ( c2 == '@' ) {
+				p1 = "*@"+ CutName(p2, p3 + 2)	// *@ の後は好きなだけ取り出す
+			} else : if ( c2 == '%' ) {			// *%
+				p1 = "*%"+ CutName(p2, p3 + 2)
 			} else {
-				p1 = "*"+ TookName(p2, p3 + 1)	// 切り出す
+				p1 = "*"+ CutName(p2, p3 + 1)	// 切り出す
 			}
 			return TOKENTYPE_LABEL
 		}
@@ -100,14 +110,14 @@
 		if ( c2 == '=' || (IsWOp(c) && c == c2) ) {	// ?= か、&& || などの二重
 			p1 = strmid(p2, p3, 2)		// 2 byte
 		} else {
-			p1 = strf("%c", c)			// 1 byte
+			wpoke p1,, c				// 1 byte
 		}
 		if ( c == '\\' && bPreLine ) {	// 改行回避の可能性
 			if ( IsNewLine(c2) ) {
 				if ( c2 == 0x0D && peek(p2, p3 + 2) == 0x0A ) {
-					lpoke p1, 0, MAKELONG2('\\', 0x0D, 0x0A, 0)	// "\\\n"
+					lpoke p1,, MAKELONG2('\\', 0x0D, 0x0A, 0)	// "\\\n"
 				} else {
-					lpoke p1, 0, MAKEWORD('\\', c2)
+					lpoke p1,, MAKEWORD('\\', c2)
 				}
 				return TOKENTYPE_ESC_LINEFEED
 			}
@@ -117,60 +127,81 @@
 	
 	// Char
 	if ( c == '\'' ) {
-		p1 = TookCharactor(p2, p3)
+		p1 = CutCharactor(p2, p3)
 		return TOKENTYPE_CHAR
 	}
 	
 	// Number (2 or 16)
 	if ( c == '$' ) {
-		p1 = "$"+ TookNum_Hex(p2, p3 + 1)
+		p1 = "$"+ CutNum_Hex(p2, p3 + 1)
 		return TOKENTYPE_NUMBER
 	}
 	if ( c == '%' ) {
+		c2 = peek(p2, p3 + 1)
+		
 		if ( bPreLine ) {
-			p1 = "%"+ TookNum_Dgt(p2, p3 + 1)
-			return TOKENTYPE_PARAMETER
-		} else {
-			p1 = "%"+ TookNum_Bin(p2, p3 + 1)
+			// 二進数表記
+			if ( c2 == '%' && IsBin(peek(p2, p3 + 2)) ) {
+				p1 = "%"+ CutNum_Bin(p2, p3 + 1)
+				return TOKENTYPE_NUMBER
+				
+			} else : if ( IsDigit(c2) ) {		// マクロ引数
+				p1 = "%"+ CutNum_Dgt(p2, p3 + 1)
+				return TOKENTYPE_MACRO_PRM
+				
+			} else : if ( IsAlpha(c2) ) {		// 特殊展開マクロ
+				p1 = "%"+ CutName(p2, p3 + 1)
+				return TOKENTYPE_MACRO_SP
+			}
+		}
+		
+		// 二進数表記
+		if ( IsBin(c2) ) {
+			p1 = "%"+ CutNum_Bin(p2, p3 + 1)
 			return TOKENTYPE_NUMBER
+		} else {
+			goto *LGotUnknownToken
 		}
 	}
+	
 	if ( c == '0' ) {
 		c2 = peek(p2, p3 + 1)
 		if ( c2 == 'x' || c2 == 'X' ) {
-			p1 = strmid(p2, p3, 2) + TookNum_Hex(p2, p3 + 2)
+			p1 = strmid(p2, p3, 2) + CutNum_Hex(p2, p3 + 2)
 			
 		} else : if ( c2 == 'b' || c2 == 'B' ) {
-			p1 = strmid(p2, p3, 2) + TookNum_Bin(p2, p3 + 2)
+			p1 = strmid(p2, p3, 2) + CutNum_Bin(p2, p3 + 2)
 			
 		} else {
-			p1 = TookNum_Dgt(p2, p3)
+			p1 = CutNum_Dgt(p2, p3)
 		}
 		return TOKENTYPE_NUMBER
 	}
 	
 	// Number (10)
 	if ( IsDigit(c) || c == '.' ) {
-		p1 = TookNum_Dgt(p2, p3)		// 10進数
+		p1 = CutNum_Dgt(p2, p3)		// 10進数
 		return TOKENTYPE_NUMBER
 	}
 	
 	// @Scope
 	if ( c == '@' ) {
-		p1 = "@"+ TookName(p2, p3 + 1)
+		p1 = "@"+ CutName(p2, p3 + 1)
 		return TOKENTYPE_SCOPE
 	}
 	
+	// 謎な場合
+*LGotUnknownToken
 	if ( IsSJIS1st(c) ) {
 		logmes "ERROR! SJIS code!"
 		wpoke p1, 0, wpeek(p2, p3)	// 書き込む
-		poke  p1, 3, 0				// NULL
+		poke  p1, 3, NULL
 		return TOKENTYPE_ERROR
 	}
 	
 	// ？？？
 	p1 = strf("%c", c)
-	logmes "ERROR !! Can't Pop a Token! [ "+ logv(p3) +" : "+ strf("%c", c) +" : "+ c +" ]"
+	logmes "ERROR !! Can't Pop a Token! [ "+ p3 + strf(" : %c : ", c) + c +" ]"
 	return TOKENTYPE_ERROR
 	
 #global

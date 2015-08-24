@@ -1,16 +1,18 @@
-// StrSet モジュール
+// 区切り文字列クラス
 
-#ifndef __MODULE_STRSET_AS__
-#define __MODULE_STRSET_AS__
+#ifndef __MODULECLASS_STRSET_AS__
+#define __MODULECLASS_STRSET_AS__
 
 #include "strutil.as"
 
-#module strset mString, mStrLen, mStrSize, mChar, mCharLen, mNow, mLastErr, mIterVar
-
+#module MCStrSet mString, mStrLen, mStrSize, mChar, mCharLen, mIdxptrList, mcntIdxptr, mLastErr, mIterVar
+#undef split
 // 定義
 #define FIRST_ALLOC_SIZE  0xFFFF
 #define EXPAND_ALLOC_SIZE 0xFF
-#define mv modvar strset@
+#define mv modvar MCStrSet@
+
+#define mNow mIdxptrList(mcntIdxptr)
 
 // マクロ
 #define ctype ErrReturn(%1,%2) mLastErr = (%1) : return (%2)
@@ -28,16 +30,22 @@
 //        内部メンバ関数の定義
 //##############################################################################
 
+//------------------------------------------------
 // mString は区切り文字で終わっているか？
+//------------------------------------------------
 #define ctype _StrSet_IsLastChar(%1,%2=mString,%3=mStrLen) __StrSet_IsLastChar(%1,%2,%3)
 #defcfunc    __StrSet_IsLastChar mv, var p2, int lenOf_p2
 	if ( lenOf_p2 < mCharLen ) { return false }
 	return ( StrCompNum(p2, mChar, mCharLen, lenOf_p2 - mCharLen) )
 	
+//------------------------------------------------
 // mString の最後に連結する
+//------------------------------------------------
 #define _StrSet_strcat(%1,%2,%3) _StrSet_strins %1,%2,%3,mStrLen
 
+//------------------------------------------------
 // mString の途中に挿入する
+//------------------------------------------------
 #modfunc _StrSet_strins str p2, int p3, int offset
 	if ( mStrSize <= mStrLen + p3 ) {
 		mStrSize += EXPAND_ALLOC_SIZE	// サイズを大きくする
@@ -47,7 +55,9 @@
 	mStrLen = stat
 	return
 	
+//------------------------------------------------
 // p2 ～ p3 を削除する
+//------------------------------------------------
 #modfunc _StrSet_DeleteBetween int p2, int p3,  local iA, local iB
 	if ( p2 == p3 ) { return }
 	if ( p2 <  p3 ) {
@@ -60,25 +70,32 @@
 	StrDelete mString, iA, iB - iA, mStrLen
 	mStrLen = stat
 	
-	// mNow が削除起点より後にあるなら、調整する
-	if (mNow > iA) {
-		mNow -= (iB - iA)
-	}
+	// ポインタが削除起点より後にあるなら、調整する
+	repeat mcntIdxptr
+		if ( mIdxptrList(cnt) > iA ) {
+			mIdxptrList(cnt) -= (iB - iA)
+		}
+	loop
 	return
 	
+//------------------------------------------------
 // 文字列の後に区切り文字を付加して返す
+//------------------------------------------------
 #modfunc _StrSet_addchar var p2, int p3,  local len
 	if ( p3 ) { len = p3 } else { len = strlen(p2) }
 	
 	// 後に区切り文字を付加する
 	if ( _StrSet_IsLastChar(thismod, p2, len) == false ) {
+		memexpand p2, len + mCharlen + 1	// 確保
 		memcpy p2, mChar, mCharLen, len		// 一番後ろに追加
 		len += mCharLen
 		poke   p2, len, 0
 	}
 	return len
 	
-// n 番目のアイテムがあるところまでのインデックス値を取得
+//------------------------------------------------
+// n 番目のアイテムへのインデックス値を取得
+//------------------------------------------------
 #defcfunc _StrSet_SearchByNum mv, int no, int iFrom,  local i, local n, local c, local c2
 	i  = iFrom
 	n  = 0
@@ -102,7 +119,9 @@
 	if ( n != no ) { ErrReturn2(STRSET_ERR_ARGMENT) }
 	return i
 	
+//------------------------------------------------
 // 指定文字列の項目までのインデックス値を求める
+//------------------------------------------------
 #define global ctype _StrSet_FindStr(%1,%2,%3=0,%4=-1) __StrSet_FindStr(%1,%2,%3,%4)
 #defcfunc __StrSet_FindStr mv, str p2, int iFrom, int lenOf_p2,  local stmp, local len
 	if ( lenOf_p2 < 0 ) { len = strlen(p2) } else { len = lenOf_p2 }
@@ -129,7 +148,9 @@
 	// 中間の項目にマッチするものがあるか探す
 	return ( instr(mString, iFrom, mChar + stmp) )	// 「区切り 項目 区切り」を探す
 	
+//------------------------------------------------
 // すでに項目として存在するか
+//------------------------------------------------
 #defcfunc _StrSet_IsInserted mv, str p2
 	
 	if ( instr(mString, 0, mChar) < 0 ) {	// 区切り文字がない
@@ -138,7 +159,9 @@
 	
 	return ( _StrSet_FindStr(thismod, p2) >= 0 )
 	
+//------------------------------------------------
 // 最後の項目までのインデックス値を求める
+//------------------------------------------------
 #defcfunc _StrSet_IdxOfLast mv, local i
 	// 最後を探索
 	i = instrb( mString, 0, mChar, mStrLen, mCharLen )
@@ -150,7 +173,7 @@
 	// 最後が区切り文字で終わっていたら
 	} else : if ( i == (mStrLen - mCharLen) ) {
 		// もう一度検索する
-		i = instrb(mString, mCharLen, mChar, mStrLen, mCharLen)
+		i = instrb( mString, mCharLen, mChar, mStrLen, mCharLen )
 		
 		// 発見できなかったら、空文字列になる
 		if ( i < 0 ) {
@@ -164,21 +187,26 @@
 	return i + mCharLen
 	
 //##############################################################################
-//        コンストラクタ・デストラクタの定義
+//                コンストラクタ・デストラクタ
 //##############################################################################
-;#deffunc StrSet_Init modinit strset@, str p2, str p3
+//------------------------------------------------
+// コンストラクタ
+//------------------------------------------------
+;#deffunc StrSet_Init modinit MCStrSet@, str p2, str p3
 #modinit str p2, str p3
 	sdim mString, FIRST_ALLOC_SIZE
 	sdim mChar
 	sdim mIterVar
 	
-	mString  = p2
-	mChar    = p3
-	mStrLen  = strlen(mString)
-	mCharLen = strlen(mChar)
-	mStrSize = FIRST_ALLOC_SIZE
-	mNow     = 0
-	mLastErr = STRSET_ERR_NONE
+	mString     = p2
+	mChar       = p3
+	mStrLen     = strlen(mString)
+	mCharLen    = strlen(mChar)
+	mStrSize    = FIRST_ALLOC_SIZE
+	mNow        = 0
+	mLastErr    = STRSET_ERR_NONE
+	mcntIdxptr  = 0
+	mIdxptrList = 0
 	
 	// mString の最後に mChar を追加する
 	if ( mStrLen ) {
@@ -187,24 +215,36 @@
 	
 	return
 	
+//------------------------------------------------
+// デストラクタ
+//------------------------------------------------
 ;#modterm
 ;	return
 
 //##############################################################################
-//        メンバ関数の定義
+//                メンバ関数
 //##############################################################################
-//######## 取得ポインタ操作系関数群 ##############
+
+//##########################################################
+//        取得ポインタ操作系関数群
+//##########################################################
+//------------------------------------------------
 // 先頭に戻る
+//------------------------------------------------
 #modfunc StrSet_gotop
 	mNow = 0
 	return
 	
+//------------------------------------------------
 // 終端までジャンプ
+//------------------------------------------------
 #modfunc StrSet_gobtm
 	mNow = mStrLen
 	return
 	
+//------------------------------------------------
 // n 個戻る
+//------------------------------------------------
 #modfunc StrSet_back int num, local offset, local i
 	if ( num <= 0 ) { return }
 	
@@ -220,7 +260,9 @@
 	if ( mNow < 0 ) { mNow = i + mCharLen }
 	return
 	
+//------------------------------------------------
 // n 個飛ばす
+//------------------------------------------------
 #modfunc StrSet_skip int num
 	i = _StrSet_SearchByNum(thismod, num, mNow)
 	
@@ -231,16 +273,41 @@
 	mNow = i		// 新しい取得ポインタ
 	return
 	
+//------------------------------------------------
 // n 番目に移動 (ランダムアクセス)
+//------------------------------------------------
 #modfunc StrSet_jump int no
 	StrSet_gotop thismod		// 一旦先頭に戻って
 	StrSet_skip  thismod, no	// no 個飛ばす
 	return
 	
-//######## 追加系関数群 ##########################
-// 必ず mString の最後が mChar で終わるように配慮する！
+	
+//------------------------------------------------
+// 取得ポインタをプッシュ
+//------------------------------------------------
+#modfunc StrSet_pushIdxptr int p2
+	mcntIdxptr ++
+	mNow = 0
+	if ( p2 ) { StrSet_jump thismod, p2 }
+	return
+	
+//------------------------------------------------
+// 取得ポインタをポップ
+//------------------------------------------------
+#modfunc StrSet_popIdxptr
+	if ( mcntIdxptr > 0 ) {
+		mcntIdxptr --
+	}
+	return
+	
+//##########################################################
+//        追加系関数群
+//##########################################################
+// ☆必ず mString の最後が mChar で終わるように配慮する
 
+//------------------------------------------------
 // 最後に加える
+//------------------------------------------------
 #modfunc StrSet_add str p2
 	
 	len = strlen(p2)
@@ -254,7 +321,11 @@
 	_StrSet_strcat thismod, stmp, len
 	return
 	
-// 現在の位置に追加する(次の getnext で取得される)
+//------------------------------------------------
+// 現在の位置に追加する
+// 
+// @ 次の getnext で取得される
+//------------------------------------------------
 #modfunc StrSet_insnow str p2
 	
 	// 後ろに区切り文字を追加しておく
@@ -262,7 +333,11 @@
 	
 	return
 	
-// n 番目の位置に追加する (挿入位置を返す)
+//------------------------------------------------
+// n 番目の位置に追加する
+// 
+// @return int : 挿入位置のインデックス値
+//------------------------------------------------
 #modfunc StrSet_insert str p2, int no
 	
 	// 数える
@@ -275,11 +350,14 @@
 	_StrSet_strins thismod, p2 + mChar, len, i
 	
 	// mNow より前なら、mNow を加算しておく
-	if ( i < mNow ) { mNow += len }
-	
+	repeat mcntIdxptr
+		if ( i < mIdxptrList(cnt) ) { mIdxptrList(cnt) += len }
+	loop
 	return i
 	
+//------------------------------------------------
 // 排他的系
+//------------------------------------------------
 #modfunc StrSet_xadd str p2
 	if ( _StrSet_IsInserted(thismod, p2) ) { return false }
 	StrSet_add thismod, p2
@@ -295,14 +373,20 @@
 	StrSet_insert thismod, p2, no
 	return stat
 	
-//######## 取得系関数群 ##########################
+//##########################################################
+//        取得系関数群
+//##########################################################
+//------------------------------------------------
 // 最初のモノを取得
+//------------------------------------------------
 #defcfunc StrSet_gettop mv
 	sdim   stmp, mStrLen	// ↓mChar までを切り出す
 	StrCut stmp, mString, 0, mChar, mStrLen, mCharLen
 	return stmp
 	
+//------------------------------------------------
 // 次のモノを取得
+//------------------------------------------------
 #defcfunc StrSet_getnext mv
 	sdim   stmp, mStrLen
 	StrCut stmp, mString, mNow, mChar, mStrLen, mCharLen
@@ -313,14 +397,27 @@
 	}
 	return stmp
 	
+//------------------------------------------------
+// 直前に取得したモノを取得
+//------------------------------------------------
+#defcfunc StrSet_getprev mv
+	StrSet_back thismod, 1
+	return StrSet_getnext(thismod)
+	
+//------------------------------------------------
 // 最後のモノを取得
+//------------------------------------------------
 #defcfunc StrSet_getlast mv
 	// 切り出して返す
 	sdim   stmp, mStrLen
 	StrCut stmp, mString, _StrSet_IdxOfLast(thismod), mChar, mStrLen, mCharLen
 	return stmp
 	
-// n 番目のモノを取得(ランダムアクセス)
+//------------------------------------------------
+// n 番目のモノを取得
+// 
+// @ ランダムアクセス
+//------------------------------------------------
 #defcfunc StrSet_getone mv, int no
 	
 	// 数える
@@ -332,19 +429,29 @@
 	StrCut stmp, mString, i, mChar, mStrLen, mCharLen
 	return stmp
 	
+//------------------------------------------------
 // すべて取得
+//------------------------------------------------
 #defcfunc StrSet_getall mv
 	return mString
 	
-// すべて取得 ( バッファにコピー )
+//------------------------------------------------
+// すべて取得
+// 
+// @ バッファにコピー
+//------------------------------------------------
 #modfunc StrSet_getall_tobuf var outbuf
 	memexpand outbuf, mStrLen + 1
 	memcpy    outbuf, mString, mStrLen
 	poke      outbuf, mStrLen, 0
 	return
 	
-//######## 削除系関数群 ##########################
-// 次のモノを削除 ( 次に取得されるものを削除 )
+//##########################################################
+//        削除系関数群
+//##########################################################
+//------------------------------------------------
+// 次に取得されるものを削除
+//------------------------------------------------
 #modfunc StrSet_delnow
 	// 次の項目のインデックスを取得
 	iNext = _StrSet_SearchByNum(thismod, 1, mNow)
@@ -354,13 +461,21 @@
 	_StrSet_DeleteBetween thismod, mNow, iNext
 	return false
 	
-// 前回のモノを削除 ( さきほど取得したものを削除 )
+//------------------------------------------------
+// 前回のモノを削除
+// 
+// @ 前回の getnext() で取得したものを削除
+//------------------------------------------------
 #modfunc StrSet_delback
 	StrSet_back   thismod, 1	// 一つ戻って
 	StrSet_delnow thismod		// 「今」のを削除する
 	return stat
 	
-// n 番目を削除する ( ランダムアクセス )
+//------------------------------------------------
+// n 番目を削除する
+// 
+// @ ランダムアクセス
+//------------------------------------------------
 #modfunc StrSet_delone int no
 	// no 番目のインデックスを取得
 	iPos = _StrSet_SearchByNum(thismod, no, 0)
@@ -374,13 +489,15 @@
 	_StrSet_DeleteBetween thismod, iPos, iNext
 	return false
 	
+//------------------------------------------------
 // 空の項目を削除
+//------------------------------------------------
 #modfunc StrSet_delvoid  local word
 	// 区切り文字が二連続になっているところを探して削除
 	len    = mCharLen * 2
 	offset = 0
 	
-	sdim word, len + 1
+	sdim   word, len + 1
 	memcpy word, mChar, mCharLen
 	memcpy word, mChar, mCharLen, mCharLen
 	// ↑ word = mChar + mChar
@@ -396,7 +513,9 @@
 	wend
 	return false
 	
+//------------------------------------------------
 // 指定文字列の項目を削除
+//------------------------------------------------
 #modfunc StrSet_delstr str p2, int bGlobal
 	
 	len = strlen(p2) + mCharLen
@@ -417,42 +536,95 @@
 	
 	return
 	
-//######## 検索系関数群 ########################################################
+//##########################################################
+//        検索系関数群
+//##########################################################
 // ※なければ負数を返すので、( 返り値 < 0 ) が偽のとき、成功。
 
+//------------------------------------------------
 // 文字列から検索
-#define global StrSet_FindStr _StrSet_FindStr
+//------------------------------------------------
+#define global StrSet_findStr _StrSet_FindStr
 
-//######## 繰返子系関数群 ######################################################
+//------------------------------------------------
+// 指定文字列の項目が存在するかどうか
+//------------------------------------------------
+#define global ctype StrSet_exists(%1,%2="") ( StrSet_findStr(%1,%2) >= 0 )
+
+//##########################################################
+//        繰返子系関数群
+//##########################################################
+//------------------------------------------------
 // 反復開始の設定
-#modfunc StrSet_Iter int p2
-	StrSet_jump thismod, p2		// mNow の位置をセットする
+//------------------------------------------------
+#modfunc StrSet_iter int p2
+	StrSet_pushIdxptr thismod, p2
 	return
 	
-// 反復開始の設定 ( 外部の変数を使う場合 )
-#modfunc StrSet_IterVar int p2, var p3
-	StrSet_Iter thismod, p2
+//------------------------------------------------
+// 反復開始の設定
+// 
+// @ 外部の変数を使う場合
+//------------------------------------------------
+#modfunc StrSet_iterVar int p2, var p3
+	StrSet_iter thismod, p2
 	dup mIt, p3					// mIt をクローンにする
 	return
 	
-// 次の項目に移動する ( mIt の更新 )
-#modfunc StrSet_IterNext
-	mIt  = StrSet_getnext(thismod)
+//------------------------------------------------
+// 次の項目に移動する
+// @private
+// @ mIt の更新
+//------------------------------------------------
+#modfunc StrSet_iterNext
+	mIt = StrSet_getnext(thismod)
 	return
 	
+//------------------------------------------------
 // while の反復条件に使う
-#defcfunc StrSet_IterCheck mv, local bool
+//------------------------------------------------
+#defcfunc StrSet_iterCheck mv, local bool
 	bool = ( mLastErr != STRSET_ERR_EOS )
 	StrSet_IterNext thismod		// 更新される
+	if ( bool == false ) {
+		StrSet_popIdxptr thismod
+	}
 	return bool
 	
+//------------------------------------------------
 // 現在の項目を取得する ( 内部変数 mIt を使う場合 )
-#defcfunc StrSet_It mv
+//------------------------------------------------
+#defcfunc StrSet_it mv
 	return mIt
 	
-//######## 便利ルーチン関数群 ####################
-// 指定した位置で二等分する ( inPosItem は、位置の項目がどちらに入るか。0なら無視、1は前、2は後 )
-#modfunc StrSet_DivByPos array str2, int p, int inPosItem
+//##########################################################
+//        便利ルーチン関数群
+//##########################################################
+//------------------------------------------------
+// 全項目を配列にして返す
+//------------------------------------------------
+#ifdef split
+#modfunc StrSet_toArray array strlist
+	split mString, mChar, strlist
+	return stat - 1
+#else
+#modfunc StrSet_toArray array strlist, local count
+	count = 0
+	StrSet_iter thismod
+	while ( StrSet_iterCheck(thismod) )
+		strlist(count) = StrSet_it(thismod)
+		count ++
+	wend
+	return count
+#endif
+	
+//------------------------------------------------
+// 指定した位置で二等分する
+// 
+// @ inPosItem は、位置の項目がどちらに入るか
+//   0 なら無視、1 は前、2 は後
+//------------------------------------------------
+#modfunc StrSet_divByPos array str2, int p, int inPosItem
 	sdim str2, mStrLen, 2
 	i = _StrSet_SearchByNum( thismod, p + (inPosItem == 1), 0 )
 	
@@ -473,9 +645,20 @@
 	
 	return
 	
-//######## その他関数群 ##########################
+//##########################################################
+//        その他関数群
+//##########################################################
+//------------------------------------------------
+// コピーを作成する
+//------------------------------------------------
+#modfunc StrSet_copy var v_copy
+	newmod v_copy, MCStrSet@, mString, mChar
+	return stat
+	
+//------------------------------------------------
 // 項目数の取得
-#defcfunc StrSet_CntItems mv
+//------------------------------------------------
+#defcfunc StrSet_cntItems mv
 	offset = 0
 	repeat
 		// 次の項目の位置
@@ -494,8 +677,10 @@
 	mLastErr = STRSET_ERR_NONE
 	return i
 	
+//------------------------------------------------
 // 区切り文字を変換
-#modfunc StrSet_ChgChar str newChar
+//------------------------------------------------
+#modfunc StrSet_chgChar str newChar
 	len = strlen(newChar)
 	
 	// 大丈夫なように再確保
@@ -518,22 +703,39 @@
 	mCharLen = len
 	return
 	
+//------------------------------------------------
+// 区切り文字を変換してから取得
+//------------------------------------------------
+#defcfunc StrSet_getall_byChar mv, str newChar, local copy
+	StrSet_copy    thismod, copy
+	StrSet_chgChar copy, newChar
+	return StrSet_getall(copy)
+	
+//------------------------------------------------
 // 区切り文字を取得
+//------------------------------------------------
 #defcfunc StrSet_char mv
 	return mChar
 	
+//------------------------------------------------
 // 現在の取得ポインタの位置
+//------------------------------------------------
 #defcfunc StrSet_now mv
 	return mNow
 	
+//------------------------------------------------
 // 最後に起きたエラー
-#defcfunc StrSet_GetLastErr mv
+//------------------------------------------------
+#defcfunc StrSet_getLastErr mv
 	return mLastErr
 	
+#ifdef _DEBUG
 #modfunc ss_check
 	logmes logv(strlen(mString))
 	logmes logv(mStrLen        )
 	return
+#endif
+
 #global
 
 #module
@@ -543,7 +745,9 @@
 
 #global
 
-// サンプル・スクリプト
+//##############################################################################
+//        サンプル・スクリプト
+//##############################################################################
 #if 0
 
 #define write(%1="") if ( bufsize - iWrote <= 300 ) { bufsize += 320 : memexpand buf, bufsize } poke buf, iWrote, ""+ (%1) +"\n" : iWrote += strsize
@@ -552,7 +756,7 @@
 	bufsize = 320
 	sdim buf, bufsize
 	
-	newmod ss, strset, "文,字,列", ","
+	newmod ss, MCStrSet, "文,字,列", ","
 	
 	write "mString = "+ StrSet_getall(ss)
 	write
@@ -612,16 +816,16 @@
 	writeAll
 	
 	write "\n・項目数を取得 CntItems();"
-	write "項目数 = "+ StrSet_CntItems(ss)
+	write "項目数 = "+ StrSet_cntItems(ss)
 	
 	write "\n・区切り文字を変更 ChgChar();"
-	StrSet_ChgChar ss, "[切]"
+	StrSet_chgChar ss, "[切]"
 	writeAll
 	
 	StrSet_xadd ss, "new[]"
 	writeAll
 	
-	StrSet_ChgChar ss, "><"
+	StrSet_chgChar ss, "><"
 	writeAll
 	
 ;	string = StrSet_getall(ss)
@@ -629,10 +833,14 @@
 	// イテレータのサンプル ( 全項目を出力する )
 	write "\n・Iterator Sample ( output all items )"
 	
-	StrSet_Iter  ss, 0				// p2 に、何個目の項目から始めるかを設定できる
-	while ( StrSet_IterCheck(ss) )	// 更新
-		write StrSet_It(ss)			// 現在の値は関数で取得する
-	wend
+;	StrSet_iter  ss, 0				// p2 に、何個目の項目から始めるかを設定できる
+;	while ( StrSet_iterCheck(ss) )	// 更新
+;		write StrSet_it(ss)			// 現在の値は関数で取得する
+;	wend
+	StrSet_toArray ss, slist
+	repeat stat						// foreach はダメ
+		write slist(cnt)
+	loop
 	
 	// 出力
 	objmode 2, 0
@@ -641,6 +849,6 @@
 ;	delmod ss
 	stop
 	
-#endif	// sample
+#endif
 
 #endif

@@ -19,7 +19,11 @@
 #const FIRST_SIZE@modReplace  12800		// はじめに確保するsResultの長さ
 #const EXPAND_SIZE@modReplace  6400		// memexpand命令で拡張する長さの単位
 
-// メモリ再確保の判断及び実行のための命令（モジュール内部で使用）
+//------------------------------------------------
+// メモリ再確保の判断及び実行のための命令
+// 
+// @private
+//------------------------------------------------
 #deffunc _expand@modReplace var sTarget, var iNowSize, int iIndex, int iPlusSize
 	if (iNowSize <= iIndex + iPlusSize) {
 		iNowSize += EXPAND_SIZE * (1 + iPlusSize / EXPAND_SIZE)
@@ -27,7 +31,9 @@
 	}
 	return
 	
+//------------------------------------------------
 // 文字列内の対象文字列全てを置換する命令
+//------------------------------------------------
 #deffunc replace var sTarget, str sBefore, str sAfter, local sResult, local iIndex, local iIns, \
 	local iStat, local iTargetLen, local iAfterLen, local iBeforeLen, local iNowSize
 	

@@ -5,12 +5,16 @@
 
 #include "strutil.as"
 
-//######## サブ・モジュール ####################################################
+//##############################################################################
+//                サブ・モジュール
+//##############################################################################
 #module hpm_sub
 
 #include "HPM_Header.as"		// ヘッダファイルを読み込む
 
+//------------------------------------------------
 // 初期化関数
+//------------------------------------------------
 #deffunc _hpm_sub_initialize
 	keylist_all       = ","+ KEYWORDS_ALL
 	keylist_statement = ","+ KEYWORDS_STATEMENT
@@ -22,11 +26,33 @@
 	keylist_ppword    = ","+ KEYWORDS_PPWORD
 	return
 	
-// 次はラベルか？ ( * から始まり、次が、文の終端、カンマ、')' のうちのどれかのときラベル )
-#defcfunc IsLabel var p1, int p2, int p_befTT
+//------------------------------------------------
+// 次はラベルか？
+// 
+// @ 条件 = {
+//     * から始まり、
+//     その次が「文の終端 or ',' or ')'」のどれか
+// }
+//------------------------------------------------
+#defcfunc IsLabel var p1, int p2, int p_befTT, int bPreLine
 	// 最低限のチェック
 	if ( peek(p1, p2    ) != '*' ) { return false }		// もはやラベルではない
 	if ( peek(p1, p2 + 1) == '@' ) { return true  }		// ローカルラベル
+	if ( peek(p1, p2 + 1) == '%' && bPreLine ) {
+		c2 = peek(p1, p2 + 2)
+		switch ( c2 )
+			// 特殊展開マクロ
+			case 'n' : case 'i' : case 'p' : case 'o'
+				swbreak
+			default
+				// または マクロ引数
+				if ( IsDigit(c2) && c2 != '0' ) {
+					swbreak
+				}
+				return false
+		swend
+		return true
+	}
 	
 	// ラベルの前を調べる
 	switch p_befTT
@@ -35,6 +61,8 @@
 	case TOKENTYPE_CIRCLE_L
 	case TOKENTYPE_KEYWORD
 	case TOKENTYPE_CAMMA
+	case TOKENTYPE_MACRO_PRM
+	case TOKENTYPE_MACRO_SP
 		swbreak
 	case TOKENTYPE_VARIABLE
 	case TOKENTYPE_NAME
@@ -64,13 +92,14 @@
 	c = peek(p1, p2 + 1)
 	if ( IsIdentTop(c) == false ) { return false }	// 次が識別子の先頭でなければ×
 	i = p2 + 2
-	while
+	repeat
 		c = peek(p1, i)
 		if ( IsIdent(c) == false ) {
-			_break
+			break
 		}
 		i ++
-	wend
+	loop
+	
 *@
 	i += CntSpaces(p1, i)	// 空白をスキップ
 	c  = peek(p1, i)		// ラベルの次
@@ -99,29 +128,41 @@
 	}
 	return true
 	
-// 命令か？ ( p1 に無駄な記号や空白があると、うまくいかない )
+//------------------------------------------------
+// 命令か？ ( p1 に無駄な記号や空白があると、偽 )
+//------------------------------------------------
 #defcfunc IsStatement str p1
 	return ( instr( keylist_statement, 0, ","+ getpath(p1, 16) +"," ) >= 0 )
 	
-// 関数か？ ( p1 に無駄な文字があるとうまくいかない )
+//------------------------------------------------
+// 関数か？ ( p1 に無駄な文字があると、偽 )
+//------------------------------------------------
 #defcfunc IsFunction str p1
 	return ( instr( keylist_function, 0, ","+ getpath(p1, 16) +"," ) >= 0 )
 	
+//------------------------------------------------
 // システム変数か？
+//------------------------------------------------
 #defcfunc IsSysvar str p1
 	return ( instr( keylist_sysvar, 0, ","+ getpath(p1, 16) +"," ) >= 0 )
 	
+//------------------------------------------------
 // マクロか？
+//------------------------------------------------
 #defcfunc IsMacro str p1
 	return ( instr( keylist_macro, 0, ","+ getpath(p1, 16) +"," ) >= 0 )
 	
+//------------------------------------------------
 // プリプロセッサ命令か？
+//------------------------------------------------
 #defcfunc IsPreproc str p1
 	stmp = getpath(p1, 16)
 	stmp = strmid( stmp, 1 + CntSpaces( stmp, 1 ), strlen(stmp) )
 	return ( instr( keylist_preproc, 0, ","+ stmp +"," ) >= 0 )
 	
-// プリプロセス行キーワードか？
+//------------------------------------------------
+// プリプロセッサ行キーワードか？
+//------------------------------------------------
 #defcfunc IsPreprocWord str p1
 	return ( instr( keylist_ppword, 0, ","+ getpath(p1, 16) +"," ) >= 0 )
 	
@@ -137,11 +178,15 @@ _hpm_sub_initialize
 	sSings = SIGN
 	return
 	
+//------------------------------------------------
 // 区切り文字か？
+//------------------------------------------------
 #defcfunc IsSign int p1
 	return ( instr(sSigns, 0, strf("%c", p1)) >= 0 )
 	
+//------------------------------------------------
 // 単語単位で分けられているか？
+//------------------------------------------------
 #defcfunc IsIndependentWord var p1, int p2, int wordlen
 	// 前はＯＫか？
 	if ( p2 ) {
@@ -151,13 +196,17 @@ _hpm_sub_initialize
 	if ( IsSign(peek(p1, p2 + wordlen)) == false ) { return false }
 	return true
 	
+//------------------------------------------------
 // 完全一致か？
+//------------------------------------------------
 #defcfunc IsCompleteLength var p1, int p2
 	if (         p2 !=        0 ) { return false }
 	if ( strlen(p1) != MatchLen ) { return false }
 	return true
 	
-// 命令か？ ( p1 に無駄な記号や空白があると、うまくいかない )
+//------------------------------------------------
+// 命令か？ ( p1 に無駄な記号や空白があると失敗 )
+//------------------------------------------------
 #defcfunc IsStatement var p1, local stmp
 	n = instrCom( p1, 0, STATE1, 1 ) : if ( IsCompleteLength(p1, n) ) { return true }
 	n = instrCom( p1, 0, STATE2, 1 ) : if ( IsCompleteLength(p1, n) ) { return true }
@@ -165,28 +214,38 @@ _hpm_sub_initialize
 	n = instrCom( p1, 0, STATE4, 1 ) : if ( IsCompleteLength(p1, n) ) { return true }
 	return false
 	
-// 関数か？ ( p1 に無駄な文字があるとうまくいかない )
+//------------------------------------------------
+// 関数か？ ( p1 に無駄な文字があると失敗 )
+//------------------------------------------------
 #defcfunc IsFunction var p1
 	n = instrCom( p1, 0, FUNC, 1 )		// 大文字・小文字を厭(いと)わない
 	return IsCompleteLength(p1, n)
 	
+//------------------------------------------------
 // システム変数か？
+//------------------------------------------------
 #defcfunc IsSysvar var p1
 	n = instrCom( p1, 0, SYSVAR, 1 )
 	return IsCompleteLength(p1, n)
 	
+//------------------------------------------------
 // マクロか？
+//------------------------------------------------
 #defcfunc IsMacro var p1
 	n = instrCom( p1, 0, MACRO1, 1 ) : if ( IsCompleteLength(p1, n) ) { return true }
 	n = instrCom( p1, 0, MACRO2, 1 ) : if ( IsCompleteLength(p1, n) ) { return true }
 	return false
 	
+//------------------------------------------------
 // プリプロセッサ命令か？
+//------------------------------------------------
 #defcfunc IsPreproc var p1
 	n = instrCom( p1, 0, PRE )
 	return IsCompleteLength(p1, n)
 	
-// プリプロセス行キーワードか？
+//------------------------------------------------
+// プリプロセッサ行キーワードか？
+//------------------------------------------------
 #defcfunc IsPreprocWord var p1
 	n = instrCom( p1, 0, FUNCWORD, 1 )
 	return IsCompleteLength(p1, n)

@@ -1,6 +1,6 @@
 /*************************************************
- * マウスの役割が反転しているかどうか
- * を、調べるモジュールです。
+ * 「マウスの役割が反転しているかどうか」を、
+ * 調べるモジュールです。
  * ファイル名・関数名の Is Mouse Button Swapped は、
  * 長ったらしかったら、適当に変更してください。
  * 
@@ -21,44 +21,48 @@
  * を、実際の数値の代わりに使用してください。
  ************************************************/
 
-#ifndef        __IS_MOUSE_BUTTON_SWAPPED_AS__
-#define global __IS_MOUSE_BUTTON_SWAPPED_AS__
+#ifndef __IS_MOUSE_BUTTON_SWAPPED_AS__
+#define __IS_MOUSE_BUTTON_SWAPPED_AS__
 
-#module
+#ifndef ___GetSystemMetrics@
+ #uselib "user32.dll"
+ #cfunc ___GetSystemMetrics@ "GetSystemMetrics" int
+#endif
 
-#uselib "user32.dll"
-#func   SwapMouseButton "SwapMouseButton" int
-
-// マウスの役割が反転しているかどうか (交換されていたら真)
-#defcfunc IsMouseButtonSwapped
-	// 反転する。もとから反転されていたら真を返す。
-	SwapMouseButton 1 : bMouseSwapped = ( stat != 0 )
-	SwapMouseButton     bMouseSwapped	// 元の状態に戻す
-	return bMouseSwapped
-	
-#global
-
+//------------------------------------------------
 // 変数マクロ
+//------------------------------------------------
 #define global bMouseBtnSwapped __bMouseButtonSwapped@
 
-// チェックマクロ (これを一度起動するだけでいい)
-#define global CheckMouseButton bMouseBtnSwapped = IsMouseButtonSwapped()
+//------------------------------------------------
+// チェックマクロ
+// 
+// @ これを一度だけ起動する
+// @ SM_SWAPBUTTON( マウス機能が交換されていたら真 )
+//------------------------------------------------
+#define global CheckMouseButton bMouseBtnSwapped = ___GetSystemMetrics@(23)
 
+//------------------------------------------------
 // stick用に定義
+//------------------------------------------------
 #define global STICK_LBTN (256 + (256 * bMouseBtnSwapped))
 #define global STICK_RBTN (512 - (256 * bMouseBtnSwapped))
 
+//------------------------------------------------
 // getkey用に定義
+//------------------------------------------------
 #define global GETKEY_LBTN (1 + bMouseBtnSwapped)
 #define global GETKEY_RBTN (2 - bMouseBtnSwapped)
 
-//######## サンプル・スクリプト ################################################
+//##############################################################################
+//                サンプル・スクリプト
+//##############################################################################
 #if 0
 
 	CheckMouseButton	// ←最初に一回呼び出すだけ！
 	
 	// 反転したクリックを正確に感知する
-	screen 0, 240, 180
+	width 240, 180
 	
 *mainlp
 	redraw 2

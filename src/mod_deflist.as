@@ -114,11 +114,11 @@
 	return linenum
 	
 // (private) モジュール空間名を決定する
-#defcfunc TookModuleName@deflist var scope, var script, int offset, str defscope, local index
+#defcfunc MakeModuleName@deflist var scope, var script, int offset, str defscope, local index
 	index = offset
 	if ( peek(script, index) == '@' ) {
 		index ++
-		index += TookIdent(scope, script, index)
+		index += CutIdent(scope, script, index)
 		if ( stat == 0 ) { scope = AREA_GLOBAL }
 	} else {
 		scope = defscope
@@ -135,7 +135,7 @@
 	return
 	
 // 定義をリストアップする
-#modfunc TookDefinition local stmp, local index, local textlen, local areaScope, local scope, local linenum, local nowTT, local befTT, local bPreLine, local bGlobal, local bLocal, local deftype, local uniqueCount
+#modfunc ListupDefinition local stmp, local index, local textlen, local areaScope, local scope, local linenum, local nowTT, local befTT, local bPreLine, local bGlobal, local bLocal, local deftype, local uniqueCount
 	index   = 0
 	textlen = strlen(mScript)
 	sdim stmp, 250
@@ -180,14 +180,16 @@
 	
 	case TOKENTYPE_END		// 文の終了
 		nowTT = TOKENTYPE_NONE
-		if ( bPreLine ) { bPreLine = false }
+		if ( bPreLine && IsNewLine( peek(nowtk) ) ) {
+			bPreLine = false
+		}
 		swbreak
 		
 	case TOKENTYPE_LABEL	// ラベル
 		if ( befTT == TOKENTYPE_NONE ) {	// 行頭の場合のみ
 			
 			index += strlen(nowtk)
-			index += TookModuleName(scope, mScript, index, areaScope)
+			index += MakeModuleName(scope, mScript, index, areaScope)
 			
 			// リストに追加
 			deftype = DEFTYPE_LABEL
@@ -196,6 +198,7 @@
 		swbreak
 		
 	case TOKENTYPE_PREPROC	// プリプロセッサ命令
+		
 		if ( IsPreproc(nowtk) ) {
 			bPreLine = true
 			index   += strlen(nowtk)
@@ -206,11 +209,11 @@
 			// # と空白を除去する
 			getstr nowtk, nowtk, 1 + CntSpaces(nowtk, 1)
 			
-			switch ( getpath( nowtk, 16 ) )
+			switch ( getpath(nowtk, 16) )
 			case "module"
 				index += CntSpaces(mScript, index)				// ignore 空白
 				if ( peek(mScript, index) == '"' ) { index ++ }	// #module "modname" の形式に対応
-				index += TookIdent(areaScope, mScript, index)	// 空間名
+				index += CutIdent(areaScope, mScript, index)	// 空間名
 				if ( stat == 0 ) {
 					areaScope   = strf("m%02d [unique]", uniqueCount)	// ユニークな空間名
 					uniqueCount ++
@@ -226,7 +229,7 @@
 				index                += strsize
 				mInclude(mCntInclude) = nowtk
 				mCntInclude ++
-;				logmes "#include \""+ nowtk +"\""
+;				logmes "#include "+ nowtk
 				swbreak
 				
 			case "modfunc"  : deftype  = DEFTYPE_MODULE
@@ -238,14 +241,15 @@
 			case "enum"     : deftype  = DEFTYPE_CONST : bGlobal = false : goto *L_AddDefinition
 *L_AddDefinition
 				index += CntSpaces(mScript, index)			// 空白 ignore
-				index += TookIdent(nowtk, mScript, index)	// 識別子を取り出す
+				index += CutIdent(nowtk, mScript, index)	// 識別子を取り出す
 				switch getpath( nowtk, 16 )
 					case "global" : bGlobal  = true                  : goto *L_AddDefinition
 					case "ctype"  : deftype |= DEFTYPE_CTYPE         : goto *L_AddDefinition
 					case "local"  : bGlobal  = false : bLocal = true : goto *L_AddDefinition
+					case "double" : goto *L_AddDefinition
 				swend
 				
-				index += TookModuleName(scope, mScript, index, areaScope)
+				index += MakeModuleName(scope, mScript, index, areaScope)
 				if ( stat ) {	// scope != areaScope ->("ident@scope")
 					bGlobal = false
 				}
@@ -300,7 +304,7 @@
 	noteunsel
 	
 	// 定義をリストアップ
-	TookDefinition thismod
+	ListupDefinition thismod
 	
 	return getaptr(thismod)
 	

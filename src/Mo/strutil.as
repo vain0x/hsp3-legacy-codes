@@ -114,8 +114,8 @@
 		}
 	loop
 	
+	memset p1, 0, len - p, p	// NULL 文字にする
 	len  = p					// 文字インデックスは、「先頭 ～ 一つ前の文字」の文字列の長さと同じ
-	memset p1, 0, len - p, len	// NULL 文字にする
 	
 	// 先頭のブランク
 	for p, 0, len
@@ -144,6 +144,8 @@
 #deffunc StripQuote var p1, int p2, int p3
 	if ( p2 < 0 ) { len = strlen(p1) } else { len = p2 }
 	
+	if ( len <= 0 ) { return 0 }
+	
 	// 末尾の引用符
 	repeat ( p3 == 0 ) - ( p3 != 0 )	// p3 が真なら無限ループ
 		c = peek(p1, len - 1)
@@ -156,6 +158,29 @@
 		if ( IsQuote(c) ) { StrDelete p1, 0, 1, len : len = stat } else { break }
 	loop
 	return len
+	
+/**
+ * 文字列を反復する
+ * 文字列を指定した回数反復します。
+ * 0以下なら、空文字列が返ります。
+ * @prm p1 = str	: 対象の文字列
+ * @prm p2 = int	: 回数
+ * @prm p3 = int	: p1 の長さ( 省略可能 )
+ * @return = str	: p1 * p2
+ */
+#define global ctype strmul(%1="",%2=0,%3=-1) _strmul(%1,%2,%3)
+#defcfunc _strmul str p1, int p2, int p3
+	if ( p2 <= 0 ) { return "" }
+	if ( p3 <  0 ) { len = strlen(p1) } else { len = p3 }
+	
+	sdim stmp, len + 1
+	sdim sRet, len * p2 + 1
+	stmp = p1
+	
+	repeat p2
+		memcpy sRet, stmp, len, len * cnt
+	loop
+	return sRet
 	
 //##################################################################################################
 //        文字列 部分取得系
@@ -224,7 +249,7 @@
  * 
  * @TODO : @ によるスコープ解決はどうする？
  */
-#defcfunc TookIdent var p1, var p2, int offset
+#defcfunc CutIdent var p1, var p2, int offset
 	if ( vartype(p1) != vartype("str") ) { sdim p1, 64 }
 	
 	c = peek(p2, offset)
@@ -288,12 +313,12 @@
  * @prm p4 = bool	: 改行を空白とみなすか
  * @return = int	: 識別子の長さ(bytes)
  */
-#defcfunc TookIdentBack var p1, var p2, int offset, int bIsLineSpace
+#defcfunc CutIdentBack var p1, var p2, int offset, int bIsLineSpace
 	if ( offset <= 0 ) {
 		poke p1
 		return 0
 	}
-	return TookIdent( p1, p2, offset - BackToIdentTop(p2, offset, bIsLineSpace) )
+	return CutIdent( p1, p2, offset - BackToIdentTop(p2, offset, bIsLineSpace) )
 	
 //##################################################################################################
 //        文字列状態取得系
@@ -336,13 +361,13 @@
  */
 #defcfunc StrSameBytes var p1, var p2, int p3, int p4
 	i = 0
-	while
+	repeat
 		c = peek(p1, p3 + i)
 		if ( c != peek(p2, p4 + i) || c == 0 ) {
-			_break
+			break
 		}
 		i ++
-	wend
+	loop
 	return i
 	
 /**
@@ -440,6 +465,6 @@
 	m = BackToIdentTop(s, i)
 	mes m
 	mes i - m
-	mes TookIdentBack(v, s, i)
+	mes CutIdentBack(v, s, i)
 	mes v
 #endif

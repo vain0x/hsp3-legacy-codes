@@ -35,7 +35,7 @@
 	hMutex = stat
 	if ( hMutex == NULL ) {
 		dialog "MutexObject の作成に失敗しました。", 1, "Error"
-		end
+		return false
 	}
 	
 	// すでに同名の Mutex が存在していた！（存在していて Mutex が作成できなかった）

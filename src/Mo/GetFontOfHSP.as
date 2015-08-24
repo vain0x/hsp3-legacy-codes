@@ -1,16 +1,19 @@
 // font 命令での設定を取得する
 // コントロールのフォントを簡単に設定する
 
-#ifndef        __GETFONT_OF_HSP_AS__
-#define global __GETFONT_OF_HSP_AS__
+#ifndef __GETFONT_OF_HSP_AS__
+#define __GETFONT_OF_HSP_AS__
 
-#module
+#module gfoh_mod
+
 #uselib "gdi32.dll"
-#func   CreateFontIndirect "CreateFontIndirectA" int
-#func   GetObject          "GetObjectA"          int,int,int
-#func   DeleteObject       "DeleteObject"        int
+#func   CreateFontIndirect@gfoh_mod "CreateFontIndirectA" int
+#func   GetObject@gfoh_mod    "GetObjectA"   int,int,int
+#func   DeleteObject@gfoh_mod "DeleteObject" int
 
+//------------------------------------------------
 // HSP の LOGFONT 構造体を取得する
+//------------------------------------------------
 #deffunc GetStructLogfont array _logfont
 	dim    _logfont, 15
 	mref      bmscr, 67
@@ -20,24 +23,30 @@
 ;		logmes strf("logfont(%2d)", cnt) +" = "+ logfont(cnt)
 ;	loop
 	
-	dim bmscr	// 一応戻しておく
+	dim bmscr	// 一応通常の変数に戻しておく
 	return
 	
-// フォント名取得
+//------------------------------------------------
+// 現在のフォント名取得
+//------------------------------------------------
 #defcfunc GetFontName local sRet
 	sdim   sRet, 64
 	GetStructLogfont logfont 
 	getstr sRet,     logfont(7)
 	return sRet
 	
-// フォントサイズ取得
+//------------------------------------------------
+// 現在のフォントサイズ取得
+//------------------------------------------------
 #defcfunc GetFontSize int bStillGotLogfont
 	if ( bStillGotLogfont == 0 ) {
 		GetStructLogfont logfont			// LOGFONT構造体
 	}
 	return ( logfont(0) ^ 0xFFFFFFFF ) + 1
 	
-// フォントスタイル取得
+//------------------------------------------------
+// 現在のフォントスタイル取得
+//------------------------------------------------
 #defcfunc GetFontStyle int bStillGotLogfont
 	if ( bStillGotLogfont == 0 ) {
 		GetStructLogfont logfont			// LOGFONT構造体
@@ -54,8 +63,14 @@
 	return ((logfont(4) >= 700)) | (((logfont(5) & 0x000000FF) != 0) << 1) | (((logfont(5) & 0x0000FF00) != 0) << 2) | (((logfont(5) & 0x00FF0000) != 0) << 3) | (((logfont(6) & 0x00040000) != 0) << 4)
 //*/
 
-// HSP を利用して、フォントオブジェクトを作成する。
-// フォントハンドルが返ります。最後に DeleteFont で解放してください！！
+//------------------------------------------------
+// フォントオブジェクトを作成する
+// 
+// @return int
+//  フォントハンドル (int)
+//  ☆最後に「必ず」 DeleteFont で解放してください！！
+// @ HSP のウィンドウを利用している
+//------------------------------------------------
 #defcfunc CreateFontByHSP str p1, int p2, int p3, local sFontName, local nFontData
 	sdim sFontName, 64		// name
 	dim  nFontData, 2		// size, style
@@ -75,24 +90,36 @@
 	
 	return hFont
 	
-// コントロールのフォントを設定 : WM_SETFONT ( hFont, bRefresh
+//------------------------------------------------
+// コントロールのフォントを設定
+// 
+// @ WM_SETFONT を送る ( hFont, bRefresh )
+//------------------------------------------------
 #define global ChangeControlFont(%1,%2="",%3,%4=0,%5=1) _ChangeControlFont %1,%2,%3,%4,%5
 #deffunc ChangeControlFont int p1, str p2, int p3, int p4, int bRefresh
 	hFont = CreateFontByHSP(p2, p3, p4)
 	sendmsg p1, 0x0030, hFont, bRefresh
 	return hFont
 	
+//------------------------------------------------
+// 不要なフォントハンドルの解放
+//------------------------------------------------
 #deffunc DeleteFont int p1
 	if ( p1 ) { DeleteObject p1 }
 	return
 	
 #global
 
+//##############################################################################
+//                サンプル・スクリプト
+//##############################################################################
+//------------------------------------------------
 // サンプル 1
+//------------------------------------------------
 #if 0
 	// StaticText Control を作成
 	winobj "static", " \n表示するテキスト ", 0, 0x50000000, ginfo(12), ginfo(13)
-	hStatic = objinfo (stat, 2)		// ハンドル
+	hStatic = objinfo(stat, 2)		// ハンドル
 	
 	ChangeControlFont hStatic, "ＭＳ 明朝", 58, 1 | 2	// 太字・斜体
 	hFont = stat										// フォントハンドルが返る
@@ -106,7 +133,9 @@
 	
 #endif
 
+//------------------------------------------------
 // サンプル 2
+//------------------------------------------------
 #if 0
 
 #define WAITTIME 120
