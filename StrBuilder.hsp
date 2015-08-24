@@ -11,14 +11,11 @@
 #define global StrBuilder_new(%1, %2 = -1, %3 = -1) \
 	newmod %1, StrBuilder@, %2, %3
 
-#modinit int p2, int p3,  \
-	local defsize, local expandSize
+#modinit int def_size, int expand_size
 	
-	if ( p2 <= 0 ) { defsize = BufSize_Default } else { defsize = p2 }
-	if ( p3 <= 0 ) { expand_size_ = BufSize_Default } else { expand_size_ = p3 }
+	capacity_    = limit(def_size, BufSize_Default, def_size)
+	expand_size_ = limit(expand_size, BufSize_Default, expand_size)
 	
-	len_ = 0
-	capacity_ = defsize
 	sdim buf_, capacity_
 	return
 	
@@ -30,17 +27,17 @@
 //------------------------------------------------
 // 文字列を設定する
 //------------------------------------------------
-#modfunc StrBuilder_set str string
-	StrBuilder_clear thismod
-	StrBuilder_append   thismod, string
+#modfunc StrBuilder_set str s
+	StrBuilder_clear  thismod
+	StrBuilder_append thismod, s
 	return
 	
 //------------------------------------------------
 // 文字列を後ろに追加する
 //------------------------------------------------
-#modfunc StrBuilder_append str src, int _lenToAppend
+#modfunc StrBuilder_append str src, int src_len
 	
-	if ( _lenToAppend ) { tmpLen = _lenToAppend } else { tmpLen = strlen(src) }
+	if ( src_len ) { tmpLen = src_len } else { tmpLen = strlen(src) }
 	
 	// overflow しないように
 	if ( capacity_ <= len_ + tmpLen ) {
@@ -53,8 +50,9 @@
 	assert (strsize == tmpLen)
 	return
 	
-#modfunc StrBuilder_append_v var src, int _lenToAppend
-	if ( _lenToAppend ) { tmpLen = _lenToAppend } else { tmpLen = strlen(src) }
+#modfunc StrBuilder_append_v var src, int src_len
+
+	if ( src_len ) { tmpLen = src_len } else { tmpLen = strlen(src) }
 	
 	if ( capacity_ <= len_ + tmpLen ) {
 		StrBuilder_expand_capacity thismod, tmpLen
@@ -88,23 +86,19 @@
 //------------------------------------------------
 // 文字列を後ろから削る
 //------------------------------------------------
-#modfunc StrBuilder_erase_back int sizeErase
-	if ( sizeErase <= 0 ) { return }
+#modfunc StrBuilder_erase_back int size
+	if ( size <= 0 ) { return }
 	
-	len_ -= sizeErase
-	if ( len_ < 0 ) { len_ = 0 }
-	
-	// 終端文字を置く
+	len_ = limit(len_ - size, 0, len_)
 	poke buf_, len_, 0
-	
 	return
 	
 //------------------------------------------------
 // バッファを確保する
 //------------------------------------------------
-#modfunc StrBuilder_ensure_capacity int size
-	if ( capacity_ < size ) {
-		capacity_ = size + expand_size_
+#modfunc StrBuilder_ensure_capacity int new_capa
+	if ( capacity_ < new_capa ) {
+		capacity_ = new_capa + expand_size_
 		memexpand buf_, capacity_
 	}
 	return
@@ -158,10 +152,12 @@
 //------------------------------------------------
 // [i] 連結
 //------------------------------------------------
-#modfunc StrBuilder_chain var src,  local data, local len
+#modfunc StrBuilder_chain var src,  \
+	local src_buf, local len
+	
 	len = StrBuilder_length(src)
-	dupptr data, StrBuilder_data_ptr(src), len + 1, vartype("str")
-	StrBuilder_append_v thismod, data, len
+	dupptr src_buf, StrBuilder_data_ptr(src), len + 1, vartype("str")
+	StrBuilder_append_v thismod, src_buf, len
 	return
 	
 //------------------------------------------------
