@@ -5,7 +5,7 @@
 
 #include "Mo/strutil.as"
 #include "Mo/HPM_split.as"
-#include "Mo/pvalptr.as"
+#include "Mo/mod_pvalptr.as"
 
 #module MCDeflist mScript, mCount, mFileName, mFilePath, mIdent, mLn, mType, mScope, mInclude, mCntInclude
 
