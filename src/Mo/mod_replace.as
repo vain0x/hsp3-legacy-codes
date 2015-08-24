@@ -21,7 +21,6 @@
 
 //------------------------------------------------
 // メモリ再確保の判断及び実行のための命令
-// 
 // @private
 //------------------------------------------------
 #deffunc _expand@modReplace var sTarget, var iNowSize, int iIndex, int iPlusSize
@@ -45,15 +44,20 @@
 	iStat  = 0
 	iIndex = 0
 	
-	repeat iTargetLen       // 検索・置換の開始
-		iIns = instr(sTarget, cnt, sBefore)
-		if (iIns < 0) {         // もう見つからないので、まだsResultに追加していない分を追加してbreak
-			_expand sResult, iNowSize, iIndex, iTargetLen - cnt // オーバーフローを避けるため、メモリを再確保
+	// 検索・置換
+	repeat iTargetLen
+		
+		iIns = instr( sTarget, cnt, sBefore )
+		if ( iIns < 0 ) {
+			// もう見つからないので、まだsResultに追加していない分を追加してbreak
+			_expand sResult, iNowSize, iIndex, iTargetLen - cnt		// オーバーフローを避けるため、メモリを再確保
 			poke sResult, iIndex, strmid(sTarget, cnt, iTargetLen - cnt)
 			iIndex += iTargetLen - cnt
 			break
-		} else {                // 見つかったので、置換して続行
-			_expand sResult, iNowSize, iIndex, iIns + iAfterLen // オーバーフローを避けるため、メモリを再確保
+			
+		// 見つかったので、置換して続行
+		} else {
+			_expand sResult, iNowSize, iIndex, iIns + iAfterLen		// オーバーフローを避けるため、メモリを再確保
 			poke sResult, iIndex, strmid(sTarget, cnt, iIns) + sAfter
 			iIndex += iIns + iAfterLen
 			iStat++
@@ -61,9 +65,10 @@
 		}
 	loop
 	
-	sdim   sTarget, iIndex + 1
-	memcpy sTarget, sResult, iIndex
-	return iStat            // おまけ。置換した個数をシステム変数statに代入。
+	memexpand sTarget, iIndex + 2
+	memcpy    sTarget, sResult, iIndex
+	poke      sTarget,  iIndex, 0
+	return iStat			// 置換した個数
 #global
 
 #if 0

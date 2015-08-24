@@ -10,12 +10,12 @@
 //##############################################################################
 #module hpm_sub
 
-#include "HPM_Header.as"		// ヘッダファイルを読み込む
+#include "HPM_header.as"		// ヘッダファイルを読み込む
 
 //------------------------------------------------
 // 初期化関数
 //------------------------------------------------
-#deffunc _hpm_sub_initialize
+#deffunc hpm_sub_initialize@hpm_sub
 	keylist_all       = ","+ KEYWORDS_ALL
 	keylist_statement = ","+ KEYWORDS_STATEMENT
 	keylist_function  = ","+ KEYWORDS_FUNCTION
@@ -29,12 +29,12 @@
 //------------------------------------------------
 // 次はラベルか？
 // 
-// @ 条件 = {
-//     * から始まり、
-//     その次が「文の終端 or ',' or ')'」のどれか
-// }
+// @ 条件 :=
+//   　 * から始まり、
+//   　その次が「文の終端 or ',' or ')'」のどれか
 //------------------------------------------------
-#defcfunc IsLabel var p1, int p2, int p_befTT, int bPreLine
+#defcfunc IsLabel var p1, int p2, int p_befTT, int bPreLine,  local c, local c2, local stmp, local i
+	
 	// 最低限のチェック
 	if ( peek(p1, p2    ) != '*' ) { return false }		// もはやラベルではない
 	if ( peek(p1, p2 + 1) == '@' ) { return true  }		// ローカルラベル
@@ -56,37 +56,49 @@
 	
 	// ラベルの前を調べる
 	switch p_befTT
-	case TOKENTYPE_NONE
-	case TOKENTYPE_OPERATOR
-	case TOKENTYPE_CIRCLE_L
-	case TOKENTYPE_KEYWORD
-	case TOKENTYPE_CAMMA
-	case TOKENTYPE_MACRO_PRM
-	case TOKENTYPE_MACRO_SP
-		swbreak
-	case TOKENTYPE_VARIABLE
-	case TOKENTYPE_NAME
-		// ラベルの前の識別子が、文頭にあるならＯＫ
-		i  = p2
-		i -= CntSpacesBack( p1, i )
-		m  = BackToIdentTop(p1, p2)
-		if ( m < 0 ) { return false }	// 前が識別子ではない (異常？)
-		i -= m
-		i -= CntSpacesBack( p1, i )		// 空白 ignore
-		i --							// ラベルの前の前
-		if ( i < 0 ) { swbreak }
-		c  = peek(p1, i)
-		if ( IsNewLine(c) || c == ':' || c == '{' || c == '}' ) {
+		case TKTYPE_END
+		case TKTYPE_OPERATOR
+		case TKTYPE_CIRCLE_L
+		case TKTYPE_KEYWORD
+		case TKTYPE_COMMA
+		case TKTYPE_MACRO_PRM
+		case TKTYPE_MACRO_SP
+			// 無条件に OK
 			swbreak
-		}
-		return false
-		
-	default
-		// その他ならダメ
-		return false
+			
+		case TKTYPE_VARIABLE
+		case TKTYPE_NAME
+			// ラベルの前の識別子が、文頭にある or goto / gosub ならＯＫ
+			i  = p2
+			i -= CntSpacesBack( p1, i )
+			m  = BackToIdentTop(p1, p2)
+			if ( m < 0 ) { return false }	// 前が識別子ではない (異常？)
+			i -= m
+			
+;			// ここで、goto gosub なら OK
+;			stmp = getpath( CutName(p1, i + 1), 16 )
+;			if ( stmp == "gosub" || stmp == "goto" ) {
+;				swbreak
+;			}
+			
+			i -= CntSpacesBack( p1, i )		// 空白 ignore
+			i --							// ラベルの前の前
+			if ( i < 0 ) { swbreak }
+			c  = peek(p1, i)
+			if ( IsNewLine(c) || c == ':' || c == '{' || c == '}' ) {
+				swbreak
+			}
+			return false
+			
+		default
+			// 予約語も OK
+			if ( IsTkTypeReserved(p_befTT) ) {
+				swbreak
+			}
+			
+			// その他ならダメ
+			return false
 	swend
-	
-	// ラベルの後を調べる
 	
 	// ラベル名を飛ばす
 	c = peek(p1, p2 + 1)
@@ -100,28 +112,32 @@
 		i ++
 	loop
 	
-*@
-	i += CntSpaces(p1, i)	// 空白をスキップ
-	c  = peek(p1, i)		// ラベルの次
-	
-	if ( c == '/' ) {
-		c2 = peek(p1, i + 1)
-		if ( c2 == '/' ) { return true }		// ダブル・スラッシュのコメント
-		if ( c2 == '*' ) {						// 複数行コメント開始
-			iFound = instr(p1, i + 2, "*/")		// 終了地点を探す
-			if ( iFound >= 0 ) {
-				i += 4 + iFound					// /**/ + 距離
-				goto *@b			// もう一度「ラベルの次」をチェックする
+	// ラベルの後を調べる
+	while
+		i += CntSpaces(p1, i)	// 空白をスキップ
+		c  = peek(p1, i)		// ラベルの次
+		
+		if ( c == '/' ) {
+			c2 = peek(p1, i + 1)
+			if ( c2 == '/' ) { return true }		// ダブル・スラッシュのコメント
+			if ( c2 == '*' ) {						// 複数行コメント開始
+				iFound = instr(p1, i + 2, "*/")		// 終了地点を探す
+				if ( iFound >= 0 ) {
+					i += 4 + iFound					// /**/ + 距離
+					_continue						// もう一度「ラベルの次」をチェックする
+				}
 			}
+		} else : if ( c == '@' ) {
+			// スコープ名をスキップ
+			do
+				i ++
+				c = peek(p1, i)
+			until ( IsIdent(c) == false )
+			_continue
 		}
-	} else : if ( c == '@' ) {
-		// スコープ名をスキップ
-		do
-			i ++
-			c = peek(p1, i)
-		until ( IsIdent(c) == false )
-		goto *@b
-	}
+		_break
+	wend
+	
 	// ;:{}), 改行文字 NULL でなければ×
 	if ( c != NULL && (c == ';' || c == ':' || c == '{' || c == '}' || c == ')' || c == ',' || c == 0x0D || c == 0x0A) == false ) {
 		return false
@@ -156,9 +172,7 @@
 // プリプロセッサ命令か？
 //------------------------------------------------
 #defcfunc IsPreproc str p1
-	stmp = getpath(p1, 16)
-	stmp = strmid( stmp, 1 + CntSpaces( stmp, 1 ), strlen(stmp) )
-	return ( instr( keylist_preproc, 0, ","+ stmp +"," ) >= 0 )
+	return ( instr( keylist_preproc, 0, ","+ CutPreprocIdent(p1) +"," ) >= 0 )
 	
 //------------------------------------------------
 // プリプロセッサ行キーワードか？
@@ -166,8 +180,16 @@
 #defcfunc IsPreprocWord str p1
 	return ( instr( keylist_ppword, 0, ","+ getpath(p1, 16) +"," ) >= 0 )
 	
+//------------------------------------------------
+// プリプロセッサ命令の識別子の部分を取り出す
+//------------------------------------------------
+#defcfunc CutPreprocIdent str p1,  local stmp
+	stmp = getpath(p1, 16)
+	stmp = strmid( stmp, 1 + CntSpaces( stmp, 1 ), strlen(stmp) )
+	return stmp
+	
 #global
-_hpm_sub_initialize
+hpm_sub_initialize@hpm_sub
 
 #endif
 

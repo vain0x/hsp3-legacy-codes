@@ -6,7 +6,6 @@
 #define global __UserDefHeader__
 
 #ifdef _DEBUG
-	// Š„‚è“–‚Ä‚é
 	mref myint, 64	// stat
 	mref mystr, 65	// refstr
 #endif
@@ -21,10 +20,8 @@
 	#define global dupmv(%1,%2) dupptr %1, varptr(%2), 16 * length(%2), vartype("struct")
 	#define global delmodall(%1) foreach %1 : delmod %1(cnt) : loop
 	#define global ctype numrg(%1,%2=0,%3=MAX_INT) (((%2) <= (%1)) && ((%1) <= (%3)))// %1 ‚ª %2 ` %3 ‚©‚Ç‚¤‚©
-	#define global Lim !!"Lim()‚Í”p~‚³‚ê‚½Bnumrg()‚ÉˆÚs‚¹‚æB"!!
 	#define global ctype boxin(%1=0,%2=0,%3=640,%4=480,%5=mousex,%6=mousey) ( (((%1) <= (%5)) && ((%5) <= (%3))) && (((%2) <= (%6)) && ((%6) <= (%4))) )
 	#define global ctype IsInRect(%1=RECT,%2=mousex,%3=mousey) ( boxin((%1(0)), (%1(1)), (%1(2)), (%1(3)), (%2), (%3)) )
-;	#define global ctype which(%1,%2,%3) if(%1){%2}else{%3}
 	#define global ctype cwhich_int(%1,%2,%3) ( ((%2) * ((%1) != 0)) | ((%3) * ((%1) == false)) )
 	#define global ctype RectTo4prm(%1) %1(0), %1(1), %1(2), %1(3)
 	
@@ -54,11 +51,7 @@
 	#define global ctype MAKELONG2(%1=0,%2=0,%3=0,%4=0) MAKELONG(MAKEWORD((%1),(%2)),MAKEWORD((%3),(%4)))
 	#define global ctype HIWORD(%1) (((%1) >> 16) & 0xFFFF)
 	#define global ctype LOWORD(%1) ((%1) & 0xFFFF)
-	#define global GetHigh !!"GetHigh() ‚Í”p~‚³‚ê‚½BHIWORD ‚ÖˆÚs‚¹‚æB"!!
-	#define global GetLow  !!"GetLow()  ‚Í”p~‚³‚ê‚½BLOWORD ‚ÖˆÚs‚¹‚æB"!!
-;	#define global ctype BITOFF(%1,%2=0) ( (%1) & (%2) ^ (%1) )	//	: (%1) ‚ğ2‰ñ•]‰¿‚·‚é
-;	#define global ctype BITOFF(%1,%2=0) ( (%1) | (%2) ^ (%2) )	//	: (%2) ‚ğ2‰ñ•]‰¿‚·‚é
-	#define global ctype BITOFF(%1,%2=0) ( (%1) & bturn(%2) )	//	: ˆê”Ê“I
+	#define global ctype BITOFF(%1,%2=0) ( (%1) & bturn(%2) )
 	#define global ctype RGB(%1,%2,%3) (GETBYTE(%1) | GETBYTE(%2) << 8 | GETBYTE(%3) << 16)
 	#define global ctype BITNUM(%1) (1 << (%1))
 	#define global ctype bturn(%1) ((%1) ^ 0xFFFFFFFF)

@@ -7,37 +7,41 @@
 
 #define MAX_TEXTLEN 0x2FFFF
 
+#define ctype IsTkTypeIdent(%1) ( (%1) == TKTYPE_NAME || (%1) == TKTYPE_VARIABLE || IsTkTypeReserved(%1) )
+#define ctype IsTkTypeReserved(%1) ( (%1) == TKTYPE_KEYWORD || (%1) == TKTYPE_EX_STATEMENT || (%1) == TKTYPE_EX_FUNCTION || (%1) == TKTYPE_EX_SYSVAR || (%1) == TKTYPE_EX_MACRO || (%1) == TKTYPE_EX_PREPROC_KEYWORD )
+
 //------------------------------------------------
 // トークンの種類
 //------------------------------------------------
-#enum TOKENTYPE_ERROR = (-1)
-#enum TOKENTYPE_BLANK = 0		// 空白
-#enum TOKENTYPE_END				// : 改行 { }
-#enum TOKENTYPE_OPERATOR		// + - * / \ & | ^ = < >
-#enum TOKENTYPE_CIRCLE_L		// (
-#enum TOKENTYPE_CIRCLE_R		// )
-#enum TOKENTYPE_MACRO_PRM		// マクロパラメータ( %1 %2 %3 etc... )
-#enum TOKENTYPE_MACRO_SP		// 特殊展開マクロ ( %t, %i etc... )
-#enum TOKENTYPE_NUMBER			// 0123456789. $E0F %0 0xFF 0b11
-#enum TOKENTYPE_STRING			// "string\n\t\\"
-#enum TOKENTYPE_CHAR			// 'x'
-#enum TOKENTYPE_LABEL			// *main
-#enum TOKENTYPE_PREPROC			// #enum ...etc
-#enum TOKENTYPE_KEYWORD			// 識別子(キーワード) (命令、関数、…)
-#enum TOKENTYPE_VARIABLE		// 識別子 (変数)
-#enum TOKENTYPE_NAME			// 識別子 ( TOKENTYPE_KEYWORD か TOKENTYPE_VARIABLE )
-#enum TOKENTYPE_COMMENT			// コメント
-#enum TOKENTYPE_CAMMA			// ,
-#enum TOKENTYPE_PERIOD			// .
-#enum TOKENTYPE_SCOPE			// @スコープ
-#enum TOKENTYPE_ESC_LINEFEED	// 改行回避 (行末の\)
-#enum TOKENTYPE_ANY				// なにか
-#enum TOKENTYPE_EX_STATEMENT	// 標準命令
-#enum TOKENTYPE_EX_FUNCTION		// 標準関数
-#enum TOKENTYPE_EX_SYSVAR		// 標準システム変数
-#enum TOKENTYPE_EX_MACRO		// 標準マクロ
-#enum TOKENTYPE_EX_PREPROC_KEYWORD	// プリプロセッサ行キーワード
-#enum TOKENTYPE_MAX
+#enum TKTYPE_ERROR = (-1)
+#enum TKTYPE_END   = 0			// : 改行 { } 終端 など、文の終端となるもの
+#enum TKTYPE_BLANK				// 空白
+#enum TKTYPE_OPERATOR			// + - * / \ & | ^ = < >
+#enum TKTYPE_CIRCLE_L			// (
+#enum TKTYPE_CIRCLE_R			// )
+#enum TKTYPE_MACRO_PRM			// マクロパラメータ( %1 %2 %3 etc... )
+#enum TKTYPE_MACRO_SP			// 特殊展開マクロ ( %t, %i etc... )
+#enum TKTYPE_NUMBER				// 0123456789. $E0F %0 0xFF 0b11
+#enum TKTYPE_STRING				// "string\n\t\\"
+#enum TKTYPE_CHAR				// 'x'
+#enum TKTYPE_LABEL				// *main
+#enum TKTYPE_PREPROC			// #enum ...etc
+#enum TKTYPE_PREPROC_DISABLE	// # から始まるがプリプロセッサ命令ではない
+#enum TKTYPE_KEYWORD			// 識別子 (キーワード) (命令、関数、…)
+#enum TKTYPE_VARIABLE			// 識別子 (変数)
+#enum TKTYPE_NAME				// 識別子 (具体的には不明)
+#enum TKTYPE_COMMENT			// コメント
+#enum TKTYPE_COMMA				// ,
+#enum TKTYPE_PERIOD				// .
+#enum TKTYPE_SCOPE				// @スコープ
+#enum TKTYPE_ESC_LINEFEED		// 改行回避 (行末の\)
+#enum TKTYPE_ANY				// なにか
+#enum TKTYPE_EX_STATEMENT		// 標準命令
+#enum TKTYPE_EX_FUNCTION		// 標準関数
+#enum TKTYPE_EX_SYSVAR			// 標準システム変数
+#enum TKTYPE_EX_MACRO			// 標準マクロ
+#enum TKTYPE_EX_PREPROC_KEYWORD	// プリプロセッサ行キーワード
+#enum TKTYPE_MAX
 
 //------------------------------------------------
 // 識別子の種類

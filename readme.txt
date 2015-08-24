@@ -2,12 +2,12 @@
 	★ deflister ★
 
 【　名称　】deflister (definition listupper)
-【Version 】1.14
+【Version 】1.15
 【開発環境】Windows XP SP3 HomeEdition
 【 更新日 】2009年 7月 29日(水)
 【　種別　】フリー・ソフトウェア
 【 開発者 】上大
-【DownLoad】http://prograpark.ninja-web.net/ -> たまり場 -> ソフト
+【DownLoad】http://prograpark.ninja-web.net/ -> たまり場
 
 ＠目次
 　・概要
@@ -129,12 +129,23 @@
 		http://hsp.tv/
 	
 ＠更新履歴
+2009 08/04 (Tue)
+	・hsedsdk に勝手に追加していた部分を Mo/hsedutil.as に移動させたことで
+		発生していたバグを修正。
+		・_HSED_* の定数が未定義変数( int 0 )になってた。
+		・hsed_capture で変更された hIF@hspsdk を参照できなかった。
+			( hIF@hsedutil を参照していた )
+	・HPM_getToken を使って解析していたところを、HPM_split を使用するように変更。
+		けっこう遅くなった。……どうにか最適化しないと。
+	・バージョン1.15としてリリース。
+	
 2009 07/29 (Wed)
 	・#modcfunc を拾えるバージョンをリリース。
 		ついでに modvar ハックを #modcfunc に修整。
 	・なぜか対応していなかった #func、#cfunc、#cmd に対応。
 	・エディットボックスをスクロールするとき、定義より何行前を基準にするかを
 		ini ファイルで指定できるようにした。( Editbox/cntShowLineBefore )
+	・バージョン1.14としてリリース。
 	
 2009 07/12 (Sun)
 	・#modcfunc が拾えていなかったバグを修正 (無害ではあるが)。
@@ -171,7 +182,8 @@
 		→ onerror を受付、bDragging が真なら移動範囲を解放する。
 	・無名モジュール空間を m? [unique] に変更。[local] に合わせてみた。
 	・無条件でファイルカラムを追加。
-		前は、include先も対象にするときだけだった。→ 簡略化のため。
+		前は、include先も対象にするときだけだった。
+		→ 簡略化のため。
 	・ファイルを読み込むときに、検索パスに追加するよう修整。
 		→ かなり遅くなる。なんとかなるのか……？
 	

@@ -3,13 +3,12 @@
 #ifndef __DEFINED_LISTER_HEADER_AS__
 #define __DEFINED_LISTER_HEADER_AS__
 
-#include "Mo/cwhich.as"
 #include "Mo/MCLongString.as"
 #include "Mo/strutil.as"
 #include "Mo/easyhash.as"
 #include "Mo/hsedutil.as"
 #include "Mo/SearchFileEx.as"
-#include "mod_deflist.as"
+#include "MCDeflist.as"
 
 // Win32 API
 #uselib "user32.dll"
@@ -30,14 +29,15 @@
 
 #uselib "kernel32.dll"
 #func   global GetFullPathNameA "GetFullPathNameA" sptr,int,int,nullptr
-#define global GetFullPathName(%1,%2) GetFullPathNameA %1,MAX_PATH,varptr(%2)
+#define global GetFullPathName(%1,%2) GetFullPathNameA %1, MAX_PATH, varptr(%2)
 
 //##################################################################################################
 //        定数・マクロ
 //##################################################################################################
-// window ID
-#const wID_Main 0
+// Window ID
+#const IDW_MAIN 0
 
+// Userdefined Window-Message
 #const UWM_SPLITTERMOVE 0x0400
 
 // その他
@@ -150,7 +150,7 @@
 ;		if ( bFirstCall == false ) {
 ;			bListupped = false
 ;			foreach mdeflist
-;				if ( DefList_GetFileName( mdeflist(cnt) ) == filename ) {
+;				if ( deflist_GetFileName( mdeflist(cnt) ) == filename ) {
 ;					bListupped = true
 ;					break
 ;				}
@@ -168,7 +168,7 @@
 			repeat cntListup
 				if ( hashListupped(cnt) == hash ) {
 					// 念のためファイルパスでも比較する
-					if ( DefList_GetFileName( mdeflist(cnt) ) == filename ) {
+					if ( deflist_GetFileName( mdeflist(cnt) ) == filename ) {
 						bListupped = true
 						break
 					}
@@ -184,12 +184,12 @@
 		}
 		
 		// 定義リストを作成する
-		newmod mdeflist, deflist, listIncludeToLoad(cnt)
+		deflist_new mdeflist, listIncludeToLoad(cnt)
 		index = stat
 		
 		// 再帰的に結合されたファイルから定義を取り出す
-		if ( DefList_GetCntInclude( mdeflist(index) ) ) {
-			DefList_GetIncludeArray mdeflist(index), listInclude
+		if ( deflist_getCntInclude( mdeflist(index) ) ) {
+			deflist_getIncludeArray mdeflist(index), listInclude
 			CreateDefinitionList    mdeflist,        listInclude, false
 		}
 		

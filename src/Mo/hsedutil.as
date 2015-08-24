@@ -16,6 +16,8 @@
 #define NULL  0
 #define MAX_PATH 260
 
+#define hIF hIF@hsedsdk
+
 //------------------------------------------------
 // Win32 API 関数群
 //------------------------------------------------
@@ -73,22 +75,22 @@
 //------------------------------------------------
 // アクティブな FootyID を返す
 //------------------------------------------------
-#defcfunc hsed_activeFootyID local fID
+#defcfunc hsed_activeFootyID  local fID
 	hsed_getactfootyid fID
 	return fID
 	
 //------------------------------------------------
 // アクティブなFootyのテキストを取得
 //------------------------------------------------
-#deffunc hsed_getActText var p1, local nActFootyID, local nTextLength
+#deffunc hsed_getActText var p1,  local nActFootyID, local nTextLength
 	hsed_capture
-	if stat : return 1
+	if ( stat ) { return 1 }
 	
-	sendmsg hIF, _HSED_GETACTFOOTYID
+	sendmsg hIF, _HSED_GETACTFOOTYID@hsedsdk
 	nActFootyID = stat
 	
 	hsed_GetTextLength nTextLength, nActFootyID
-	if stat : return
+	if ( stat ) { return }
 	if ( nTextLength == 0 ) {
 		p1 = ""
 	} else {
@@ -101,9 +103,9 @@
 //------------------------------------------------
 #deffunc hsed_setActText str sText, local nActFootyID
 	hsed_capture
-	if stat : return 1
+	if ( stat ) { return 1 }
 	
-	sendmsg hIF, _HSED_GETACTFOOTYID
+	sendmsg hIF, _HSED_GETACTFOOTYID@hsedsdk
 	nActFootyID = stat
 
 	hsed_settext nActFootyID, sText
@@ -115,9 +117,9 @@
 //------------------------------------------------
 #deffunc hsed_getCaretPos var p1, int nFootyID
 	hsed_capture
-	if stat : return 1
-	sendmsg hIF, _HSED_GETCARETPOS, nFootyID
-	if stat <= 0 : return 1
+	if ( stat ) { return 1 }
+	sendmsg hIF, _HSED_GETCARETPOS@hsedsdk, nFootyID
+	if ( stat <= 0 ) { return 1 }
 	p1 = stat
 	return 0
 	
@@ -128,7 +130,7 @@
 #deffunc hsed_getCaretThrough var p1, int nFootyID
 	hsed_capture
 	if stat : return 1
-	sendmsg hIF, _HSED_GETCARETTHROUGH, nFootyID
+	sendmsg hIF, _HSED_GETCARETTHROUGH@hsedsdk, nFootyID
 	if stat <= 0 : return 1
 	p1 = stat
 	return 0
@@ -140,7 +142,7 @@
 #deffunc hsed_getCaretVPos var p1, int nFootyID
 	hsed_capture
 	if stat : return 1
-	sendmsg hIF, _HSED_GETCARETVPOS, nFootyID
+	sendmsg hIF, _HSED_GETCARETVPOS@hsedsdk, nFootyID
 	if stat < 0 : return 1
 	p1 = stat
 	return 0
@@ -151,7 +153,7 @@
 #deffunc hsed_getCaretLine var p1, int nFootyID
 	hsed_capture
 	if stat : return 1
-	sendmsg hIF, _HSED_GETCARETLINE, nFootyID
+	sendmsg hIF, _HSED_GETCARETLINE@hsedsdk, nFootyID
 	
 	if ( stat <= 0 ) {
 		return 1
@@ -167,7 +169,7 @@
 #deffunc hsed_setCaretPos int nFootyID, int nCaretpos
 	hsed_capture
 	if stat : return 1
-	sendmsg hIF, _HSED_SETCARETPOS, nFootyID, nCaretpos
+	sendmsg hIF, _HSED_SETCARETPOS@hsedsdk, nFootyID, nCaretpos
 	return
 
 //------------------------------------------------
@@ -177,16 +179,16 @@
 #deffunc hsed_setCaretThrough int nFootyID, int nCaretthrough
 	hsed_capture
 	if stat : return 1
-	sendmsg hIF, _HSED_SETCARETTHROUGH, nFootyID, nCaretthrough
+	sendmsg hIF, _HSED_SETCARETTHROUGH@hsedsdk, nFootyID, nCaretthrough
 	return
 	
 //------------------------------------------------
 // 指定した行番号にキャレットの位置を変更
 //------------------------------------------------
-#deffunc hsed_setcaretline int nFootyID, int nLine
+#deffunc hsed_setCaretLine int nFootyID, int nLine
 	hsed_capture
 	if stat : return 1
-	sendmsg hIF, _HSED_SETCARETLINE, nFootyID, nLine
+	sendmsg hIF, _HSED_SETCARETLINE@hsedsdk, nFootyID, nLine
 	return
 	
 #global
