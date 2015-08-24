@@ -109,10 +109,10 @@
 	     curdir = dirinfo(0)
 	
 	// 一意な文字列メッセージを作成しておく
-	UWM_ALREADY_USED = RegisterWindowMessage("deflister_UWM_ALREADY_USED")
+	UWM_ALREADY_USED = RegisterWindowMessage("deflister::UWM_ALREADY_USED")
 	
 	// 二重起動を防ぐ
-	if ( IsUsedByMutex("DEFLISTER_MUTEX") ) {
+	if ( IsUsedByMutex("deflister::mutex") ) {
 		sendmsg 0xFFFF, UWM_ALREADY_USED	// 二重起動が発生したことを知らせる
 		end : end							// 強制終了
 	}
@@ -409,7 +409,7 @@
 	
 	repeat deflistCount
 		deflist_get mdeflist(iDL), cnt, deflistIdent, deflistLn, deflistType, deflistScope
-		stype = MakeTypeString( deflistType )
+		stype = MakeDefTypeString( deflistType )
 		
 		LvInsertItem  mLv, strf("%d", deflistLn) : iLvItem = stat
 		LvSetSub      mLv, deflistIdent, iLvItem, 1

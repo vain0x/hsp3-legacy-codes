@@ -26,6 +26,8 @@
 #const global DEFTYPE_FUNC		0x0008		// 命令・関数
 #const global DEFTYPE_DLL		0x0010		// DLL命令
 #const global DEFTYPE_CMD		0x0020		// HPIコマンド
+#const global DEFTYPE_COM		0x0040		// COM命令
+#const global DEFTYPE_IFACE		0x0080		// インターフェース
 
 #const global DEFTYPE_CTYPE		0x0100		// CTYPE
 #const global DEFTYPE_MODULE	0x0200		// モジュールメンバ
@@ -42,7 +44,7 @@
 //------------------------------------------------
 // コンストラクタ
 //------------------------------------------------
-#define global deflist_new(%1,%2) newmod %1, deflist@, %2
+#define global deflist_new(%1,%2) newmod %1, MCDeflist@, %2
 #modinit str path
 	// メンバ変数を初期化
 	sdim mIdent,, 5
@@ -211,14 +213,29 @@
 			swbreak
 			
 		//--------------------
+		// 改行回避
+		//--------------------
+		case TKTYPE_ESC_LINEFEED
+			nowline ++
+			swbreak
+			
+		//--------------------
 		// コメント
 		//--------------------
 		case TKTYPE_COMMENT
 			// 複数行コメントの場合、行数を数える
-			if ( wpeek(nowTkStr) == 0x2A2F ) {		// "/*"
-				notesel nowTkStr
-				nowline += notemax		// 行数
-				noteunsel
+			if ( wpeek(nowTkStr) == 0x2A2F ) {		// /*
+				gosub *LCountLines
+			}
+			swbreak
+			
+		//--------------------
+		// 文字列
+		//--------------------
+		case TKTYPE_STRING
+			// 複数行文字列定数の場合、行数を数える
+			if ( wpeek(nowTkStr) == 0x227B ) {		// {"
+				gosub *LCountLines
 			}
 			swbreak
 			
@@ -246,9 +263,9 @@
 			bGlobal  = true
 			bLocal   = false
 			
-			nowTkStr = CutPreprocIdent( nowTkStr )		// 識別子部分だけにする
+			ppident  = CutPreprocIdent( nowTkStr )		// 識別子部分だけにする
 			
-			switch ( nowTkStr )
+			switch ( ppident )
 				
 				// モジュール空間に突入
 				case "module"
@@ -302,6 +319,8 @@
 				case "cfunc"    : deftype  = DEFTYPE_CTYPE
 				case "func"     : deftype |= DEFTYPE_DLL   : bGlobal = false : goto *LAddDefinition
 				case "cmd"      : deftype  = DEFTYPE_CMD   : bGlobal = true  : goto *LAddDefinition
+				case "comfunc"  : deftype  = DEFTYPE_COM   : bGlobal = false : goto *LAddDefinition
+				case "usecom"   : deftype  = DEFTYPE_IFACE : bGlobal = false : goto *LAddDefinition
 			:*LAddDefinition
 					gosub *LNextToken
 					
@@ -362,6 +381,12 @@
 ;	}
 ;	return
 	
+*LCountLines
+	notesel nowTkStr
+	nowline += notemax - 1		// 行数
+	noteunsel
+	return
+	
 //----------------------------
 // モジュール空間名を決定する
 //----------------------------
@@ -385,6 +410,34 @@
 *LDecideModuleName_areaScope
 	scope = areaScope
 	return
+	
+//------------------------------------------------
+// 定義タイプから文字列を生成する
+// @static
+//------------------------------------------------
+#defcfunc MakeDefTypeString int deftype,  local stype, local bCType
+	sdim stype, 320
+	bCType = ( deftype & DEFTYPE_CTYPE ) != false
+	
+	if ( deftype & DEFTYPE_LABEL ) { stype = "ラベル"   }
+	if ( deftype & DEFTYPE_MACRO ) { stype = "マクロ"   }
+	if ( deftype & DEFTYPE_CONST ) { stype = "定数"     }
+	if ( deftype & DEFTYPE_CMD   ) { stype = "コマンド" }
+	if ( deftype & DEFTYPE_COM   ) { stype = "命令(COM)" }
+	if ( deftype & DEFTYPE_IFACE ) { stype = "interface" }
+	
+	if ( deftype & DEFTYPE_DLL ) {
+		if ( bCType ) { stype = "関数(Dll)" } else { stype = "命令(Dll)" }
+		
+	} else : if ( deftype & DEFTYPE_FUNC  ) {
+		if ( bCType ) { stype = "関数" } else { stype = "命令" }
+		
+	} else {
+		if ( bCType ) { stype += " Ｃ" }
+	}
+	
+	if ( deftype & DEFTYPE_MODULE ) { stype += " Ｍ" }
+	return stype
 	
 #global
 
