@@ -23,10 +23,10 @@
 #define global IDC_HELP				0x00007F8B		// ？カーソル
 
 #uselib "user32.dll"
-#func   SetClassLong@syscursor_mod "SetClassLongA" int,int,int
-#cfunc  LoadCursor@syscursor_mod   "LoadCursorA"   nullptr,int
-#func   SetCursor@syscursor_mod    "SetCursor"     int
-#func   GetCursor@syscursor_mod    "GetCursor"
+#func    SetClassLong@syscursor_mod "SetClassLongA" int,int,int
+#cfunc   LoadCursor@syscursor_mod   "LoadCursorA"   nullptr,int
+#func    SetCursor@syscursor_mod    "SetCursor"     int
+#func    GetCursor@syscursor_mod    "GetCursor"
 
 #define global SetSystemCursor(%1=hwnd,%2) _SetSystemCursor %1,%2
 #deffunc _SetSystemCursor int p1, int p2

@@ -3,243 +3,175 @@
 #ifndef __HSP_PARSE_MODULE_GET_TOKEN_AS__
 #define __HSP_PARSE_MODULE_GET_TOKEN_AS__
 
-#include "HPM_cutToken.as"	// 識別子取り出し
-#include "HPM_sub.as"		// モジュール
+#include "HPM_TookToken.as"	// 識別子取り出し
+#include "HPM_Sub.as"		// モジュール
 
 // 主要モジュール
 #module hpm_getToken
 
-#include "HPM_header.as"
+#include "HPM_Header.as"
 
 #uselib "user32.dll"
-#func   CharLower@hpm_getToken "CharLowerA" int
+#func   _ChrLow "CharLowerA" int
 
-//------------------------------------------------
 // マクロ
-//------------------------------------------------
 #define ctype IsWOp(%1) ((%1) == '<' || (%1) == '=' || (%1) == '>' || (%1) == '&' || (%1) == '|' || (%1) == '+' || (%1) == '-')
 
-#define NULL 0
-
-//------------------------------------------------
 // 次のトークンを取得する
-//------------------------------------------------
-#deffunc hpm_getNextToken var result, var sSrc, int index, int p_befTT, int bPreLine
-	c = peek(sSrc, index)
+#deffunc GetNextToken var p1, var p2, int p3, int p_befTT, int bPreLine
+	c = peek(p2, p3)
 	
-	// 空白 (Blank)
-	if ( IsSpace(c) ) {
-		result = CutSpace(sSrc, index)
-		return TKTYPE_BLANK
+	// Name (識別子)
+	if ( IsIdentTop(c) ) {
+		p1 = TookName(p2, p3)
+		return TOKENTYPE_NAME
 	}
 	
-	// 識別子 (Identifier)
-	if ( IsIdentTop(c) || c == '`' || IsSJIS1st(c) ) {
-		result = CutName(sSrc, index)
-		return TKTYPE_NAME
-	}
-	
-	// プリプロセッサ命令 (Preprocessor)
+	// Preprocessor
 	if ( c == '#' ) {
-		iFound = 1 + CntSpaces(sSrc, index + 1)		// 空白
-		result = strmid(sSrc, index, iFound) + CutName(sSrc, index + iFound)
-		return TKTYPE_PREPROC
+		iFound = 1 + CntSpaces(p2, p3 + 1)		// 空白
+		p1     = strmid(p2, p3, iFound) + TookName(p2, p3 + iFound)
+		return TOKENTYPE_PREPROC
 	}
 	
-	// 文字列定数 (Single-line String Literal)
+	// String
 	if ( c == '"' ) {
-		result = CutStr(sSrc, index)			// 文字列を取り出す (""を含む)
-		return TKTYPE_STRING
+		p1 = TookStr(p2, p3)		// 文字列を取り出す (""を含む)
+		return TOKENTYPE_STRING
 	}
-	
-	// 複数行文字列定数 (Multi-line String Literal)
-	if ( wpeek(sSrc, index) == 0x227B ) {		// {"
-		result = CutStrMulti(sSrc, index)		// 複数行文字列を取り出す ({" "} 含む)
-		return TKTYPE_STRING
+	if ( wpeek(p2, p3) == 0x227B ) {	// {"
+		p1 = TookStrMulti(p2, p3)		// 複数行文字列を取り出す ({" "} 含む)
+		return TOKENTYPE_STRING
 	}
 	
 	// 終了記号
-	if ( c == ':' || c == '{' || c == '}' || IsNewLine(c) || c == 0 ) {
-		result = strf("%c", c)
+	if ( c == ':' || c == '{' || c == '}' || IsNewLine(c) ) {
+		p1 = strf("%c", c)
 		if ( c == 0x0D ) {		// CRLF
-			if ( peek(sSrc, index + 1) == 0x0A ) {
-				result = "\n"
+			if ( peek(p2, p3 + 1) == 0x0A ) {
+				p1 = "\n"
 			}
 		} else : if ( c == 0x0A ) {
-			result = "\r"
+			p1 = "\r"
 		}
-		return TKTYPE_END
+		return TOKENTYPE_END
 	}
 	
-	// 記号 (Sign)
-	if ( c == ',' ) { result = "," : return TKTYPE_COMMA    }
-	if ( c == '(' ) { result = "(" : return TKTYPE_CIRCLE_L }
-	if ( c == ')' ) { result = ")" : return TKTYPE_CIRCLE_R }
-	if ( c == '.' ) { result = "." : return TKTYPE_PERIOD   }
+	// Sign
+	if ( c == ',' ) { p1 = "," : return TOKENTYPE_CAMMA    }
+	if ( c == '(' ) { p1 = "(" : return TOKENTYPE_CIRCLE_L }
+	if ( c == ')' ) { p1 = ")" : return TOKENTYPE_CIRCLE_R }
+	if ( c == '.' ) { p1 = "." : return TOKENTYPE_PERIOD   }
 	
-	// ラベル (Label) := * から始まり、次が「文の終端、カンマ、')'」のどれか
+	// Label ( * から始まり、次が、文の終端、カンマ、) のうちのどれかのとき )
 	if ( c == '*' ) {
-		if ( IsLabel(sSrc, index, p_befTT, bPreline) ) {
-			c2 = peek(sSrc, index + 1)
-			if ( c2 == '@' ) {
-				result = "*@"+ CutName(sSrc, index + 2)		// *@ の後は好きなだけ取り出す
-			} else : if ( c2 == '%' ) {						// *%
-				result = "*%"+ CutName(sSrc, index + 2)
+		if ( IsLabel(p2, p3, p_befTT) ) {	// ラベルか？
+			if ( peek(p2, p3 + 1) == '@' ) {
+				p1 = "*@"+ TookName(p2, p3 + 2)	// *@ の後は好きなだけ取り出す
 			} else {
-				result = "*"+ CutName(sSrc, index + 1)		// 切り出す
+				p1 = "*"+ TookName(p2, p3 + 1)	// 切り出す
 			}
-			return TKTYPE_LABEL
+			return TOKENTYPE_LABEL
 		}
 	}
 	
-	// 行末コメント (Single-line Comment)
-	if ( c == ';' || wpeek(sSrc, index) == 0x2F2F ) {
-		getstr result, sSrc, index			// 改行まで取り出す
-		return TKTYPE_COMMENT
+	// Comment
+	if ( c == ';' || wpeek(p2, p3) == 0x2F2F ) {
+		getstr p1, p2, p3			// 改行まで取り出す
+		return TOKENTYPE_COMMENT
 	}
 	
-	// 複数行コメント (Multi-line Comment)
-	if ( wpeek(sSrc, index) == 0x2A2F ) {
-		iFound = instr(sSrc, index + 2, "*/")
+	// Comment (multi)
+	if ( wpeek(p2, p3) == 0x2A2F ) {
+		iFound = instr(p2, p3 + 2, "*/")
 		if ( iFound < 0 ) {
-			result = strmid(sSrc, index, strlen(sSrc) - index)	// 以降すべてコメント
+			p1 = strmid(p2, p3, strlen(p2) - p3)	// 以降すべてコメント
 		} else {
-			result = strmid(sSrc, index, iFound + 4)			// 開始・終了も含む
+			p1 = strmid(p2, p3, iFound + 4)			// 開始・終了も含む
 		}
-		return TKTYPE_COMMENT
+		return TOKENTYPE_COMMENT
 	}
 	
-	// 演算子 (Operator)
-	if ( IsOperator(c) ) {
+	// Operator
+	if ( IsOperator(c) ) {							// 演算子か？
 		
-		// 2 バイトの演算子の時もある ( '?'= か、&& || などの二重 )
-		c2 = peek(sSrc, index + 1)
-		if ( c2 == '=' || ( IsWOp(c) && c == c2 ) ) {
-			result = strmid(sSrc, index, 2)	// 2 byte
+		// 2 バイトの演算子の時もある
+		c2 = peek(p2, p3 + 1)
+		if ( c2 == '=' || (IsWOp(c) && c == c2) ) {	// ?= か、&& || などの二重
+			p1 = strmid(p2, p3, 2)		// 2 byte
 		} else {
-			wpoke result, , c			// 1 byte
+			p1 = strf("%c", c)			// 1 byte
 		}
-		
-		// 改行回避の可能性
-		if ( c == '\\' && bPreLine ) {
+		if ( c == '\\' && bPreLine ) {	// 改行回避の可能性
 			if ( IsNewLine(c2) ) {
-				if ( c2 == 0x0D && peek(sSrc, index + 2) == 0x0A ) {
-					lpoke result,, MAKELONG2('\\', 0x0D, 0x0A, 0)	// "\\\n"
+				if ( c2 == 0x0D && peek(p2, p3 + 2) == 0x0A ) {
+					lpoke p1, 0, MAKELONG2('\\', 0x0D, 0x0A, 0)	// "\\\n"
 				} else {
-					lpoke result,, MAKEWORD('\\', c2)
+					lpoke p1, 0, MAKEWORD('\\', c2)
 				}
-				return TKTYPE_ESC_LINEFEED
+				return TOKENTYPE_ESC_LINEFEED
 			}
 		}
-		
-		return TKTYPE_OPERATOR
+		return TOKENTYPE_OPERATOR
 	}
 	
-	// 文字定数 (Charactor Literal)
+	// Char
 	if ( c == '\'' ) {
-		result = CutCharactor(sSrc, index)
-		return TKTYPE_CHAR
+		p1 = TookCharactor(p2, p3)
+		return TOKENTYPE_CHAR
 	}
 	
-	// 整数値定数( 2 or 16 進数 ) (Binary or Hexadigimal Number)
+	// Number (2 or 16)
 	if ( c == '$' ) {
-		result = "$"+ CutNum_Hex(sSrc, index + 1)
-		return TKTYPE_NUMBER
+		p1 = "$"+ TookNum_Hex(p2, p3 + 1)
+		return TOKENTYPE_NUMBER
 	}
 	if ( c == '%' ) {
-		c2 = peek(sSrc, index + 1)
-		
 		if ( bPreLine ) {
-			// 二進数表記 ( %%010101 ... etc )
-			if ( c2 == '%' && IsBin(peek(sSrc, index + 2)) ) {
-				result = "%"+ CutNum_Bin(sSrc, index + 1)
-				return TKTYPE_NUMBER
-				
-			// マクロ引数 ( %1, %2, %3 ... etc )
-			} else : if ( IsDigit(c2) && c2 != '0' ) {
-				result = "%"+ CutNum_Dgt(sSrc, index + 1)
-				return TKTYPE_MACRO_PRM
-				
-			// 特殊展開マクロ ( %i, %s1 ... etc )
-			} else : if ( IsAlpha(c2) ) {
-				result = "%"+ CutName(sSrc, index + 1)
-				return TKTYPE_MACRO_SP
-			}
+			p1 = "%"+ TookNum_Dgt(p2, p3 + 1)
+			return TOKENTYPE_PARAMETER
+		} else {
+			p1 = "%"+ TookNum_Bin(p2, p3 + 1)
+			return TOKENTYPE_NUMBER
 		}
-		
-		// 二進数表記
-		result = "%"+ CutNum_Bin(sSrc, index + 1)
-		return TKTYPE_NUMBER
 	}
-	
-	// '0' か始まる : 0x, 0b, 0123...
 	if ( c == '0' ) {
-		c2 = peek(sSrc, index + 1)
+		c2 = peek(p2, p3 + 1)
 		if ( c2 == 'x' || c2 == 'X' ) {
-			result = strmid(sSrc, index, 2) + CutNum_Hex(sSrc, index + 2)
+			p1 = strmid(p2, p3, 2) + TookNum_Hex(p2, p3 + 2)
 			
 		} else : if ( c2 == 'b' || c2 == 'B' ) {
-			result = strmid(sSrc, index, 2) + CutNum_Bin(sSrc, index + 2)
+			p1 = strmid(p2, p3, 2) + TookNum_Bin(p2, p3 + 2)
 			
 		} else {
-			gosub *LGetToken_Digit
-			return stat
+			p1 = TookNum_Dgt(p2, p3)
 		}
-		return TKTYPE_NUMBER
+		return TOKENTYPE_NUMBER
 	}
 	
-	// 整数値定数 (10進数) (Digimal Number)
+	// Number (10)
 	if ( IsDigit(c) || c == '.' ) {
-		gosub *LGetToken_Digit
-		return stat
+		p1 = TookNum_Dgt(p2, p3)		// 10進数
+		return TOKENTYPE_NUMBER
 	}
 	
-	// スコープ解決 (scope solver)
+	// @Scope
 	if ( c == '@' ) {
-		result = "@"+ CutName(sSrc, index + 1)
-		return TKTYPE_SCOPE
+		p1 = "@"+ TookName(p2, p3 + 1)
+		return TOKENTYPE_SCOPE
 	}
 	
-	// 謎な場合
-*LUnknownToken
 	if ( IsSJIS1st(c) ) {
 		logmes "ERROR! SJIS code!"
-		wpoke result, 0, wpeek(sSrc, index)	// 書き込む
-		poke  result, 3, NULL
-		return TKTYPE_ERROR
+		wpoke p1, 0, wpeek(p2, p3)	// 書き込む
+		poke  p1, 3, 0				// NULL
+		return TOKENTYPE_ERROR
 	}
 	
 	// ？？？
-	result = strf("%c", c)
-	logmes "ERROR !! Can't Pop a Token! [ "+ index + strf(" : %c : ", c) + c +" ]"
-	return TKTYPE_ERROR
-	
-// 10進数を切り出す
-*LGetToken_Digit
-	result = CutNum_Dgt(sSrc, index)
-	len    = strlen(result)
-	c      = peek( sSrc, index + len )		// 数の次の文字
-	switch ( c )
-		case 'f'
-		case 'd'
-			result += strf("%c", c)
-			swbreak
-			
-		case 'e'
-			result += "e"
-			
-			c2 = peek( sSrc, index + len + 1 )
-			if ( c2 == '-' ) {
-				result += "-"
-				len ++
-			}
-			
-			// 指数を足しておく
-			result += CutNum_Dgt( sSrc, index + len + 1 )
-			swbreak
-	swend
-	
-	return TKTYPE_NUMBER
+	p1 = strf("%c", c)
+	logmes "ERROR !! Can't Pop a Token! [ "+ logv(p3) +" : "+ strf("%c", c) +" : "+ c +" ]"
+	return TOKENTYPE_ERROR
 	
 #global
 

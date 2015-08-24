@@ -1,31 +1,22 @@
 // ctype which
 
-#ifndef IG_CTYPE_WHICH_AS
-#define global IG_CTYPE_WHICH_AS
-#ifndef cond_i
+#ifndef __CTYPE_WHICH_MODULE_AS__
+#define __CTYPE_WHICH_MODULE_AS__
 
-#module
-#defcfunc cond_i int cond, int x, int y
-	if (cond) { return x } else { return y }
+#module cwhich_module
+
+#define global ctype cwhich(%1=1,%2=1,%3=0,%4=0) cwhich_core(%1,str(%2),str(%3),%4)
+#defcfunc cwhich_core int p1, str TrueValue, str FalseValue, int p4, local sRet
+	if (p1) { sRet = TrueValue } else { sRet = FalseValue }
+	if (p4) {	// 戻り値の型を指定した場合
+		if (p4 == 2) { return sRet         }	// 文字列
+		if (p4 == 3) { return double(sRet) }	// 実数値
+		if (p4 == 4) { return int(sRet)    }	// 整数値
+	}
+	if (sRet == int(sRet)) { return int(sRet) }
+	if (sRet == double(sRet) && instr(sRet, 0, ".") != -1) { return double(sRet) }
+	return sRet
+	
 #global
-
-#module
-#define global ctype cond_d(%1, %2 = 0, %3 = 0) cond_d_@__uedai(%1, %2, %3)
-#defcfunc cond_d_@__uedai int cond, double x, double y
-	if (cond) { return x } else { return y }
-#global
-
-#module
-#define global ctype cond_s(%1, %2 = "", %3 = "") cond_s_@__uedai(%1, %2, %3)
-#defcfunc cond_s_@__uedai int cond, str x, str y
-	if (cond) { return x } else { return y }
-#global
-
-#endif
-
-#undef cwhich_int
-#define global cwhich_int cond_i
-#define global cwhich_str cond_s
-#define global cwhich_double cond_d
 
 #endif

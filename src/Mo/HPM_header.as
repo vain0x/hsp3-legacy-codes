@@ -1,62 +1,38 @@
 // HSP parse module - Header
 
-#ifndef IG_HSP_PARSE_MODULE_HEADER_AS
-#define IG_HSP_PARSE_MODULE_HEADER_AS
+#ifndef __HSP_PARSE_MODULE_HEADER_AS__
+#define __HSP_PARSE_MODULE_HEADER_AS__
 
 #include "Mo/ctype.as"
 
 #define MAX_TEXTLEN 0x2FFFF
 
-#define ctype IsTkTypeIdent(%1) ( (%1) == TKTYPE_NAME || (%1) == TKTYPE_VARIABLE || IsTkTypeReserved(%1) )
-#define ctype IsTkTypeReserved(%1) ( (%1) == TKTYPE_KEYWORD || (%1) == TKTYPE_EX_STATEMENT || (%1) == TKTYPE_EX_FUNCTION || (%1) == TKTYPE_EX_SYSVAR || (%1) == TKTYPE_EX_MACRO || (%1) == TKTYPE_EX_PREPROC_KEYWORD )
-
-//------------------------------------------------
 // トークンの種類
-//------------------------------------------------
-#enum TKTYPE_ERROR = (-1)
-#enum TKTYPE_NONE  = 0
-#enum TKTYPE_END   = 0			// : 改行 { } 終端 など、文の終端となるもの
-#enum TKTYPE_BLANK				// 空白
-#enum TKTYPE_OPERATOR			// + - * / \ & | ^ = < >
-#enum TKTYPE_CIRCLE_L			// (
-#enum TKTYPE_CIRCLE_R			// )
-#enum TKTYPE_PAREN_L = TKTYPE_CIRCLE_L
-#enum TKTYPE_PAREN_R = TKTYPE_CIRCLE_R
-#enum TKTYPE_MACRO_PRM			// マクロパラメータ( %1 %2 %3 etc... )
-#enum TKTYPE_MACRO_SP			// 特殊展開マクロ ( %t, %i etc... )
-#enum TKTYPE_NUMBER				// 0123456789. $E0F %0 0xFF 0b11
-#enum TKTYPE_STRING				// "string\n\t\\"
-#enum TKTYPE_CHAR				// 'x'
-#enum TKTYPE_LABEL				// *main
-#enum TKTYPE_PREPROC			// #enum ...etc
-#enum TKTYPE_PREPROC_DISABLE	// # から始まるがプリプロセッサ命令ではない
-#enum TKTYPE_KEYWORD			// 識別子 (キーワード) (命令、関数、…)
-#enum TKTYPE_VARIABLE			// 識別子 (変数)
-#enum TKTYPE_NAME				// 識別子 (具体的には不明)
-#enum TKTYPE_IDENT = TKTYPE_NAME
-#enum TKTYPE_COMMENT			// コメント
-#enum TKTYPE_COMMA				// ,
-#enum TKTYPE_PERIOD				// .
-#enum TKTYPE_SCOPE				// @スコープ
-#enum TKTYPE_ESC_LINEFEED		// 改行回避 (行末の\)
-#enum TKTYPE_ANY				// なにか
-#enum TKTYPE_EX_STATEMENT		// 標準命令
-#enum TKTYPE_EX_FUNCTION		// 標準関数
-#enum TKTYPE_EX_SYSVAR			// 標準システム変数
-#enum TKTYPE_EX_MACRO			// 標準マクロ
-#enum TKTYPE_EX_PREPROC_KEYWORD	// プリプロセッサ行キーワード
-#enum TKTYPE_EX_CONST			// 定数
-#enum TKTYPE_EX_USER_STTM		// ユーザ定義命令
-#enum TKTYPE_EX_USER_FUNC		// ユーザ定義関数
-#enum TKTYPE_EX_DLLFUNC			// Dll関数 (命令形式含む)
-#enum TKTYPE_EX_IFACE			// インターフェース
-#enum TKTYPE_EX_MODNAME			// モジュール名 (スコープ名)
-#enum TKTYPE_EX_VAR				// 変数
-#enum TKTYPE_MAX
+#enum TOKENTYPE_ERROR   = (-1)
+#enum TOKNETYPE_UNKNOWN = TOKENTYPE_ERROR
+#enum TOKENTYPE_NONE    = 0
+#enum TOKENTYPE_END				// : 改行 { }
+#enum TOKENTYPE_OPERATOR		// + - * / \ & | ^ = < >
+#enum TOKENTYPE_CIRCLE_L		// (
+#enum TOKENTYPE_CIRCLE_R		// )
+#enum TOKENTYPE_PARAMETER		// マクロパラメータ( %1 %2 %3 ...etc)
+#enum TOKENTYPE_NUMBER			// 0123456789. $E0F %0 0xFF 0b11
+#enum TOKENTYPE_STRING			// "string\n\t\\"
+#enum TOKENTYPE_CHAR			// 'x'
+#enum TOKENTYPE_LABEL			// *main
+#enum TOKENTYPE_PREPROC			// #enum ...etc
+#enum TOKENTYPE_KEYWORD			// 識別子 (命令、関数、…)
+#enum TOKENTYPE_VARIABLE		// 識別子 (変数)
+#enum TOKENTYPE_NAME			// 識別子 ( TOKENTYPE_KEYWORD か TOKENTYPE_VARIABLE )
+#enum TOKENTYPE_COMMENT			// コメント
+#enum TOKENTYPE_CAMMA			// ,
+#enum TOKENTYPE_PERIOD			// .
+#enum TOKENTYPE_SCOPE			// @スコープ
+#enum TOKENTYPE_ESC_LINEFEED	// 改行回避 (行末の\)
+#enum TOKENTYPE_ANY				// なにか
+#enum TOKENTYPE_LAST
 
-//------------------------------------------------
 // 識別子の種類
-//------------------------------------------------
 #enum IDENTTYPE_ERROR     = (-1)
 #enum IDENTTYPE_OTHER     = 0	// 以下に含まない
 #enum IDENTTYPE_STATEMENT		// 命令
@@ -67,24 +43,19 @@
 #enum IDENTTYPE_LABEL			// ラベル名
 #enum IDENTTYPE_MODNAME			// モジュール名
 #enum IDENTTYPE_IFACE			// インターフェース
-#enum IDENTTYPE_MAX
+#enum IDENTTYPE_LAST
 
-//------------------------------------------------
 // キーワードリスト
-//------------------------------------------------
-#define KEYWORDS_ALL ( KEYWORDS_STATEMENT + KEYWORDS_FUNCTION + KEYWORDS_SYSVAR + KEYWORDS_PREPROC + KEYWORDS_MACRO + KEYWORDS_MODNAME + KEYWORDS_PPWORD )
-#define KEYWORDS_STATEMENT "await,assert,break,continue,end,exec,exgoto,foreach,gosub,goto,if,else,loop,on,onclick,oncmd,onerror,onexit,onkey,repeat,return,run,stop,wait,logmes,axobj,bgscr,bmpsave,boxf,buffer,chgdisp,circle,cls,color,dialog,font,gcopy,gmode,grect,groll,grotate,gsel,gsquare,gzoom,gradf,hsvcolor,line,mes,palcolor,palette,pget,picload,pos,print,pset,redraw,screen,sendmsg,syscolor,sysfont,title,width,winobj,cnvstow,getstr,split,noteadd,notedel,noteget,noteload,notesave,notesel,noteunsel,button,chkbox,clrobj,combox,input,listbox,mesbox,objmode,objprm,objsel,objsize,objenable,objskip,objimage,comres,delmod,dimtype,dim,lpoke,memcpy,memexpand,memset,newmod,poke,sdim,setmod,wpoke,bcopy,bload,bsave,chdir,chdpm,delete,dirlist,exist,memfile,mkdir,getkey,mcall,mouse,randomize,stick,dup,dupptr,mref,mci,mmload,mmplay,mmstop,comevarg,comevent,delcom,newcom,querycom,sarrayconv,"
-#define KEYWORDS_FUNCTION  "cnvwtos,getpath,instr,noteinfo,strf,strmid,strtrim,lpeek,peek,wpeek,abs,absf,atan,callfunc,cos,dirinfo,double,expf,gettime,ginfo,int,length,length2,length3,length4,libptr,limit,limitf,logf,objinfo,rnd,sin,sqrt,str,strlen,sysinfo,tan,varptr,vartype,varuse,comevdisp,"
+#define KEYWORDS_ALL ( KEYWORDS_STATEMENT + KEYWORDS_FUNCTION + KEYWORDS_SYSVAR + KEYWORDS_PREPROC + KEYWORDS_MACRO + KEYWORDS_MODNAME + KEYWORDS_PPLINE )
+#define KEYWORDS_STATEMENT "await,break,continue,end,exec,exgoto,foreach,gosub,goto,if,else,loop,on,onclick,oncmd,onerror,onexit,onkey,repeat,return,run,stop,wait,logmes,axobj,bgscr,bmpsave,boxf,buffer,chgdisp,circle,cls,color,dialog,font,gcopy,gmode,grect,groll,grotate,gsel,gsquare,gzoom,hsvcolor,line,mes,palcolor,palette,pget,picload,pos,print,pset,redraw,screen,sendmsg,syscolor,sysfont,title,width,winobj,cnvstow,getstr,noteadd,notedel,noteget,noteload,notesave,notesel,noteunsel,button,chkbox,clrobj,combox,input,listbox,mesbox,objmode,objprm,objsel,objsize,comres,delmod,dimtype,dim,lpoke,memcpy,memexpand,memset,newmod,poke,sdim,setmod,wpoke,bcopy,bload,bsave,chdir,chdpm,delete,dirlist,exist,memfile,mkdir,getkey,mcall,mouse,randomize,stick,dup,dupptr,mref,mci,mmload,mmplay,mmstop,comevarg,comevent,delcom,newcom,querycom,sarrayconv,"
+#define KEYWORDS_FUNCTION  "cnvwtos,getpath,instr,noteinfo,strf,strmid,lpeek,peek,wpeek,abs,absf,atan,callfunc,cos,dirinfo,double,expf,gettime,ginfo,int,length,length2,length3,length4,libptr,limit,limitf,logf,objinfo,rnd,sin,sqrt,str,strlen,sysinfo,tan,varptr,vartype,varuse,comevdisp,"
 #define KEYWORDS_SYSVAR    "cnt,err,hdc,hinstance,hspstat,hspver,hwnd,iparam,looplev,lparam,mousew,mousex,mousey,refdval,refstr,stat,strsize,sublev,thismod,wparam,"
-#define KEYWORDS_PREPROC   "addition,aht,ahtmes,cfunc,cmd,cmpopt,comfunc,const,defcfunc,deffunc,define,else,endif,enum,epack,func,global,if,ifdef,ifndef,include,modfunc,modcfunc,modinit,modterm,module,pack,packopt,regcmd,runtime,undef,usecom,uselib,"
-#define KEYWORDS_MACRO     "__hspver__,__hsp30__,__date__,__time__,__file__,_debug,alloc,ddim,_break,_continue,case,default,do,for,next,swbreak,swend,switch,until,wend,while,and,not,or,xor,ginfo_act,ginfo_b,ginfo_cx,ginfo_cy,ginfo_dispx,ginfo_dispy,ginfo_g,ginfo_intid,ginfo_mesx,ginfo_mesy,ginfo_mx,ginfo_my,ginfo_paluse,ginfo_r,ginfo_sel,ginfo_sizex,ginfo_sizey,ginfo_sx,ginfo_sy,ginfo_vx,ginfo_vy,ginfo_winx,ginfo_winy,ginfo_wx1,ginfo_wx2,ginfo_wy1,ginfo_wy2,ginfo_newid,dir_cmdline,dir_cur,dir_desktop,dir_exe,dir_mydoc,dir_sys,dir_win,font_normal,font_bold,font_italic,font_underline,font_strikeout,font_antialias,gmode_add,gmode_alpha,gmode_gdi,gmode_mem,gmode_pixela,gmode_rgb0,gmode_rgb0alpha,gmode_sub,objmode_normal,objmode_bmscr,objmode_hwnd,objmode_mode,objmode_guifont,objmode_usefont,msgothic,msmincho,notemax,notesize,"
+#define KEYWORDS_PREPROC   "addition,aht,ahtmes,cfunc,cmd,cmpopt,comfunc,const,defcfunc,deffunc,define,else,endif,enum,epack,func,global,if,ifdef,ifndef,include,modfunc,modinit,modterm,module,pack,packopt,regcmd,runtime,undef,usecom,uselib,"
+#define KEYWORDS_MACRO     "alloc,ddim,_break,_continue,case,default,do,for,next,swbreak,swend,switch,until,wend,while,and,not,or,xor,ginfo_act,ginfo_b,ginfo_cx,ginfo_cy,ginfo_dispx,ginfo_dispy,ginfo_g,ginfo_intid,ginfo_mesx,ginfo_mesy,ginfo_mx,ginfo_my,ginfo_paluse,ginfo_r,ginfo_sel,ginfo_sizex,ginfo_sizey,ginfo_sx,ginfo_sy,ginfo_vx,ginfo_vy,ginfo_winx,ginfo_winy,ginfo_wx1,ginfo_wx2,ginfo_wy1,ginfo_wy2,dir_cmdline,dir_cur,dir_desktop,dir_exe,dir_mydoc,dir_sys,dir_win,msgothic,msmincho,notemax,notesize,__hsp30__,__hspver__,__line__,__date__,__file__,__time__,_debug,"
 #define KEYWORDS_MODNAME   "hsp,"
 #define KEYWORDS_PPWORD    "global,ctype,int,str,sptr,wstr,double,float,label,comobj,var,array,modvar,nullptr,wptr,pval,bmscr,prefstr,pexinfo,local,onexit,"
 
-//------------------------------------------------
 // パターンのマクロ
-//------------------------------------------------
-
 // 単語の切れ目を表す記号
 #define SIGN "[ \t!\"&'()<>=|-^\\@{};+:*,./\n\r'\\\\`]"
 

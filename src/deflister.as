@@ -7,6 +7,9 @@
 #include "Mo/LongString.as"
 #include "Mo/strutil.as"
 #include "Mo/HPM_GetToken.as"
+#ifdef __LISTUP_INCLUDE__
+#include "Mo/SearchFileEx.as"
+#endif
 
 // Win32 API
 #uselib "user32.dll"
@@ -19,6 +22,8 @@
 #func   global SetClassLong   "SetClassLongA"  int,int,int
 #func   global SetCursor      "SetCursor"      int
 #func   global EnableWindow   "EnableWindow"   int,int
+
+#cfunc  global RegisterWindowMessage "RegisterWindowMessageA" sptr
 
 //##################################################################################################
 //        定数・マクロ
@@ -40,6 +45,9 @@
 // 特殊な空間名
 #define global AREA_GLOBAL "global"
 #define global AREA_ALL    "*"
+
+// その他
+#define global HSED_TEMPFILE "hsed_hsptmp.hsp"
 
 //##################################################################################################
 //        モジュール
@@ -113,7 +121,7 @@
 	return stype
 	
 // (private) モジュール空間名を決定する
-#defcfunc TookModuleName var scope, var script, int offset, str defscope, local index
+#defcfunc TookModuleName@deflister_mod var scope, var script, int offset, str defscope, local index
 	index = offset
 	if ( peek(script, index) == '@' ) {
 		index ++
@@ -124,24 +132,38 @@
 	}
 	return index - offset
 	
+// (private) 範囲名を作成する
+#deffunc MakeScope@deflister_mod var scope, str defscope, int deftype, int bGlobal, int bLocal
+	if ( bGlobal ) { scope = AREA_ALL : return }
+	
+	scope = defscope
+	
+	if ( bLocal ) { scope += " [local]" }
+	return
+	
 // 定義をリストアップする( 引数の順番に注意 )
-#deffunc TookDefinition str p1, array listIdent, array listLn, array listType, array listScope, local script, local listIndex, local count, local stmp, local index, local textlen, local areaScope, local scope, local nowTT, local befTT, local bPreLine, local bGlobal, local deftype
+#deffunc TookDefinition str p1, int defcnt, array listIdent, array listLn, array listType, array listScope, array listInclude, local script, local listIndex, local cntInclude, local count, local stmp, local index, local textlen, local areaScope, local scope, local nowTT, local befTT, local bPreLine, local bGlobal, local bLocal, local deftype, local uniqueCount
 	script  = p1
 	index   = 0
-	count   = 0
+	count   = defcnt
 	textlen = strlen(script)
 	sdim stmp, 250
 	sdim name
 	sdim scope
 	sdim areaScope
 	
-	dim  listLn   ,  5
-	sdim listIdent,, 5
-	dim  listType ,  5
-	sdim listScope,, 5
-	dim  listIndex,  5		// 文字インデックスのリスト( 高速化のために使う )
+	if ( defcnt == 0 ) {
+		dim  listLn   ,  5
+		sdim listIdent,, 5
+		dim  listType ,  5
+		sdim listScope,, 5
+	}
+	dim      listIndex,  defcnt + 5		// 文字インデックスのリスト( 高速化のために使う )
+	sdim     listInclude, 260
 	
-	areaScope = AREA_GLOBAL
+	cntInclude  = 0
+	uniqueCount = 0
+	areaScope   = AREA_GLOBAL
 	
 	repeat
 		// 空白を飛ばす
@@ -203,7 +225,8 @@
 			bPreLine = true
 			index   += strlen(nowtk)
 			deftype  = 0
-			bGlobal  = false
+			bGlobal  = true
+			bLocal   = false
 			
 			// # と空白を除去する
 			getstr nowtk, nowtk, 1 + CntSpaces(nowtk, 1)
@@ -213,35 +236,56 @@
 				index += CntSpaces(script, index)				// ignore 空白
 				if ( peek(script, index) == '"' ) { index ++ }	// #module "modname" の形式に対応
 				index += TookIdent(areaScope, script, index)	// 空間名
+				if ( stat == 0 ) {
+					areaScope   = "("+ uniqueCount +")unique"	// ユニークな空間名
+					uniqueCount ++
+				}
 				swbreak
 			case "global" : areaScope = AREA_GLOBAL : swbreak	// モジュール空間からの脱出
 			
+			case "include"
+			case "addition"
+				index += CntSpaces(script, index)
+				if ( peek(script, index) == '"' ) { index ++ }
+				getstr nowtk, script, index, '"'
+				index                  += strsize
+				listInclude(cntInclude) = nowtk
+				cntInclude ++
+				swbreak
+			
 			case "modfunc"  : deftype  = DEFTYPE_MODULE
-			case "deffunc"  : deftype |= DEFTYPE_FUNC                   : goto *L_AddDefinition
+			case "deffunc"  : deftype |= DEFTYPE_FUNC                    : goto *L_AddDefinition
 			case "modcfunc" : deftype  = DEFTYPE_MODULE
-			case "defcfunc" : deftype |= DEFTYPE_FUNC   | DEFTYPE_CTYPE : goto *L_AddDefinition
-			case "define"   : deftype  = DEFTYPE_MACRO                  : goto *L_AddDefinition
+			case "defcfunc" : deftype |= DEFTYPE_FUNC   | DEFTYPE_CTYPE  : goto *L_AddDefinition
+			case "define"   : deftype  = DEFTYPE_MACRO : bGlobal = false : goto *L_AddDefinition
 			case "const"
-			case "enum"     : deftype  = DEFTYPE_CONST                  : goto *L_AddDefinition
+			case "enum"     : deftype  = DEFTYPE_CONST : bGlobal = false : goto *L_AddDefinition
 *L_AddDefinition
 				index += CntSpaces(script, index)			// 空白 ignore
 				index += TookIdent(nowtk, script, index)	// 識別子を取り出す
 				switch getpath( nowtk, 16 )
-					case "global" : bGlobal  = true          : goto *L_AddDefinition
-					case "ctype"  : deftype |= DEFTYPE_CTYPE : goto *L_AddDefinition
-					case "local"  : bGlobal  = false         : goto *L_AddDefinition
+					case "global" : bGlobal  = true                  : goto *L_AddDefinition
+					case "ctype"  : deftype |= DEFTYPE_CTYPE         : goto *L_AddDefinition
+					case "local"  : bGlobal  = false : bLocal = true : goto *L_AddDefinition
 				swend
 				
 				index += TookModuleName(scope, script, index, areaScope)
+				if ( stat ) {	// scope != areaScope ->("ident@scope")
+					bGlobal = false
+				}
 				
+				// 範囲を作成
+				MakeScope scope, areaScope, deftype, bGlobal, bLocal
+				
+				// リストに追加
 				listIdent(count) = nowtk
-				if ( count <= 0 ) {
+				if ( count <= defcnt ) {
 					listLn(count) = GetLinenumByIndex(script, index, 0, 0)
 				} else {
 					listLn(count) = GetLinenumByIndex(script, index, listIndex(count - 1), listLn(count - 1))
 				}
 				listType (count) = deftype
-				listScope(count) = cwhich( bGlobal, AREA_ALL, scope )
+				listScope(count) = scope
 				listIndex(count) = index
 				count ++
 				swbreak
@@ -254,6 +298,74 @@
 	swend
 	return
 	
+#ifdef __LISTUP_INCLUDE__
+
+// 定義リストを再帰的に作成する
+#deffunc CreateDefinitionList array listIncludeToLoad, int defcnt, array listIdent, array listLn, array listType, array listScope, array listFile, local script, local listInclude, local cntTotal, local count
+	
+	cntTotal = defcnt
+	
+	foreach listIncludeToLoad
+		
+		// 次のスクリプトを変数 script に展開
+		// <TODO> common のパスをユーザに指定してもらう
+		SearchFileEx "D:\\D_MyDocuments\\DProgramFiles\\hsp31\\common;", listIncludeToLoad(cnt)
+		if ( refstr == "" ) { continue }
+		listIncludeToLoad(cnt) = refstr
+		
+		// ファイル名のみを取得しておく
+		filename = getpath(listIncludeToLoad(cnt), 8)
+		c        = peek(filename)
+		
+		// 既に開かれているファイルなら無視
+		for i, 0, cntTotal
+			if ( peek(listFile(i)) == c ) {
+				if ( listFile(i) == filename ) {
+					continue
+				}
+			}
+		next
+		
+;		exist listIncludeToLoad(cnt)
+;		if ( strsize < 0 ) { continue }
+		
+		notesel script
+		noteload listIncludeToLoad(cnt)
+		noteunsel
+		
+		// 定義を取り出す
+		TookDefinition script, cntTotal, listIdent, listLn, listType, listScope, listInclude
+		count = stat
+		
+		// listFile を設定
+		i = cnt
+		for i, cntTotal, count
+			listFile(i) = filename	// パスは含めない
+		next
+		
+		cntTotal = count
+		
+		// 再帰的に結合されたファイルから定義を取り出す
+		if ( peek(listInclude) ) {
+			CreateDefinitionList listInclude, cntTotal, listIdent, listLn, listType, listScope, listFile
+			cntTotal = stat
+		}
+		
+	loop
+	
+	return cntTotal
+#endif
+	
+// コントロールを単一方向にスクロールする( direction = SB_HORZ(=0) or SB_VERT(=1) )
+#deffunc ScrollWindow int handle, int direction, int nPos
+	dim scrollinfo, 8
+	scrollinfo = 32, 0x04, 0, 0, 0, nPos
+	SetScrollInfo handle, direction, varptr(scrollinfo), true
+	sendmsg       handle, 0x0114 + direction, MAKELONG(4, nPos), handle
+	return
+	
+#if 0
+
 // 周辺の三行を取り出す
 #deffunc TookArline3 var bufArline3, str p2, int linenum, local text, local index, local stmp, local tmpbuf
 	newmod tmpbuf, longstr
@@ -292,15 +404,8 @@
 	     bufArline3 = LongStr_get(tmpbuf)
 	
 	return
-	
-// コントロールを単一方向にスクロールする( direction = SB_HORZ(=0) or SB_VERT(=1) )
-#deffunc ScrollWindow int handle, int direction, int nPos
-	dim scrollinfo, 8
-	scrollinfo = 32, 0x04, 0, 0, 0, nPos
-	SetScrollInfo handle, direction, varptr(scrollinfo), true
-	sendmsg       handle, 0x0114 + direction, MAKELONG(4, nPos), handle
-	return
-	
+#endif
+
 #global
 
 #endif

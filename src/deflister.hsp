@@ -5,12 +5,16 @@
 
 #runtime "hsp3mt"
 
+;	#define global __LISTUP_INCLUDE__
+	#define global __LV_CUSTOMDRAW__
+
 #include "hsedsdk.as"
 #include "Mo/flexFrame.as"
 #include "Mo/GetFontOfHSP.as"
 #include "Mo/IsMouseButtonSwapped.as"
 #include "Mo/SysCursor.as"
 #include "Mo/Lvmod.as"
+#include "Mo/mutex.as"
 
 #include "deflister.as"
 
@@ -24,7 +28,8 @@
 	gosub *SetWindow		// スクリーンを作成
 	
 	gosub *GetTargetScript		// 対象スクリプトを取得
-	gosub *UpdateDefinitionList	// アップデート
+	gosub *UpdateDefinitionList	// 定義リストの更新
+	gosub *UpdateListview		// リストビューの更新
 	
 	gsel wID_Main
 		oncmd gosub *OnSize       , 0x0005		// WM_SIZE        (サイズが変更された)
@@ -34,13 +39,16 @@
 		oncmd gosub *OnLBtnDown   , 0x0201		// WM_LBUTTONDOWN
 		oncmd gosub *OnSplitterMove, UWM_SPLITTERMOVE
 		
+		oncmd gosub *OnAlreadyUsed, UWM_ALREADY_USED	// 二重起動された
+		
 	onexit gosub *exit		// 終了時
 	
 	gsel wID_Main, 1
 	stop
 	
 *exit
-	DeleteFont  hFont
+	DeleteFont hFont
+	CloseMutex
 	
 	oncmd   false
 	onexit  false
@@ -51,10 +59,16 @@
 //##################################################################################################
 //        Message Handler
 //##################################################################################################
+// 二重起動が発生した
+*OnAlreadyUsed
+	gsel wID_Main, 2
+	gsel wID_Main, 1
+	return
+	
 // ウィンドウのサイズが変わった
 *OnSize
 	MoveWindow infScript, 5,  5             , ginfo(12) - 10, EditHeight, true
-	MoveWindow infLv,     5, 10 + EditHeight, ginfo(12) - 10, ginfo(13) - (EditHeight + 30 + 10), true
+	MoveWindow infLv,     5, 10 + EditHeight, ginfo(12) - 10, ginfo(13) - (EditHeight + 30 + 20), true
 	
 	repeat length2(infBtns)
 		MoveWindow infBtns(0, cnt), ginfo(12) - (85 * (cnt + 1)), ginfo(13) - 30, 80, 25, true
@@ -72,8 +86,27 @@
 	
 	if ( nmhdr(0) == infLv ) {
 		
+#ifdef __LV_CUSTOMDRAW__
+		// NM_CUSTOMDRAW (これはカスタムドローの処理)
+		if ( nmhdr(2) == -12 ) {
+			
+			if ( LvIsCustom( mLv ) ) {
+				dupptr NMLVCUSTOMDRAW, lparam, 60		// NMLVCUSTOMDRAW 構造体
+				
+				if ( NMLVCUSTOMDRAW(3) == 0x0001 ) {	// CDDS_REPAINT (描画サイクルの前)
+					return 0x0020						// CDRF_NOTIFYITEMDRAW (アイテムの描画処理を親に通知)
+				}
+				
+				if ( NMLVCUSTOMDRAW(3) == 0x10001 ) {	// CDDS_ITEMREPAINT (描画前)
+					NMLVCUSTOMDRAW(12) = LvTextColor(mLv, NMLVCUSTOMDRAW(9))	// 文字色
+					NMLVCUSTOMDRAW(13) = LvBackColor(mLv, NMLVCUSTOMDRAW(9))	// 背景色
+					return 0x0002
+				}
+			}
+		}
+#endif
 		// カラムがクリックされた
-		if ( nmhdr(2) == 0xFFFFFF94 ) {				// LVN_COLUMNCLICK
+		if ( nmhdr(2) == 0xFFFFFF94 ) {	// LVN_COLUMNCLICK
 			dupptr   NMLISTVIEW, lparam, 12 + 32		// NMLISTVIEW 構造体
 			lviCol = NMLISTVIEW(4)						// クリックされたカラムのインデックス
 			if ( lviCol == lvSortcol ) {				// マークつきカラムなら
@@ -163,6 +196,15 @@
 *Initialize
 	gsel 0, -1
 	
+	// 一意な文字列メッセージを作成しておく
+	UWM_ALREADY_USED = RegisterWindowMessage("deflister_UWM_ALREADY_USED")
+	
+	// 二重起動を防ぐ
+	if ( IsUsedByMutex("DEFLISTER_MUTEX") ) {
+		sendmsg 0xFFFF, UWM_ALREADY_USED	// 二重起動が発生したことを知らせる
+		end : end							// 強制終了
+	}
+	
 	// マウス反転を取得
 	CheckMouseButton
 	return
@@ -172,15 +214,19 @@
 	cmdline = dirinfo(4)
 ;	cmdline = "hsed"
 	
-	if ( peek(cmdline) == 0 ) {
+	if ( strmid(cmdline, 0, 4) == "hsed" ) {
+		// hsed からの外部ツール呼び出し
+		bHsed = true
+		
+		// hsed があるかチェック
+		hsed_exist
+		if ( stat == false ) { dialog "外部エラー\nhsed3.exe が起動されていません。", 1, "deflister" : end }
+		
+	} else : if ( peek(cmdline) == 0 ) {
 		// 通常の起動
 		dialog "hsp;*.as", 16, "HSP3 Script File"
 		if ( stat == 0 ) { end }
 		cmdline = refstr
-		
-	} else : if ( strmid(cmdline, 0, 4) == "hsed" ) {
-		// hsed からの外部ツール呼び出し
-		bHsed = true
 		
 	} else {
 		// DOSからの引数付き呼び出し
@@ -191,11 +237,6 @@
 		if ( strsize < 0 ) { dialog "外部エラー\n指定されたファイルがありません。", 1, "deflister" : end }
 	}
 	
-	if ( bHsed ) {
-		// hsed があるかチェック
-		hsed_exist
-		if ( stat == false ) { dialog "外部エラー\nhsed3.exe が起動されていません。", 1, "deflister" : end }
-	}
 	return
 	
 // 変数の初期化
@@ -211,8 +252,10 @@
 	sdim deflistIdent			// 定義される識別子のリスト
 	dim  deflistType			// 定義される種類のリスト
 	sdim deflistScope			// 定義されるスコープのリスト
+	sdim deflistFile			// 定義のあるファイルのリスト
 	dim  deflistCount			// 定義の数
 	sdim stype
+	sdim filepath, 260
 	return
 	
 // ウィンドウの準備
@@ -252,10 +295,13 @@
 	LvSetExStyle   mLv, 0x0001 | 0x0020
 	
 	// カラムを追加
-	LvInsertColumn mLv, "行",     0, 0, 0
-	LvInsertColumn mLv, "識別子", 1, 0, 1
-	LvInsertColumn mLv, "種類",   2, 0, 2
-	LvInsertColumn mLv, "範囲",   3, 0, 3
+	LvInsertColumn mLv, "行",       0, 0, 0
+	LvInsertColumn mLv, "識別子",   1, 0, 1
+	LvInsertColumn mLv, "種類",     2, 0, 2
+	LvInsertColumn mLv, "範囲",     3, 0, 3
+#ifdef __LISTUP_INCLUDE__
+	LvInsertColumn mLv, "ファイル", 4, 0, 4
+#endif
 	
 	// ▲▼マークを表示
 ;	LvSetSortMark mLv, 0, 1
@@ -264,12 +310,23 @@
 	
 	// フォントの変更
 	ChangeControlFont infLv, "MS Gothic", 13
+	hFont = stat
+	
+#ifdef __LV_CUSTOMDRAW__
+	LvUseCustomMode mLv		// カスタムドローをする
+#endif
 	
 	return
 	
 // 識別子が選択された( iLv は与えられる )
 *LvSelectedIdent
 	if ( numrg(iLv, 0, deflistCount) == false ) { return }
+	
+#ifdef __LISTUP_INCLUDE__
+	if ( deflistFile(iLv) != deflistFile(0) ) {		// 元のファイルではない
+		return
+	}
+#endif
 	
 	// 位置を保存
 	posLn = deflistLn( iLv )
@@ -282,15 +339,48 @@
 *GetTargetScript
 	if ( bHsed ) {
 		hsed_GetActText script		// アクティブな Footy のテキストを取得
+#ifdef __LISTUP_INCLUDE__
+		filepath = "[hsed]"
+#endif
 	} else {
 		exist cmdline
 		sdim           script, strsize + 1
 		bload cmdline, script, strsize	// ファイルから取り出す
+#ifndef __LISTUP_INCLUDE__
+		filepath = getpath(cmdline, 8)
+#endif
 	}
+	return
 	
-	// 定義をリストアップする
-	TookDefinition script, deflistIdent, deflistLn, deflistType, deflistScope
+// 定義リストを更新する
+*UpdateDefinitionList
+	
+#ifdef __LISTUP_INCLUDE__
+	// ファイルパスを設定
+	if ( bHsed ) {
+		notesel script
+		notesave   HSED_TEMPFILE
+		noteunsel
+		filepath = HSED_TEMPFILE
+	} else {
+		filepath = cmdline
+	}
+	SearchFileEx "", filepath	// カレントポジションからの検索
+	filepath = refstr			// フルパスとして取得する
+	
+	// 再帰的に定義リストを作成
+	CreateDefinitionList filepath, 0, deflistIdent, deflistLn, deflistType, deflistScope, deflistFile
 	deflistCount = stat
+	
+	// テンプレートファイルを削除
+	if ( bHsed ) { exdel HSED_TEMPFILE }
+	
+#else
+	// 定義をリストアップする
+	TookDefinition script, 0, deflistIdent, deflistLn, deflistType, deflistScope, listInclude
+	deflistCount = stat
+	
+#endif
 	
 	// 行番号を埋め込む
 	SetLineNum script, script, "%3d "
@@ -299,35 +389,46 @@
 	objprm infScript(1), script
 	
 	// 位置を設定
-	posLn = deflistLn(0)
+	posLn = 0
 	return
 	
-// リストをアップデートする
-*UpdateDefinitionList
+// リストをリセットする
+*ResetDefinitionList
 	sendmsg infLv, 0x000B, false, 0		// WM_SETREDRAW
 	
 	// すべて除去
 	LvDeleteAll mLv
 	
+	return
+	
+// リストを更新する
+*UpdateListview
+	sendmsg infLv, 0x000B, false, 0		// WM_SETREDRAW
+	
 	if ( deflistCount <= 0 ) { return }
 	
 	// 項目をすべて追加
 	repeat deflistCount
-;		bLabel = (peek(note) == '*')
-;		ODLbInsertItem   lbID, note
-;		ODLbSetItemColor lbID, stat, 0x00FFFF * bLabel, cwhich_int(ntcnt & 1, 0xEEFFEE, 0xEEEEFF) ^ 0xAAAAAA * bLabel
-		
 		stype = MakeDefTypeString( deflistType(cnt) )
-		LvInsertItem mLv, strf("%d", deflistLn(cnt)), cnt
-		LvSetSub     mLv, deflistIdent(cnt), cnt, 1
-		LvSetSub     mLv,             stype, cnt, 2
-		LvSetSub     mLv, deflistScope(cnt), cnt, 3
-		
+		LvInsertItem  mLv, strf("%d", deflistLn(cnt)), cnt
+		LvSetSub      mLv, deflistIdent(cnt), cnt, 1
+		LvSetSub      mLv,             stype, cnt, 2
+		LvSetSub      mLv, deflistScope(cnt), cnt, 3
+#ifdef __LISTUP_INCLUDE__
+		LvSetSub      mLv, deflistFile (cnt), cnt, 4
+#endif
 	loop
 	
+#ifdef __LV_CUSTOMDRAW__
+	repeat deflistCount
+		LvCtTextColor mLv, cnt, 0x000000
+		LvCtBackColor mLv, cnt, cwhich(cnt & 1, 0xFFF2F2, 0xF2F2FF)
+	loop
+#endif
+	
 	// カラムの幅を適正にする
-	repeat 4
-		sendmsg infLv, 0x101E, cnt, -2
+	repeat 5
+		sendmsg infLv, 0x101E, cnt, -2	// LVM_SETCOLUMNWIDTH::lp = LVSCW_AUTOSIZE_USEHEADER
 	loop
 	
 	sendmsg infLv, 0x000B, true, 0		// WM_SETREDRAW
@@ -339,6 +440,14 @@
 		dialog "hsed3 からの呼び出しではありません。", 1, "deflister"
 		return
 	}
+	
+#ifdef __LISTUP_INCLUDE__
+	// 他のファイルならだめ
+	if ( deflistFile(iLv) != HSED_TEMPFILE ) {
+		dialog "include 先のファイルにはジャンプできません。", 1, "deflister"
+		return
+	}
+#endif
 	
 	gsel wID_Main, -1	// 動きが俊敏なように見せる
 	
@@ -353,5 +462,6 @@
 *BtnRenew
 	gosub *GetTargetScript
 	gosub *UpdateDefinitionList
+	gosub *UpdateListview
 	return
 	
