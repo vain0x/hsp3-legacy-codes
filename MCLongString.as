@@ -1,7 +1,7 @@
-// 長い文字列特化クラス
-
 #ifndef IG_MODULE_CLASS_LONG_STRING_AS
 #define IG_MODULE_CLASS_LONG_STRING_AS
+
+// 長い文字列特化クラス
 
 #module MCLongString mString, mStrlen, mCapacity, mExpand
 
@@ -27,9 +27,6 @@
 //------------------------------------------------
 #define global LongStr_delete(%1) delmod %1
 
-//##########################################################
-//        公開メソッド
-//##########################################################
 //------------------------------------------------
 // 文字列を設定する
 //------------------------------------------------
@@ -42,9 +39,9 @@
 // 文字列を後ろに追加する
 //------------------------------------------------
 #modfunc LongStr_add str src, int _lenToAppend
-	// local tmpLen
+	
 	if ( _lenToAppend ) { tmpLen = _lenToAppend } else { tmpLen = strlen(src) }
-//*
+	
 	// overflow しないように
 	if ( mCapacity <= mStrlen + tmpLen ) {
 		LongStr_expand thismod, tmpLen
@@ -54,11 +51,6 @@
 	poke mString, mStrlen, src
 	mStrlen += strsize
 	assert (strsize == tmpLen)
-/*/
-	mref tmpSrcPtr, 3	// 黒魔術：src へのポインタを得る
-	dupptr tmpSrc, tmpSrcPtr, tmpLen + 1, 2
-	LongStr_addv thismod, tmpSrc, tmpLen
-//*/
 	return
 	
 #modfunc LongStr_addv var src, int _lenToAppend
@@ -142,10 +134,6 @@
 //------------------------------------------------
 #modcfunc LongStr_length
 	return mStrlen
-	
-#define global LongStr_empty LongStr_length
-#define global LongStr_size  LongStr_length
-#define global LongStr_count LongStr_length
 
 //------------------------------------------------
 // 確保済みバッファの大きさを返す
@@ -162,15 +150,10 @@
 #modcfunc LongStr_dataPtr
 	return varptr(mString)
 	
-#modfunc longstr_dup var s
-	dup s, mString
-	return
-	
 //------------------------------------------------
 // [i] 初期化
 //------------------------------------------------
 #modfunc LongStr_clear
-;	memset mString, 0, mStrlen
 	poke mString
 	mStrlen = 0
 	return
@@ -178,29 +161,18 @@
 //------------------------------------------------
 // [i] 連結
 //------------------------------------------------
-#modfunc LongStr_chain var mv_from,  local data, local len
-	len = LongStr_length(mv_from)
-	dupptr data, LongStr_dataPtr(mv_from), len + 1, vartype("str")
+#modfunc LongStr_chain var src,  local data, local len
+	len = LongStr_length(src)
+	dupptr data, LongStr_dataPtr(src), len + 1, vartype("str")
 	LongStr_addv thismod, data, len
 	return
 	
 //------------------------------------------------
 // [i] 複写
 //------------------------------------------------
-#modfunc LongStr_copy var mv_from
+#modfunc LongStr_copy var src
 	LongStr_clear thismod
-	LongStr_chain thismod, mv_from
-	return
-	
-//------------------------------------------------
-// [i] コンテナ交換
-//------------------------------------------------
-#modfunc LongStr_exchange var mv2, local mvTemp
-	LongStr_new  mvTemp
-	LongStr_copy mvTemp,  thismod
-	LongStr_copy thismod, mv2
-	LongStr_copy mv2,     mvTemp
-	LongStr_delete mvTemp
+	LongStr_chain thismod, src
 	return
 	
 #global
