@@ -39,10 +39,7 @@
 	
 	if ( src_len ) { tmpLen = src_len } else { tmpLen = strlen(src) }
 	
-	// overflow ‚µ‚È‚¢‚æ‚¤‚É
-	if ( capacity_ <= len_ + tmpLen ) {
-		StrBuilder_expand_capacity thismod, tmpLen
-	}
+	StrBuilder_ensure_capacity thismod, len_ + tmpLen + 1
 	
 	// ‘‚«ž‚Þ (poke ‘¤‚ª src ‚ð strlen ‚·‚é•ª–³‘Ê‚ª‚ ‚é)
 	poke buf_, len_, src
@@ -54,9 +51,7 @@
 
 	if ( src_len ) { tmpLen = src_len } else { tmpLen = strlen(src) }
 	
-	if ( capacity_ <= len_ + tmpLen ) {
-		StrBuilder_expand_capacity thismod, tmpLen
-	}
+	StrBuilder_ensure_capacity thismod, len_ + tmpLen + 1
 	
 	// ‘‚«ž‚Þ ('\0' ‚ðŠÜ‚ß‚é)
 	memcpy buf_, src, tmpLen + 1, len_
@@ -73,10 +68,7 @@
 #modfunc StrBuilder_append_char int c
 	if ( c == 0 ) { return }
 	
-	// over-flow ‚µ‚È‚¢‚æ‚¤‚É
-	if ( capacity_ <= len_ + 1 ) {
-		StrBuilder_expand_capacity thismod, 1
-	}
+	StrBuilder_ensure_capacity thismod, len_ + 2
 	
 	// ‘‚«ž‚Þ
 	wpoke buf_, len_, c
