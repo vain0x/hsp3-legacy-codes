@@ -1,0 +1,190 @@
+// ODListbox.dll のサンプル (複雑になった)
+
+#include "ODListbox.as"
+
+// その他
+#include "sample.as"
+
+//##################################################################################################
+*main
+;	bgscr  wID_Buffer, 32, 32
+	buffer wID_Buffer, 32, 32
+	gsel 0, -1
+	screen wID_Main, ginfo(20), ginfo(21), 2, , , 320, 240
+	title "ODListbox.dll"
+	syscolor 15 : boxf : color
+	
+	// リストボックス作成前に割り込みを設定する
+	oncmd gosub *OnSize       , 0x0005		// WM_SIZE        (サイズが変更された)
+	oncmd gosub *OnDrawItem   , 0x002B		// WM_DRAWITEM    (オーナー描画の項目を描画するように要求)
+	oncmd gosub *OnMeasureItem, 0x002C		// WM_MEASUREITEM (オーナー描画の項目のサイズを設定・確認するよう要求)
+	oncmd gosub *OnCommand    , 0x0111		// WM_COMMAND (任意)
+	onexit goto *exit
+	
+	// 生成！
+	ODLbCreate hwnd, 20, 20, 280, 200
+	lbID     = stat						// ID で管理される
+	hListbox = ODLbGetHandle(lbID)		// ハンドルを取得
+	
+	hFont = CreateFontByHSP("MS Gothic", 25, 2 + 16)
+	ODLbSetFont lbID, hFont
+	
+	// 設定する
+	ODLbSetItemPadding lbID, 8, 2, 8		// 左右方向パディングを 8 にセット
+	ODLbSetItemHeight  lbID, 25				// 項目の高さを一括変更
+	ODLbSetItemMargin  lbID, 1				// この命令を使う場合は、必ず ODLbSetItemHeight を呼び出しておくこと！
+	ODLbSetMarginColor lbID, , 0xFFEEEE		// 基本マージン色を設定する
+	
+;	ODLbSetItemNum      lbID, true					// 真値 → 使用する
+;//	(×未実装！！)ODLbSetItemNumColor lbID, 0, 0xEEEEEE, 0x80FF80	// 数字色、背景色、境界色
+;	ODLbSetItemNumWidth lbID, 12					// 横幅
+	
+;	ODLbSetTextFormat  lbID, DT_RIGHT		// 右揃え
+	
+	// リストデータの作成
+	sdim colname, 64, 16
+		colname( 0) = "Deep Pink",   "Light Coral", "Dark Orange", "Golden Rod"
+		colname( 4) = "Pale Green",  "Lawn Green",  "Lime Green",  "Medium Sea Green"
+		colname( 8) = "Dodger Blue", "Royal Blue",  "Slate Blue",  "Medium Blue"
+		colname(12) = "Purple",      "Dark Violet", "Copper",      "Plum"
+		
+	dim bgcolor, 16
+		bgcolor( 0) = RGB(255,  20, 147), RGB(240, 128, 128), RGB(255, 140,   0), RGB( 218, 165,  32)
+		bgcolor( 4) = RGB(152, 251, 152), RGB(124, 252,   0), RGB( 50, 205,  50), RGB(  60, 179, 113)
+		bgcolor( 8) = RGB( 30, 144, 255), RGB( 65, 105, 225), RGB(106,  90, 205), RGB(   0,   0, 205)
+		bgcolor(12) = RGB(128,   0, 128), RGB(148,   0, 211), RGB(191,   0, 223), RGB( 221, 160, 221)
+		
+	dim itemColor
+		itemColor(0) = 0xEEEEFF	;RGB(240, 248, 255)	// AliceBlue
+		itemColor(1) = 0xEEFFEE	;RGB(255, 240, 245)	// LavenderBlush
+		itemColor(2) = 0xFFEEEE	;RGB(248, 240, 255)	// ???
+		
+	// リストに項目を追加
+	foreach colname
+		ODLbInsertItem    lbID, colname(cnt);, cnt	// 上から順に追加されていく
+		ODLbSetItemColor  lbID, cnt, 0x000000, itemColor( cnt \ length(itemColor) )
+		ODLbSetItemLParam lbID, cnt, bgcolor(cnt)
+		
+	;	if ( cnt \ length(itemColor) == length(itemColor) - 1 ) {
+	;		ODLbSetMarginColor lbID, cnt, 0x000000	// 個々のマージン色を変更できる
+	;	}
+	loop
+	
+	ODLbUseIcon lbID, true	// ↓でオーナー描画している
+	
+	gsel wID_Main, 1
+	
+	stop
+	
+*exit
+	// リソース解放
+	if ( hIcon ) { DestroyIcon hIcon }
+	DeleteFont hFont
+	
+	end : end			// 重ねる必要あり
+	
+*OnSize
+	MoveWindow hListbox, 20, 20, ginfo(12) - 40, ginfo(13) - 40, true
+	return
+	
+*OnDrawItem
+	// アイコンをHSPで描画してみる
+	dupptr _dis, lparam, 48		// DRAWITEMSTRUCT構造体
+	dup itemID,   _dis( 2)
+	dup itemAct,  _dis( 3)
+	dup itemSta,  _dis( 4)
+	dup hCtrl,    _dis( 5)
+	dup itemDC,   _dis( 6)
+	dup rcLeft,   _dis( 7)
+	dup rcTop,    _dis( 8)
+	dup rcRight,  _dis( 9)
+	dup rcBottom, _dis(10)
+	// ↑ODLbProc より先にやらないと問題が起きる
+	
+	// 標準のプロシージャ
+	ODLbProc lbID, iparam, wparam, lparam
+	ret = stat
+	
+	// アイコンをHSPで描画してみる
+	if ( (itemAct & 3) != 0 && ODLbIsUseIcon(lbID) ) {	// ODA_DRAWENTINE
+	;	logmes "OwnerDraw!"
+		
+		// バッファに描画
+		gsel wID_Buffer
+		color32 ODLbGetItemColor(lbID, itemID, 1) : boxf
+		
+		if ( itemSta & 1 ) {		// ODS_SELECTED
+			// なんかを描画
+			color32 ODLbGetLParam(lbID, itemID)	// bgcolor(itemID)
+		/*
+			circle 0, 0, ICON_SIZE, ICON_SIZE	// 丸くする
+		/*/
+			font "ＭＳ ゴシック", 18, 1
+			pos -2, -1 : mes "選"
+		//*/
+		}
+		color
+		
+		// コピーする
+		posx = rcLeft + ODLbGetPadding(lbID, 0) + SELMARKWIDTH + ODLbGetItemNumWidth()
+		posy = rcTop  + (ODLbGetItemHeight(lbID) - ICON_SIZE) / 2 + 1
+		
+		BitBlt itemDC, posx, posy, ICON_SIZE, ICON_SIZE, hdc, 0, 0, 0x00CC0020	// SRCCOPY ( 上書き )
+		
+		gsel wID_Main
+	}
+	
+	return ret
+	
+*OnMeasureItem
+	ODLbProc lbID, iparam, wparam, lparam
+	return stat
+	
+*OnCommand
+	if ( lparam == hListbox ) {
+		
+		switch HIWORD(wparam)
+		
+		case 1		// LBN_SELCHANGE (選択項目が変わった)
+			sendmsg hListbox, 0x0188, 0, 0	// LB_GETCURSEL (選択されている項目番号を取得)
+			iList = stat					// 選択項目番号
+			
+			// 選択されていた場合
+			if ( iList >= 0 ) {
+				// 画面の色を変える
+				color32 ODLbGetLParam(lbID, iList)	// bgcolor(iList)
+				boxf
+				
+				// 選択項目をタイトルバーに表示
+				sdim szItem, 256
+				sendmsg hListbox, 0x0189, iList, varptr(szItem)	// LB_GETTEXT
+				title "ODListbox.dll - "+ szItem
+			}
+;			if ( iList == 3 ) {
+;				ODLbClearItem lbID
+;			}
+			swbreak
+			
+		case ODLBN_CREATE			// 生成される直前
+			lbID = LOWORD(wparam)		// wparam の下位ワードに ID が渡される
+		;	logmes "lbID = "+ lbID		// 表示する
+			swbreak
+			
+		case ODLBN_ITEMINSERTED		// 項目が追加された
+		;	logmes "Item Inserted ("+ LOWORD(wparam) +")"
+			swbreak
+			
+		case ODLBN_ITEMDELETED		// 項目が削除された
+		;	logmes "Item Deleted ("+ LOWORD(wparam) +")"
+			
+			// 背景色を割り当てなおす
+			foreach colname
+				ODLbSetItemColor lbID, cnt, 0x000000, itemColor( cnt \ length(itemColor) )
+			loop
+			swbreak
+			
+		swend
+	}
+	return
+	
+	
