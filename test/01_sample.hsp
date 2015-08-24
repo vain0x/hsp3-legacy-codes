@@ -1,29 +1,36 @@
-#include "../MCLongString.as"
+#include "../StrBuilder.hsp"
 
 // サンプル
 
-#define LongStr_print(%1) %t_ls LongStr_tobuf (%1), %i : mes %o
-
-	mes "LongStr sample"
+	mes "StrBuilder sample"
 	
-	// LongStr インスタンス ls を構築
-	LongStr_new ls
+	// StrBuilder インスタンス sb を構築
+	StrBuilder_new sb
 	
-	// *_add thismod, str : 文字列 str を末尾に連結する
-	LongStr_add ls, "Hello, world!\n"
+	// *_append thismod, str : 文字列 str を末尾に連結する
+	StrBuilder_append sb, "Hello, world!\n"
 	
-	// *_addv thismod, var : 文字列変数 var の内容を末尾に連結する (add より速い)
+	// *_append_v thismod, var : 文字列変数 var の内容を末尾に連結する (add より速い)
 	sGreet = "Good Evening, world!\n"
-	LongStr_addv ls, sGreet
+	StrBuilder_append_v sb, sGreet
 	
-	// *_tobuf thismod, var : 内容を文字列型変数 var に書き込む
-	LongStr_tobuf ls, buf
+	// *_copy_to thismod, var : 内容を文字列型変数 var に書き込む
+	StrBuilder_copy_to sb, buf
 	mes buf
 	
 	// *_erase_back thismod, N : 末尾の N バイトを取り除く
-	LongStr_erase_back ls, 8
-	LongStr_add ls, "you!"
+	StrBuilder_erase_back sb, 8
+	StrBuilder_append sb, "you!"
 	
-	LongStr_print ls
-	
+	StrBuilder_print sb
 	stop
+	
+#module
+
+// *_print thismod : 内容を mes する
+#deffunc StrBuilder_print var self,  local buf
+	StrBuilder_dup self, buf
+	mes buf
+	return
+
+#global
