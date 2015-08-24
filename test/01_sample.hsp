@@ -1,0 +1,29 @@
+#include "../MCLongString.as"
+
+// サンプル
+
+#define LongStr_print(%1) %t_ls LongStr_tobuf (%1), %i : mes %o
+
+	mes "LongStr sample"
+	
+	// LongStr インスタンス ls を構築
+	LongStr_new ls
+	
+	// *_add thismod, str : 文字列 str を末尾に連結する
+	LongStr_add ls, "Hello, world!\n"
+	
+	// *_addv thismod, var : 文字列変数 var の内容を末尾に連結する (add より速い)
+	sGreet = "Good Evening, world!\n"
+	LongStr_addv ls, sGreet
+	
+	// *_tobuf thismod, var : 内容を文字列型変数 var に書き込む
+	LongStr_tobuf ls, buf
+	mes buf
+	
+	// *_erase_back thismod, N : 末尾の N バイトを取り除く
+	LongStr_erase_back ls, 8
+	LongStr_add ls, "you!"
+	
+	LongStr_print ls
+	
+	stop
