@@ -44,7 +44,7 @@
 #define global HSED_TEMPFILE (ownpath +"\\"+ HSED_TEMPFILENAME)
 #define global HSED_TEMPFILENAME "hsedtmp.hsp"
 
-#define STR_INIPATH (ownpath +"\\deflister.ini")
+#define STR_INIPATH (dir_exe2 +"\\deflister.ini")
 
 #undef SetStyle
 #undef ChangeVisible

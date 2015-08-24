@@ -13,12 +13,12 @@
 #include "Mo/flexFrame.as"
 #include "Mo/GetFontOfHSP.as"
 #include "Mo/hsedutil.as"
-#include "Mo/ini.as"
 #include "Mo/IsMouseButtonSwapped.as"
 #include "Mo/SysCursor.as"
 #include "Mo/LexCmdline.as"
 #include "Mo/Lvmod.as"
 #include "Mo/mutex.as"
+#include "Mo/ini.hsp"
 
 #include "deflister.as"
 #include "MCDeflist.as"
@@ -86,13 +86,13 @@
 *LWriteSetOfEnd
 	GetClientRect hwnd, varptr(rc)
 	
-	WriteIntIni "Window", "cx", rc(2) - rc(0)
-	WriteIntIni "Window", "cy", rc(3) - rc(1)
-	WriteIntIni "Window", "px", rc(0)
-	WriteIntIni "Window", "py", rc(1)
+	ini_puti cfg, "Window", "cx", rc(2) - rc(0)
+	ini_puti cfg, "Window", "cy", rc(3) - rc(1)
+	ini_puti cfg, "Window", "px", rc(0)
+	ini_puti cfg, "Window", "py", rc(1)
 	
-	WriteIntIni "Editbox", "Height",            EditHeight
-	WriteIntIni "Editbox", "cntShowLineBefore", cntShowLineBefore
+	ini_puti cfg, "Editbox", "Height",            EditHeight
+	ini_puti cfg, "Editbox", "cntShowLineBefore", cntShowLineBefore
 	
 	return
 	
@@ -153,7 +153,7 @@
 // 変数の初期化
 //------------------------------------------------
 *LClearVariable
-	SetIniName STR_INIPATH
+	ini_new cfg, STR_INIPATH
 	
 	dim  rc, 4
 	dim  infScript, 2
@@ -161,8 +161,8 @@
 	dim  infLv, 2
 	dim  iLv
 	dim  iDL					// Index of Active Definition List
-	EditHeight        = GetIntIni("Editbox", "Height", 100)
-	cntShowLineBefore = GetIntIni("EditBox", "cntShowLineBefore", 1)
+	EditHeight        = ini_geti(cfg, "Editbox", "Height", 100)
+	cntShowLineBefore = ini_geti(cfg, "EditBox", "cntShowLineBefore", 1)
 	
 	sdim script, 0x1FFF			// スクリプト表示部分のバッファ
 	dim  deflistLn				// 定義がある行番号
@@ -175,10 +175,11 @@
 	sdim filepath, MAX_PATH
 	sdim filename, MAX_PATH
 	
-	sFormatLineNumber = GetStrIni("String", "FormatLineNumber", , "%3d|")
+	// ini からデータロード
+	sFormatLineNumber = ini_gets(cfg, "String", "FormatLineNumber", "%3d|")
 	
-	bInclude    = GetIntIni("Opt", "bInclude",    false)
-	bCustomDraw = GetIntIni("Opt", "bCustomDraw", true)
+	bInclude    = ini_geti(cfg, "Opt", "bInclude",    false)
+	bCustomDraw = ini_geti(cfg, "Opt", "bCustomDraw", true)
 	
 	if ( bInclude ) {
 		if ( bHsed ) { gosub *LGetCommonPath }
@@ -190,16 +191,16 @@
 // ウィンドウの準備
 //------------------------------------------------
 *LSetWindow
-	winsize(0) = GetIntIni("Window", "cx", 380)
-	winsize(1) = GetIntIni("Window", "cy", 360)
+	winsize(0) = ini_geti(cfg, "Window", "cx", 380)
+	winsize(1) = ini_geti(cfg, "Window", "cy", 360)
 	
 	screen IDW_MAIN, ginfo(20), ginfo(21), 2 + 8, ,, winsize(0), winsize(1)
 		title "deflister"
 		SetStyle hwnd, -16, 0x40000		// 可変枠
 		syscolor 15 : boxf : color
 		
-		// エディットボックス
-		font IniLoad("Editbox", "FontFamily", , "MS Gothic"), GetIntIni("Editbox", "FontSize", 12)
+		// Script-Viewer
+		font ini_gets(cfg, "Editbox", "FontFamily", msgothic), ini_geti(cfg, "Editbox", "FontSize", 12)
 		objmode 2
 		pos 5, 5 : mesbox script, ginfo(20), EditHeight, 4 : infScript = objinfo(stat, 2), stat
 		
@@ -244,7 +245,7 @@
 ;	lvSortcol = 0
 	
 	// フォントの変更
-	ChangeControlFont infLv, GetStrIni("Listview", "FontFamily", , msgothic), GetIntIni("Listview", "FontSize", 13)
+	ChangeControlFont infLv, ini_gets(cfg, "Listview", "FontFamily", msgothic), ini_geti(cfg, "Listview", "FontSize", 13)
 	hFont = stat
 	
 	if ( bCustomDraw ) {
