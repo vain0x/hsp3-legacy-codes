@@ -6,6 +6,7 @@
 #module StrBuilder buf_, len_, capacity_
 
 #define BufSize_Default 4096
+#define HSPVAR_FLAG_STR 2
 
 //------------------------------------------------
 // [i] 構築
@@ -37,7 +38,12 @@
 //------------------------------------------------
 #modfunc StrBuilder_append str src, int src_len
 	
-	if ( src_len ) { stt_strsize = src_len } else { stt_strsize = strlen(src) }
+	if ( src_len ) {
+		stt_strsize = src_len
+		assert src_len == strlen(src)
+	} else {
+		stt_strsize = strlen(src)
+	}
 	
 	StrBuilder_ensure_capacity thismod, len_ + stt_strsize
 	
@@ -49,7 +55,13 @@
 	
 #modfunc StrBuilder_append_v var src, int src_len
 
-	if ( src_len ) { stt_strsize = src_len } else { stt_strsize = strlen(src) }
+	assert vartype(src) == HSPVAR_FLAG_STR
+	if ( src_len ) {
+		stt_strsize = src_len
+		assert src_len == strlen(src)
+	} else {
+		stt_strsize = strlen(src)
+	}
 	
 	StrBuilder_ensure_capacity thismod, len_ + stt_strsize
 	
@@ -68,6 +80,8 @@
 // 文字を連結する
 //------------------------------------------------
 #modfunc StrBuilder_append_char int c
+
+	assert 0 <= c && c <= 0xFF
 	if ( c == 0 ) { return }
 	
 	StrBuilder_ensure_capacity thismod, len_ + 1
@@ -81,7 +95,8 @@
 // 文字列を後ろから削る
 //------------------------------------------------
 #modfunc StrBuilder_erase_back int size
-	if ( size <= 0 ) { return }
+
+	assert size >= 0
 	
 	len_ = limit(len_ - size, 0, len_)
 	poke buf_, len_, 0
@@ -91,6 +106,9 @@
 // バッファを確保する
 //------------------------------------------------
 #modfunc StrBuilder_ensure_capacity int new_capa
+
+	assert new_capa >= 0
+	
 	if ( capacity_ < new_capa ) {
 		capacity_ = limit(new_capa, capacity_ * 2, 0x7FFFFFFF)
 		memexpand buf_, capacity_ + 1
@@ -101,7 +119,8 @@
 // 文字列を変数バッファに複写する
 //------------------------------------------------
 #modfunc StrBuilder_copy_to var buf
-	if ( vartype( buf ) != vartype("str") ) {
+
+	if ( vartype(buf) != HSPVAR_FLAG_STR ) {
 		sdim      buf, len_ + 1
 	} else {
 		memexpand buf, len_ + 1
@@ -145,7 +164,7 @@
 	local src_buf, local len
 	
 	len = StrBuilder_length(src)
-	dupptr src_buf, StrBuilder_data_ptr(src), len + 1, vartype("str")
+	dupptr src_buf, StrBuilder_data_ptr(src), len + 1, HSPVAR_FLAG_STR
 	StrBuilder_append_v thismod, src_buf, len
 	return
 	
