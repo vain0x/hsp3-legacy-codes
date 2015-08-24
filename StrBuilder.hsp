@@ -3,20 +3,19 @@
 
 //capacity: バッファに格納できるバイト数、null終端は除く。
 
-#module StrBuilder buf_, len_, capacity_, expand_size_
+#module StrBuilder buf_, len_, capacity_
 
 #define BufSize_Default 4096
 
 //------------------------------------------------
 // [i] 構築
 //------------------------------------------------
-#define global StrBuilder_new(%1, %2 = -1, %3 = -1) \
-	newmod %1, StrBuilder@, %2, %3
+#define global StrBuilder_new(%1, %2 = 0) \
+	newmod %1, StrBuilder@, %2
 
-#modinit int def_size, int expand_size
+#modinit int def_size
 	
-	capacity_    = limit(def_size,    BufSize_Default, def_size)
-	expand_size_ = limit(expand_size, BufSize_Default, expand_size)
+	capacity_ = limit(def_size, BufSize_Default, def_size)
 	sdim buf_, capacity_ + 1
 	return
 	
@@ -91,13 +90,13 @@
 //------------------------------------------------
 #modfunc StrBuilder_ensure_capacity int new_capa
 	if ( capacity_ < new_capa ) {
-		capacity_ = new_capa + expand_size_
+		capacity_ = limit(new_capa, capacity_ * 2, 0x7FFFFFFF)
 		memexpand buf_, capacity_ + 1
 	}
 	return
 	
 #modfunc StrBuilder_expand_capacity int size
-	capacity_ += size + expand_size_
+	capacity_ +=size
 	memexpand buf_, capacity_ + 1
 	return
 	
