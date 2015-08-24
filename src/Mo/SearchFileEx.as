@@ -3,7 +3,7 @@
 #ifndef __SEARCH_FILE_EX_MODULE_AS__
 #define __SEARCH_FILE_EX_MODULE_AS__
 
-#include "Mo/StrSet.as"
+#include "StrSet.as"
 
 #module SearchFileEx_mod
 

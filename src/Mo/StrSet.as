@@ -1,7 +1,7 @@
 // StrSet ÉÇÉWÉÖÅ[Éã
 
-#ifndef __MODULE_STR_SET_AS__
-#define __MODULE_STR_SET_AS__
+#ifndef __MODULE_STRSET_AS__
+#define __MODULE_STRSET_AS__
 
 #include "strutil.as"
 

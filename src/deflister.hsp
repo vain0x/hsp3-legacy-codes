@@ -1,14 +1,16 @@
 // ユーザ定義命令・関数をリストアップ
 
 #packopt name "deflister.exe"
-#packopt hide 1
+#packopt hide    1
+#packopt orgpath 1
 
 #runtime "hsp3mt"
 
-;	#define global __LISTUP_INCLUDE__
+	#define global __LISTUP_INCLUDE__
 	#define global __LV_CUSTOMDRAW__
 
 #include "hsedsdk.as"
+#include "Mo/DialogEx.as"
 #include "Mo/flexFrame.as"
 #include "Mo/GetFontOfHSP.as"
 #include "Mo/IsMouseButtonSwapped.as"
@@ -16,6 +18,7 @@
 #include "Mo/Lvmod.as"
 #include "Mo/mutex.as"
 
+#include "mod_deflist.as"
 #include "deflister.as"
 
 //##################################################################################################
@@ -27,7 +30,7 @@
 	gosub *ClearVariable	// 変数の初期化
 	gosub *SetWindow		// スクリーンを作成
 	
-	gosub *GetTargetScript		// 対象スクリプトを取得
+	gosub *GetTargetFilePath	// 対象ファイルのパスを取得
 	gosub *UpdateDefinitionList	// 定義リストの更新
 	gosub *UpdateListview		// リストビューの更新
 	
@@ -41,19 +44,33 @@
 		
 		oncmd gosub *OnAlreadyUsed, UWM_ALREADY_USED	// 二重起動された
 		
-	onexit gosub *exit		// 終了時
+	onexit  goto *exit		// 終了時
+	onerror goto *error		// エラー発生時
 	
 	gsel wID_Main, 1
 	stop
 	
 *exit
-	DeleteFont hFont
-	CloseMutex
-	
+	gosub *SettleProgram
 	oncmd   false
 	onexit  false
 	onerror false
 	PostMessage hwnd, 0x0010, 0, 0
+	return
+	
+// エラー発生時
+*error
+	onerror false		// 無限割り込みを防ぐ
+	gosub *SettleProgram
+	end : end
+	
+// 後始末
+*SettleProgram
+	DeleteFont hFont
+	CloseMutex
+	if ( peek(curdir) ) { chdir curdir }						// カレントポジションを起動時のモノに戻す
+	if ( bDragging )    { ClipCursor NULL : bDragging = false }	// マウスの移動範囲を解放する
+	if ( bHsed )        { exdel HSED_TEMPFILE }					// 一時ファイルの削除
 	return
 	
 //##################################################################################################
@@ -133,68 +150,15 @@
 	}
 	return
 	
-// マウスが仮想スプリッター上を動いた
-*OnMouseMove
-	if ( boxin( 5, 5 + EditHeight, ginfo(12) - 10, 10 + EditHeight, mousex2, mousey2 ) ) {
-		SetCursor LoadCursor(IDC_SIZENS)	// 上下
-	}
-	return
-	
-// ドラッグ開始
-*OnLBtnDown
-	if ( boxin( 5, 5 + EditHeight, ginfo(12) - 10, 10 + EditHeight, mousex2, mousey2 ) ) {
-		bDragging   = true					// ドラッグ開始フラッグ
-		ptDragStart = ginfo(0), ginfo(1)	// 位置を記憶する
-		
-		// 無限ループ
-		while
-			
-			getkey bLBtnDown, GETKEY_LBTN
-			if ( bLBtnDown == false ) {
-				_break
-			}
-			
-			// 変更し続ける
-			SetCursor LoadCursor(IDC_SIZENS)
-			
-			ptDragEnd   = ginfo(0), ginfo(1)			// 位置を記憶する
-			sendmsg hwnd, UWM_SPLITTERMOVE, 0, 0		// 通知する
-			ptDragStart = ptDragEnd(0), ptDragEnd(1)	// 始点を変更する
-			
-			await 0
-			
-		wend
-		
-		// ドロップされた
-		if ( bDragging ) {			// ドロップ
-			bDragging = false						// 終了
-			ptDragEnd = ginfo(0), ginfo(1)			// 位置を記憶する
-			
-			sendmsg hwnd, UWM_SPLITTERMOVE, 0, 0	// 終了を通知する
-		}
-	}
-	return
-	
-// 仮想スプリッタが動いた
-*OnSplitterMove
-	EditHeight += ptDragEnd(1) - ptDragStart(1)		// 変わる
-	
-	if ( EditHeight < 60 ) {
-		EditHeight =  60
-		mouse , ginfo(5) + (ginfo(11) - ginfo(13)) + 5 + EditHeight + 2
-	} else : if ( (ginfo(13) - 80) < EditHeight ) {
-		EditHeight = ginfo(13) - 80
-		mouse , ginfo(5) + (ginfo(11) - ginfo(13)) + 5 + EditHeight + 2
-	}
-	
-	gosub *OnSize
-	return
-	
 //##################################################################################################
 //        サブ・ルーチン
 //##################################################################################################
 *Initialize
 	gsel 0, -1
+	
+	// カレントディレクトリを取得する
+	sdim curdir, MAX_PATH
+	curdir = dirinfo(0)
 	
 	// 一意な文字列メッセージを作成しておく
 	UWM_ALREADY_USED = RegisterWindowMessage("deflister_UWM_ALREADY_USED")
@@ -211,8 +175,9 @@
 	
 // コマンドラインを処理する
 *ProcCmdline
+	sdim cmdline, MAX_PATH
 	cmdline = dirinfo(4)
-;	cmdline = "hsed"
+	cmdline = "hsed"
 	
 	if ( strmid(cmdline, 0, 4) == "hsed" ) {
 		// hsed からの外部ツール呼び出し
@@ -224,7 +189,8 @@
 		
 	} else : if ( peek(cmdline) == 0 ) {
 		// 通常の起動
-		dialog "hsp;*.as", 16, "HSP3 Script File"
+		FileSelDlg "HSP3 Script File (*.hsp;*.as)@*.hsp;*.as;hsptmp@@", NULL, false, OFN_HIDEREADONLY | OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NONETWORKBUTTON
+;		dialog "hsp;*.as", 16, "HSP3 Script File"
 		if ( stat == 0 ) { end }
 		cmdline = refstr
 		
@@ -241,21 +207,28 @@
 	
 // 変数の初期化
 *ClearVariable
+	dim  rc, 4
 	dim  infScript, 2
 	dim  infBtns, 2, 2			// 各種ボタン
 	dim  infLv, 2
 	dim  iLv
+	dim  iDL					// Index of Definition List
 	EditHeight = 100
 	
 	sdim script, 0x1FFFF		// スクリプト
-	dim  deflistLn				// 定義がある行番号のリスト
-	sdim deflistIdent			// 定義される識別子のリスト
-	dim  deflistType			// 定義される種類のリスト
-	sdim deflistScope			// 定義されるスコープのリスト
-	sdim deflistFile			// 定義のあるファイルのリスト
+	dim  deflistLn				// 定義がある行番号
+	sdim deflistIdent			// 定義される識別子
+	dim  deflistType			// 定義される種類
+	sdim deflistScope			// 定義されるスコープ
 	dim  deflistCount			// 定義の数
 	sdim stype
-	sdim filepath, 260
+	sdim filepath, MAX_PATH
+	sdim filename, MAX_PATH
+	
+#ifdef __LISTUP_INCLUDE__
+	if ( bHsed ) { gosub *GetCommonPath }
+#endif
+	
 	return
 	
 // ウィンドウの準備
@@ -291,17 +264,15 @@
 	
 // リストビューを初期化
 *LvInitialize
-	SetStyle     infLv, -20, 0x0200			// 枠
-	LvSetExStyle   mLv, 0x0001 | 0x0020
+	SetStyle   infLv, -20, 0x0200		// 枠
+	LvSetExStyle mLv, 0x0001 | 0x0020
 	
 	// カラムを追加
 	LvInsertColumn mLv, "行",       0, 0, 0
 	LvInsertColumn mLv, "識別子",   1, 0, 1
 	LvInsertColumn mLv, "種類",     2, 0, 2
 	LvInsertColumn mLv, "範囲",     3, 0, 3
-#ifdef __LISTUP_INCLUDE__
 	LvInsertColumn mLv, "ファイル", 4, 0, 4
-#endif
 	
 	// ▲▼マークを表示
 ;	LvSetSortMark mLv, 0, 1
@@ -320,80 +291,70 @@
 	
 // 識別子が選択された( iLv は与えられる )
 *LvSelectedIdent
-	if ( numrg(iLv, 0, deflistCount) == false ) { return }
-	
-#ifdef __LISTUP_INCLUDE__
-	if ( deflistFile(iLv) != deflistFile(0) ) {		// 元のファイルではない
-		return
-	}
-#endif
+	if ( numrg(iLv, 0, DefList_GetCount(mdeflist(iDL)) - 1 ) == false ) { return }
 	
 	// 位置を保存
-	posLn = deflistLn( iLv )
+	posLn = DefList_GetLn( mdeflist(iDL), iLv )
 	
 	// スクロールする
-	ScrollWindow infScript, 1, limit(posLn - 1, 0, 0x7FFFFFFF)		// SB_VERT
+	ScrollWindow infScript, 1, limit(posLn - 1, 0, MAX_INT)		// SB_VERT
 	return
 	
-// 対象のスクリプトを取得する
-*GetTargetScript
-	if ( bHsed ) {
-		hsed_GetActText script		// アクティブな Footy のテキストを取得
+// common フォルダのフルパスを取得
+*GetCommonPath
 #ifdef __LISTUP_INCLUDE__
-		filepath = "[hsed]"
-#endif
-	} else {
-		exist cmdline
-		sdim           script, strsize + 1
-		bload cmdline, script, strsize	// ファイルから取り出す
-#ifndef __LISTUP_INCLUDE__
-		filepath = getpath(cmdline, 8)
-#endif
+	if ( bHsed ) {
+		// hsed のフルパスに common をくっつける
+		AppendSearchPath getpath(hsed_GetHsedPath(), 32) +"common"
 	}
+#endif
+	return
+	
+// 対象のスクリプトのパスを取得する
+*GetTargetFilePath
+	if ( bHsed ) {
+		hsed_GetActText                script		// アクティブな Footy のテキストを取得
+		bsave           HSED_TEMPFILE, script		// 一時ファイルを作る
+		GetFullPathName HSED_TEMPFILE, filepath		// フルパスとして取得する
+	} else {
+		GetFullPathName cmdline, filepath	// フルパスとして取得する
+	}
+	
 	return
 	
 // 定義リストを更新する
 *UpdateDefinitionList
 	
 #ifdef __LISTUP_INCLUDE__
-	// ファイルパスを設定
-	if ( bHsed ) {
-		notesel script
-		notesave   HSED_TEMPFILE
-		noteunsel
-		filepath = HSED_TEMPFILE
-	} else {
-		filepath = cmdline
-	}
-	SearchFileEx "", filepath	// カレントポジションからの検索
-	filepath = refstr			// フルパスとして取得する
+	// 検索パスに追加
+	AppendSearchPath getpath(filepath, 32)
 	
 	// 再帰的に定義リストを作成
-	CreateDefinitionList filepath, 0, deflistIdent, deflistLn, deflistType, deflistScope, deflistFile
-	deflistCount = stat
-	
-	// テンプレートファイルを削除
-	if ( bHsed ) { exdel HSED_TEMPFILE }
-	
+	CreateDefinitionList mdeflist, filepath
 #else
-	// 定義をリストアップする
-	TookDefinition script, 0, deflistIdent, deflistLn, deflistType, deflistScope, listInclude
-	deflistCount = stat
-	
+	// 定義リストを作成する
+	newmod mdeflist, deflist, filepath
 #endif
 	
-	// 行番号を埋め込む
-	SetLineNum script, script, "%3d "
-	
-	// スクリプトを更新
-	objprm infScript(1), script
+	gosub *ResetScriptBox
 	
 	// 位置を設定
 	posLn = 0
 	return
 	
+// スクリプトを更新する
+*ResetScriptBox
+	DefList_GetScript mdeflist(iDL), script
+	
+	// 行番号を埋め込む
+	SetLinenum script, script, "%3d "
+	
+	// スクリプトを更新
+	objprm infScript(1), script
+	return
+	
 // リストをリセットする
-*ResetDefinitionList
+*ResetListview
 	sendmsg infLv, 0x000B, false, 0		// WM_SETREDRAW
 	
 	// すべて除去
@@ -403,26 +364,42 @@
 	
 // リストを更新する
 *UpdateListview
-	sendmsg infLv, 0x000B, false, 0		// WM_SETREDRAW
+	
+#ifdef __LISTUP_INCLUDE__
+	old_iDL = iDL
+	foreach mdeflist
+		iDL = cnt
+#endif
+	
+	// 項目をすべて追加
+	filename     = DefList_GetFileName( mdeflist(iDL) )
+	deflistCount = DefList_GetCount   ( mdeflist(iDL) )
 	
 	if ( deflistCount <= 0 ) { return }
 	
-	// 項目をすべて追加
+	sendmsg infLv, 0x000B, false, 0		// WM_SETREDRAW
+	
 	repeat deflistCount
-		stype = MakeDefTypeString( deflistType(cnt) )
-		LvInsertItem  mLv, strf("%d", deflistLn(cnt)), cnt
-		LvSetSub      mLv, deflistIdent(cnt), cnt, 1
-		LvSetSub      mLv,             stype, cnt, 2
-		LvSetSub      mLv, deflistScope(cnt), cnt, 3
-#ifdef __LISTUP_INCLUDE__
-		LvSetSub      mLv, deflistFile (cnt), cnt, 4
-#endif
+		DefList_Get mdeflist(iDL), cnt, deflistIdent, deflistLn, deflistType, deflistScope
+		stype = MakeTypeString( deflistType )
+		
+		LvInsertItem  mLv, strf("%d", deflistLn) : iLvItem = stat
+		LvSetSub      mLv, deflistIdent, iLvItem, 1
+		LvSetSub      mLv,        stype, iLvItem, 2
+		LvSetSub      mLv, deflistScope, iLvItem, 3
+		LvSetSub      mLv,     filename, iLvItem, 4
 	loop
 	
+#ifdef __LISTUP_INCLUDE__
+	loop
+	iDL = old_iDL
+#endif
+	
 #ifdef __LV_CUSTOMDRAW__
-	repeat deflistCount
+	sendmsg infLv, 0x1004, 0, 0		// LVM_GETITEMCOUNT
+	repeat stat
 		LvCtTextColor mLv, cnt, 0x000000
-		LvCtBackColor mLv, cnt, cwhich(cnt & 1, 0xFFF2F2, 0xF2F2FF)
+		LvCtBackColor mLv, cnt, cwhich_int(cnt & 1, 0xFFF2F2, 0xF2F2FF)
 	loop
 #endif
 	
@@ -443,7 +420,7 @@
 	
 #ifdef __LISTUP_INCLUDE__
 	// 他のファイルならだめ
-	if ( deflistFile(iLv) != HSED_TEMPFILE ) {
+	if ( DefList_GetFileName( deflist(iDL) ) != HSED_TEMPFILE ) {
 		dialog "include 先のファイルにはジャンプできません。", 1, "deflister"
 		return
 	}
@@ -451,8 +428,8 @@
 	
 	gsel wID_Main, -1	// 動きが俊敏なように見せる
 	
-	// 指定行に移動
-	hsed_setcaretline hsed_activeFootyID(), deflistLn( iLv ) + 1	// hsed の行番号は１ベース
+	// 指定行に移動( hsed の行番号は１ベース )
+	hsed_setcaretline hsed_activeFootyID(), DefList_GetLn( mdeflist(iDL), iLv ) + 1
 	
 	// 終了する
 	PostMessage hwnd, 0x0010, 0, 0
@@ -460,8 +437,71 @@
 	
 // 更新する
 *BtnRenew
-	gosub *GetTargetScript
+	delmodall mdeflist
+	
+	gosub *ResetListview
+	gosub *GetTargetFilePath
 	gosub *UpdateDefinitionList
 	gosub *UpdateListview
+	return
+	
+//##############################################################################
+//        マウスＤ＆Ｄ関係
+//##############################################################################
+// マウスが仮想スプリッター上を動いた
+*OnMouseMove
+	if ( boxin( 5, 5 + EditHeight, ginfo(12) - 10, 10 + EditHeight, mousex2, mousey2 ) ) {
+		SetCursor LoadCursor(IDC_SIZENS)	// 上下
+	}
+	return
+	
+// ドラッグ開始
+*OnLBtnDown
+	if ( boxin( 5, 5 + EditHeight, ginfo(12) - 10, 10 + EditHeight, mousex2, mousey2 ) ) {
+		// 開始時の位置を記憶する
+		bDragging   = true					// ドラッグ開始フラッグ
+		ptDragStart = ginfo(0), ginfo(1)	// 位置を記憶する
+		
+		// マウスの移動範囲を制限する
+		rc(0) = ginfo(4) + 10
+		rc(1) = ginfo(5) + ( 10 + 60 )
+		rc(2) = ginfo(6) - 10
+		rc(3) = ginfo(7) - ( 40 + 80 )
+		ClipCursor varptr(rc)
+		
+		// 無限ループ
+		while
+			getkey bLBtnDown, GETKEY_LBTN
+			if ( bLBtnDown == false ) {
+				_break
+			}
+			
+			await 0
+			
+			// 変更し続ける
+			SetCursor LoadCursor(IDC_SIZENS)
+			
+			ptDragEnd   = ginfo(0), ginfo(1)			// 位置を記憶する
+			sendmsg hwnd, UWM_SPLITTERMOVE, 0, 0		// 通知する
+			ptDragStart = ptDragEnd(0), ptDragEnd(1)	// 始点を変更する
+			
+		wend
+		
+		// ドロップされた
+		if ( bDragging ) {			// ドロップ
+			ClipCursor NULL							// 移動制限を解放
+			bDragging = false						// 終了
+			ptDragEnd = ginfo(0), ginfo(1)			// 位置を記憶する
+			
+			sendmsg hwnd, UWM_SPLITTERMOVE, 0, 0	// 終了を通知する
+		}
+	}
+	return
+	
+// 仮想スプリッタが動いた
+*OnSplitterMove
+	EditHeight += ptDragEnd(1) - ptDragStart(1)		// 変わる
+	
+	gosub *OnSize
 	return
 	

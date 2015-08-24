@@ -20,12 +20,10 @@
 #define false 0
 #define NULL  0
 
-#ifndef CreateMutex
- #uselib "kernel32.dll"
- #func   CreateMutex@mutexmod  "CreateMutexA" nullptr,int,sptr
- #cfunc  GetLastError@mutexmod "GetLastError"
- #func   CloseHandle@mutexmod  "CloseHandle"  int
-#endif
+#uselib "kernel32.dll"
+#func   CreateMutex@mutexmod  "CreateMutexA" nullptr,int,sptr
+#cfunc  GetLastError@mutexmod "GetLastError"
+#func   CloseHandle@mutexmod  "CloseHandle"  int
 
 #deffunc CloseMutex		// Mutex ”jŠü
 	if ( hMutex ) { CloseHandle hMutex : hMutex = NULL }

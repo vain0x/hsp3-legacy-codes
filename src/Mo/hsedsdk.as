@@ -121,26 +121,26 @@
 #deffunc hsed_uninitduppipe
 	if hReadPipe :  CloseHandle hReadPipe :  hReadPipe  = 0
 	if hWritePipe : CloseHandle hWritePipe : hWritePipe = 0
-
+	
 	if hDupReadPipe :  CloseHandle hDupReadPipe :  hDupReadPipe  = 0
 	if hDupWritePipe : CloseHandle hDupWritePipe : hDupWritePipe = 0
 	return
-
+	
 // パイプ ハンドルの作成
 #deffunc hsed_initduppipe int nSize
 	CreatePipe hReadPipe, hWritePipe, 0, nSize
 	if hReadPipe == 0 || hWritePipe == 0 : return 1
-
+	
 	GetWindowThreadProcessID hIF, dwProcessID
 	OpenProcess PROCESS_ALL_ACCESS, 0, dwProcessID
 	hHsedProc = stat
-
+	
 	GetCurrentProcess
 	hCurProc = stat
-
+	
 	DuplicateHandle hCurProc, hReadPipe,  hHsedProc, hDupReadPipe,  0, 0, DUPLICATE_SAME_ACCESS
 	DuplicateHandle hCurProc, hWritePipe, hHsedProc, hDupWritePipe, 0, 0, DUPLICATE_SAME_ACCESS
-
+	
 	CloseHandle hHsedProc
 	if hDupReadPipe == 0 | hDupWritePipe == 0 : hsed_uninitduppipe : return 1
 	return 0
@@ -151,41 +151,41 @@
 	hIF = stat
 	if hIF == 0 : return 1
 	return 0
-
+	
 // スクリプト エディタが起動しているかチェック
 #deffunc hsed_exist
 	hsed_capture
 	return stat == 0
-
+	
 // スクリプト エディタのバージョンを取得
 #deffunc hsed_getver var ret, int nType
 	hsed_capture
 	if stat : ret = 0 : return 1
-
-	if(nType == HGV_HSPCMPVER){
+	
+	if (nType == HGV_HSPCMPVER) {
 		sdim ret, 4096
-
+		
 		hsed_initduppipe 4096
 		if stat : return 2
-
+		
 		sendmsg hIF, _HSED_GETVER, nType, hDupWritePipe
 		if stat < 0 : ret = "Error" : hsed_uninitduppipe : return 3
 		
 		ReadFile hReadPipe, ret, 4096, dwNumberOfBytesRead, 0
 		hsed_uninitduppipe
-
+		
 	} else {
 		sendmsg hIF, _HSED_GETVER, nType, 0
 		ret = stat
 		if ret < 0 : return 3
 	}
 	return 0
-
+	
 // スクリプト エディタの各種ハンドルを取得
 #deffunc hsed_getwnd var ret, int nType, int nID
 	hsed_capture
 	if stat : ret = 0 : return 1
-
+	
 	if ( nType == HGW_EDIT ) {
 		sendmsg hIF, _HSED_GETWND, nType, nID
 	} else {
@@ -194,28 +194,28 @@
 	ret = stat
 	if ret = 0 : return 2
 	return 0
-
+	
 // バージョンの数値を文字列に変換
 #deffunc hsed_cnvverstr int nVersion
 	sdim _refstr, 4096
 	_refstr = "" + hsed_getmajorver(nVersion) + "." + strf("%02d", hsed_getminorver(nVersion))
 	if hsed_getbetaver(nVersion) : _refstr += "b" + hsed_getbetaver(nVersion)
 	return _refstr
-
+	
 // タブ数の取得
 #deffunc hsed_gettabcount var ret
 	hsed_capture
 	if stat : ret = -1 : return 1
-
+	
 	sendmsg hIF, _HSED_GETTABCOUNT
 	ret = stat
 	return 0
-
+	
 // FootyのIDからタブのIDを取得
 #deffunc hsed_gettabid var ret, int nFootyID
 	hsed_capture
 	if stat : ret = -1 : return 1
-
+	
 	sendmsg hIF, _HSED_GETTABID, nFootyID
 	if ret < 0{
 		ret = -1
@@ -224,12 +224,12 @@
 		ret = stat
 		return 0
 	}
-
+	
 // タブのIDからFootyのIDを取得
 #deffunc hsed_getfootyid var ret, int nTabID
 	hsed_capture
 	if stat : ret = -1 : return 1
-
+	
 	sendmsg hIF, _HSED_GETFOOTYID, nTabID
 	if ret < 0{
 		ret = -1
@@ -238,88 +238,88 @@
 		ret = stat
 		return 0
 	}
-
+	
 // コピーの可否を取得
 #deffunc hsed_cancopy var ret, int nFootyID
 	hsed_capture
 	if stat : ret = -1 : return 1
-
+	
 	sendmsg hIF, _HSED_CANCOPY, nFootyID
 	ret = stat
 	if ret < 0 : return 2
 	return 0
-
+	
 // 貼り付けの可否を取得
 #deffunc hsed_canpaste var ret
 	hsed_capture
 	if stat : ret = -1 : return 1
-
+	
 	sendmsg hIF, _HSED_CANPASTE
 	ret = stat
 	return 0
-
+	
 // アンドゥの可否を取得
 #deffunc hsed_canundo var ret, int nFootyID
 	hsed_capture
 	if stat : ret = -1 : return 1
-
+	
 	sendmsg hIF, _HSED_CANUNDO, nFootyID
 	ret = stat
 	if ret < 0 : return 2
 	return 0
-
+	
 // リドゥの可否を取得
 #deffunc hsed_canredo var ret, int nFootyID
 	hsed_capture
 	if stat : ret = -1 : return 1
-
+	
 	sendmsg hIF, _HSED_CANREDO, nFootyID
 	ret = stat
 	if ret < 0 : return 2
 	return 0
-
+	
 // 変更フラグを取得
 #deffunc hsed_getmodify var ret, int nFootyID
 	hsed_capture
 	if stat : ret = -1 : return 1
-
+	
 	sendmsg hIF, _HSED_GETMODIFY, nFootyID
 	ret = stat
 	if ret < 0 : return 2
 	return 0
-
+	
 // コピー
 #deffunc hsed_copy int nFootyID
 	hsed_capture
 	if stat : return 1
-
+	
 	sendmsg hIF, _HSED_COPY, nFootyID
 	if stat == -1 : return 0
 	return
-
+	
 // 切り取り
 #deffunc hsed_cut int nFootyID
 	hsed_capture
 	if stat : return 1
-
+	
 	sendmsg hIF, _HSED_CUT, nFootyID
 	if stat == -1 : return 0
 	return
-
+	
 // 貼り付け
 #deffunc hsed_paste int nFootyID
 	hsed_capture
 	if stat : return 1
-
+	
 	sendmsg hIF, _HSED_PASTE, nFootyID
 	if stat == -1 : return 0
 	return
-
+	
 // アンドゥ
 #deffunc hsed_undo int nFootyID
 	hsed_capture
 	if stat : return 1
-
+	
 	sendmsg hIF, _HSED_UNDO, nFootyID
 	if stat == -1 : return 0
 	return
@@ -328,73 +328,73 @@
 #deffunc hsed_redo int nFootyID
 	hsed_capture
 	if stat: return 1
-
+	
 	sendmsg hIF, _HSED_REDO, nFootyID
 	if stat == -1 : return 0
 	return
-
+	
 // インデント
 #deffunc hsed_indent int nFootyID
 	hsed_capture
 	if stat : return 1
-
+	
 	sendmsg hIF, _HSED_INDENT, nFootyID
 	if stat == -1 : return 0
 	return
-
+	
 // アンインデント
 #deffunc hsed_unindent int nFootyID
 	hsed_capture
 	if stat : return 1
-
+	
 	sendmsg hIF, _HSED_UNINDENT, nFootyID
 	if stat == -1 : return 0
 	return
-
+	
 // すべて選択
 #deffunc hsed_selectall int nFootyID
 	hsed_capture
 	if stat : return 1
-
+	
 	sendmsg hIF, _HSED_SELECTALL, nFootyID
 	if stat == -1 : return 0
 	return
-
+	
 // 文字列長を取得
 #deffunc hsed_gettextlength var ret, int nFootyID
 	hsed_capture
 	if stat : return 1
-
+	
 	sendmsg hIF, _HSED_GETTEXTLENGTH, nFootyID
 	if stat < 0 : return 1
 	ret = stat
 	return 0
-
+	
 // 行数を取得
 #deffunc hsed_getlines var ret, int nFootyID
 	hsed_capture
 	if stat : return 1
-
+	
 	sendmsg hIF, _HSED_GETLINES, nFootyID
 	if stat < 0 : return 1
 	ret = stat
 	return 0
-
+	
 // 行の文字列長を取得
 #deffunc hsed_getlinelength var ret, int nFootyID, int nLine
 	hsed_capture
 	if stat : return 1
-
+	
 	sendmsg hIF, _HSED_GETLINELENGTH, nFootyID, nLine
 	if stat < 0 : return 1
 	ret = stat
 	return 0
-
+	
 // 改行コードの取得
 #deffunc hsed_getlinecode var ret, int nFootyID
 	hsed_capture
 	if stat : return 1
-
+	
 	sendmsg hIF, _HSED_GETLINECODE, nFootyID
 	if stat == -5 {
 		ret = -1
@@ -403,61 +403,61 @@
 		ret = stat
 		return 0
 	}
-
+	
 // 文字列の取得
 #deffunc hsed_GetText var ret, int nFootyID
 	hsed_capture
 	if stat : return 1
-
+	
 	hsed_gettextlength nLength, nFootyID
 	if stat : return 2
-
+	
 	sdim ret, nLength + 1
 	hsed_initduppipe nLength + 1
 	if stat : return 3
-
+	
 	sendmsg hIF, _HSED_GETTEXT, nFootyID, hDupWritePipe
 	if stat < 0 : ret = "Error" : hsed_uninitduppipe : return 4
-
+	
 	ReadFile hReadPipe, ret, nLength, dwNumberOfBytesRead, 0
 	hsed_uninitduppipe
 	return 0
-
+	
 #deffunc hsed_settext int nFootyID, str sText
 	hsed_capture
 	if stat : return 1
-
+	
 	nLength = strlen(sText)
-
+	
 	hsed_initduppipe nLength + 1
 	if stat : return 3
-
+	
 	WriteFile hWritePipe, sText, nLength + 1, dwNumberOfBytesWritten, 0
-
+	
 	sendmsg hIF, _HSED_SETTEXT, nFootyID, hDupReadPipe
 	if stat < 0 : hsed_uninitduppipe : return 4
 	
 	hsed_uninitduppipe
 	return 0
-
+	
 // アクティブなFootyのIDの取得
 #deffunc hsed_getactfootyid var ret
 	hsed_capture
 	if stat : ret = -1 : return 1
-
+	
 	sendmsg hIF, _HSED_GETACTFOOTYID
 	ret = stat
 	return 0
-
+	
 // アクティブなタブのIDの取得
 #deffunc hsed_getacttabid var ret
 	hsed_capture
 	if stat : ret = -1 : return 1
-
+	
 	sendmsg hIF, _HSED_GETACTTABID
 	ret = stat
 	return 0
-
+	
 // クリップボード経由で指定された文字列をエディタに送る
 #deffunc hsed_sendstr var _p1
 	hsed_capture
@@ -468,13 +468,13 @@
 	ret = stat
 	if ret != 0 : EmptyClipboard
 	
-	ls = strlen(_p1) +1
-	lngHwnd=GlobalAlloc(2, ls)
-	if lngHwnd != 0 {
+	ls      = strlen(_p1) +1
+	lngHwnd = GlobalAlloc(2, ls)
+	if ( lngHwnd != 0 ) {
 		lngMem = GlobalLock(lngHwnd)
-		if lngMem != 0 {
-			ret=lstrcpy(lngMem, varptr(_p1))
-			if ret != 0 {
+		if ( lngMem != 0 ) {
+			ret = lstrcpy(lngMem, varptr(_p1))
+			if ( ret != 0 ) {
 				SetClipboardData CF_OEMTEXT, lngHwnd
 			}
 			GlobalUnlock lngHwnd : lngRet = stat
@@ -509,7 +509,7 @@
 	
 	sendmsg hIF, _HSED_GETACTFOOTYID
 	nActFootyID = stat
-
+	
 	hsed_settext nActFootyID, sText
 	return
 	
@@ -521,7 +521,7 @@
 	if stat <= 0 : return 1
 	p1 = stat
 	return 0
-
+	
 // スクリプトのはじめを1としたキャレットの位置を取得
 #deffunc hsed_getcaretthrough var p1, int nFootyID
 	hsed_capture
@@ -530,7 +530,7 @@
 	if stat <= 0 : return 1
 	p1 = stat
 	return 0
-
+	
 // 行のはじめを0としたキャレットの位置（ルーラーに従う）を取得
 #deffunc hsed_getcaretvpos var p1, int nFootyID
 	hsed_capture
@@ -539,28 +539,28 @@
 	if stat < 0 : return 1
 	p1 = stat
 	return 0
-
+	
 // キャレットのある行の行番号を取得
 #deffunc hsed_getcaretline var p1, int nFootyID
 	hsed_capture
 	if stat : return 1
 	sendmsg hIF, _HSED_GETCARETLINE, nFootyID
 	if stat <= 0 : return 1 : else : p1 = stat : return 0
-
+	
 // 行のはじめを1として、指定した位置にキャレットの位置を変更
 #deffunc hsed_setcaretpos int nFootyID, int nCaretpos
 	hsed_capture
 	if stat : return 1
 	sendmsg hIF, _HSED_SETCARETPOS, nFootyID, nCaretpos
 	return
-
+	
 // スクリプトのはじめを1として、指定した位置にキャレットの位置を変更
 #deffunc hsed_setcaretthrough int nFootyID, int nCaretthrough
 	hsed_capture
 	if stat : return 1
 	sendmsg hIF, _HSED_SETCARETTHROUGH, nFootyID, nCaretthrough
 	return
-
+	
 // 指定した行番号にキャレットの位置を変更
 #deffunc hsed_setcaretline int nFootyID, int nLine
 	hsed_capture

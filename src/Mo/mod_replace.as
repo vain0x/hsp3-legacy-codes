@@ -1,7 +1,7 @@
 // 置換モジュール (HSP開発Wiki) 2007/06/05      ver1.3
 
-#ifndef        __MODULE_REPLACE_AS__
-#define global __MODULE_REPLACE_AS__
+#ifndef __MODULE_REPLACE_AS__
+#define __MODULE_REPLACE_AS__
 
 #module modReplace
 // 【変数の説明】
@@ -16,11 +16,11 @@
 //    int iTargetLen    sTargetの文字列の長さ（毎回調べるのは効率が悪い）
 //    int iAfterLen     sAfterの文字列の長さ （〃）
 //    int iBeforeLen    sBeforeの文字列の長さ（〃）
-#const FIRST_SIZE       64000   // はじめに確保するsResultの長さ
-#const EXPAND_SIZE      32000   // memexpand命令で拡張する長さの単位
+#const FIRST_SIZE@modReplace  12800		// はじめに確保するsResultの長さ
+#const EXPAND_SIZE@modReplace  6400		// memexpand命令で拡張する長さの単位
 
 // メモリ再確保の判断及び実行のための命令（モジュール内部で使用）
-#deffunc _expand var sTarget, var iNowSize, int iIndex, int iPlusSize
+#deffunc _expand@modReplace var sTarget, var iNowSize, int iIndex, int iPlusSize
 	if (iNowSize <= iIndex + iPlusSize) {
 		iNowSize += EXPAND_SIZE * (1 + iPlusSize / EXPAND_SIZE)
 		memexpand sTarget, iNowSize

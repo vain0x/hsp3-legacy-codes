@@ -6,10 +6,11 @@
 #include "Mo/cwhich.as"
 #include "Mo/LongString.as"
 #include "Mo/strutil.as"
-#include "Mo/HPM_GetToken.as"
 #ifdef __LISTUP_INCLUDE__
+#include "Mo/hsedutil.as"
 #include "Mo/SearchFileEx.as"
 #endif
+#include "mod_deflist.as"
 
 // Win32 API
 #uselib "user32.dll"
@@ -21,9 +22,15 @@
 #cfunc  global LoadCursor     "LoadCursorA"    nullptr,int
 #func   global SetClassLong   "SetClassLongA"  int,int,int
 #func   global SetCursor      "SetCursor"      int
+#func   global ClipCursor     "ClipCursor"     int
 #func   global EnableWindow   "EnableWindow"   int,int
 
+#func   global SetForegroundWindow   "SetForegroundWindow"    int
 #cfunc  global RegisterWindowMessage "RegisterWindowMessageA" sptr
+
+#uselib "kernel32.dll"
+#func   global GetFullPathNameA "GetFullPathNameA" sptr,int,int,nullptr
+#define global GetFullPathName(%1,%2) GetFullPathNameA %1,MAX_PATH,varptr(%2)
 
 //##################################################################################################
 //        定数・マクロ
@@ -33,21 +40,8 @@
 
 #const UWM_SPLITTERMOVE 0x0400
 
-// DEFTYPE
-#const global DEFTYPE_LABEL		0x0001		// ラベル
-#const global DEFTYPE_MACRO		0x0002		// マクロ
-#const global DEFTYPE_CONST		0x0004		// 定数
-#const global DEFTYPE_FUNC		0x0008		// 命令・関数
-
-#const global DEFTYPE_CTYPE		0x0100		// CTYPE
-#const global DEFTYPE_MODULE	0x0200		// モジュールメンバ
-
-// 特殊な空間名
-#define global AREA_GLOBAL "global"
-#define global AREA_ALL    "*"
-
 // その他
-#define global HSED_TEMPFILE "hsed_hsptmp.hsp"
+#define global HSED_TEMPFILE (curdir +"\\hsedtmp.hsp")
 
 //##################################################################################################
 //        モジュール
@@ -55,22 +49,21 @@
 #module deflister_mod
 
 #include "Mo/ctype.as"
-#include "Mo/HPM_Header.as"
 
 #define true  1
 #define false 0
 
 // 各行の先頭に行番号を埋め込む
-#deffunc SetLineNum var retbuf, str text, str sform, int start, local buf, local tmpbuf, local index, local stmp
+#deffunc SetLinenum var retbuf, str p2, str sform, int start, local text, local tmpbuf, local index, local stmp
 	newmod tmpbuf, longstr
-	buf   = text
+	text  = p2
 	index = 0
 	
 	sdim stmp, 320
 	
 	repeat , start
 		// 次の一行を取得
-		getstr stmp, buf, index : index += strsize
+		getstr stmp, text, index : index += strsize
 		
 		if ( strsize == 0 ) { break }
 		
@@ -82,37 +75,13 @@
 	     retbuf = LongStr_get(tmpbuf)
 	return
 	
-// 指定文字インデックスのある行番号を取得する
-#defcfunc GetLinenumByIndex str p1, int p2, int iStart, int iStartLineNum, local text, local linenum, local c
-	text    = p1
-	linenum = iStartLineNum
-	
-	if ( iStart > p2 ) { return iStartLineNum }
-	
-	repeat p2 - iStart, iStart
-		c = peek(text, cnt)
-		if ( c == 0x0D || c == 0x0A ) {		// 改行コード
-			linenum ++
-			if ( c == 0x0D && peek(text, cnt + 1) == 0x0A ) {
-				continue cnt + 2
-			}
-		} else : if ( IsSJIS1st(c) ) {		// 全角文字
-			continue cnt + 2
-			
-		} else : if ( c == 0 ) {
-			break
-		}
-	loop
-	
-	return linenum
-	
 // 定義タイプから文字列を生成する
-#defcfunc MakeDefTypeString int deftype, local stype
+#defcfunc MakeTypeString int deftype, local stype
 	sdim stype, 320
 	if ( deftype & DEFTYPE_LABEL ) { stype = "ラベル" }
 	if ( deftype & DEFTYPE_MACRO ) { stype = "マクロ" }
 	if ( deftype & DEFTYPE_CONST ) { stype = "定数"   }
-	if ( deftype & DEFTYPE_FUNC ) {
+	if ( deftype & DEFTYPE_FUNC  ) {
 		if ( deftype & DEFTYPE_CTYPE ) { stype = "関数" } else { stype = "命令" }
 	} else {
 		if ( deftype & DEFTYPE_CTYPE ) { stype += " Ｃ" }
@@ -120,240 +89,67 @@
 	if ( deftype & DEFTYPE_MODULE ) { stype += " Ｍ" }
 	return stype
 	
-// (private) モジュール空間名を決定する
-#defcfunc TookModuleName@deflister_mod var scope, var script, int offset, str defscope, local index
-	index = offset
-	if ( peek(script, index) == '@' ) {
-		index ++
-		index += TookIdent(scope, script, index)
-		if ( stat == 0 ) { scope = AREA_GLOBAL }
-	} else {
-		scope = defscope
-	}
-	return index - offset
-	
-// (private) 範囲名を作成する
-#deffunc MakeScope@deflister_mod var scope, str defscope, int deftype, int bGlobal, int bLocal
-	if ( bGlobal ) { scope = AREA_ALL : return }
-	
-	scope = defscope
-	
-	if ( bLocal ) { scope += " [local]" }
-	return
-	
-// 定義をリストアップする( 引数の順番に注意 )
-#deffunc TookDefinition str p1, int defcnt, array listIdent, array listLn, array listType, array listScope, array listInclude, local script, local listIndex, local cntInclude, local count, local stmp, local index, local textlen, local areaScope, local scope, local nowTT, local befTT, local bPreLine, local bGlobal, local bLocal, local deftype, local uniqueCount
-	script  = p1
-	index   = 0
-	count   = defcnt
-	textlen = strlen(script)
-	sdim stmp, 250
-	sdim name
-	sdim scope
-	sdim areaScope
-	
-	if ( defcnt == 0 ) {
-		dim  listLn   ,  5
-		sdim listIdent,, 5
-		dim  listType ,  5
-		sdim listScope,, 5
-	}
-	dim      listIndex,  defcnt + 5		// 文字インデックスのリスト( 高速化のために使う )
-	sdim     listInclude, 260
-	
-	cntInclude  = 0
-	uniqueCount = 0
-	areaScope   = AREA_GLOBAL
-	
-	repeat
-		// 空白を飛ばす
-		index += CntSpaces(script, index)
-		
-		// 最後まで取得できたら終了する
-		if ( textlen <= index ) { break }
-		
-		// 次のトークンを取得
-		GetNextToken nowtk, script, index, befTT, bPreLine : nowTT = stat
-		if ( nowTT == TOKENTYPE_ERROR ) {
-			index += strlen(nowtk)
-			continue				// 単純に無視するだけ
-		}
-		
-		// トークンの種類ごとに処理をわける
-		gosub *L_ProcToken
-		
-		// インデックスを進める
-		index += strlen(nowtk)
-		
-		befTT = nowTT
-	loop
-	
-	return count
-	
-*L_ProcToken
-	switch nowTT
-	
-	case TOKENTYPE_COMMENT : nowTT = befTT : swbreak
-	
-	case TOKENTYPE_END		// 文の終了
-		nowTT = TOKENTYPE_NONE
-		if ( bPreLine ) { bPreLine = false }
-		swbreak
-		
-	case TOKENTYPE_LABEL	// ラベル
-		if ( befTT == TOKENTYPE_NONE ) {	// 行頭の場合のみ
-			
-			index += strlen(nowtk)
-			index += TookModuleName(scope, script, index, areaScope)
-			
-			// リストに追加
-			listIdent(count) = nowtk
-			if ( count <= 0 ) {
-				listLn(count) = GetLinenumByIndex(script, index, 0, 0)
-			} else {
-				listLn(count) = GetLinenumByIndex(script, index, listIndex(count - 1), listLn(count - 1))
-			}
-			listType (count) = DEFTYPE_LABEL
-			listScope(count) = scope
-			listIndex(count) = index
-			count ++
-		}
-		swbreak
-		
-	case TOKENTYPE_PREPROC	// プリプロセッサ命令
-		if ( IsPreproc(nowtk) ) {
-			bPreLine = true
-			index   += strlen(nowtk)
-			deftype  = 0
-			bGlobal  = true
-			bLocal   = false
-			
-			// # と空白を除去する
-			getstr nowtk, nowtk, 1 + CntSpaces(nowtk, 1)
-			
-			switch ( getpath( nowtk, 16 ) )
-			case "module"
-				index += CntSpaces(script, index)				// ignore 空白
-				if ( peek(script, index) == '"' ) { index ++ }	// #module "modname" の形式に対応
-				index += TookIdent(areaScope, script, index)	// 空間名
-				if ( stat == 0 ) {
-					areaScope   = "("+ uniqueCount +")unique"	// ユニークな空間名
-					uniqueCount ++
-				}
-				swbreak
-			case "global" : areaScope = AREA_GLOBAL : swbreak	// モジュール空間からの脱出
-			
-			case "include"
-			case "addition"
-				index += CntSpaces(script, index)
-				if ( peek(script, index) == '"' ) { index ++ }
-				getstr nowtk, script, index, '"'
-				index                  += strsize
-				listInclude(cntInclude) = nowtk
-				cntInclude ++
-				swbreak
-			
-			case "modfunc"  : deftype  = DEFTYPE_MODULE
-			case "deffunc"  : deftype |= DEFTYPE_FUNC                    : goto *L_AddDefinition
-			case "modcfunc" : deftype  = DEFTYPE_MODULE
-			case "defcfunc" : deftype |= DEFTYPE_FUNC   | DEFTYPE_CTYPE  : goto *L_AddDefinition
-			case "define"   : deftype  = DEFTYPE_MACRO : bGlobal = false : goto *L_AddDefinition
-			case "const"
-			case "enum"     : deftype  = DEFTYPE_CONST : bGlobal = false : goto *L_AddDefinition
-*L_AddDefinition
-				index += CntSpaces(script, index)			// 空白 ignore
-				index += TookIdent(nowtk, script, index)	// 識別子を取り出す
-				switch getpath( nowtk, 16 )
-					case "global" : bGlobal  = true                  : goto *L_AddDefinition
-					case "ctype"  : deftype |= DEFTYPE_CTYPE         : goto *L_AddDefinition
-					case "local"  : bGlobal  = false : bLocal = true : goto *L_AddDefinition
-				swend
-				
-				index += TookModuleName(scope, script, index, areaScope)
-				if ( stat ) {	// scope != areaScope ->("ident@scope")
-					bGlobal = false
-				}
-				
-				// 範囲を作成
-				MakeScope scope, areaScope, deftype, bGlobal, bLocal
-				
-				// リストに追加
-				listIdent(count) = nowtk
-				if ( count <= defcnt ) {
-					listLn(count) = GetLinenumByIndex(script, index, 0, 0)
-				} else {
-					listLn(count) = GetLinenumByIndex(script, index, listIndex(count - 1), listLn(count - 1))
-				}
-				listType (count) = deftype
-				listScope(count) = scope
-				listIndex(count) = index
-				count ++
-				swbreak
-			swend
-			
-			poke nowtk
-		}
-		swbreak
-		
-	swend
-	return
-	
 #ifdef __LISTUP_INCLUDE__
 
-// 定義リストを再帰的に作成する
-#deffunc CreateDefinitionList array listIncludeToLoad, int defcnt, array listIdent, array listLn, array listType, array listScope, array listFile, local script, local listInclude, local cntTotal, local count
+// 検索パスを追加する
+#deffunc AppendSearchPath str p1, local path, local c, local len
+	sdim path, MAX_PATH
+	path = p1
+	len  = strlen(path)
+	c    = peek(path, len - 1)
+	if ( c == '/' ) { len -- }
+	if ( c != '\\') { wpoke path, len, '\\' << 16 : len ++ }
+	if ( instr(searchpath, 0, path +";") < 0 ) {
+		searchpath += path +";"
+	}
+	return
 	
-	cntTotal = defcnt
+// 定義リストを再帰的に作成する
+#deffunc CreateDefinitionList array mdeflist, array listIncludeToLoad, local listInclude, local filename, local index, local bListupped
 	
 	foreach listIncludeToLoad
 		
-		// 次のスクリプトを変数 script に展開
-		// <TODO> common のパスをユーザに指定してもらう
-		SearchFileEx "D:\\D_MyDocuments\\DProgramFiles\\hsp31\\common;", listIncludeToLoad(cnt)
-		if ( refstr == "" ) { continue }
-		listIncludeToLoad(cnt) = refstr
+		// 次のファイルのフルパスを取得
+		if ( peek(listIncludeToLoad(cnt), 1) != ':' ) {		// "x:\..." なら既にフルパス
+			
+			SearchFileEx searchpath, listIncludeToLoad(cnt)
+			if ( refstr == "" ) { continue }
+			listIncludeToLoad(cnt) = refstr
+			AppendSearchPath getpath(refstr, 32)	// 逐一検索パスを拡張していく
+		}
 		
 		// ファイル名のみを取得しておく
 		filename = getpath(listIncludeToLoad(cnt), 8)
-		c        = peek(filename)
 		
 		// 既に開かれているファイルなら無視
-		for i, 0, cntTotal
-			if ( peek(listFile(i)) == c ) {
-				if ( listFile(i) == filename ) {
-					continue
+		if ( vartype(mdeflist) == vartype("struct") ) {
+			bListupped = false
+			foreach mdeflist
+				if ( DefList_GetFileName( mdeflist(cnt) ) == filename ) {
+					bListupped = true
+					break
 				}
-			}
-		next
+			loop
+			if ( bListupped ) { continue }
+		}
 		
 ;		exist listIncludeToLoad(cnt)
 ;		if ( strsize < 0 ) { continue }
 		
-		notesel script
-		noteload listIncludeToLoad(cnt)
-		noteunsel
-		
-		// 定義を取り出す
-		TookDefinition script, cntTotal, listIdent, listLn, listType, listScope, listInclude
-		count = stat
-		
-		// listFile を設定
-		i = cnt
-		for i, cntTotal, count
-			listFile(i) = filename	// パスは含めない
-		next
-		
-		cntTotal = count
+		// 定義リストを作成する
+		newmod mdeflist, deflist, listIncludeToLoad(cnt)
+		index = stat
 		
 		// 再帰的に結合されたファイルから定義を取り出す
-		if ( peek(listInclude) ) {
-			CreateDefinitionList listInclude, cntTotal, listIdent, listLn, listType, listScope, listFile
-			cntTotal = stat
+		if ( DefList_GetCntInclude( mdeflist(index) ) ) {
+			DefList_GetIncludeArray mdeflist(index), listInclude
+			CreateDefinitionList    mdeflist,        listInclude
 		}
 		
 	loop
 	
-	return cntTotal
+	return
+	
 #endif
 	
 // コントロールを単一方向にスクロールする( direction = SB_HORZ(=0) or SB_VERT(=1) )
@@ -407,5 +203,6 @@
 #endif
 
 #global
+sdim searchpath@deflister_mod, MAX_PATH * 3
 
 #endif
