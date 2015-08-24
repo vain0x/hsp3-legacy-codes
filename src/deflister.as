@@ -1,7 +1,7 @@
 // deflister - header
 
-#ifndef __DEFINED_LISTER_HEADER_AS__
-#define __DEFINED_LISTER_HEADER_AS__
+#ifndef IG_DEFINITION_LISTER_HEADER_AS
+#define IG_DEFINITION_LISTER_HEADER_AS
 
 #include "Mo/MCLongString.as"
 #include "Mo/strutil.as"

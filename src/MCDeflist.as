@@ -1,7 +1,7 @@
 // definition list
 
-#ifndef __MODULECLASS_DEFINITION_LIST_AS__
-#define __MODULECLASS_DEFINITION_LIST_AS__
+#ifndef IG_MODULECLASS_DEFINITION_LIST_AS
+#define IG_MODULECLASS_DEFINITION_LIST_AS
 
 #include "Mo/strutil.as"
 #include "Mo/HPM_split.as"
