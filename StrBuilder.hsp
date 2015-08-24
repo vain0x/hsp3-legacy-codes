@@ -13,9 +13,9 @@
 #define global StrBuilder_new(%1, %2 = 0) \
 	newmod %1, StrBuilder@, %2
 
-#modinit int def_size
+#modinit int def_capa
 	
-	capacity_ = limit(def_size, BufSize_Default, def_size)
+	capacity_ = limit(def_capa, BufSize_Default, def_capa)
 	sdim buf_, capacity_ + 1
 	return
 	
