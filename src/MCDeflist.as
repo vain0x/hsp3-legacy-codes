@@ -303,9 +303,9 @@
 						mInclude(mCntInclude) = nowTkStr
 						mCntInclude ++
 						
-;						logmes "#include "+ nowTkStr
+;						logmes "#include " + nowTkStr
 					} else {
-						logmes "[Warning] in mod_deflist line "+ nowline +"\nBad #include Syntax:\n\t#include "+ nowTkStr +"\n\tTKTYPE = "+ nowTkType
+						logmes "[Warning] in mod_deflist line " + nowline + "\nBad #include Syntax:\n\t#include " + nowTkStr + "\n\tTKTYPE = " + nowTkType
 					}
 					swbreak
 					

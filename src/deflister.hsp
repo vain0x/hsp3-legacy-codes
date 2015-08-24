@@ -129,7 +129,7 @@
 	
 	// 通常の起動
 	if ( cntCmdopt == 0 ) {
-		FileSelDlg "HSP3 Script File (*.hsp;*.as)@*.hsp;*.as;hsptmp@すべてのファイル (*.*)@*.*@", NULL, false, OFN_HIDEREADONLY | OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NONETWORKBUTTON
+		FileSelDlg "HSP3 Script File (*.hsp;*.as)@*.hsp;*.as;hsptmp@すべてのファイル (*.*)@*.*@", NULL, false, (OFN_HIDEREADONLY | OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NONETWORKBUTTON)
 ;		dialog "hsp;*.as", 16, "HSP3 Script File"
 		if ( stat == 0 ) { end }
 		cmdopt(0) = refstr
