@@ -8,6 +8,7 @@
 #endif
 
 #define ctype IsSJIS1st(%1) (numrg(%1, 0x81, 0x9F) || numrg(%1, 0xE0, 0xFC))// 全角第一バイトを判定
+;#define ctype IsSJIS1st(%1) ( (((%1) ^ 0x20) - 0xA1) < 0x3C)// 巧妙バージョン ( ttp://www.st.rim.or.jp/~phinloda/cqa/cqa15.html#Q4 )
 #define ctype IsSJIS2nd(%1) (numrg(%1, 0x40, 0x7E) || numrg(%1, 0x80, 0xFC))// 全角第二バイトを判定
 
 #define ctype IsAlpha(%1)   ( IsAlphaLw(%1) || IsAlphaUp(%1) )

@@ -173,15 +173,16 @@
 			p1 = strmid(p2, p3, 2) + CutNum_Bin(p2, p3 + 2)
 			
 		} else {
-			p1 = CutNum_Dgt(p2, p3)
+			gosub *LGetToken_Digit
+			return stat
 		}
 		return TOKENTYPE_NUMBER
 	}
 	
 	// Number (10)
 	if ( IsDigit(c) || c == '.' ) {
-		p1 = CutNum_Dgt(p2, p3)		// 10進数
-		return TOKENTYPE_NUMBER
+		gosub *LGetToken_Digit
+		return stat
 	}
 	
 	// @Scope
@@ -203,6 +204,33 @@
 	p1 = strf("%c", c)
 	logmes "ERROR !! Can't Pop a Token! [ "+ p3 + strf(" : %c : ", c) + c +" ]"
 	return TOKENTYPE_ERROR
+	
+// 10進数を切り出す
+*LGetToken_Digit
+	p1  = CutNum_Dgt(p2, p3)
+	len = strlen(p1)
+	c   = peek( p2, p3 + len )		// 数の次の文字
+	switch ( c )
+		case 'f'
+		case 'd'
+			p1 += strf("%c", c)
+			swbreak
+			
+		case 'e'
+			p1 += "e"
+			
+			c2 = peek( p2, p3 + len + 1 )
+			if ( c2 == '-' ) {
+				p1  += "-"
+				len ++
+			}
+			
+			// 指数を足しておく
+			p1 += CutNum_Dgt( p2, p3 + len + 1 )
+			swbreak
+	swend
+	
+	return TOKENTYPE_NUMBER
 	
 #global
 

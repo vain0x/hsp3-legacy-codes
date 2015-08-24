@@ -15,6 +15,7 @@
 #include "Mo/ini.as"
 #include "Mo/IsMouseButtonSwapped.as"
 #include "Mo/SysCursor.as"
+#include "Mo/LexCmdline.as"
 #include "Mo/Lvmod.as"
 #include "Mo/mutex.as"
 
@@ -59,13 +60,17 @@
 	PostMessage hwnd, 0x0010, 0, 0
 	return
 	
+//------------------------------------------------
 // エラー発生時
+//------------------------------------------------
 *error
 	onerror false			// 無限割り込みを防ぐ
 	gosub *SettleProgram
 	end : end
 	
+//------------------------------------------------
 // 後始末
+//------------------------------------------------
 *SettleProgram
 	DeleteFont hFont
 	CloseMutex
@@ -74,29 +79,36 @@
 	if ( bHsed )        { exdel HSED_TEMPFILE }					// 一時ファイルの削除
 	return
 	
+//------------------------------------------------
 // 設定を保存する
+//------------------------------------------------
 *WriteSetOfEnd
 	GetClientRect hwnd, varptr(rc)
 	
-	WriteIni "Window", "cx", rc(2) - rc(0)
-	WriteIni "Window", "cy", rc(3) - rc(1)
-	WriteIni "Window", "px", rc(0)
-	WriteIni "Window", "py", rc(1)
+	WriteIntIni "Window", "cx", rc(2) - rc(0)
+	WriteIntIni "Window", "cy", rc(3) - rc(1)
+	WriteIntIni "Window", "px", rc(0)
+	WriteIntIni "Window", "py", rc(1)
 	
-	WriteIni "Editbox", "Height", EditHeight
+	WriteIntIni "Editbox", "Height",            EditHeight
+	WriteIntIni "Editbox", "cntShowLineBefore", cntShowLineBefore
 	
 	return
 	
 //##################################################################################################
 //        Message Handler
 //##################################################################################################
+//------------------------------------------------
 // 二重起動が発生した
+//------------------------------------------------
 *OnAlreadyUsed
 	gsel wID_Main, 2
 	gsel wID_Main, 1
 	return
 	
+//------------------------------------------------
 // ウィンドウのサイズが変わった
+//------------------------------------------------
 *OnSize
 	MoveWindow infScript, 5,  5             , ginfo(12) - 10, EditHeight, true
 	MoveWindow infLv,     5, 10 + EditHeight, ginfo(12) - 10, ginfo(13) - (EditHeight + 30 + 20), true
@@ -106,12 +118,16 @@
 	loop
 	return
 	
+//------------------------------------------------
 // サイズが変更されている
+//------------------------------------------------
 *OnSizing
 	OnSizingToFlexFrame 240, 200
 	return
 	
+//------------------------------------------------
 // コントロールの割り込み
+//------------------------------------------------
 *OnNotify
 	dupptr nmhdr, lparam, 12
 	
@@ -164,8 +180,11 @@
 	return
 	
 //##################################################################################################
-//        サブ・ルーチン
+//        サブルーチン
 //##################################################################################################
+//------------------------------------------------
+// 初期化ルーチン
+//------------------------------------------------
 *Initialize
 	gsel 0, -1
 	
@@ -181,44 +200,41 @@
 		sendmsg 0xFFFF, UWM_ALREADY_USED	// 二重起動が発生したことを知らせる
 		end : end							// 強制終了
 	}
-	
-	// マウス反転を取得
-	CheckMouseButton
 	return
 	
+//------------------------------------------------
 // コマンドラインを処理する
+//------------------------------------------------
 *ProcCmdline
-	sdim cmdline, MAX_PATH
-	cmdline = dirinfo(4)
-;	cmdline = "hsed"
+	LexCmdline cmdopt, 1	;, "hsed"
+	cntCmdopt = stat
 	
-	if ( strmid(cmdline, 0, 4) == "hsed" ) {
-		// hsed からの外部ツール呼び出し
+	// 通常の起動
+	if ( cntCmdopt == 0 ) {
+		FileSelDlg "HSP3 Script File (*.hsp;*.as)@*.hsp;*.as;hsptmp@すべてのファイル (*.*)@*.*@", NULL, false, OFN_HIDEREADONLY | OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NONETWORKBUTTON
+;		dialog "hsp;*.as", 16, "HSP3 Script File"
+		if ( stat == 0 ) { end }
+		cmdline = refstr
+		
+	// hsed からの外部ツール呼び出し
+	} else : if ( cmdopt(0) == "hsed" ) {
 		bHsed = true
 		
 		// hsed があるかチェック
 		hsed_exist
 		if ( stat == false ) { dialog "外部エラー\nhsed3.exe が起動されていません。", 1, "deflister" : end }
 		
-	} else : if ( peek(cmdline) == 0 ) {
-		// 通常の起動
-		FileSelDlg "HSP3 Script File (*.hsp;*.as)@*.hsp;*.as;hsptmp@すべてのファイル (*.*)@*.*@", NULL, false, OFN_HIDEREADONLY | OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NONETWORKBUTTON
-;		dialog "hsp;*.as", 16, "HSP3 Script File"
-		if ( stat == 0 ) { end }
-		cmdline = refstr
-		
+	// コマンドライン付き呼び出し
 	} else {
-		// コマンドライン付き呼び出し
-		if ( peek( cmdline ) == '"' ) {			// ホントは空白入りパスなんて無視してやりたいが……
-			getstr cmdline, cmdline, 1, '"'
-		}
-		exist cmdline
+		exist cmdopt(0)
 		if ( strsize < 0 ) { dialog "外部エラー\n指定されたファイルがありません。", 1, "deflister" : end }
 	}
 	
 	return
 	
+//------------------------------------------------
 // 変数の初期化
+//------------------------------------------------
 *ClearVariable
 	sdim ownpath, MAX_PATH
 		 ownpath = GetOwnpath("D:\\D_MyDocuments\\Programming\\HSP\\ProjSmall\\deflister")
@@ -231,7 +247,8 @@
 	dim  infLv, 2
 	dim  iLv
 	dim  iDL					// Index of Active Definition List
-	EditHeight = GetIntIni("Editbox", "Height", 100)
+	EditHeight        = GetIntIni("Editbox", "Height", 100)
+	cntShowLineBefore = GetIntIni("EditBox", "cntShowLineBefore", 1)
 	
 	sdim script, 0x1FFF			// スクリプト表示部分のバッファ
 	dim  deflistLn				// 定義がある行番号
@@ -244,7 +261,7 @@
 	sdim filepath, MAX_PATH
 	sdim filename, MAX_PATH
 	
-	sFormatLineNumber = IniLoad("String", "FormatLineNumber", , "%3d|")
+	sFormatLineNumber = GetStrIni("String", "FormatLineNumber", , "%3d|")
 	
 	bInclude    = GetIntIni("Opt", "bInclude",    false)
 	bCustomDraw = GetIntIni("Opt", "bCustomDraw", true)
@@ -255,7 +272,9 @@
 	
 	return
 	
+//------------------------------------------------
 // ウィンドウの準備
+//------------------------------------------------
 *SetWindow
 	winsize(0) = GetIntIni("Window", "cx", 380)
 	winsize(1) = GetIntIni("Window", "cy", 360)
@@ -289,7 +308,9 @@
 		
 	return
 	
+//------------------------------------------------
 // リストビューを初期化
+//------------------------------------------------
 *LvInitialize
 	SetStyle   infLv, -20, 0x0200		// 枠
 	LvSetExStyle mLv, 0x0001 | 0x0020
@@ -307,7 +328,7 @@
 ;	lvSortcol = 0
 	
 	// フォントの変更
-	ChangeControlFont infLv, IniLoad("Listview", "FontFamily", , "MS Gothic"), GetIntIni("Listview", "FontSize", 13)
+	ChangeControlFont infLv, GetStrIni("Listview", "FontFamily", , msgothic), GetIntIni("Listview", "FontSize", 13)
 	hFont = stat
 	
 	if ( bCustomDraw ) {
@@ -316,14 +337,18 @@
 	
 	return
 	
-// 識別子が選択された( iLv は与えられる )
+//------------------------------------------------
+// 識別子が選択された
+// 
+// @ iLv は与えられる
+//------------------------------------------------
 *LvSelectedIdent
 	if ( bInclude ) {
 		
 		// どのファイルにある宣言か調べる
 		bSelected = false
 		foreach deflistItemTop
-			if ( numrg( iLv, deflistItemTop(cnt), deflistItemTop(cnt) + DefList_GetCount( mdeflist(cnt) ) - 1 ) ) {
+			if ( numrg( iLv, deflistItemTop(cnt), deflistItemTop(cnt) + DefList_getCount( mdeflist(cnt) ) - 1 ) ) {
 				iDL       = cnt
 				bSelected = true
 				gosub *ResetScriptBox
@@ -334,17 +359,20 @@
 		
 	} else {
 		// 指定したファイルにある宣言かどうか調べる
-		if ( numrg( iLv, 0, DefList_GetCount(mdeflist(iDL)) - 1 ) == false ) { return }
+		if ( numrg( iLv, 0, DefList_getCount( mdeflist(iDL) ) - 1 ) == false ) { return }
 	}
 	
 	// 位置を保存
-	posLn = DefList_GetLn( mdeflist(iDL), iLv - deflistItemTop(iDL) )
+	posLn = DefList_getLn( mdeflist(iDL), iLv - deflistItemTop(iDL) )
 	
-	// 宣言の位置までスクロールする
-	ScrollWindow infScript, 1, limit(posLn - 1, 0, MAX_INT)		// SB_VERT
+	// 宣言の位置までスクロールする ( p2 := 1 == SB_VERT )
+	ScrollWindow infScript, 1, limit(posLn - cntShowLineBefore, 0, MAX_INT)
+	
 	return
 	
+//------------------------------------------------
 // common フォルダのパスを検索パスに登録する
+//------------------------------------------------
 *GetCommonPath
 	if ( bInclude ) {
 		if ( bHsed ) {
@@ -355,7 +383,9 @@
 	}
 	return
 	
+//------------------------------------------------
 // 対象のスクリプトのパスを取得する
+//------------------------------------------------
 *GetTargetFilePath
 	if ( bHsed ) {
 		filepath(0) = HSED_TEMPFILE			// フルパス
@@ -367,7 +397,9 @@
 	}
 	return
 	
+//------------------------------------------------
 // 定義リストを更新する
+//------------------------------------------------
 *UpdateDefinitionList
 	if ( bInclude ) {
 		
@@ -391,7 +423,9 @@
 	posLn = 0
 	return
 	
+//------------------------------------------------
 // スクリプト・ボックスを更新する
+//------------------------------------------------
 *ResetScriptBox
 	DefList_GetScript mdeflist(iDL), script
 	
@@ -402,13 +436,17 @@
 	objprm infScript(1), script
 	return
 	
+//------------------------------------------------
 // リストをリセットする
+//------------------------------------------------
 *ResetListview
 	// すべて除去
 	LvDeleteAll mLv
 	return
 	
+//------------------------------------------------
 // リストを更新する
+//------------------------------------------------
 *UpdateListview
 	
 	sendmsg infLv, 0x000B, false, 0		// WM_SETREDRAW
@@ -440,16 +478,18 @@
 	sendmsg infLv, 0x000B, true, 0		// WM_SETREDRAW
 	return
 	
+//------------------------------------------------
 // リストビューに項目を追加する
+//------------------------------------------------
 *AddItemsToListview
 	// 項目をすべて追加
-	filename     = DefList_GetFileName( mdeflist(iDL) )
-	deflistCount = DefList_GetCount   ( mdeflist(iDL) )
+	filename     = DefList_getFileName( mdeflist(iDL) )
+	deflistCount = DefList_getCount   ( mdeflist(iDL) )
 	
 	if ( deflistCount <= 0 ) { return }
 	
 	repeat deflistCount
-		DefList_Get mdeflist(iDL), cnt, deflistIdent, deflistLn, deflistType, deflistScope
+		DefList_get mdeflist(iDL), cnt, deflistIdent, deflistLn, deflistType, deflistScope
 		stype = MakeTypeString( deflistType )
 		
 		LvInsertItem  mLv, strf("%d", deflistLn) : iLvItem = stat
@@ -465,7 +505,9 @@
 	loop
 	return
 	
+//------------------------------------------------
 // ジャンプする
+//------------------------------------------------
 *BtnJump
 	if ( bHsed == false ) {
 		dialog "hsed3 からの呼び出しではありません。", 1, "deflister"
@@ -480,16 +522,18 @@
 		}
 	}
 	
-	gsel wID_Main, -1	// 動きが俊敏なように見せる
+	gsel wID_Main, -1		// 動きが軽快なように見せる
 	
-	// 指定行に移動( hsed の行番号は１ベース )
-	hsed_setcaretline hsed_activeFootyID(), DefList_GetLn( mdeflist(iDL), iLv - deflistItemTop(iDL) ) + 1
+	// 指定行に移動( hsed の行番号は 1 ベース )
+	hsed_setcaretline hsed_activeFootyID(), DefList_getLn( mdeflist(iDL), iLv - deflistItemTop(iDL) ) + 1
 	
 	// 終了する
 	PostMessage hwnd, 0x0010, 0, 0
 	return
 	
-// 更新する
+//------------------------------------------------
+// いろいろ更新する
+//------------------------------------------------
 *BtnRenew
 	delmodall mdeflist
 	
@@ -502,14 +546,18 @@
 //##############################################################################
 //        マウスＤ＆Ｄ関係
 //##############################################################################
+//------------------------------------------------
 // マウスが仮想スプリッター上を動いた
+//------------------------------------------------
 *OnMouseMove
 	if ( boxin( 5, 5 + EditHeight, ginfo(12) - 10, 10 + EditHeight, mousex2, mousey2 ) ) {
 		SetCursor LoadCursor(IDC_SIZENS)	// 上下
 	}
 	return
 	
+//------------------------------------------------
 // ドラッグ開始
+//------------------------------------------------
 *OnLBtnDown
 	if ( boxin( 5, 5 + EditHeight, ginfo(12) - 10, 10 + EditHeight, mousex2, mousey2 ) ) {
 		// 開始時の位置を記憶する
@@ -552,7 +600,9 @@
 	}
 	return
 	
+//------------------------------------------------
 // 仮想スプリッタが動いた
+//------------------------------------------------
 *OnSplitterMove
 	EditHeight += ptDragEnd(1) - ptDragStart(1)		// 変わる
 	

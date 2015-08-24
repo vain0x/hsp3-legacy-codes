@@ -24,10 +24,8 @@
 #ifndef __IS_MOUSE_BUTTON_SWAPPED_AS__
 #define __IS_MOUSE_BUTTON_SWAPPED_AS__
 
-#ifndef ___GetSystemMetrics@
- #uselib "user32.dll"
- #cfunc ___GetSystemMetrics@ "GetSystemMetrics" int
-#endif
+#uselib "user32.dll"
+#cfunc GetSystemMetrics_at_IsMouseBtnSwapped "GetSystemMetrics" int
 
 //------------------------------------------------
 // 変数マクロ
@@ -40,7 +38,7 @@
 // @ これを一度だけ起動する
 // @ SM_SWAPBUTTON( マウス機能が交換されていたら真 )
 //------------------------------------------------
-#define global CheckMouseButton bMouseBtnSwapped = ___GetSystemMetrics@(23)
+#define global CheckMouseButton bMouseBtnSwapped = GetSystemMetrics_at_IsMouseBtnSwapped(23)
 
 //------------------------------------------------
 // stick用に定義
@@ -54,12 +52,14 @@
 #define global GETKEY_LBTN (1 + bMouseBtnSwapped)
 #define global GETKEY_RBTN (2 - bMouseBtnSwapped)
 
+CheckMouseButton
+
 //##############################################################################
 //                サンプル・スクリプト
 //##############################################################################
 #if 0
-
-	CheckMouseButton	// ←最初に一回呼び出すだけ！
+	
+; #include "IsMouseButtonSwapped.as"	// ← include しておくだけでいい
 	
 	// 反転したクリックを正確に感知する
 	width 240, 180

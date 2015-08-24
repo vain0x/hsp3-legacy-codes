@@ -13,7 +13,7 @@
 //------------------------------------------------
 // エスケープシーケンス付き切り出し
 //------------------------------------------------
-#define TEMP_CutTokenInEsqSec(%1,%2) /* p1 = オフセット p2 = 終了条件 */\
+#define FTM_CutTokenInEsqSec(%1,%2) /* p1 = オフセット p2 = 終了条件 */\
 	i = (%1) :\
 	repeat :\
 		c = peek(p1, p2 + i) : i ++ :\
@@ -28,7 +28,7 @@
 // 文字列か文字定数を切り出す
 //------------------------------------------------
 #defcfunc CutStr_or_Char var p1, int p2, int p3
-	TEMP_CutTokenInEsqSec 1, ( c == p3 || IsNewLine(c) || c == 0 )
+	FTM_CutTokenInEsqSec 1, ( c == p3 || IsNewLine(c) || c == 0 )
 	
 //------------------------------------------------
 // 　文字列を切り出して返す
@@ -41,12 +41,12 @@
 // 複数行文字列を切り出して返す
 //------------------------------------------------
 #defcfunc CutStrMulti var p1, int p2
-	TEMP_CutTokenInEsqSec 2, ( peek(p1, p2 + i - 2) == '"' && c == '}' || c == 0 )
+	FTM_CutTokenInEsqSec 2, ( peek(p1, p2 + i - 2) == '"' && c == '}' || c == 0 )
 	
 //------------------------------------------------
 // 範囲の違う「トークン」を切り出して返す
 //------------------------------------------------
-#define TEMP_CutToken(%1,%2=0) \
+#define FTM_CutToken(%1,%2=0) \
 	i = p2 :\
 	repeat :\
 		c = peek(p1, i) :\
@@ -60,25 +60,25 @@
 // 識別子を切り出して返す
 //------------------------------------------------
 #defcfunc CutName var p1, int p2
-	TEMP_CutToken ( IsIdent(c) || IsSJIS1st(c) || c == '`' ), IsSJIS1st(c)
+	FTM_CutToken ( IsIdent(c) || IsSJIS1st(c) || c == '`' ), IsSJIS1st(c)
 	
 //------------------------------------------------
 // 16進数を切り出して返す
 //------------------------------------------------
 #defcfunc CutNum_Hex var p1, int p2
-	TEMP_CutToken ( IsHex(c) )
+	FTM_CutToken ( IsHex(c) || c == '_' )
 	
 //------------------------------------------------
 // 2進数を切り出して返す
 //------------------------------------------------
 #defcfunc CutNum_Bin var p1, int p2
-	TEMP_CutToken ( IsBin(c) )
+	FTM_CutToken ( IsBin(c) || c == '_' )
 	
 //------------------------------------------------
 // 10進数を切り出して返す
 //------------------------------------------------
 #defcfunc CutNum_Dgt var p1, int p2
-	TEMP_CutToken ( IsDigit(c) || c == '.' )
+	FTM_CutToken ( IsDigit(c) || c == '.' || c == '_' )
 	
 #global
 

@@ -9,15 +9,18 @@
 #cfunc  global GetPrivateProfileInt_mod_ini      "GetPrivateProfileIntA"      sptr,sptr,int,sptr
 
 #define global SetIniName(%1) sdim INIPATH, 260 : INIPATH = str(%1)
-#define global INIPATH _ininame@
+#define global INIPATH _stt_ini_file_name@
 
 #define global WriteIni(%1,%2,%3,%4=INIPATH) WritePrivateProfileString_mod_ini %1,%2,str(%3),%4
+#define global WriteStrIni(%1,%2,%3,%4=INIPATH) WriteIni %1,%2,"\""+ (%3) +"\"",%4
+#define global WriteIntIni WriteIni
 
-#define global GetIni(%1,%2,%3,%4=64,%5="",%6=INIPATH) GetPrivateProfileString_mod_ini %1,%2,str(%5),varptr(%3),%4,%6
+#define global GetIni(%1,%2,%3,%4=63,%5="",%6=INIPATH) GetPrivateProfileString_mod_ini %1,%2,str(%5),varptr(%3),%4,%6
 #define global ctype GetIntIni(%1,%2,%3=0,%4=INIPATH)  GetPrivateProfileInt_mod_ini(%1,%2,%3,%4)
+#define global       GetStrIni IniLoad
 
 #define global DelSectionIni(%1,%2=INIPATH) WritePrivateProfileString_mod_ini %1,0,0,%2
-#define global DelKeyIni(%1,%2,%3=INIPATH) WritePrivateProfileString_mod_ini %1,%2,0,%3
+#define global DelKeyIni(%1,%2,%3=INIPATH)  WritePrivateProfileString_mod_ini %1,%2,0,%3
 
 #define global ctype IsExistKeyIni(%1,%2,%3=INIPATH) ( GetIntIni(%1,%2,0,%3) != 0 && GetIntIni(%1,%2,1,%3) != 1 )
 
@@ -26,21 +29,22 @@
 //------------------------------------------------
 // INI から読み込む ( 関数形式 )
 //------------------------------------------------
-#define global ctype IniLoad(%1,%2,%3=3200,%4="",%5=INIPATH) _IniLoad_mod_ini(%1,%2,%3,%4,%5)
+#define global ctype IniLoad(%1,%2,%3=1200,%4="",%5=INIPATH) _IniLoad_mod_ini(%1,%2,%3,%4,%5)
 #defcfunc _IniLoad_mod_ini str p1, str p2, int p3, str p4, str p5
-	GetIni p1, p2, stmp_mod_ini@, p3, p4, p5
-	return stmp_mod_ini@
+	GetIni p1, p2, _stt_stmp_mod_ini@, p3, p4, p5
+	return _stt_stmp_mod_ini@
 	
 #global
-sdim stmp_mod_ini@, 3201
+sdim _stt_stmp_mod_ini@, 1201
 
 /***
 
 ＠リファレンス
 
-＊すべてに関して
+＊INIに関して
 	・セクション名、キー名、ファイルパスは、半角アルファベットの大文字・小文字を区別しません。
 	・行末コメントはセミコロン ; だけです。ナンバープレース # やＷスラッシュ // は有効な記号です。
+	  まぁ、セクションでもキーでもない場所は意味ない訳ですが。
 	
 ＊INIの設定
 	・SetIniName "ファイルパス"
@@ -48,11 +52,15 @@ sdim stmp_mod_ini@, 3201
 	カレント・INIファイルを設定します。パスにはファイル名ではなく、絶対パスか相対パスを指定してください。
 	
 ＊INIへの書き込み
-	・WriteIni "sec", "key", "value", maxlen, ["inipath"]
+	・WriteIni "sec", "key", "value", ["inipath"]
 	
-	セクション "sec" のキー "key" の値を "value" に設定します。str/int 問いません。
-	maxlen は、登録する文字列の長さ(最大)です。通常は 64 ですが、それ以上の場合は
-	指定してください。文字列長とぴったりである必要はありません。
+	セクション "sec" のキー "key" の値を value に設定します。型は問いません。
+	
+	・WriteIni "sec", "key", "value", ["inipath"]
+	
+	セクション "sec" のキー "key" の値を "value" に設定します。型は問いませんが、
+	文字列として書き込まれます。
+	読み出す場合は普通に GetIni でかまいません。
 	
 ＊INIからの読み込み
 	・GetIni "sec", "key", variable, maxlen, "default", ["inipath"]
@@ -69,7 +77,7 @@ sdim stmp_mod_ini@, 3201
 	
 	・IniLoad("sec", "key", maxlen, "default", ["inipath"])
 	
-	GetIni の関数バージョンです。若干低速になります。maxlen は、省略すると 3200 になります。
+	GetIni の関数バージョンです。若干低速になります。maxlen は、省略すると 1200 になります。
 	
 ＊INIデータの削除
 	・DelSectionIni "sec", ["inipath"]

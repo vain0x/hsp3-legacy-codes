@@ -3,15 +3,16 @@
 #ifndef __MODULE_CLASS_LONG_STRING_AS__
 #define __MODULE_CLASS_LONG_STRING_AS__
 
-#module MCLongStr mString, mStrlen, mStrSize, mExpand
+#module MCLongString mString, mStrlen, mStrSize, mExpand
 
-#define mv modvar MCLongStr@
+#define mv modvar MCLongString@
 #define DEFAULT_SIZE 3200
 
 //------------------------------------------------
-// コンストラクタ
+// [i] コンストラクタ
 //------------------------------------------------
-#modinit int p2, int p3, local defsize, local expandSize
+#define global LongStr_new(%1,%2=-1,%3=-1) newmod %1, MCLongString@, %2, %3
+#modinit int p2, int p3,  local defsize, local expandSize
 	if ( p2 <= 0 ) { defsize = DEFAULT_SIZE } else { defsize = p2 }
 	if ( p3 <= 0 ) { mExpand = DEFAULT_SIZE } else { mExpand = p3 }
 	
@@ -21,17 +22,29 @@
 	return
 	
 //------------------------------------------------
-// 文字列をクリアする
+// [i] デストラクタ
 //------------------------------------------------
-#modfunc LongStr_clear
-	memset mString, 0, mStrlen
-	mStrlen = 0
-	return
+#define global LongStr_delete(%1) delmod %1
+
+//------------------------------------------------
+// [i] 文字列の長さを返す
+//------------------------------------------------
+#defcfunc LongStr_len mv
+	return mStrlen
+	
+#define global LongStr_size LongStr_len
+#define global LongStr_n    LongStr_len
+
+//------------------------------------------------
+// 確保済みバッファの大きさを返す
+//------------------------------------------------
+#defcfunc LongStr_bufSize mv
+	return mStrSize
 	
 //------------------------------------------------
 // 文字列を後ろに追加する
 //------------------------------------------------
-#modfunc LongStr_cat str p2, int p3
+#modfunc LongStr_add str p2, int p3
 	if ( p3 ) { len = p3 } else { len = strlen(p2) }
 	
 	// overflow しないように
@@ -45,17 +58,14 @@
 	mStrlen += strsize
 	return
 	
+#define global LongStr_cat       LongStr_add
+#define global LongStr_push_back LongStr_add
+
 //------------------------------------------------
 // 文字列を関数形式で返す( 非推奨 )
 //------------------------------------------------
 ;#defcfunc LongStr_get mv
 ;	return mString
-	
-//------------------------------------------------
-// 文字列の長さを返す
-//------------------------------------------------
-#defcfunc LongStr_len mv
-	return mStrlen
 	
 //------------------------------------------------
 // 文字列を変数バッファにコピーする
@@ -68,6 +78,49 @@
 	}
 	memcpy buf, mString, mStrlen
 	poke   buf, mStrlen, 0
+	return
+	
+//------------------------------------------------
+// [i] 初期化
+//------------------------------------------------
+#modfunc LongStr_clear
+	memset mString, 0, mStrlen
+	mStrlen = 0
+	return
+	
+//------------------------------------------------
+// [i] 連結
+//------------------------------------------------
+#modfunc LongStr_chain var mv_from,  local tmpbuf
+	LongStr_tobuf mv_from, tmpbuf
+	LongStr_add   thismod, tmpbuf
+	return
+	
+//------------------------------------------------
+// [i] 複製
+//------------------------------------------------
+#modfunc LongStr_copy var mv_from
+	LongStr_clear thismod
+	LongStr_chain thismod, mv_from
+	return
+	
+//------------------------------------------------
+// [i] 交換
+//------------------------------------------------
+#modfunc LongStr_exchange var mv2, local mvTemp
+	LongStr_new  mvTemp
+	LongStr_copy mvTemp,  thismod
+	LongStr_copy thismod, mv2
+	LongStr_copy mv2,     mvTemp
+	LongStr_delete mvTemp
+	return
+	
+//------------------------------------------------
+// 文字列を設定する
+//------------------------------------------------
+#modfunc LongStr_set str string
+	LongStr_clear thismod
+	LongStr_add   thismod, string
 	return
 	
 #global

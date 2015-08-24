@@ -14,26 +14,37 @@
 //######## 定数・マクロ ########################################################
 #define true  1
 #define false 0
-#define mv modvar deflist@
 
+//------------------------------------------------
 // DEFTYPE
+//------------------------------------------------
 #const global DEFTYPE_LABEL		0x0001		// ラベル
 #const global DEFTYPE_MACRO		0x0002		// マクロ
 #const global DEFTYPE_CONST		0x0004		// 定数
 #const global DEFTYPE_FUNC		0x0008		// 命令・関数
+#const global DEFTYPE_DLL		0x0010		// DLL命令
+#const global DEFTYPE_CMD		0x0020		// HPIコマンド
 
 #const global DEFTYPE_CTYPE		0x0100		// CTYPE
 #const global DEFTYPE_MODULE	0x0200		// モジュールメンバ
 
+//------------------------------------------------
 // 特殊な空間名
+//------------------------------------------------
 #define global AREA_GLOBAL "global"
 #define global AREA_ALL    "*"
 
-//######## メンバ関数群 ########################################################
-// 一括して格納する ( p2 = -1 で 追加になる )
-#define global DefList_Set(%1,%2,%3,%4,%5,%6) _DefList_Set %1,%2,%3,%4,%5,%6
-#define global DefList_Add(%1,%2,%3,%4,%5) _DefList_Set %1,-1,%2,%3,%4,%5
-#modfunc _DefList_Set int p2, str ident, int linenum, int deftype, str scope, local iItem
+//##############################################################################
+//                メンバ関数
+//##############################################################################
+//------------------------------------------------
+// 一括して格納する
+// 
+// @ p2 を負数にすると追加になる
+//------------------------------------------------
+#define global DefList_set(%1,%2,%3,%4,%5,%6) _DefList_set %1,%2,%3,%4,%5,%6
+#define global DefList_add(%1,%2,%3,%4,%5) _DefList_set %1,-1,%2,%3,%4,%5
+#modfunc _DefList_set int p2, str ident, int linenum, int deftype, str scope, local iItem
 	if ( p2 < 0 ) { iItem = mCount : mCount ++ } else { iItem = p2 }
 	mIdent(iItem) = ident
 	mLn   (iItem) = linenum
@@ -41,63 +52,74 @@
 	mScope(iItem) = scope
 	return iItem
 	
+//------------------------------------------------
 // 一括して取得する
-#modfunc DefList_Get int p2, var ident, var linenum, var deftype, var scope
+//------------------------------------------------
+#modfunc DefList_get int p2, var ident, var linenum, var deftype, var scope
 	ident   = mIdent(p2)
 	linenum = mLn   (p2)
 	deftype = mType (p2)
 	scope   = mScope(p2)
 	return
 	
-// 各メンバごとの Getter
-#modfunc DefList_GetScript var script
+//------------------------------------------------
+// 各メンバごとの getter
+//------------------------------------------------
+#modfunc DefList_getScript var script
 	script = mScript
 	return
 	
-#defcfunc DefList_GetCount mv
+#modcfunc DefList_getCount
 	return mCount
 	
-#defcfunc DefList_GetFilePath mv
+#modcfunc DefList_getFilePath
 	return mFilePath
 	
-#defcfunc DefList_GetFileName mv
+#modcfunc DefList_getFileName
 	return mFileName
 	
-#defcfunc DefList_GetIdent mv, int p2
+#modcfunc DefList_getIdent int p2
 	return mIdent(p2)
 	
-#defcfunc DefList_GetLn mv, int p2
+#modcfunc DefList_getLn int p2
 	return mLn(p2)
 	
-#defcfunc DefList_GetDefType mv, int p2
+#modcfunc DefList_getDefType int p2
 	return mType(p2)
 	
-#defcfunc DefList_GetScope mv, int p2
+#modcfunc DefList_getScope int p2
 	return mScope(p2)
 	
-#defcfunc DefList_GetCntInclude mv
+#modcfunc DefList_getCntInclude
 	return mCntInclude
 	
-#defcfunc DefList_GetInclude mv, int p2
+#modcfunc DefList_getInclude int p2
 	return mInclude(p2)
 	
+//------------------------------------------------
 // include ファイルを配列にして返す
-#modfunc DefList_GetIncludeArray array p2
+//------------------------------------------------
+#modfunc DefList_getIncludeArray array p2
 	sdim p2,, mCntInclude
 	repeat    mCntInclude
 		p2(cnt) = mInclude(cnt)
 	loop
 	return
 	
-//######## 定義をリストアップする ##############################################
-// (private) 指定文字インデックスのある行番号を取得する
+//##############################################################################
+//                定義をリストアップする
+//##############################################################################
+//------------------------------------------------
+// 指定文字インデックスのある行番号を取得する
+// @private
+//------------------------------------------------
 #defcfunc GetLinenumByIndex@deflist var text, int p2, int iStart, int iStartLineNum, local linenum, local c
 	linenum = iStartLineNum
 	
 	if ( iStart > p2 ) { return iStartLineNum }
 	
 	repeat p2 - iStart, iStart
-		c = peek(text, cnt)
+		c = peek( text, cnt )
 		if ( c == 0x0D || c == 0x0A ) {		// 改行コード
 			linenum ++
 			if ( c == 0x0D && peek(text, cnt + 1) == 0x0A ) {
@@ -106,14 +128,17 @@
 		} else : if ( IsSJIS1st(c) ) {		// 全角文字
 			continue cnt + 2				// 次の 1byte は見る必要なし
 			
-		} else : if ( c == 0 ) {		// '\0' == 終端
+		} else : if ( c == 0 ) {			// '\0' == 終端
 			break
 		}
 	loop
 	
 	return linenum
 	
-// (private) モジュール空間名を決定する
+//------------------------------------------------	
+// モジュール空間名を決定する
+// @private
+//------------------------------------------------
 #defcfunc MakeModuleName@deflist var scope, var script, int offset, str defscope, local index
 	index = offset
 	if ( peek(script, index) == '@' ) {
@@ -125,7 +150,10 @@
 	}
 	return index - offset
 	
-// (private) 範囲名を作成する
+//------------------------------------------------
+// 範囲名を作成する
+// @private
+//------------------------------------------------
 #deffunc MakeScope@deflist var scope, str defscope, int deftype, int bGlobal, int bLocal
 	if ( bGlobal ) { scope = AREA_ALL : return }
 	
@@ -134,8 +162,10 @@
 	if ( bLocal ) { scope += " [local]" }
 	return
 	
+//------------------------------------------------
 // 定義をリストアップする
-#modfunc ListupDefinition local stmp, local index, local textlen, local areaScope, local scope, local linenum, local nowTT, local befTT, local bPreLine, local bGlobal, local bLocal, local deftype, local uniqueCount
+//------------------------------------------------
+#modfunc ListupDefinition  local stmp, local index, local textlen, local areaScope, local scope, local linenum, local nowTT, local befTT, local bPreLine, local bGlobal, local bLocal, local deftype, local uniqueCount
 	index   = 0
 	textlen = strlen(mScript)
 	sdim stmp, 250
@@ -239,9 +269,13 @@
 			case "define"   : deftype  = DEFTYPE_MACRO : bGlobal = false : goto *L_AddDefinition
 			case "const"
 			case "enum"     : deftype  = DEFTYPE_CONST : bGlobal = false : goto *L_AddDefinition
+			case "cfunc"    : deftype  = DEFTYPE_CTYPE
+			case "func"     : deftype |= DEFTYPE_DLL   : bGlobal = false : goto *L_AddDefinition
+			case "cmd"      : deftype  = DEFTYPE_CMD   : bGlobal = true  : goto *L_AddDefinition
 *L_AddDefinition
 				index += CntSpaces(mScript, index)			// 空白 ignore
 				index += CutIdent(nowtk, mScript, index)	// 識別子を取り出す
+				
 				switch getpath( nowtk, 16 )
 					case "global" : bGlobal  = true                  : goto *L_AddDefinition
 					case "ctype"  : deftype |= DEFTYPE_CTYPE         : goto *L_AddDefinition
@@ -283,7 +317,9 @@
 	}
 	return
 	
-//######## コンストラクタ ######################################################
+//------------------------------------------------
+// コンストラクタ
+//------------------------------------------------
 #modinit str path
 	// メンバ変数を初期化
 	sdim mIdent,, 5

@@ -60,7 +60,7 @@
 // 各行の先頭に行番号を埋め込む
 //------------------------------------------------
 #deffunc SetLinenum var retbuf, str p2, str sform, int start, local text, local tmpbuf, local index, local stmp
-	newmod tmpbuf, MCLongStr
+	LongStr_new tmpbuf
 	text  = p2
 	index = 0
 	
@@ -76,22 +76,32 @@
 		LongStr_cat tmpbuf, strf(sform, cnt) + stmp +"\n"
 	loop
 	
-	LongStr_tobuf tmpbuf, retbuf
+	LongStr_tobuf  tmpbuf, retbuf
+	LongStr_delete tmpbuf
 	return
 	
 //------------------------------------------------
 // 定義タイプから文字列を生成する
 //------------------------------------------------
-#defcfunc MakeTypeString int deftype, local stype
+#defcfunc MakeTypeString int deftype,  local stype, local bCType
 	sdim stype, 320
-	if ( deftype & DEFTYPE_LABEL ) { stype = "ラベル" }
-	if ( deftype & DEFTYPE_MACRO ) { stype = "マクロ" }
-	if ( deftype & DEFTYPE_CONST ) { stype = "定数"   }
-	if ( deftype & DEFTYPE_FUNC  ) {
-		if ( deftype & DEFTYPE_CTYPE ) { stype = "関数" } else { stype = "命令" }
+	bCType = ( deftype & DEFTYPE_CTYPE ) != false
+	
+	if ( deftype & DEFTYPE_LABEL ) { stype = "ラベル"   }
+	if ( deftype & DEFTYPE_MACRO ) { stype = "マクロ"   }
+	if ( deftype & DEFTYPE_CONST ) { stype = "定数"     }
+	if ( deftype & DEFTYPE_CMD   ) { stype = "コマンド" }
+	
+	if ( deftype & DEFTYPE_DLL ) {
+		if ( bCType ) { stype = "関数(Dll)" } else { stype = "命令(Dll)" }
+		
+	} else : if ( deftype & DEFTYPE_FUNC  ) {
+		if ( bCType ) { stype = "関数" } else { stype = "命令" }
+		
 	} else {
-		if ( deftype & DEFTYPE_CTYPE ) { stype += " Ｃ" }
+		if ( bCType ) { stype += " Ｃ" }
 	}
+	
 	if ( deftype & DEFTYPE_MODULE ) { stype += " Ｍ" }
 	return stype
 	

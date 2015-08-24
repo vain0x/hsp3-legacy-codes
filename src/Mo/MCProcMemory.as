@@ -3,7 +3,7 @@
 #ifndef __MODULE_CLASS_PROCESS_MEMORY_AS__
 #define __MODULE_CLASS_PROCESS_MEMORY_AS__
 
-#module MCPcMem mhWnd, mProcID, mhProc, mpMem, mMSize
+#module MCPcMem mhWnd, midProc, mhProc, mpMem, mMSize
 
 //------------------------------------------------
 // マクロ
@@ -48,7 +48,7 @@
 //------------------------------------------------
 // 仮想メモリの確保
 //------------------------------------------------
-#modfunc PCM_Alloc int nSize
+#modfunc PCM_alloc int nSize
 	if ( mMSize || mhProc == NULL ) { return NULL }
 	VirtualAllocEx mhProc, NULL, nSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE
 	mpMem  = stat
@@ -58,8 +58,8 @@
 //------------------------------------------------
 // 仮想メモリの解放
 //------------------------------------------------
-#modfunc PCM_Free
-	if ( mhProc == NULL || mMSize == 0 ) { return false }
+#modfunc PCM_free
+	if ( mhProc == NULL || mMSize == 0 || mpMem == NULL ) { return false }
 	VirtualFreeEx mhProc, mpMem, mMSize, MEM_RELEASE
 	mpMem  = NULL
 	mMSize = 0
@@ -68,7 +68,7 @@
 //------------------------------------------------
 // 仮想メモリへの書き込み
 //------------------------------------------------
-#modfunc PCM_WriteVM int ptr, int pValue, int nSize
+#modfunc PCM_writeVM int ptr, int pValue, int nSize
 	if ( pValue == NULL || mhProc == NULL ) { return false }
 	WriteProcessMemory mhProc, ptr, pValue, nSize, NULL
 	return
@@ -76,29 +76,29 @@
 //------------------------------------------------
 // 確保した仮想メモリへの書き込み( ポインタ )
 //------------------------------------------------
-#modfunc PCM_Write int pValue, int nSize, int offset
+#modfunc PCM_write int pValue, int nSize, int offset
 	if ( (offset + nSize) > mMSize ) { return false }
-	PCM_WriteVM thismod, mpMem + offset, pValue, nSize
+	PCM_writeVM thismod, mpMem + offset, pValue, nSize
 	return stat
 	
 //------------------------------------------------
 // 確保した仮想メモリへの書き込み( 変数 )
 //------------------------------------------------
-#modfunc PCM_WriteVar var p2, int nSize, int offset
-	PCM_Write thismod, varptr(p2), nSize, offset
+#modfunc PCM_writeVar var p2, int nSize, int offset
+	PCM_write thismod, varptr(p2), nSize, offset
 	return stat
 	
 //------------------------------------------------
 // 仮想メモリへの書き込み( 値 )
 //------------------------------------------------
-#define global PCM_WriteInt(%1,%2=0,%3=0) val@MCPcMem = %2 : PCM_WriteVar %1,val@MCPcMem,4,%3
-#define global PCM_WriteDouble(%1,%2,%3=0)val@MCPcMem = %2 : PCM_WriteVar %1,val@MCPcMem,8,%3
-#define global PCM_WriteStr(%1,%2,%3=0)  sval@MCPcMem = %2 : PCM_WriteVar %1,sval@MCPcMem,strlen(sval@MCPcMem) + 1,%3
+#define global PCM_writeInt(%1,%2=0,%3=0) val@MCPcMem = %2 : PCM_writeVar %1,val@MCPcMem,4,%3
+#define global PCM_writeDouble(%1,%2,%3=0)val@MCPcMem = %2 : PCM_writeVar %1,val@MCPcMem,8,%3
+#define global PCM_writeStr(%1,%2,%3=0)  sval@MCPcMem = %2 : PCM_writeVar %1,sval@MCPcMem,strlen(sval@MCPcMem) + 1,%3
 
 //------------------------------------------------
 // 仮想メモリからの読み込み
 //------------------------------------------------
-#modfunc PCM_ReadVM int ptr, int pBuffer, int nSize
+#modfunc PCM_readVM int ptr, int pBuffer, int nSize
 	if ( pBuffer == NULL || mhProc == NULL ) { return false }
 	ReadProcessMemory mhProc, ptr, pBuffer, nSize, NULL
 	return
@@ -106,27 +106,27 @@
 //------------------------------------------------
 // 確保した仮想メモリからの読み込み( ポインタ )
 //------------------------------------------------
-#modfunc PCM_Read int pBuffer, int nSize, int offset
-	PCM_ReadVM thismod, mpMem + offset, pBuffer, nSize
+#modfunc PCM_read int pBuffer, int nSize, int offset
+	PCM_readVM thismod, mpMem + offset, pBuffer, nSize
 	return stat
 	
 //------------------------------------------------
 // 確保した仮想メモリからの読み込み( 変数 )
 //------------------------------------------------
-#modfunc PCM_ReadVar var p2, int nSize, int offset
-	PCM_Read thismod, varptr(p2), nSize, offset
+#modfunc PCM_readVar var p2, int nSize, int offset
+	PCM_read thismod, varptr(p2), nSize, offset
 	return stat
 	
 //------------------------------------------------
 // 確保した仮想メモリの先頭へのポインタを得る
 //------------------------------------------------
-#defcfunc PCM_GetPtr mv
+#defcfunc PCM_getPtr mv
 	return mpMem
 	
 //------------------------------------------------
 // 確保したサイズ
 //------------------------------------------------
-#defcfunc PCM_GetSize mv
+#defcfunc PCM_getSize mv
 	return mMSize
 	
 //------------------------------------------------
@@ -136,29 +136,32 @@
 	return mhProc
 	
 //------------------------------------------------
-// コンストラクタ
+// [i] コンストラクタ
 //------------------------------------------------
+#define global PCM_new(%1,%2) newmod %1, MCPcMem@, %2
 #modinit int hWindow
+	
 	// メンバ変数の初期化
 	mhWnd = hWindow
-	dim mProcID
+	dim midProc
 	dim mhProc
 	dim mpMem
 	dim mMSize
 	
 	// プロセスのハンドルを得る
-	GetWindowThreadProcessId mhWnd, varptr(mProcID)
-	OpenProcess PROCESS_ALL_ACCESS, false, mProcID
+	GetWindowThreadProcessId mhWnd, varptr(midProc)
+	OpenProcess PROCESS_ALL_ACCESS, false, midProc
 	mhProc = stat
 	
-	return mhProc
+	return
 	
 //------------------------------------------------
-// デストラクタ
+// [i] デストラクタ
 //------------------------------------------------
+#define global PCM_delete(%1) delmod %1
 #modterm
-	// メモリが確保されていたら解放する
-	if ( mpMem != NULL ) { PCM_Free thismod }
+	// 解放する
+	PCM_free thismod
 	
 	// プロセスハンドルを閉じる
 	if ( mhProc ) { CloseHandle mhProc : mhProc = NULL }

@@ -26,6 +26,10 @@
 #enum global STRSET_ERR_ARGMENT   = -4		// 引数が異常 (関数なら失敗)
 #enum global STRSET_ERR_EOS       = -5		// 最後まで読み切った
 
+// 統一関数マクロ
+#define global StrSet_new(%1,%2="",%3) newmod %1, MCStrSet@, %2, %3
+#define global StrSet_delete(%1) delmod %1
+
 //##############################################################################
 //        内部メンバ関数の定義
 //##############################################################################
@@ -576,7 +580,7 @@
 // @private
 // @ mIt の更新
 //------------------------------------------------
-#modfunc StrSet_iterNext
+#modfunc StrSet_iterCheckCore
 	mIt = StrSet_getnext(thismod)
 	return
 	
@@ -585,7 +589,7 @@
 //------------------------------------------------
 #defcfunc StrSet_iterCheck mv, local bool
 	bool = ( mLastErr != STRSET_ERR_EOS )
-	StrSet_IterNext thismod		// 更新される
+	StrSet_IterCheckCore thismod	// 更新される
 	if ( bool == false ) {
 		StrSet_popIdxptr thismod
 	}
@@ -596,6 +600,24 @@
 //------------------------------------------------
 #defcfunc StrSet_it mv
 	return mIt
+	
+//------------------------------------------------
+// [i] 繰返子初期化
+//------------------------------------------------
+#modfunc StrSet_iterInit var iterData
+	StrSet_iter thismod
+	iterData = false
+	return
+	
+//------------------------------------------------
+// [i] 繰返子更新
+//------------------------------------------------
+#defcfunc StrSet_iterNext mv, var vIt, var iterData
+	if ( iterData == false ) {
+		dup vIt, mIt
+		iterData = true
+	}
+	return StrSet_iterCheck(thismod)
 	
 //##########################################################
 //        便利ルーチン関数群
@@ -652,7 +674,7 @@
 // コピーを作成する
 //------------------------------------------------
 #modfunc StrSet_copy var v_copy
-	newmod v_copy, MCStrSet@, mString, mChar
+	StrSet_new v_copy, mString, mChar
 	return stat
 	
 //------------------------------------------------
@@ -756,7 +778,7 @@
 	bufsize = 320
 	sdim buf, bufsize
 	
-	newmod ss, MCStrSet, "文,字,列", ","
+	StrSet_new ss, "文,字,列", ","
 	
 	write "mString = "+ StrSet_getall(ss)
 	write
