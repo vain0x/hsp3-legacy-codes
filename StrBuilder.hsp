@@ -1,6 +1,8 @@
 #ifndef ig_str_builder_hsp
 #define ig_str_builder_hsp
 
+//capacity: バッファに格納できるバイト数、null終端は除く。
+
 #module StrBuilder buf_, len_, capacity_, expand_size_
 
 #define BufSize_Default 4096
@@ -13,10 +15,9 @@
 
 #modinit int def_size, int expand_size
 	
-	capacity_    = limit(def_size, BufSize_Default, def_size)
+	capacity_    = limit(def_size,    BufSize_Default, def_size)
 	expand_size_ = limit(expand_size, BufSize_Default, expand_size)
-	
-	sdim buf_, capacity_
+	sdim buf_, capacity_ + 1
 	return
 	
 //------------------------------------------------
@@ -39,7 +40,7 @@
 	
 	if ( src_len ) { tmpLen = src_len } else { tmpLen = strlen(src) }
 	
-	StrBuilder_ensure_capacity thismod, len_ + tmpLen + 1
+	StrBuilder_ensure_capacity thismod, len_ + tmpLen
 	
 	// 書き込む (poke 側が src を strlen する分無駄がある)
 	poke buf_, len_, src
@@ -51,7 +52,7 @@
 
 	if ( src_len ) { tmpLen = src_len } else { tmpLen = strlen(src) }
 	
-	StrBuilder_ensure_capacity thismod, len_ + tmpLen + 1
+	StrBuilder_ensure_capacity thismod, len_ + tmpLen
 	
 	// 書き込む ('\0' を含める)
 	memcpy buf_, src, tmpLen + 1, len_
@@ -68,7 +69,7 @@
 #modfunc StrBuilder_append_char int c
 	if ( c == 0 ) { return }
 	
-	StrBuilder_ensure_capacity thismod, len_ + 2
+	StrBuilder_ensure_capacity thismod, len_ + 1
 	
 	// 書き込む
 	wpoke buf_, len_, c
@@ -91,13 +92,13 @@
 #modfunc StrBuilder_ensure_capacity int new_capa
 	if ( capacity_ < new_capa ) {
 		capacity_ = new_capa + expand_size_
-		memexpand buf_, capacity_
+		memexpand buf_, capacity_ + 1
 	}
 	return
 	
 #modfunc StrBuilder_expand_capacity int size
 	capacity_ += size + expand_size_
-	memexpand buf_, capacity_
+	memexpand buf_, capacity_ + 1
 	return
 	
 //------------------------------------------------
@@ -119,7 +120,7 @@
 	return len_
 
 //------------------------------------------------
-// 確保済みバッファの大きさを返す
+// 確保済みのキャパシティを返す
 //------------------------------------------------
 #modcfunc StrBuilder_capacity
 	return capacity_
