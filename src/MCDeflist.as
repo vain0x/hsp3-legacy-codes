@@ -64,8 +64,8 @@
 	noteload mFilePath
 	noteunsel
 	
-	// 定義をリストアップ
-	deflist_listup thismod
+	// 定義をリストする
+	deflist_list thismod
 	
 	return getaptr(thismod)
 	
@@ -163,12 +163,12 @@
 	return
 	
 //------------------------------------------------
-// 定義をリストアップする
+// 定義をリストする
 //------------------------------------------------
 #define nowTkType tktypelist(idx)
 #define nowTkStr  tkstrlist (idx)
 
-#modfunc deflist_listup  local tktypelist, local tkstrlist, local befTkType, local idx, local cntToken, local sIdent, local areaScope, local scope, local nowline, local bGlobal, local bLocal, local deftype, local uniqueCount, local fSplit
+#modfunc deflist_list  local tktypelist, local tkstrlist, local befTkType, local idx, local cntToken, local sIdent, local areaScope, local scope, local nowline, local bGlobal, local bLocal, local deftype, local uniqueCount, local fSplit
 	fSplit  = HPM_SPLIT_FLAG_NO_BLANK
 	fSplit |= HPM_SPLIT_FLAG_NO_RESERVED
 	

@@ -81,55 +81,32 @@
 	return
 	
 //------------------------------------------------
-// 定義タイプから文字列を生成する
-//------------------------------------------------
-#defcfunc MakeTypeString int deftype,  local stype, local bCType
-	sdim stype, 320
-	bCType = ( deftype & DEFTYPE_CTYPE ) != false
-	
-	if ( deftype & DEFTYPE_LABEL ) { stype = "ラベル"   }
-	if ( deftype & DEFTYPE_MACRO ) { stype = "マクロ"   }
-	if ( deftype & DEFTYPE_CONST ) { stype = "定数"     }
-	if ( deftype & DEFTYPE_CMD   ) { stype = "コマンド" }
-	
-	if ( deftype & DEFTYPE_DLL ) {
-		if ( bCType ) { stype = "関数(Dll)" } else { stype = "命令(Dll)" }
-		
-	} else : if ( deftype & DEFTYPE_FUNC  ) {
-		if ( bCType ) { stype = "関数" } else { stype = "命令" }
-		
-	} else {
-		if ( bCType ) { stype += " Ｃ" }
-	}
-	
-	if ( deftype & DEFTYPE_MODULE ) { stype += " Ｍ" }
-	return stype
-	
-//------------------------------------------------
 // 検索パスを追加する
 //------------------------------------------------
 #deffunc AppendSearchPath str p1, local path, local c, local len
 	sdim path, MAX_PATH
 	path = p1
 	len  = strlen(path)
+	if ( len == 0 ) { return }
+	
 	c    = peek(path, len - 1)
 	if ( c == '/' ) { len -- }
 	if ( c != '\\') { wpoke path, len, '\\' : len ++ }
-	if ( instr(searchpath, 0, path +";") < 0 ) {
-		searchpath += path +";"
+	if ( instr(searchpath, 0, path + ";") < 0 ) {
+		searchpath += path + ";"
 	}
 	return
 	
 //------------------------------------------------
 // 定義リストを再帰的に作成する
 //------------------------------------------------
-#deffunc CreateDefinitionList array mdeflist, array listIncludeToLoad, int bFirstCall, local listInclude, local filename, local index, local bListupped
+#deffunc CreateDefinitionList array mdeflist, array listIncludeToLoad, int bFirstCall, local listInclude, local filename, local index, local bListed
 	
 	// 初回の場合、ハッシュ値の配列を削除
 	if ( bFirstCall ) {
 		dim mdeflist
-		dim hashListupped, 32
-		cntListup = 0
+		dim hashListed, 32
+		cntList = 0
 	}
 	
 	foreach listIncludeToLoad
@@ -148,39 +125,39 @@
 		
 ;		// 既に開かれているファイルなら無視
 ;		if ( bFirstCall == false ) {
-;			bListupped = false
+;			bListed = false
 ;			foreach mdeflist
 ;				if ( deflist_GetFileName( mdeflist(cnt) ) == filename ) {
-;					bListupped = true
+;					bListed = true
 ;					break
 ;				}
 ;			loop
-;			if ( bListupped ) { continue }
+;			if ( bListed ) { continue }
 ;		}
 		
 ;		exist listIncludeToLoad(cnt)
 ;		if ( strsize < 0 ) { continue }
 		
 		// 既に開かれているファイルは無視
-		bListupped = false
-		hash       = EasyHash( listIncludeToLoad(cnt) )		// フルパス
+		bListed = false
+		hash    = EasyHash( listIncludeToLoad(cnt) )		// フルパス
 		if ( bFirstCall == false ) {
-			repeat cntListup
-				if ( hashListupped(cnt) == hash ) {
+			repeat cntList
+				if ( hashListed(cnt) == hash ) {
 					// 念のためファイルパスでも比較する
 					if ( deflist_GetFileName( mdeflist(cnt) ) == filename ) {
-						bListupped = true
+						bListed = true
 						break
 					}
 				}
 			loop
-			if ( bListupped ) { continue }	// 定義済みなので無視する
+			if ( bListed ) { continue }	// 定義済みなので無視する
 		}
 		
 		// 開いたリストに追加
-		if ( bListupped == false ) {
-			hashListupped(cntListup) = hash
-			cntListup ++
+		if ( bListed == false ) {
+			hashListed(cntList) = hash
+			cntList ++
 		}
 		
 		// 定義リストを作成する
@@ -189,7 +166,7 @@
 		
 		// 再帰的に結合されたファイルから定義を取り出す
 		if ( deflist_getCntInclude( mdeflist(index) ) ) {
-			deflist_getIncludeArray mdeflist(index), listInclude
+			deflist_getIncludeArray mdeflist(index), listInclude		// #iclude 指示されたファイルのリストを得る
 			CreateDefinitionList    mdeflist,        listInclude, false
 		}
 		
