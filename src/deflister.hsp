@@ -32,21 +32,22 @@
 	gosub *LClearVariable	// 変数の初期化
 	gosub *LSetWindow		// スクリーンを作成
 	
-	gosub *LGetTargetFilePath	// 対象ファイルのパスを取得
+	gosub *LGetTargetFilePath		// 対象ファイルのパスを取得
 	gosub *LUpdateDefinitionList	// 定義リストの更新
-	gosub *LUpdateListview		// リストビューの更新
+	gosub *LUpdateListview			// リストビューの更新
 	
 	gsel IDW_MAIN
 		oncmd gosub *OnSize       , 0x0005		// WM_SIZE        (サイズが変更された)
 		oncmd gosub *OnSizing     , 0x0214		// WM_SIZING      (サイズが変更されている)
 		oncmd gosub *OnNotify     , 0x004E		// WM_NOTIFY
+		oncmd gosub *OnCommand    , 0x0111		// WM_COMMAND
 		oncmd gosub *OnMouseMove  , 0x0200		// WM_MOUSEMOVE   (マウスが動いた)
 		oncmd gosub *OnLBtnDown   , 0x0201		// WM_LBUTTONDOWN
 		oncmd gosub *OnSplitterMove, UWM_SPLITTERMOVE
 		
 		oncmd gosub *OnAlreadyUsed, UWM_ALREADY_USED	// 二重起動された
 		
-	onexit  goto *LExit		// 終了時
+	onexit  goto *LExit			// 終了時
 	onerror goto *LError		// エラー発生時
 	
 	gsel IDW_MAIN, 1
@@ -91,7 +92,7 @@
 	ini_puti cfg, "Window", "px", rc(0)
 	ini_puti cfg, "Window", "py", rc(1)
 	
-	ini_puti cfg, "Editbox", "Height",            EditHeight
+	ini_puti cfg, "Editbox", "Height",            heightEdit
 	ini_puti cfg, "Editbox", "cntShowLineBefore", cntShowLineBefore
 	
 	return
@@ -155,15 +156,19 @@
 *LClearVariable
 	ini_new cfg, STR_INIPATH
 	
+	// GUI部分に用いる変数
 	dim  rc, 4
 	dim  infScript, 2
 	dim  infBtns, 2, 2			// 各種ボタン
 	dim  infLv, 2
 	dim  iLv
 	dim  iDL					// Index of Active Definition List
-	EditHeight        = ini_geti(cfg, "Editbox", "Height", 100)
+	heightEdit        = ini_geti(cfg, "Editbox", "Height", 100)
 	cntShowLineBefore = ini_geti(cfg, "EditBox", "cntShowLineBefore", 1)
+	dim  infFind,  2			// 検索窓
+	sdim strFind,  320
 	
+	// 選択状態にある項目の各データ
 	sdim script, 0x1FFF			// スクリプト表示部分のバッファ
 	dim  deflistLn				// 定義がある行番号
 	sdim deflistIdent			// 定義される識別子
@@ -172,6 +177,7 @@
 	dim  deflistCount			// 定義の数
 	dim  deflistItemTop			// 定義の項目番号の先頭
 	sdim stype
+	
 	sdim filepath, MAX_PATH
 	sdim filename, MAX_PATH
 	
@@ -219,6 +225,8 @@
 	
 //------------------------------------------------
 // ウィンドウの準備
+// 
+// @ オブジェクトの位置と大きさは、*OnSize で整えるので、気にせず配置する。
 //------------------------------------------------
 *LSetWindow
 	winsize(0) = ini_geti(cfg, "Window", "cx", 380)
@@ -232,14 +240,18 @@
 		// Script-Viewer
 		font ini_gets(cfg, "Editbox", "FontFamily", msgothic), ini_geti(cfg, "Editbox", "FontSize", 12)
 		objmode 2
-		pos 5, 5 : mesbox script, ginfo(20), EditHeight, 4 : infScript = objinfo(stat, 2), stat
+		mesbox script, ginfo(20), ginfo(21), 4 : infScript = objinfo(stat, 2), stat
 		
 		tabstops = (12 + 1) / 4 * 4						// (fontpt + 1) / 4 * tabsize
 		sendmsg infScript, 0x00CB, 1, varptr(tabstops)	// EM_SETTABSTOPS
+		
+		// 検索窓
+		input strFind, 240, 20 : infFind = objinfo(stat, 2), stat
+		
 		objmode 1
 		
-		// リストビュー
-		CreateListview mLv, ginfo(20), ginfo(21), 0x0001 | 0x0004 | 0x0008 | 0x8000
+		// Deflist-Viewer
+		CreateListview mLv, ginfo(20), ginfo(21), (0x0001 | 0x0004 | 0x0008 | 0x8000)
 		infLv = objinfo(stat, 2), stat
 		
 		gosub *LLvInitialize
@@ -249,8 +261,8 @@
 		button gosub "移動", *LBtnJump  : infBtns(0, 0) = objinfo(stat, 2), stat : EnableWindow infBtns(0, 0), bHsed
 		button gosub "更新", *LBtnRenew : infBtns(0, 1) = objinfo(stat, 2), stat
 		
-		gosub *OnSize
-		
+	gosub *OnSize
+	
 	return
 	
 //------------------------------------------------
@@ -520,8 +532,9 @@
 // ウィンドウのサイズが変わった
 //------------------------------------------------
 *OnSize
-	MoveWindow infScript, 5,  5             , ginfo(12) - 10, EditHeight, true
-	MoveWindow infLv,     5, 10 + EditHeight, ginfo(12) - 10, ginfo(13) - (EditHeight + 30 + 20), true
+	MoveWindow infScript, 5,  5             , ginfo(12) - 10, heightEdit, true
+	MoveWindow infLv,     5, 10 + heightEdit, ginfo(12) - 10, ginfo(13) - (heightEdit + 30 + 20), true
+	MoveWindow infFind,   5, ginfo(13) - 30 ,            240, 20, true
 	
 	repeat length2(infBtns)
 		MoveWindow infBtns(0, cnt), ginfo(12) - (85 * (cnt + 1)), ginfo(13) - 30, 80, 25, true
@@ -586,8 +599,98 @@
 		} else : if ( nmhdr(2) == -114 ) {			// LVN_ITEMACTIVATE
 			if ( bHsed ) { gosub *LBtnJump }
 		}
+		
+	// 検索窓
+	} else : if ( nmhdr(0) == infFind(0) ) {
+		// [Enter]
+		if ( nmhdr(2) == -4 ) {
+			gosub *LFindNext
+		}
 	}
 	return
+	
+//------------------------------------------------
+// コントロールの割り込み (Command)
+//------------------------------------------------
+*OnCommand
+	// 検索窓
+	if ( lparam == infFind(0) ) {
+		// EN_CHANGE (内容が変更された)
+		if ( HIWORD(wparam) == 0x0300 ) {
+			gosub *LFindNext
+		}
+	}
+	return
+	
+//##############################################################################
+//        検索関係
+//##############################################################################
+//------------------------------------------------
+// 次を検索
+// 
+// @global: iLv, strFind
+//------------------------------------------------
+*LFindNext
+;	logmes dbgstr(iLv)
+;	if ( iLv < 0 ) { iLv = 0 }
+	if ( strFind == "" ) { return }
+	
+	if ( bInclude ) {
+		// iLv → last まで検索
+		repeat length(mdeflist), iDL
+			
+			for i, 0, deflist_getCount(mdeflist(cnt))
+				if ( cnt == iDL ) : if ( i + deflistItemTop(cnt) <= iLv ) { _continue }
+				
+				gosub *LFindNextImpl
+				if ( stat ) { break }
+			next
+			
+		loop
+		
+		if ( iFound >= 0 ) { return }
+		
+		// first → iLv まで検索
+		repeat iDL
+			for i, 0, deflist_getCount(mdeflist(cnt))
+				if ( i + deflistItemTop(cnt) >= iLv ) { break }
+				
+				gosub *LFindNextImpl
+				if ( stat ) { break }
+			next
+		loop
+		
+	} else {
+		repeat 1, iDL		// cnt = iDL とする
+			i = iLv + 1		// iLv → delistCound → 0 → iLv
+			while
+				if ( i == deflistCount ) { i = 0 }	// 選択項目(iLv)より下になければ、上に戻る
+				if ( i == iLv ) { break }			// 検索終了
+				
+				gosub *LFindNextImpl
+				if ( stat ) { break }
+				
+				i ++
+			wend
+		loop
+	}
+	
+	return
+	
+*LFindNextImpl
+	// @ deflist(cnt) の [i] の識別子と検索文字列が一致するか調べ、
+	// @	一致すればそれを選択
+	
+	ident  = deflist_getIdent( mdeflist(cnt), i )
+	iFound = instr( ident, , strFind )
+	if ( iFound >= 0 ) {
+		iLv = i
+		iDL = cnt
+		gosub *LLvSelectedIdent		// 選択させる
+		return 1
+	}
+	
+	return 0
 	
 //##############################################################################
 //        マウスＤ＆Ｄ関係
@@ -596,7 +699,7 @@
 // マウスが仮想スプリッター上を動いた
 //------------------------------------------------
 *OnMouseMove
-	if ( in_rect( mousex2, mousey2, 5, 5 + EditHeight, ginfo(12) - 10, 10 + EditHeight ) ) {
+	if ( in_rect( mousex2, mousey2, 5, 5 + heightEdit, ginfo(12) - 10, 10 + heightEdit ) ) {
 		SetCursor LoadCursor(IDC_SIZENS)	// 上下
 	}
 	return
@@ -605,7 +708,7 @@
 // ドラッグ開始
 //------------------------------------------------
 *OnLBtnDown
-	if ( in_rect( mousex2, mousey2, 5, 5 + EditHeight, ginfo(12) - 10, 10 + EditHeight ) ) {
+	if ( in_rect( mousex2, mousey2, 5, 5 + heightEdit, ginfo(12) - 10, 10 + heightEdit ) ) {
 		// 開始時の位置を記憶する
 		bDragging   = true					// ドラッグ開始フラッグ
 		ptDragStart = ginfo(0), ginfo(1)	// 位置を記憶する
@@ -650,7 +753,7 @@
 // 仮想スプリッタが動いた
 //------------------------------------------------
 *OnSplitterMove
-	EditHeight += ptDragEnd(1) - ptDragStart(1)		// 変わる
+	heightEdit += ptDragEnd(1) - ptDragStart(1)		// 変わる
 	
 	gosub *OnSize
 	return
