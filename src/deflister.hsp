@@ -182,7 +182,18 @@
 	bCustomDraw = ini_geti(cfg, "Opt", "bCustomDraw", true)
 	
 	if ( bInclude ) {
-		if ( bHsed ) { gosub *LGetCommonPath }
+		// common
+		pathToCommon = ini_gets( cfg, "Env", "CommonPath", "" )
+		
+		if ( pathToCommon == "" && bHsed ) {
+			gosub *LGetCommonPath				// hsed のパスから逆算して求まる
+			if ( pathToCommon == "" ) { ini_puts cfg, "Env", "CommonPath", pathToCommon }
+		}
+		
+		AppendSearchPath pathToCommon
+		
+		// others
+		AppendSearchPath ini_gets( cfg, "Env", "IncludePath", "" )
 	}
 	
 	return
@@ -287,15 +298,12 @@
 	return
 	
 //------------------------------------------------
-// common フォルダのパスを検索パスに登録する
+// common フォルダのパスを取得する
 //------------------------------------------------
 *LGetCommonPath
-	if ( bInclude ) {
-		if ( bHsed ) {
-			// hsed のフルパスに common をくっつける
-			pathToCommon = getpath( hsed_GetHsedPath(), 32 ) +"common"
-			AppendSearchPath pathToCommon
-		}
+	if ( bHsed ) {
+		// hsed のフルパスに common をくっつける
+		pathToCommon = getpath( hsed_GetHsedPath(), 32 ) + "common"
 	}
 	return
 	
