@@ -180,7 +180,26 @@
 	
 	bInclude    = ini_geti(cfg, "Opt", "bInclude",    false)
 	bCustomDraw = ini_geti(cfg, "Opt", "bCustomDraw", true)
+	bColoringByIdentType = ini_geti(cfg, "Opt", "bColoringByIdentType", false)
 	
+	// listview
+	if ( bCustomDraw ) {
+		// 既定色
+		ini_getArray cfg, lvClrTx, "Color", "Lv.Text" : lvClrTxCnt = length(lvClrTx)	// 文字色
+		ini_getArray cfg, lvClrBg, "Color", "Lv.Back" : lvClrBgCnt = length(lvClrBg)	// 背景色
+		
+		// 識別子タイプごとの色分け
+		if ( bColoringByIdentType ) {
+			stmp = ini_gets(cfg, "Color", "Lv.Id.$idtypelist") : split@hsp stmp, ",", idtypelist
+			stmp = ini_gets(cfg, "Color", "Lv.Id.$keylist")    : split@hsp stmp, ",", keylist
+			foreach keylist
+				lvClrTxId(cnt) = ini_geti(cfg, "Color", "Lv.Text.Id." + keylist(cnt), (-1))
+				lvClrBgId(cnt) = ini_geti(cfg, "Color", "Lv.Back.Id." + keylist(cnt), (-1))
+			loop
+		}
+	}
+	
+	// search path
 	if ( bInclude ) {
 		// common
 		pathToCommon = ini_gets( cfg, "Env", "CommonPath", "" )
@@ -426,8 +445,22 @@
 		LvSetSub      mLv,       filename, iLvItem, 4
 		
 		if ( bCustomDraw ) {
-			LvCtTextColor mLv, iLvItem, 0x000000
-			LvCtBackColor mLv, iLvItem, cond_i(iLvItem & 1, 0xFFF2F2, 0xF2F2FF)
+			crefTx = lvClrTx(iLvItem \ lvClrTxCnt)
+			crefBg = lvClrBg(iLvItem \ lvClrBgCnt)
+			
+			// 識別子タイプによって色分けする
+			if ( bColoringByIdentType ) {
+				foreach idtypelist
+					if ( idtypelist(cnt) == stype ) {
+						if ( lvClrTxId(cnt) >= 0 ) { crefTx = lvClrTxId(cnt) }
+						if ( lvClrBgId(cnt) >= 0 ) { crefBg = lvClrBgId(cnt) }
+						break
+					}
+				loop
+			}
+			
+			LvCtTextColor mLv, iLvItem, crefTx
+			LvCtBackColor mLv, iLvItem, crefBg
 		}
 	loop
 	return
