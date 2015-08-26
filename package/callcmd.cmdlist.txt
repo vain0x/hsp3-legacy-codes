@@ -71,10 +71,8 @@ HpiCmdlistBegin;
 
 	HpiCmd_F_(0x150, argBind);
 	HpiCmd_F_(0x151, unBind);
-#if 0
 	HpiCmd_F_(0x140, streamCallerNew);
 	HpiCmdS__(0x141, streamCallerAdd);
-#endif
 	HpiCmd_F_(0x160, coCreate);
 	HpiCmdS__(0x161, coYield_);
 	HpiCmd_F_(0x170, lambda);

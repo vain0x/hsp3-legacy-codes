@@ -1,5 +1,5 @@
 ﻿// CAssoc 実装
-
+#if 0
 #include "CAssoc.h"
 #include "mod_makepval.h"
 
@@ -174,3 +174,4 @@ void CAssoc::Clear()
 	map_.clear();
 	return;
 }
+#endif

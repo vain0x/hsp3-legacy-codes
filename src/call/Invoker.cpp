@@ -4,133 +4,90 @@
 
 #include "iface_call.h"
 #include "Invoker.h"
+#include "Argument.h"
+
+#include "../var_vector/cmd_vector.h"
 
 using namespace hpimod;
 
 ManagedPVal Caller::lastResult { nullptr };
 
-// nobind(N) に指定できる N の最大値
-static int const NobindPriorityMax = std::numeric_limits<unsigned short>::max();
-
-//------------------------------------------------
-// my_code_getarg の返値
-//
-// type CodeGetArgResult =
-//	| ByVal * ((PDAT*) * vartype_t)
-//	| ByRef * (PVal*)
-//	| ByThismod * (PVal*)
-//	| ByFlex * (vector_t)
-//	| Default
-//	| End
-//	| NoBind * int
-//------------------------------------------------
-struct CodeGetArgResult
-{
-	enum class Style : unsigned char {
-		ByVal, ByRef, ByThismod, ByFlex,
-		Default, End, NoBind,
-	};
-private:
-	Style style_;
-	union {
-		struct { PDAT const* pdat_; vartype_t vtype_; };
-		MPVarData vardata_;
-		int priority_;
-	};
-public:
-	static CodeGetArgResult byVal(PDAT const* pdat, vartype_t vtype) { return CodeGetArgResult(pdat, vtype); }
-	static CodeGetArgResult byRef(PVal* pval) { return CodeGetArgResult(pval, pval->offset, Style::ByRef); }
-	static CodeGetArgResult byThismod(PVal* pval) { return CodeGetArgResult(pval, pval->offset, Style::ByThismod); }
-	static CodeGetArgResult noBind(int priority) { return CodeGetArgResult(priority); }
-	static CodeGetArgResult const Default;
-	static CodeGetArgResult const End;
-
-	Style getStyle() const { return style_; }
-	PDAT const* getValptr() const{ assert(getStyle() == Style::ByVal); return pdat_; }
-	vartype_t getVartype() const { assert(getStyle() == Style::ByVal); return vtype_; }
-	PVal* getPVal() const { assert(isByRefStyle()); return vardata_.pval; }
-	APTR getAptr() const { assert(isByRefStyle()); return vardata_.aptr; }
-	int getPriority() const { assert(style_ == Style::NoBind); return priority_; }
-
-private:
-	CodeGetArgResult(Style style) : style_ { style }
-	{ }
-	CodeGetArgResult(PVal* pval, APTR aptr, Style style) : style_ { style }, vardata_ ({ pval, aptr })
-	{ assert(style == Style::ByRef || style == Style::ByThismod); }
-	CodeGetArgResult(PDAT const* pdat, vartype_t vtype) : style_ { Style::ByVal }, pdat_ { pdat }, vtype_ { vtype }
-	{ }
-	CodeGetArgResult(int priority) : style_ { Style::NoBind }, priority_ { priority }
-	{ }
-
-	bool isByRefStyle() const { return (style_ == Style::ByRef || style_ == Style::ByThismod); }
-};
-
-CodeGetArgResult const CodeGetArgResult::Default { Style::Default };
-CodeGetArgResult const CodeGetArgResult::End { Style::End };
+ArgData const ArgData::Default { Style::Default };
+ArgData const ArgData::End { Style::End };
 
 //------------------------------------------------
 // 次の値を取り出す (oode_getprm の call.hpi 版)
 //------------------------------------------------
-CodeGetArgResult my_code_getarg(int prmtype)
+static ArgData my_code_getarg(prmtype_t prmtype)
 {
 	switch ( code_get_procHeader() ) {
 		case PARAM_END:
-		case PARAM_ENDSPLIT: return CodeGetArgResult::End;
-		case PARAM_DEFAULT:  return CodeGetArgResult::Default;
+		case PARAM_ENDSPLIT: return ArgData::End;
+		case PARAM_DEFAULT:  return ArgData::Default;
 		default:
 		{
-			if ( *type == g_pluginType_call && *val == CallCmd::Id::noBind ) {
-				// 不束縛引数 (noBind)
+			if ( *type == g_pluginType_call ) {
+				switch ( *val ) {
+					case CallCmd::Id::noBind:
+					{
+						// 不束縛引数 (noBind)
 
-				code_next();
-				int priority = NobindPriorityMax;
-				
-				if ( *type == TYPE_MARK && *val == '(' ) {
-					// ( ) あり => 優先度数を取り出す
-					code_next();
-					priority = code_getdi(priority);
-					if ( !(0 <= priority && priority <= NobindPriorityMax) ) puterror(HSPERR_ILLEGAL_FUNCTION);
-					if ( !code_next_expect(TYPE_MARK, ')') ) puterror(HSPERR_TOO_MANY_PARAMETERS);
-				}
+						code_next();
+						int priority = NobindPriorityMax;
 
-				*exinfo->npexflg &= ~EXFLG_2;	// 引数取り出し後に必要な処理
-				return CodeGetArgResult::noBind(priority);
+						if ( *type == TYPE_MARK && *val == '(' ) {
+							// ( ) あり => 優先度数を取り出す
+							code_next();
+							priority = code_getdi(priority);
+							if ( !(0 <= priority && priority <= NobindPriorityMax) ) puterror(HSPERR_ILLEGAL_FUNCTION);
+							if ( !code_next_expect(TYPE_MARK, ')') ) puterror(HSPERR_TOO_MANY_PARAMETERS);
+						}
 
-			} else if ( *type == g_pluginType_call
-				&& (*val == CallCmd::Id::call_byRef_ || *val == CallCmd::Id::call_byThismod_) ) {
-				// 明示的参照渡し (byRef, byThismod)
-				// 中間コードは [ keyword var || ] となっている。
+						*exinfo->npexflg &= ~EXFLG_2;	// 引数取り出し後に必要な処理
+						return ArgData::noBind(priority);
+					}
+					case CallCmd::Id::call_byRef_:
+					case CallCmd::Id::call_byThismod_:
+					{
+						// 明示的参照渡し (byRef, byThismod)
+						// 中間コードは [ keyword, var ] となっている。
 
-				bool const bByRef = (*val == CallCmd::Id::call_byRef_);
-				code_next();
-				PVal* const pval = code_get_var();
-				if ( !code_next_expect(TYPE_MARK, CALCCODE_OR) ) puterror(HSPERR_SYNTAX);
+						bool const bByRef = (*val == CallCmd::Id::call_byRef_);
+						code_get_singleToken();
 
-				return bByRef
-					? CodeGetArgResult::byRef(pval)
-					: CodeGetArgResult::byThismod(pval);
-
+						PVal* const pval = code_get_var();
+						return bByRef
+							? ArgData::byRef(pval)
+							: ArgData::byThismod(pval);
+					}
 #if 0
-			} else if ( *type == g_pluginType_call && *val == CallCmd::Id::call_byFlex_ ) {
-				// 明示的可変長引数渡し (byFlex)
-				// 中間コードは [ byFlex, flex-vector ] となっている。
+					case CallCmd::Id::call_byFlex_:
+					{
+						// 明示的可変長引数渡し (byFlex)
+						// 中間コードは [ byFlex, flex-vector ] となっている。
 
-				code_get_singleToken();
+						code_get_singleToken();
 
-				vector_t&& vec = code_get_vector();
-				return CodeGetArgResult::byFlex(vec);
+						vector_t&& vec = code_get_vector();
+						return ArgData::byFlex(vec);
+					}
 #endif
-			} else if ( *type == g_pluginType_call && *val == CallCmd::Id::byDef ) {
-				// 明示的引数省略 (bydef)
+					case CallCmd::Id::byDef:
+					{
+						// 明示的引数省略 (bydef)
 
-				code_get_singleToken();
-				return CodeGetArgResult::Default;
+						code_get_singleToken();
+						return ArgData::Default;
+					}
+					default: break;
+				}
+			}
 
-			} else if ( PrmType::isRef(prmtype) ) {
+			if ( PrmType::isRef(prmtype) ) {
 				switch ( prmtype ) {
-					case PrmType::Array:  return CodeGetArgResult::byRef(code_getpval());
-					case PrmType::Var:    return CodeGetArgResult::byRef(code_get_var());
-					case PrmType::Modvar: return CodeGetArgResult::byThismod(code_get_var());
+					case PrmType::Array:  return ArgData::byRef(code_getpval());
+					case PrmType::Var:    return ArgData::byRef(code_get_var());
+					case PrmType::Modvar: return ArgData::byThismod(code_get_var());
 					default: assert(false);
 				}
 				puterror(HSPERR_VARIABLE_REQUIRED);
@@ -142,14 +99,14 @@ CodeGetArgResult my_code_getarg(int prmtype)
 					{
 						if ( prmtype == HSPVAR_FLAG_DOUBLE && mpval->flag == HSPVAR_FLAG_INT ) {
 							// int → double の暗黙変換を許可する
-							return CodeGetArgResult::byVal(Valptr_cnvTo(mpval->pt, mpval->flag, prmtype), prmtype);
+							return ArgData::byVal(Valptr_cnvTo(mpval->pt, mpval->flag, prmtype), prmtype);
 						} else {
-							return CodeGetArgResult::byVal(mpval->pt, mpval->flag);
+							return ArgData::byVal(mpval->pt, mpval->flag);
 						}
 					}
 					case PARAM_END:
-					case PARAM_ENDSPLIT: return CodeGetArgResult::End;
-					case PARAM_DEFAULT:  return CodeGetArgResult::Default;
+					case PARAM_ENDSPLIT: return ArgData::End;
+					case PARAM_DEFAULT:  return ArgData::Default;
 					default: assert(false); puterror(HSPERR_UNKNOWN_CODE);
 				}
 			}
@@ -166,8 +123,8 @@ vector_t code_get_vectorFromSequence()
 	for (;;) {
 		auto&& result = my_code_getarg(PrmType::Any);
 
-		using Sty = CodeGetArgResult::Style;
 		switch ( result.getStyle() ) {
+			using Sty = ArgData::Style;
 			case Sty::End: return std::move(vec);
 			case Sty::Default: break;
 
@@ -231,8 +188,8 @@ bool Caller::code_get_nextArgument()
 
 	auto&& result = my_code_getarg(getArgs()->getNextPrmType());
 
-	using Sty = CodeGetArgResult::Style;
 	switch ( result.getStyle() ) {
+		using Sty = ArgData::Style;
 		case Sty::Default:   getArgs()->pushArgByDefault(); break;
 		case Sty::ByVal:     getArgs()->pushArgByVal(result.getValptr(), result.getVartype()); break;
 		case Sty::ByRef:     getArgs()->pushArgByRef(result.getPVal(), result.getPVal()->offset); break;
@@ -315,8 +272,8 @@ bool ArgBinder::code_get_nextArgument()
 
 	auto&& result = my_code_getarg(getArgs()->getNextPrmType());
 
-	using Sty = CodeGetArgResult::Style;
 	switch ( result.getStyle() ) {
+		using Sty = ArgData::Style;
 		case Sty::Default:   getArgs()->pushArgByDefault(); break;
 		case Sty::ByVal:     getArgs()->pushArgByVal(result.getValptr(), result.getVartype()); break;
 		case Sty::ByRef:     getArgs()->pushArgByRef(result.getPVal(), result.getPVal()->offset); break;
@@ -328,32 +285,6 @@ bool ArgBinder::code_get_nextArgument()
 	}
 	return true;
 }
-
-#if 0
-vector_t ArgBinder::code_get_flex()
-{
-	vector_t vec {};
-	for ( ;; ) {
-		auto&& result = my_code_getarg(PrmType::Any);
-
-		using Sty = CodeGetArgResult::Style;
-		switch ( result.getStyle() ) {
-			case Sty::End: return std::move(vec);
-			case Sty::Default: break;
-
-			case Sty::ByVal: vec->push_back(ManagedVarData(result.getValptr(), result.getVartype())); break;
-			case Sty::ByRef: vec->push_back(ManagedVarData(result.getPVal(), result.getPVal()->offset)); break;
-			case Sty::ByFlex: dbgout("未実装"); puterror(HSPERR_UNSUPPORTED_FUNCTION);
-
-			case Sty::ByThismod: puterror(HSPERR_UNSUPPORTED_FUNCTION);
-			case Sty::NoBind: 
-				//
-			default: assert(false);
-		}
-		//assert(code_isNextArg());
-	}
-}
-#endif
 
 //******************************************************************************
 
@@ -378,7 +309,3 @@ PVal* callLabelWithPrmStk(label_t lb, void* prmstk)
 		return nullptr;
 	}
 }
-
-//------------------------------------------------
-// 
-//------------------------------------------------

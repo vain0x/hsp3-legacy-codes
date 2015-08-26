@@ -11,7 +11,6 @@
 #include "hsp3plugin_custom.h"
 
 class CPrmInfo;
-class CCaller;
 class CPrmStk;
 class Caller;
 

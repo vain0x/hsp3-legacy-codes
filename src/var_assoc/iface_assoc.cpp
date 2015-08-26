@@ -12,6 +12,7 @@
 #include "cmd_assoc.h"
 
 #include "hsp3plugin_custom.h"
+#include "cmdfuncTemplate.h"
 #include "reffuncResult.h"
 #include "mod_varutil.h"
 

@@ -20,7 +20,7 @@ struct StAssocMapList
 	StAssocMapList* next;		// NULL => last
 };
 
-using GetMapList_t = StAssocMapList*(*)(assoc_t*);	// HspVarProc::user
+using GetMapList_t = StAssocMapList*(*)(CAssoc*);	// HspVarProc::user
 static char const* const assoc_vartype_name = "assoc_k";
 
 #endif

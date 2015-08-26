@@ -17,9 +17,6 @@
     <Filter Include="hpimod">
       <UniqueIdentifier>{ff6ed210-2204-4ca7-bc9c-69310e60d761}</UniqueIdentifier>
     </Filter>
-    <Filter Include="hpimod\hspsdk">
-      <UniqueIdentifier>{fd8a7911-9018-4662-892f-9fb9aa90a652}</UniqueIdentifier>
-    </Filter>
     <Filter Include="functor">
       <UniqueIdentifier>{6564e1b6-4124-4e28-be49-21b01e5993d3}</UniqueIdentifier>
     </Filter>
@@ -35,65 +32,17 @@
     <Filter Include="functor\IFunctor">
       <UniqueIdentifier>{d377a5ef-989e-460d-9bc5-978ab7a82b6d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="hpimod\knowbug">
-      <UniqueIdentifier>{a528324b-78ef-418b-abc1-460819ee2c1e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="call_core\cmd">
       <UniqueIdentifier>{f298ef19-1e89-4e25-bcab-e45bf003e3c0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="hpimod\hspsdk">
+      <UniqueIdentifier>{38562c04-a496-4f51-8acd-41d361317ddb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="hpimod\knowbug">
+      <UniqueIdentifier>{0cc73e0b-e597-4b13-86e8-ec9950552de7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\hpimod\axcmd.h">
-      <Filter>hpimod</Filter>
-    </ClInclude>
-    <ClInclude Include="..\hpimod\basis.h">
-      <Filter>hpimod</Filter>
-    </ClInclude>
-    <ClInclude Include="..\hpimod\CHspCode.h">
-      <Filter>hpimod</Filter>
-    </ClInclude>
-    <ClInclude Include="..\hpimod\cmdlistMacro.h">
-      <Filter>hpimod</Filter>
-    </ClInclude>
-    <ClInclude Include="..\hpimod\hsp3plugin_custom.h">
-      <Filter>hpimod</Filter>
-    </ClInclude>
-    <ClInclude Include="..\hpimod\HspAllocator.h">
-      <Filter>hpimod</Filter>
-    </ClInclude>
-    <ClInclude Include="..\hpimod\Managed.h">
-      <Filter>hpimod</Filter>
-    </ClInclude>
-    <ClInclude Include="..\hpimod\ManagedPVal.h">
-      <Filter>hpimod</Filter>
-    </ClInclude>
-    <ClInclude Include="..\hpimod\mod_argGetter.h">
-      <Filter>hpimod</Filter>
-    </ClInclude>
-    <ClInclude Include="..\hpimod\reffuncResult.h">
-      <Filter>hpimod</Filter>
-    </ClInclude>
-    <ClInclude Include="..\hpimod\mod_makepval.h">
-      <Filter>hpimod</Filter>
-    </ClInclude>
-    <ClInclude Include="..\hpimod\mod_varutil.h">
-      <Filter>hpimod</Filter>
-    </ClInclude>
-    <ClInclude Include="..\hpimod\hspsdk\hsp3debug.h">
-      <Filter>hpimod\hspsdk</Filter>
-    </ClInclude>
-    <ClInclude Include="..\hpimod\hspsdk\hsp3plugin.h">
-      <Filter>hpimod\hspsdk</Filter>
-    </ClInclude>
-    <ClInclude Include="..\hpimod\hspsdk\hsp3struct.h">
-      <Filter>hpimod\hspsdk</Filter>
-    </ClInclude>
-    <ClInclude Include="..\hpimod\hspsdk\hspvar_core.h">
-      <Filter>hpimod\hspsdk</Filter>
-    </ClInclude>
-    <ClInclude Include="..\hpimod\hspsdk\hspwnd.h">
-      <Filter>hpimod\hspsdk</Filter>
-    </ClInclude>
     <ClInclude Include="src\call\CModClsCtor.h">
       <Filter>call_core\structWrap</Filter>
     </ClInclude>
@@ -178,38 +127,83 @@
     <ClInclude Include="src\var_vector\vt_vector.h">
       <Filter>var_vector</Filter>
     </ClInclude>
-    <ClInclude Include="..\hpimod\knowbug\knowbugForHPI.h">
-      <Filter>hpimod\knowbug</Filter>
-    </ClInclude>
     <ClInclude Include="src\call\cmd_call.h">
       <Filter>call_core\cmd</Filter>
     </ClInclude>
     <ClInclude Include="src\call\iface_call.h">
       <Filter>call_core\cmd</Filter>
     </ClInclude>
-    <ClInclude Include="..\hpimod\vp_template.h">
-      <Filter>hpimod</Filter>
-    </ClInclude>
-    <ClInclude Include="..\hpimod\vartype_traits.h">
-      <Filter>hpimod</Filter>
-    </ClInclude>
     <ClInclude Include="src\call\CPrmStkNative.h">
       <Filter>call_core</Filter>
     </ClInclude>
+    <ClInclude Include="src\call\Argument.h">
+      <Filter>call_core</Filter>
+    </ClInclude>
+    <ClInclude Include="hpimod\hpimod\cmdlistMacro.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="hpimod\hpimod\hsp3plugin_custom.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="hpimod\hpimod\HspAllocator.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="hpimod\hpimod\Managed.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="hpimod\hpimod\ManagedPVal.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="hpimod\hpimod\mod_argGetter.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="hpimod\hpimod\mod_makepval.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="hpimod\hpimod\mod_varutil.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="hpimod\hpimod\reffuncResult.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="hpimod\hpimod\vartype_traits.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="hpimod\hpimod\vp_template.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="hpimod\hpimod\axcmd.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="hpimod\hpimod\basis.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="hpimod\hpimod\cmdfuncTemplate.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="hpimod\hspsdk\hsp3plugin.h">
+      <Filter>hpimod\hspsdk</Filter>
+    </ClInclude>
+    <ClInclude Include="hpimod\hspsdk\hsp3struct.h">
+      <Filter>hpimod\hspsdk</Filter>
+    </ClInclude>
+    <ClInclude Include="hpimod\hspsdk\hspvar_core.h">
+      <Filter>hpimod\hspsdk</Filter>
+    </ClInclude>
+    <ClInclude Include="hpimod\hspsdk\hspwnd.h">
+      <Filter>hpimod\hspsdk</Filter>
+    </ClInclude>
+    <ClInclude Include="hpimod\hspsdk\hsp3debug.h">
+      <Filter>hpimod\hspsdk</Filter>
+    </ClInclude>
+    <ClInclude Include="hpimod\hpimod\knowbug\knowbugForHPI.h">
+      <Filter>hpimod\knowbug</Filter>
+    </ClInclude>
+    <ClInclude Include="hpimod\hpimod\CHspCode.h">
+      <Filter>hpimod</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\hpimod\mod_argGetter.cpp">
-      <Filter>hpimod</Filter>
-    </ClCompile>
-    <ClCompile Include="..\hpimod\mod_makepval.cpp">
-      <Filter>hpimod</Filter>
-    </ClCompile>
-    <ClCompile Include="..\hpimod\mod_varutil.cpp">
-      <Filter>hpimod</Filter>
-    </ClCompile>
-    <ClCompile Include="..\hpimod\hspsdk\hsp3plugin.cpp">
-      <Filter>hpimod\hspsdk</Filter>
-    </ClCompile>
     <ClCompile Include="src\call\CModClsCtor.cpp">
       <Filter>call_core\structWrap</Filter>
     </ClCompile>
@@ -282,9 +276,6 @@
     <ClCompile Include="src\var_vector\vt_vector.cpp">
       <Filter>var_vector</Filter>
     </ClCompile>
-    <ClCompile Include="..\hpimod\knowbug\knowbugForHPI.cpp">
-      <Filter>hpimod\knowbug</Filter>
-    </ClCompile>
     <ClCompile Include="src\call\cmd_call.cpp">
       <Filter>call_core\cmd</Filter>
     </ClCompile>
@@ -294,7 +285,22 @@
     <ClCompile Include="src\call\CPrmStk.cpp">
       <Filter>call_core</Filter>
     </ClCompile>
-    <ClCompile Include="..\hpimod\CHspCode.cpp">
+    <ClCompile Include="hpimod\hpimod\mod_argGetter.cpp">
+      <Filter>hpimod</Filter>
+    </ClCompile>
+    <ClCompile Include="hpimod\hpimod\mod_makepval.cpp">
+      <Filter>hpimod</Filter>
+    </ClCompile>
+    <ClCompile Include="hpimod\hpimod\mod_varutil.cpp">
+      <Filter>hpimod</Filter>
+    </ClCompile>
+    <ClCompile Include="hpimod\hspsdk\hsp3plugin.cpp">
+      <Filter>hpimod\hspsdk</Filter>
+    </ClCompile>
+    <ClCompile Include="hpimod\hpimod\knowbug\knowbugForHPI.cpp">
+      <Filter>hpimod\knowbug</Filter>
+    </ClCompile>
+    <ClCompile Include="hpimod\hpimod\CHspCode.cpp">
       <Filter>hpimod</Filter>
     </ClCompile>
   </ItemGroup>

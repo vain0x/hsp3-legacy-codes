@@ -51,7 +51,7 @@ CPrmInfo const& GetPrmInfo(label_t lb)
 
 CPrmInfo const& GetPrmInfo(stdat_t stdat)
 {
-	assert(stdat->index == STRUCTDAT_INDEX_FUNC || stdat->index == STRUCTDAT_INDEX_CFUNC);
+	assert(STRUCTDAT_isSttmOrFunc(stdat));
 	auto const lb = hpimod::getLabel(stdat->otindex);
 
 	auto const iter = g_prmlistLabel.find(lb);

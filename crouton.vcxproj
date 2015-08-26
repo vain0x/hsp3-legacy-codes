@@ -49,7 +49,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../hpimod;../hpimod/hspsdk</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>hpimod/hpimod;hpimod/hspsdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>HSP3PLUGIN;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -63,7 +63,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>../hpimod;../hpimod/hspsdk</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>hpimod/hpimod;hpimod/hspsdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>HSP3PLUGIN;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -73,26 +73,28 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\hpimod\axcmd.h" />
-    <ClInclude Include="..\hpimod\basis.h" />
-    <ClInclude Include="..\hpimod\CHspCode.h" />
-    <ClInclude Include="..\hpimod\cmdlistMacro.h" />
-    <ClInclude Include="..\hpimod\hsp3plugin_custom.h" />
-    <ClInclude Include="..\hpimod\HspAllocator.h" />
-    <ClInclude Include="..\hpimod\hspsdk\hsp3debug.h" />
-    <ClInclude Include="..\hpimod\hspsdk\hsp3plugin.h" />
-    <ClInclude Include="..\hpimod\hspsdk\hsp3struct.h" />
-    <ClInclude Include="..\hpimod\hspsdk\hspvar_core.h" />
-    <ClInclude Include="..\hpimod\hspsdk\hspwnd.h" />
-    <ClInclude Include="..\hpimod\knowbug\knowbugForHPI.h" />
-    <ClInclude Include="..\hpimod\Managed.h" />
-    <ClInclude Include="..\hpimod\ManagedPVal.h" />
-    <ClInclude Include="..\hpimod\mod_argGetter.h" />
-    <ClInclude Include="..\hpimod\mod_makepval.h" />
-    <ClInclude Include="..\hpimod\mod_varutil.h" />
-    <ClInclude Include="..\hpimod\reffuncResult.h" />
-    <ClInclude Include="..\hpimod\vartype_traits.h" />
-    <ClInclude Include="..\hpimod\vp_template.h" />
+    <ClInclude Include="hpimod\hpimod\axcmd.h" />
+    <ClInclude Include="hpimod\hpimod\basis.h" />
+    <ClInclude Include="hpimod\hpimod\CHspCode.h" />
+    <ClInclude Include="hpimod\hpimod\cmdfuncTemplate.h" />
+    <ClInclude Include="hpimod\hpimod\cmdlistMacro.h" />
+    <ClInclude Include="hpimod\hpimod\hsp3plugin_custom.h" />
+    <ClInclude Include="hpimod\hpimod\HspAllocator.h" />
+    <ClInclude Include="hpimod\hpimod\knowbug\knowbugForHPI.h" />
+    <ClInclude Include="hpimod\hpimod\Managed.h" />
+    <ClInclude Include="hpimod\hpimod\ManagedPVal.h" />
+    <ClInclude Include="hpimod\hpimod\mod_argGetter.h" />
+    <ClInclude Include="hpimod\hpimod\mod_makepval.h" />
+    <ClInclude Include="hpimod\hpimod\mod_varutil.h" />
+    <ClInclude Include="hpimod\hpimod\reffuncResult.h" />
+    <ClInclude Include="hpimod\hpimod\vartype_traits.h" />
+    <ClInclude Include="hpimod\hpimod\vp_template.h" />
+    <ClInclude Include="hpimod\hspsdk\hsp3debug.h" />
+    <ClInclude Include="hpimod\hspsdk\hsp3plugin.h" />
+    <ClInclude Include="hpimod\hspsdk\hsp3struct.h" />
+    <ClInclude Include="hpimod\hspsdk\hspvar_core.h" />
+    <ClInclude Include="hpimod\hspsdk\hspwnd.h" />
+    <ClInclude Include="src\call\Argument.h" />
     <ClInclude Include="src\call\CBound.h" />
     <ClInclude Include="src\call\CCoRoutine.h" />
     <ClInclude Include="src\call\CLabelFunc.h" />
@@ -126,12 +128,12 @@
     <ClInclude Include="src\var_vector\vt_vector.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\hpimod\CHspCode.cpp" />
-    <ClCompile Include="..\hpimod\hspsdk\hsp3plugin.cpp" />
-    <ClCompile Include="..\hpimod\knowbug\knowbugForHPI.cpp" />
-    <ClCompile Include="..\hpimod\mod_argGetter.cpp" />
-    <ClCompile Include="..\hpimod\mod_makepval.cpp" />
-    <ClCompile Include="..\hpimod\mod_varutil.cpp" />
+    <ClCompile Include="hpimod\hpimod\CHspCode.cpp" />
+    <ClCompile Include="hpimod\hpimod\knowbug\knowbugForHPI.cpp" />
+    <ClCompile Include="hpimod\hpimod\mod_argGetter.cpp" />
+    <ClCompile Include="hpimod\hpimod\mod_makepval.cpp" />
+    <ClCompile Include="hpimod\hpimod\mod_varutil.cpp" />
+    <ClCompile Include="hpimod\hspsdk\hsp3plugin.cpp" />
     <ClCompile Include="src\call\CBound.cpp" />
     <ClCompile Include="src\call\CCoRoutine.cpp" />
     <ClCompile Include="src\call\CLambda.cpp" />

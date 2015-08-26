@@ -42,17 +42,14 @@ PrmStk を操作するインターフェースクラスの再考
 lambda のデバッグ
 	(arr(n) -> 配列の要素が無効です、のエラー、length() で十分な要素数を持つことは確認している)
 
-・call の拡張的関数子の実装
-	knowbug 文字列化の実装
+・knowbug 文字列化の実装
 ・call/structWrap, methodWrap の実装
-・vector のコンテナ移動機能の再実装
-	sort
-・assoc の Managed<> を使った実装
-	PVal::offset だけで添字結果を判断するように
-	prototype 的仕様の追加
+・vector sort
+・assoc prototype 的仕様
 ・obsjson の修整
 ・knowbug との連携――call 時に呼び出しノードを push/pop
 serialize/unserialize
+byval/byref/bydef を1つの判別共用体で持ち運ぶべきでは
 
 ・スクリプト側で、今実行されているのが call による呼び出しかどうかを確認する方法。
 

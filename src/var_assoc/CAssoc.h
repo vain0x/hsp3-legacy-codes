@@ -1,5 +1,6 @@
 ﻿// Assoc 実体データクラス
 
+#if 0
 #ifndef IG_CLASS_ASSOC_H
 #define IG_CLASS_ASSOC_H
 
@@ -124,4 +125,5 @@ private:
 };
 //*/
 
+#endif
 #endif

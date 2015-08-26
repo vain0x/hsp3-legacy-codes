@@ -4,6 +4,8 @@
 #include "Invoker.h"
 #include "CBound.h"
 
+#include "Argument.h"
+
 using namespace hpimod;
 
 //------------------------------------------------
@@ -199,6 +201,25 @@ void CPrmStk::pushThismod(PVal* pval, APTR aptr)
 }
 
 //------------------------------------------------
+// 実引数
+//------------------------------------------------
+void CPrmStk::pushArg(ArgData const& arg)
+{
+	switch ( arg.getStyle() ) {
+		using Sty = ArgData::Style;
+
+		case Sty::Default:   pushArgByDefault(); break;
+		case Sty::ByVal:     pushArgByVal(arg.getValptr(), arg.getVartype()); break;
+		case Sty::ByRef:     pushArgByRef(arg.getPVal(), arg.getPVal()->offset); break;
+		case Sty::ByThismod: pushThismod(arg.getPVal(), arg.getPVal()->offset); break;
+		case Sty::ByFlex: puterror(HSPERR_UNSUPPORTED_FUNCTION); break;
+		case Sty::NoBind:    allocArgNoBind(arg.getPriority()); break;
+		case Sty::End: //
+		default: assert(false);
+	}
+}
+
+//------------------------------------------------
 // 一般、値渡し
 //------------------------------------------------
 void CPrmStk::pushArgByVal(PDAT const* pdat, vartype_t vtype)
@@ -302,6 +323,65 @@ unsigned short const* CPrmStk::peekArgNoBind(size_t idx) const
 }
 
 //------------------------------------------------
+// 実引数の参照
+//------------------------------------------------
+ArgData const& CPrmStk::peekArgAt(size_t idx) const
+{
+	if ( unsigned short const* const p = peekArgNoBind(idx) ) {
+		return ArgData::noBind(*p);
+	}
+
+	int const prmtype = getPrmInfo().getPrmType(idx);
+
+	switch ( prmtype ) {
+		case PrmType::Var:
+		case PrmType::Array:
+		{
+			auto& vardata = getPrmStk().peekPVal(getPrmInfo().getStackOffsetParam(idx));
+			vardata.pval->offset = vardata.aptr;
+			return ArgData::byRef(vardata.pval);
+		}
+		case PrmType::Modvar:
+		{
+			auto& thismod = getPrmStk().peekThismod(getPrmInfo().getStackOffsetParam(idx));
+			assert(thismod.magic == MODVAR_MAGICCODE);
+			thismod.pval->offset = thismod.aptr;
+			return ArgData::byThismod(thismod.pval);
+		}
+		case PrmType::Any:
+		{
+			auto const vardata = peekAnyAt(idx);
+			auto const& pval = vardata.getPValManaged();
+
+			// 一時オブジェクトなら prmstk, 'vardata' のちょうど2つに所有されているはず
+			// vector などに積まれている可能性がないとはいえない
+			if ( pval.isManaged() && pval.cntRefers() <= 2 ) {
+				return ArgData::byVal(PVal_getPtr(vardata.getVar()), pval->flag);
+			} else {
+				return ArgData::byRef(vardata.getVar());
+			}
+		}
+		case HSPVAR_FLAG_STR:
+		{
+			auto const ptr = getArgPtrAt(idx);
+			return ArgData::byVal(VtTraits::asPDAT<vtStr>(*reinterpret_cast<char const* const*>(ptr)), HSPVAR_FLAG_STR);
+		}
+		default:
+			if ( PrmType::isNativeVartype(prmtype) ) {
+				assert(prmtype == HSPVAR_FLAG_LABEL || prmtype == HSPVAR_FLAG_DOUBLE || prmtype == HSPVAR_FLAG_INT);
+				auto const ptr = getArgPtrAt(idx);
+				return ArgData::byVal(reinterpret_cast<PDAT const*>(ptr), prmtype);
+
+			} else if ( PrmType::isExtendedVartype(prmtype) ) {
+				auto& vardata = getPrmStk().peekPVal(getPrmInfo().getStackOffsetParam(idx));
+				assert(vardata.aptr <= 0);
+				return ArgData::byVal(vardata.pval->pt, vardata.pval->flag);
+			}
+	}
+	assert(false); throw;
+}
+
+//------------------------------------------------
 // 値渡し引数の参照
 //
 // @ any は参照渡しでも値を取る。配列なら (0) を返す。
@@ -309,23 +389,11 @@ unsigned short const* CPrmStk::peekArgNoBind(size_t idx) const
 //------------------------------------------------
 PDAT const* CPrmStk::peekValArgAt(size_t idx, vartype_t& vtype) const
 {
-	int const prmtype = getPrmInfo().getPrmType(idx);
-	if ( PrmType::isNativeVartype(prmtype) ) {
-		auto const ptr = getArgPtrAt(idx);
-		vtype = prmtype;
-		return ( prmtype == HSPVAR_FLAG_STR )
-			? VtTraits::asPDAT<vtStr>(*reinterpret_cast<char const* const*>(ptr))
-			: reinterpret_cast<PDAT const*>(ptr);
+	auto const& arg = peekArgAt(idx);
+	if ( arg.getStyle() != ArgData::Style::ByVal ) puterror(HSPERR_TYPE_MISMATCH);
 
-	} else if ( PrmType::isExtendedVartype(prmtype) || prmtype == PrmType::Any || prmtype == PrmType::Var ) {
-		auto& vardata = getPrmStk().peekPVal( getPrmInfo().getStackOffsetParam(idx) );
-		assert(vardata.aptr <= 0);
-		vtype = vardata.pval->flag;
-		return vardata.pval->pt;
-
-	} else {
-		puterror(HSPERR_TYPE_MISMATCH);
-	}
+	vtype = arg.getVartype();
+	return arg.getValptr();
 }
 
 //------------------------------------------------
@@ -333,38 +401,27 @@ PDAT const* CPrmStk::peekValArgAt(size_t idx, vartype_t& vtype) const
 //------------------------------------------------
 PVal const* CPrmStk::peekRefArgAt(size_t idx) const
 {
-	int const prmtype = getPrmInfo().getPrmType(idx);
-	switch ( prmtype ) {
-		case PrmType::Var:
-		case PrmType::Array:
-		case PrmType::Any:
-		{
-			auto& vardata = getPrmStk().peekPVal(getPrmInfo().getStackOffsetParam(idx));
-			assert(vardata.aptr >= 0);
-			vardata.pval->offset = vardata.aptr;
-			return vardata.pval;
-		}
-		case PrmType::Modvar:
-		{
-			auto& thismod = getPrmStk().peekThismod(getPrmInfo().getStackOffsetParam(idx));
-			assert(thismod.magic == MODVAR_MAGICCODE);
-			thismod.pval->offset = thismod.aptr;
-			return thismod.pval;
-		}
-		default: puterror(HSPERR_VARIABLE_REQUIRED);
-	}
+	auto const& arg = peekArgAt(idx);
+	if ( !arg.isByRefStyle() ) puterror(HSPERR_TYPE_MISMATCH);
+
+	PVal* const pval = arg.getPVal();
+	pval->offset = arg.getAptr();
+	return pval;
 }
 
 //------------------------------------------------
-// その他の引数の参照
+// any 引数の参照
 //------------------------------------------------
 ManagedVarData const CPrmStk::peekAnyAt(size_t idx) const
 {
 	assert(idx < cntArgs());
 	assert(getPrmInfo().getPrmType(idx) == PrmType::Any);
-	return hpimod::ManagedVarData { getPrmStk().peekPVal(getPrmInfo().getStackOffsetParam(idx)) };
+	return ManagedVarData { getPrmStk().peekPVal(getPrmInfo().getStackOffsetParam(idx)) };
 }
 
+//------------------------------------------------
+// その他の引数の参照
+//------------------------------------------------
 MPVarData const* CPrmStk::peekCaptureAt(size_t idx) const
 {
 	assert(hasFinalized());
@@ -463,8 +520,8 @@ void CPrmStk::free()
 			}
 			case PrmType::Any:
 			{
-				auto&& pval = ManagedPVal::ofValptr(peekRefArgAt(i));
-				pval.decRef();
+				auto&& vardata = peekAnyAt(i);
+				vardata.getPValManaged().decRef();
 				break;
 			}
 		}
@@ -484,6 +541,7 @@ void CPrmStk::free()
 	}
 
 	hspfree(p_->getOwnerPtr());
+	return;
 }
 
 //------------------------------------------------
@@ -620,7 +678,3 @@ void CPrmStk::importCaptures(vector_t const& captured)
 	}
 	return;
 }
-
-//------------------------------------------------
-// 
-//------------------------------------------------

@@ -120,17 +120,11 @@
 #define global __call_empty__// empty
 
 // キーワード
-#define global byref     call_byref_     ||	// 参照渡し引数 (明示)
-#define global bythismod call_bythismod_ ||	// thismod 渡し (明示)
-/*
-#define global arginfo   call_arginfo
-#define global thislb    call_thislb
-#define global bydef     call_bydef			// 省略引数     (明示)
-#define global nobind    call_nobind		// 不束縛引数   (明示)
-#define global nocall    call_nocall		// 呼び出しなし (フラグ)
-//*/
+#define global byref     call_byref_,
+#define global bythismod call_bythismod_,
+#define global byflex    call_byflex_,
 
-#define global argcount arginfo(-1)		// 実引数の数
+#define global argcount arginfo(-1)
 #define global argc argcount
 //#define global argv argVal
 

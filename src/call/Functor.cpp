@@ -37,7 +37,7 @@ functor_t const& New(int axcmd)
 		case TYPE_MODCMD:
 		{
 			auto const stdat = hpimod::getSTRUCTDAT(AxCmd::getCode(axcmd));
-			if ( stdat->index == STRUCTDAT_INDEX_FUNC || stdat->index == STRUCTDAT_INDEX_CFUNC ) {
+			if ( STRUCTDAT_isSttmOrFunc(stdat) ) {
 				// 仮引数リストをキャッシュ化しておく
 				static_cast<void>(GetPrmInfo(stdat));
 

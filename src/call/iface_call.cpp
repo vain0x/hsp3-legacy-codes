@@ -1,6 +1,7 @@
 ﻿// call.hpi interface
 
 #include "hsp3plugin_custom.h"
+#include "cmdfuncTemplate.h"
 
 #include "iface_call.h"
 #include "cmd_call.h"

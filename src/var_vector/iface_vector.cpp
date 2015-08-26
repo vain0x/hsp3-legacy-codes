@@ -6,6 +6,7 @@
 
 #include "mod_varutil.h"
 #include "reffuncResult.h"
+#include "cmdfuncTemplate.h"
 
 using namespace hpimod;
 

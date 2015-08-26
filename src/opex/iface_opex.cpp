@@ -11,6 +11,7 @@
 
 #include "hsp3plugin_custom.h"
 #include "reffuncResult.h"
+#include "cmdfuncTemplate.h"
 
 using namespace hpimod;
 

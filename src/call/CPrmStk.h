@@ -46,6 +46,8 @@ class CBound;
 class CPrmStk;
 using arguments_t = hpimod::Managed<CPrmStk, true>;
 
+struct ArgData;
+
 //------------------------------------------------
 // 高級な prmstk 
 //------------------------------------------------
@@ -67,7 +69,7 @@ public:
 	CPrmStkNative const& getPrmStk() const;
 	void* getPrmStkPtr();
 	size_t cntArgs() const;
-	bool hasFinalized() const;
+	bool hasFinalized() const; //has been finalized?
 
 	CPrmStkNative& getPrmStk() { return const_cast<CPrmStkNative&>(static_cast<CPrmStk const*>(this)->getPrmStk()); }
 
@@ -106,6 +108,7 @@ public:
 	//------------------------------------------------
 	// 実引数値の動的な push
 	//------------------------------------------------
+	void pushArg(ArgData const& arg);
 	void pushArgByVal(PDAT const* pdat, hpimod::vartype_t vtype);
 	void pushArgByRef(PVal* pval, APTR aptr);
 	void pushArgByDefault();
@@ -115,6 +118,7 @@ public:
 	// 実引数値の peek 各種
 	//------------------------------------------------
 	
+	ArgData const& peekArgAt(size_t idx) const;
 	PDAT const* peekValArgAt(size_t idx, hpimod::vartype_t& vtype) const;
 	PVal const* peekRefArgAt(size_t idx) const;
 

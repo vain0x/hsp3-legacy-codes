@@ -413,37 +413,34 @@ int CallCmd::streamEnd(PDAT** ppResult)
 	return restype;
 }
 
+#endif
 
 //------------------------------------------------
-// ストリーム呼び出しオブジェクト::生成
+// ストリーム呼び出しオブジェクトの生成
 //------------------------------------------------
-int CallCmd::streamCallerNew( PDAT** ppResult )
+int FunctorCmd::streamCallerNew( PDAT** ppResult )
 {
-	stream_t const stream = CStreamCaller::New();
+	auto&& f = code_get_functor();
 
-	// 引数処理
-	CCaller* const caller = stream->getCaller();
-	{
-		caller->setFunctor();
-	}
+	if ( !!f || f->getUsing() ) puterror(HSPERR_ILLEGAL_FUNCTION);
+	auto result = functor_t::makeDerived<CStreamCaller>( std::move(f) );
 
-	// functor 型として返却する
-	return SetReffuncResult( ppResult, functor_t::make(stream) );
+	return SetReffuncResult( ppResult, std::move(result) );
 }
 
-
 //------------------------------------------------
-// ストリーム呼び出しオブジェクト::追加
+// ストリーム呼び出しオブジェクトへの引数追加
 //------------------------------------------------
-void CallCmd::streamCallerAdd()
+void FunctorCmd::streamCallerAdd()
 {
 	functor_t&& functor = code_get_functor();
-	stream_t const stream = functor->safeCastTo<stream_t>();
 
-	stream->getCaller()->setArgAll();		// 全ての引数を追加する
+	auto* const stream = (functor ? functor->safeCastTo<CStreamCaller>() : nullptr);
+	if ( !stream ) puterror(HSPERR_ILLEGAL_FUNCTION);
+
+	stream->getCaller().code_get_arguments();
 	return;
 }
-#endif
 
 //##########################################################
 //    functor 型関係
@@ -675,7 +672,7 @@ static label_t code_labelOfImpl(int axcmd)
 			case TYPE_MODCMD:
 			{
 				stdat_t const stdat = getSTRUCTDAT(code);
-				if ( stdat->index == STRUCTDAT_INDEX_FUNC || stdat->index == STRUCTDAT_INDEX_CFUNC ) {
+				if ( STRUCTDAT_isSttmOrFunc(stdat) ) {
 					return getLabel(stdat->otindex);
 				}
 			}
