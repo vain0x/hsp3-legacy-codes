@@ -1,17 +1,15 @@
-// HSP parse module - ToUDScript
+#ifndef IG_HSP_PARSE_MODULE_BEAUTIFY_AS
+#define IG_HSP_PARSE_MODULE_BEAUTIFY_AS
 
-#ifndef IG_HSP_PARSE_MODULE_TO_UDSCRIPT_AS
-#define IG_HSP_PARSE_MODULE_TO_UDSCRIPT_AS
-
-#include "Mo/HPM_getToken.as"		// HSPç\ï∂âêÕÉÇÉWÉÖÅ[Éã
+#include "Mo/HPM_getToken.as"
 #include "Mo/MCLongString.as"
 #include "Mo/strutil.as"
 
-#module ToUDS_mod
+#module
 
 #include "Mo/HPM_header.as"
 
-#deffunc ToUDScript var outbuf, str inbuf
+#deffunc hpm_beautify var outbuf, str inbuf
 	
 	LongStr_new script
 	sdim nowtk, 320
