@@ -10,9 +10,6 @@
 
 #include "common.hsp"
 
-#define true  1
-#define false 0
-
 #define global HspLexer_Flag_None		0x0000		// Žw’è‚È‚µ
 #define global HspLexer_Flag_NoBlank	0x0001		// TkType_Blank   ‚ð–³Ž‹‚·‚é
 #define global HspLexer_Flag_NoComment	0x0002		// TkType_Comment ‚ð–³Ž‹‚·‚é
@@ -348,7 +345,7 @@
 		if ( c == '\\' && bPreLine ) {
 			if ( IsNewLine(c2) ) {
 				if ( c2 == 0x0D && peek(sSrc, index + 2) == 0x0A ) {
-					lpoke result,, MAKELONG2('\\', 0x0D, 0x0A, 0)	// "\\\n"
+					lpoke result,, MAKELONG4('\\', 0x0D, 0x0A, 0)	// "\\\n"
 				} else {
 					lpoke result,, MAKEWORD('\\', c2)
 				}
@@ -570,7 +567,7 @@
 #global
 
 // ƒTƒ“ƒvƒ‹
-#if 0
+#if 1
 
 #include "StrBuilder/MCLongString.as"
 

@@ -3,6 +3,17 @@
 
 #include "ctype.hsp"
 
+#define true  1
+#define false 0
+
+#define ctype MAKELONG(%1, %2) \
+	((%1) & 0xFFFF | ((%2) << 16) & 0xFFFF)
+	
+#define ctype MAKELONG4(%1 = 0, %2 = 0, %3 = 0, %4 = 0) \
+	MAKELONG(MAKEWORD((%1), (%2)), MAKEWORD((%3), (%4)))
+
+#define ctype MAKEWORD(%1, %2) ((%1) & 0xFF | ((%2) << 8) & 0xFF)
+
 #define Max_TextLen 0x2FFFF
 
 #define ctype IsTkTypeIdent(%1) ( (%1) == TkType_Ident || (%1) == TkTypeEx_Var || IsTkTypeReserved(%1) )
