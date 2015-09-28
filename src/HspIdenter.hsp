@@ -6,7 +6,7 @@
 
 #include "easyhash.hsp"
 #include "SearchFileEx.hsp"
-#include "array.hsp"
+#include "array_assign.hsp"
 #include "HspDeflister.hsp"
 
 #module MCHspIdenter \
@@ -40,8 +40,8 @@
 	keylist_iface     = ","
 	keylist_var       = ","
 	
-	array_copy mlistTkType, listTkType
-	array_copy mlistTkStr,  listTkStr
+	array_assign mlistTkType, listTkType
+	array_assign mlistTkStr,  listTkStr
 	return
 	
 //------------------------------------------------
