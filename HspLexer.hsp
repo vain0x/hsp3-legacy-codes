@@ -567,18 +567,13 @@
 #global
 
 // サンプル
-#if 1
+#if 0
 
-#include "StrBuilder/MCLongString.as"
+#include "StrBuilder/StrBuilder.hsp"
 
-	s = {"
-		// 識別子を切り出して返す
-		#defcfunc CutName var sSrc, int iOffset,  \\
-			local n
-		\	
-		\	FTM_CutToken ( IsIdent(c) || IsSJIS1st(c) || c == '`' ), IsSJIS1st(c)
-		\	return \"Hello, world!\"
-	"}
+	notesel s
+	noteload "HspLexer.hsp"
+	noteunsel
 	
 	fSplit = HspLexer_Flag_ExtendTab
 	
@@ -587,23 +582,20 @@
 	hspLexer_set lexer, fSplit, 4
 	hspLexer_lex lexer, tktypelist, tkstrlist, s
 	
-	LongStr_new ls
+	StrBuilder_new ls
 	
 	foreach tktypelist
-		
-		LongStr_add ls, "type\t= "+ tktypelist(cnt) +"\n"
-		LongStr_add ls, "str\t= "+  tkstrlist (cnt)  +"\n"
-		LongStr_add ls, "\n"
-		
+		StrBuilder_append ls, "type\t= "+ tktypelist(cnt) +"\n"
+		StrBuilder_append ls, "str\t= "+  tkstrlist (cnt)  +"\n"
+		StrBuilder_append ls, "\n"
 	loop
 	
-	LongStr_toBuf  ls, buf
-	LongStr_delete ls
+	StrBuilder_copy_to ls, buf
+	StrBuilder_delete  ls
 	
 	objmode 2
 	font msgothic, 12
-	mesbox buf, ginfo(12), ginfo(13)
-	
+	mesbox buf, ginfo_winx, ginfo_winy
 	stop
 	
 #endif
