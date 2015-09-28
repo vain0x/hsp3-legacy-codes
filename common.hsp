@@ -1,9 +1,7 @@
-// HSP parse module - Header
+#ifndef ig_hsp_lex_common_hsp
+#define ig_hsp_lex_common_hsp
 
-#ifndef IG_HSP_PARSE_MODULE_HEADER_AS
-#define IG_HSP_PARSE_MODULE_HEADER_AS
-
-#include "Mo/ctype.as"
+#include "ctype.hsp"
 
 #define Max_TextLen 0x2FFFF
 

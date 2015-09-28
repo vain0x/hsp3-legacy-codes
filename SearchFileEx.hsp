@@ -1,9 +1,9 @@
-// 指定の検索パスを使って、ファイルを検索する
-
 #ifndef IG_SEARCH_FILE_EX_MODULE_AS
 #define IG_SEARCH_FILE_EX_MODULE_AS
 
-#include "MCStrSet.as"
+// 指定の検索パスを使って、ファイルを検索する
+
+#include "MCStrSet.hsp"
 
 #module SearchFileEx_mod
 

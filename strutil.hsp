@@ -1,7 +1,7 @@
-// 汎用文字列操作モジュール
-
 #ifndef IG_STRING_UTILITY_AS
 #define IG_STRING_UTILITY_AS
+
+// 汎用文字列操作モジュール
 
 /**+
  * strutil
@@ -13,14 +13,14 @@
  * @group 文字列操作関数
  */
 
-#include "mod_replace.as"
+#include "mod_replace.hsp"
 
 #module strutil
 
 // ※命令・関数 間の変数の衝突は気にしない。
 // 　別の関数は、衝突しても問題ない場合を除き、呼び出してはいけない。
 
-#include "ctype.as"
+#include "ctype.hsp"
 
 #define true  1
 #define false 0
