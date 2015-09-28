@@ -7,6 +7,7 @@
 #include "easyhash.hsp"
 #include "SearchFileEx.hsp"
 #include "array.hsp"
+#include "HspDeflister.hsp"
 
 #module MCHspIdenter \
 	mlistTkType, mlistTkStr, mfOpt, mpathCommon, mSearchPath, \
@@ -39,8 +40,8 @@
 	keylist_iface     = ","
 	keylist_var       = ","
 	
-	ArrayCopy mlistTkType, listTkType
-	ArrayCopy mlistTkStr,  listTkStr
+	array_copy mlistTkType, listTkType
+	array_copy mlistTkStr,  listTkStr
 	return
 	
 //------------------------------------------------
@@ -76,7 +77,7 @@
 //------------------------------------------------
 // —\–ñŒê‚Ì’Ç‰Á
 //------------------------------------------------
-#define ctype FTC_add(%1, %2, %3) xcase %1: if ( instr(%2, 0, "," + (%3) + ",") >= 0 ) { %2 += (%3) }
+#define ctype FTC_add(%1, %2, %3) swbreak : case %1: if ( instr(%2, 0, "," + (%3) + ",") >= 0 ) { %2 += (%3) }
 #modfunc hspIdenter_reserveIdent str src_, int type,  local src
 	src = getpath(src_, 16)
 	if ( peek(src, strlen(src) - 1) != ',' ) { src += "," }
