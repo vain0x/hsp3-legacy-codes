@@ -7,6 +7,10 @@
 
 #runtime "hsp3cl"
 
+#include "hsp_green/src/all.hsp"
+#define global MAKELONG2 MAKELONG4
+#define global max_int 0x7FFFFFFF
+
 #include "HPM_ToUDScript.as"
 
 *main
@@ -24,7 +28,7 @@
 	
 *Initialize
 	sdim curdir, MAX_PATH
-		 curdir = dirinfo(0)
+		 curdir = dir_cur
 	return
 	
 *ClearVariable
@@ -32,11 +36,11 @@
 	return
 	
 *ProcCmdline
-	cmdline = dirinfo(4)
+	cmdline = dir_cmdline
 	if ( peek(cmdline) == '"' ) { getstr cmdline, cmdline, 1, '"' }
 	
 #ifdef _debug
-	cmdline  = "D:/Docs/prg/hsp/Misc/UDScript/" + "test2.hsp"
+	cmdline  = "D:/Docs/prg/hsp/Project/UDScript/" + "_nobak/input.hsp"
 #endif
 	return
 	
