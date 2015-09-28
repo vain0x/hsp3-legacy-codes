@@ -1,0 +1,54 @@
+// UDScript
+// スクリプトの体裁を整える
+
+#packopt name    "UDScript"
+#packopt hide    1
+#packopt orgpath 1
+
+#runtime "hsp3cl"
+
+#include "HPM_ToUDScript.as"
+
+*main
+	gosub *Initialize
+	gosub *ClearVariable
+	gosub *ProcCmdline
+	gosub *Transration
+	
+	onexit goto *exit
+	goto *exit
+	
+*exit
+	if ( curdir != "" ) { chdir curdir }
+	end : end
+	
+*Initialize
+	sdim curdir, MAX_PATH
+		 curdir = dirinfo(0)
+	return
+	
+*ClearVariable
+	sdim cmdline, MAX_PATH
+	return
+	
+*ProcCmdline
+	cmdline = dirinfo(4)
+	if ( peek(cmdline) == '"' ) { getstr cmdline, cmdline, 1, '"' }
+	
+#ifdef _debug
+	cmdline  = "D:/Docs/prg/hsp/Misc/UDScript/" + "test2.hsp"
+#endif
+	return
+	
+*Transration
+	exist cmdline
+	if ( strsize < 0 ) { print "File not found." : return }
+	
+	sdim     script, strsize + 1
+	notesel  script
+	noteload cmdline
+	ToUDScript script, script
+	notesave getpath(cmdline, 1) +"_ud"+ getpath(cmdline, 2)
+	noteunsel
+	return
+	
