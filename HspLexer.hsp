@@ -247,8 +247,6 @@
 // 2つ重ねて演算子になる文字
 #define ctype IsWOp(%1) ((%1) == '<' || (%1) == '=' || (%1) == '>' || (%1) == '&' || (%1) == '|' || (%1) == '+' || (%1) == '-')
 
-#define NULL 0
-
 //------------------------------------------------
 // 次のトークンを取得する
 //------------------------------------------------
@@ -431,7 +429,7 @@
 	if ( IsSJIS1st(c) ) {
 		logmes "ERROR! SJIS code!"
 		wpoke result, 0, wpeek(sSrc, index)	// 書き込む
-		poke  result, 3, NULL
+		poke  result, 3, 0
 		return TkType_Error
 	}
 	
@@ -545,39 +543,6 @@
 		}
 		i ++
 	loop
-	
-#if 0
-	// ラベルの後を調べる
-	while
-		i += CntSpaces(src, i)	// 空白をスキップ
-		c  = peek(src, i)		// ラベルの次
-		
-		if ( c == '/' ) {
-			c2 = peek(src, i + 1)
-			if ( c2 == '/' ) { return true }		// ダブル・スラッシュのコメント
-			if ( c2 == '*' ) {						// 複数行コメント開始
-				iFound = instr(src, i + 2, "*/")	// 終了地点を探す
-				if ( iFound >= 0 ) {
-					i += 4 + iFound					// /**/ + 距離
-					_continue						// もう一度「ラベルの次」をチェックする
-				}
-			}
-		} else : if ( c == '@' ) {
-			// スコープ名をスキップ
-			do
-				i ++
-				c = peek(src, i)
-			until ( IsIdent(c) == false )
-			_continue
-		}
-		_break
-	wend
-	
-	// ;:{}), 改行文字 NULL でなければ×
-	if ( c != NULL && (c == ';' || c == ':' || c == '{' || c == '}' || c == ')' || c == ',' || c == 0x0D || c == 0x0A) == false ) {
-		return false
-	}
-#endif
 	return true
 	
 #define ctype isIdentInList(%1,%2=src) ( instr( %1, 0, ","+ getpath(%2, 16) +"," ) >= 0 )
