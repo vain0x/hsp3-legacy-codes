@@ -34,20 +34,4 @@
 
 #global
 
-#if 0
-
-	clmn = "012345678901234567890123456789"
-	text = "str	length		for		a	o."
-	
-	sdim buf, 3200
-	buf  = strf("%s\n%s\n%s\n\n",   clmn, text, extendTab(text, 8, 0))
-	buf += strf("%s\n %s\n %s\n\n", clmn, text, extendTab(text, 8, 1))
-	
-	objmode 2
-	objsize ginfo_winx, ginfo_winy
-	mesbox buf
-	stop
-	
-#endif
-
 #endif

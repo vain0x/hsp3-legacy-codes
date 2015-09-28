@@ -44,7 +44,6 @@
 	
 	ArrayCopy mlistTkType, listTkType
 	ArrayCopy mlistTkStr,  listTkStr
-	
 	return
 	
 //------------------------------------------------
@@ -124,7 +123,6 @@
 	FT_exists( TkTypeEx_DllFunc, keylist_dllfunc, src )
 	FT_exists( TkTypeEx_IFace,   keylist_iface,   src )
 	FT_exists( TkTypeEx_Var,     keylist_var,     src )
-	
 	return 0
 	
 #undef FT_exists
@@ -196,9 +194,7 @@
 			hspDeflister_getIncludeArray    deflister(idx), listInclude		// #include 指示されたファイルのリストを得る
 			hspIdenter_collectDefs thismod, deflister(idx), listInclude, false
 		}
-		
 	loop
-	
 	return
 	
 #global

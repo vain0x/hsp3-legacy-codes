@@ -19,8 +19,9 @@
 #define global HspLexer_Flag_NoScope	0x0004		// TkType_Scope   を無視する
 #define global HspLexer_Flag_NoReserved	0x0008		// TkType_Ident が予約語かどうかの判定をしない
 #define global HspLexer_Flag_ExtendTab	0x0010		// タブ文字を半角スペースに展開する
-;#define global HspLexer_Flag_
-;#define global HspLexer_Flag_
+
+#uselib "user32.dll"
+#func   CharLower@MCHspLexer "CharLowerA" int
 
 //------------------------------------------------
 // 構築
@@ -90,17 +91,6 @@
 			continue
 		}
 		
-;		if ( tktype == TkType_Error ) {
-;			cntToken = -1
-;			break
-;		}
-		
-;		logmes "type\t= "+ tktype
-;		logmes "str\t= "+  tkstr
-;		logmes "beftype\t= "+ befTkType
-;		logmes "index\t= "+ index
-;		logmes ""
-		
 		tktypelist(cntToken) = tktype
 		tkstrlist (cntToken) = tkstr
 		
@@ -111,12 +101,10 @@
 		befTkType = tktype
 		cntToken ++
 	loop
-	
 	return cntToken
 	
 *LProcToken
 	switch ( tktype )
-		
 		// 空白 or コメント
 		case TkType_Blank
 		case TkType_Comment
@@ -153,29 +141,11 @@
 				}
 			}
 			
-		/*
-			         if ( isSttm(thismod, tkstr) )    { tkType = TkTypeEx_Sttm		// 標準命令
-			} else : if ( isFunc(thismod, tkstr) )    { tkType = TkTypeEx_Func		// 標準関数
-			} else : if ( isSysvar(thismod, tkstr) )  { tktype = TkTypeEx_Sysvar	// システム変数
-			} else : if ( isMacro(thismod, tkstr) )   { tktype = TkTypeEx_Macro		// マクロ
-			} else : if ( isConst(thismod, tkstr) )   { tktype = TkTypeEx_Const		// 定数
-			} else : if ( isDefSttm(thismod, tkstr) ) { tktype = TkTypeEx_DefSttm	// ユーザ定義命令
-			} else : if ( isDefFunc(thismod, tkstr) ) { tktype = TkTypeEx_DefFunc	// ユーザ定義関数
-			} else : if ( isDllFunc(thismod, tkstr) ) { tktype = TkTypeEx_DllFunc	// DllFunc
-			} else : if ( isIFace(thismod, tkstr) )   { tktype = TkTypeEx_IFace		// IFace
-			} else : if ( isModname(thismod, tkstr) ) { tktype = TkTypeEx_ModName	// モジュール名
-			} else {
-				tktype = TkTypeEx_Var
-			}
-		//*/
-			
 			// 配列に指定した値を変更する
 		:*LChangeTkTypeList
 			tktypelist(cntToken) = tktype
 			swbreak
-			
 	swend
-	
 	return
 	
 //##########################################################
@@ -274,15 +244,7 @@
 #defcfunc CutNum_Dgt@MCHspLexer var sSrc, int iOffset
 	FTM_CutToken ( IsDigit(c) || c == '.' || c == '_' )
 	
-//##########################################################
-//        字句取り出し
-//##########################################################
-#uselib "user32.dll"
-#func   CharLower@MCHspLexer "CharLowerA" int
-
-//------------------------------------------------
-// マクロ
-//------------------------------------------------
+// 2つ重ねて演算子になる文字
 #define ctype IsWOp(%1) ((%1) == '<' || (%1) == '=' || (%1) == '>' || (%1) == '&' || (%1) == '|' || (%1) == '+' || (%1) == '-')
 
 #define NULL 0
@@ -505,9 +467,6 @@
 	
 	return TkType_Numeric
 	
-//##############################################################################
-//                識別子判定
-//##############################################################################
 //------------------------------------------------
 // 次はラベルか？
 // 
@@ -555,12 +514,6 @@
 			m  = BackToIdentTop(src, offset)
 			if ( m < 0 ) { return false }	// 前が識別子ではない (異常？)
 			i -= m
-			
-;			// ここで、goto gosub なら OK
-;			stmp = getpath( CutName(src, i + 1), 16 )
-;			if ( stmp == "gosub" || stmp == "goto" ) {
-;				swbreak
-;			}
 			
 			i -= CntSpacesBack( src, i )		// 空白 ignore
 			i --							// ラベルの前の前
@@ -649,80 +602,10 @@
 	stmp = strmid( stmp, 1 + CntSpaces( stmp, 1 ), strlen(stmp) )
 	return stmp
 	
-	/*
-//------------------------------------------------
-// 命令か？ ( src に無駄な記号や空白があると、偽 )
-//------------------------------------------------
-#modcfunc isSttm@MCHspLexer str src
-	return isIdentInList( keylist_sttm )
-	
-//------------------------------------------------
-// 関数か？
-//------------------------------------------------
-#modcfunc isFunc@MCHspLexer str src
-	return isIdentInList( keylist_func )
-	
-//------------------------------------------------
-// システム変数か？
-//------------------------------------------------
-#modcfunc isSysvar@MCHspLexer str src
-	return isIdentInList( keylist_sysvar )
-	
-//------------------------------------------------
-// マクロか？
-//------------------------------------------------
-#modcfunc isMacro@MCHspLexer str src
-	return isIdentInList( keylist_macro )
-	
-//------------------------------------------------
-// 定数か？
-//------------------------------------------------
-#modcfunc isConst@MCHspLexer str src
-	return isIdentInList( keylist_const )
-	
-//------------------------------------------------
-// ユーザ定義命令か？
-//------------------------------------------------
-#modcfunc isDefSttm@MCHspLexer str src
-	return isIdentInList( keylist_defsttm )
-	
-//------------------------------------------------
-// ユーザ定義関数か？
-//------------------------------------------------
-#modcfunc isDefFunc@MCHspLexer str src
-	return isIdentInList( keylist_deffunc )
-	
-//------------------------------------------------
-// Dll関数か？
-//------------------------------------------------
-#modcfunc isDllFunc@MCHspLexer str src
-	return isIdentInList( keylist_dllfunc )
-	
-//------------------------------------------------
-// InterFace か？
-//------------------------------------------------
-#modcfunc isIFace@MCHspLexer str src
-	return isIdentInList( keylist_iface )
-	
-//------------------------------------------------
-// モジュール名か？
-//------------------------------------------------
-#modcfunc isModname@MCHspLexer str src
-	return isIdentInList( keylist_modname )
-	
-//------------------------------------------------
-// 変数か？
-//------------------------------------------------
-#modcfunc isVar@MCHspLexer str src
-	return isIdentInList( keylist_var )
-	//*/
-	
 #global
 
-//##############################################################################
-//                テスト
-//##############################################################################
-#if 1
+// サンプル
+#if 0
 
 #include "StrBuilder/MCLongString.as"
 
