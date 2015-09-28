@@ -5,7 +5,6 @@
 // 単一のファイルだけ処理する。(include の先は見に行かない)
 // @ 行番号情報は削除すべき？
 
-#include "strutil.hsp"
 #include "pvalptr.hsp"
 #include "hsplexer.hsp"
 
@@ -257,7 +256,7 @@
 			bGlobal  = true
 			bLocal   = false
 			
-			ppident  = CutPreprocIdent( nowTkStr )		// 識別子部分だけにする
+			ppident  = CutPreprocIdent@MCHspLexer(nowTkStr) // 識別子部分だけにする
 			
 			switch ( ppident )
 				
@@ -267,7 +266,7 @@
 					
 					// #module "modname" の形式
 					if ( nowTkType == TkType_String ) {
-						nowTkStr = CutStrInner(nowTkStr)
+						nowTkStr = CutStrInner@MCHspLexer(nowTkStr)
 						
 					// #module modname の形式
 					} else : if ( nowTkType == TkType_Ident ) {
@@ -292,7 +291,7 @@
 					gosub *LNextToken
 					
 					if ( nowTkType == TkType_String ) {
-						nowTkStr = CutStrInner( nowTkStr )
+						nowTkStr = CutStrInner@MCHspLexer( nowTkStr )
 						
 						mInclude(mCntInclude) = nowTkStr
 						mCntInclude ++
