@@ -5,15 +5,13 @@
 // 単一のファイルだけ処理する。(include の先は見に行かない)
 // @ 行番号情報は削除すべき？
 
-#include "strutil.as"
-#include "pvalptr.as"
+#include "strutil.hsp"
+#include "pvalptr.hsp"
+#include "hsplexer.hsp"
 
 #module MCDeflister mScript, mCount, mFileName, mFilePath, mIdent, mLn, mType, mScope, mInclude, mCntInclude
 
-#include "HspLexer_header.as"
-
-#define true  1
-#define false 0
+#include "common.hsp"
 
 //------------------------------------------------
 // DEFTYPE
@@ -39,7 +37,7 @@
 //------------------------------------------------
 // コンストラクタ
 //------------------------------------------------
-#define global hspDeflister_new(%1,%2) newmod %1, MCDeflist@, %2
+#define global hspDeflister_new(%1,%2) newmod %1, MCDeflister@, %2
 #modinit str path
 	// メンバ変数を初期化
 	sdim mIdent,, 5
@@ -143,7 +141,7 @@
 // @private
 // @static
 //------------------------------------------------
-#deffunc MakeScope@MCDeflist var scope, str defscope, int deftype, int bGlobal, int bLocal
+#deffunc MakeScope@MCDeflister var scope, str defscope, int deftype, int bGlobal, int bLocal
 	if ( bGlobal ) { scope = AREA_ALL : return }
 	
 	scope = defscope
@@ -162,6 +160,7 @@
 	fSplit  = HspLexer_Flag_NoBlank
 	fSplit |= HspLexer_Flag_NoReserved
 	
+	dim lexer
 	hspLexer_new lexer
 	hspLexer_set lexer, fSplit
 	hspLexer_lex lexer, tktypelist, tkstrlist, mScript
@@ -365,16 +364,6 @@
 	gosub *LProcToken
 	
 	return
-	
-;*LBackToken
-;	idx --
-;	if ( idx <= 0 ) {
-;		idx       = 0
-;		befTkType = TKTYPE_END
-;	} else {
-;		befTkType = tktypelist(idx - 1)
-;	}
-;	return
 	
 *LCountLines
 	notesel nowTkStr

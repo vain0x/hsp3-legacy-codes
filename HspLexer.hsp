@@ -582,6 +582,7 @@
 	
 	fSplit = HspLexer_Flag_ExtendTab
 	
+	dim lexer
 	hspLexer_new lexer
 	hspLexer_set lexer, fSplit, 4
 	hspLexer_lex lexer, tktypelist, tkstrlist, s

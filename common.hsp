@@ -5,6 +5,7 @@
 
 #define true  1
 #define false 0
+#define MAX_PATH 260
 
 #define ctype MAKELONG(%1, %2) \
 	((%1) & 0xFFFF | ((%2) << 16) & 0xFFFF)
@@ -46,6 +47,8 @@
 #enum TkType_Scope				// @スコープ
 #enum TkType_EscLineFeed		// 改行回避 (行末の\)
 #enum TkType_Any				// なにか
+#enum TkTypeEx_Cmd
+#enum TkTypeEx_PreProc
 #enum TkTypeEx_Sttm				// 標準命令
 #enum TkTypeEx_Func				// 標準関数
 #enum TkTypeEx_Sysvar			// 標準システム変数
