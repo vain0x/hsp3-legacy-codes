@@ -469,7 +469,7 @@
 //   　 * から始まり、
 //   　その次が「文の終端 or ',' or ')'」のどれか
 //------------------------------------------------
-#modcfunc isLabel@MCHspLexer var src, int offset, int p_befTT, int bPreLine,  local stmp
+#defcfunc isLabel@MCHspLexer var src, int offset, int p_befTT, int bPreLine,  local stmp
 
 	// 最低限のチェック
 	if ( peek(src, offset    ) != '*' ) { return false }		// もはやラベルではない
