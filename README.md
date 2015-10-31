@@ -63,7 +63,7 @@ HSP3•W€ƒXƒNƒŠƒvƒgƒGƒfƒBƒ^(hsed3)‚ÌŠO•”ƒc[ƒ‹‚Æ‚µ‚Ä“o˜^‚·‚éê‡AƒRƒ}ƒ“ƒhƒ‰ƒCƒ“ˆ
 ’è‹`ŽûW‘ÎÛ‚Ìƒtƒ@ƒCƒ‹–¼‚É‚È‚è‚Ü‚·BƒXƒNƒŠƒvƒgƒGƒfƒBƒ^‚Å•ÒW’†‚Ìƒtƒ@ƒCƒ‹‚ÍA`[hsedtmp.hsp]` ‚Æ‚¢‚¤ƒtƒ@ƒCƒ‹–¼‚É‚È‚è‚Ü‚·B
 
 ## Œ —˜
-’N‚Å‚àAƒpƒbƒP[ƒW‚ÉŠÜ‚Ü‚ê‚éƒ‚ƒm‚Í‚·‚×‚ÄA‰ü•Ï‚Ì—L–³Aˆê•”E‘S•”‚É‚©‚©‚í‚ç‚¸Ž©—R‚ÉŽg—pA—¬—pA”z•z‚·‚é‚±‚Æ‚ª‚Å‚«‚Ü‚·B
+[NYSL Version 0.9982](http://www.kmonos.net/nysl/) ‚É]‚¤B
 
 ## ŠÖ˜AURL
 * ƒvƒƒOƒ‰Lê <http://prograpark.ninja-web.net/>
