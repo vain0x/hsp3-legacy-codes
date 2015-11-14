@@ -9,6 +9,12 @@
 #packopt name "XEaters"
 #packopt hide 1
 
+#define global true 1
+#define global false 0
+
+#define global ctype RGB(%1 = 0, %2 = 0, %3 = 0) \
+	((%1) & 0xFF) | ((%2) & 0xFF) << 8 | (((%3) & 0xFF) << 16)
+
 #define WINX 320
 #define WINY 240
 
@@ -20,6 +26,10 @@
 #module
 #defcfunc randomColorref
 	return RGB(127 * rnd(3), 127 * rnd(3), 127 * rnd(3))
+	
+#deffunc color32 int cref
+	color (cref & 0xFF), (cref >> 8) & 0xFF, (cref >> 16) & 0xFF
+	return
 #global
 
 	gosub *initialize
