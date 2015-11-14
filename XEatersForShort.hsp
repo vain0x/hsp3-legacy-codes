@@ -1,0 +1,502 @@
+// X Eaters
+
+// ショート用
+
+// 唯食者たちにえさをやろう！
+// でも、彼らは自分の好みのえさしか食べない。
+// 間違えたら怒られるぞ。
+// しかも、彼らは特に気まぐれさん達。
+// 好みがコロッと変わっちゃうときもあるよ。
+
+;#packopt name "XEaters"
+;#packopt hide 1
+
+#if 1
+ #include "hsptv.as"
+#else
+ #define hsptv_up(%1,%2,%3)         logmes "hsptv に送信"
+ #define hsptv_getrank(%1,%2,%3,%4) logmes "ランキング取得" : dim %1 : sdim %2 : sdim %3
+#endif
+
+// 定数
+;#const gameSpeed 96
+#const gameSpeedMulti 32
+
+#const WINX 640
+#const WINY 480
+
+#const MAX_XEATERS     4
+#const MAX_CHARGE_FOOD 16
+#const MAX_RANK        13
+
+#const HEIGHT_FOOD 10
+
+#enum WINMODE_NONE = 0
+#enum WINMODE_TITLE
+#enum WINMODE_RANKING
+#enum WINMODE_GAME
+#enum WINMODE_GAMEOVER
+#enum WINMODE_INPUT_RANKDATA
+
+// マクロ
+#define SetNormalFont font "ＭＳ ゴシック", 28
+
+#ifndef __UserDefHeader__
+	#const true  1
+	#const false 0
+	#define color32(%1) color (%1) & 0xFF, ( (%1) >> 8 ) & 0xFF, ( (%1) >> 16 ) & 0xFF
+#endif
+
+;	repeat MAX_RANK
+;		hsptv_up cnt, "", 0x1000
+;	loop
+	
+	gosub *colors_init@
+	gosub *initialize
+*main
+	gosub *SetVariables
+	gosub *SetWindowForTitle
+	
+	gsel , 1
+	onkey *Key
+	stop
+	
+*Key
+	if ( winmode == WINMODE_TITLE ) {
+		if ( iparam == 13 ) {				// Enter
+			goto *mainlp
+			
+		} else : if ( wparam == 0x7B ) {	// F12
+			gosub *SetWindowForRanking
+		}
+		
+	} else : if ( winmode == WINMODE_RANKING ) {
+		if ( iparam == 13 ) {				// Enter
+			gosub *SetWindowForTitle
+		}
+		
+	} else : if ( winmode == WINMODE_GAMEOVER ) {
+		if ( iparam == 13 ) {				// Enter
+			goto *main
+		}
+	}
+	stop
+	
+// メインループ
+*mainlp
+	winmode = WINMODE_GAME
+	onkey false
+	repeat
+		repeat
+			if ( ginfo(2) >= 0 ) { break }
+			await 34
+		loop
+		
+		if ( (cnt \ gameSpeed) == 0 ) {		// 何回かに一回だけ
+;			logmes "eat"
+			gosub *Eat						// 食べる処理
+			if ( bGameOver ) { break }
+		}
+		
+		gosub *CheckKeyDown				// キー入力受付
+		gosub *RedrawMain				// 再描画
+		
+		await 17
+		cntMLp ++
+	loop
+	
+	// ゲーム終了
+	gosub *SetWindowForGameOver
+	onkey *Key
+	
+	// ランクインしたかどうかを調べる
+	hsptv_up -1, ""						// 最新データの取得
+	repeat MAX_RANK
+		hsptv_getrank rankScore, rankName, rankComment, cnt
+		if ( rankScore <= score ) {
+			rank = cnt
+			gosub *InputRankData
+			break
+		}
+	loop
+	
+	stop
+	
+//##############################################################################
+//        サブルーチン群
+//##############################################################################
+// 初期化
+*initialize
+	randomize
+	
+	// ランキングデータ入力画面
+	sdim comment			// ランキング・コメント
+	
+	screen 1, 200, 80, 14, ginfo(12) / 2 - 100, ginfo(13) / 2 - 40
+	title "XEaters - Rankin"
+	syscolor 15 : boxf : color
+	
+	objsize 60, 20
+	pos  60,  50 : button gosub "ＯＫ",       *UpRankData
+	pos 130,  50 : button gosub "キャンセル", *CancelRankData
+	
+	objmode 2
+	pos  10,  20 : input comment, 180, 25, 24
+	
+	sysfont 17
+	pos   5,   5 : mes "コメントを入力してください。"
+	
+	// メイン画面
+;	screen 0, WINX, WINY, 2
+	gsel , -1
+	title "XEaters ～ 唯食者たち ～"
+	return
+	
+// 変数を用意する
+*SetVariables
+;	dim crefType,  MAX_XEATERS
+	dim cidXEater, MAX_XEATERS
+	dim cidFood,   MAX_CHARGE_FOOD
+	dim iFood				// cidFood から取り出す要素番号
+	dim score
+	dim cntMLp
+	dim bGameOver
+	dim targetEaterID		// えさやり対象の生物のID
+;	sdim comment			// ランキング・コメント
+	dim  rankScore
+	sdim rankName
+	sdim rankComment
+	
+	eatingID   = -1
+	gameSpeed  = 128
+	gameSpdIdx = 4
+	crefType   = 0xFF, 0xFF00, 0xFF0000, 0xFFFFFF	// RGB(255, 0, 0), RGB(0, 255, 0), RGB(0, 0, 255), RGB(255, 255, 255)
+	numDummy   = 1
+	winmode    = WINMODE_TITLE
+	
+	repeat MAX_XEATERS : cidXEater(cnt) = cnt : loop
+	
+	gosub *SetDefaultFood
+	return
+	
+// 再描画
+*RedrawMain
+	redraw 2
+	
+	gosub *DrawBackground	// 背景
+	gosub *DrawMembers		// 唯食者たち
+	gosub *DrawFood			// えさ
+	gosub *DrawScore		// カウンタ
+	
+	redraw 1
+	return
+	
+// キー入力を受け付ける
+#const MAX_XEATERS_minus_1 (MAX_XEATERS - 1)
+*CheckKeyDown
+	stick keydown
+	if ( keydown & 2 ) { targetEaterID = limit(targetEaterID - 1, 0, MAX_XEATERS_minus_1) }
+	if ( keydown & 8 ) { targetEaterID = limit(targetEaterID + 1, 0, MAX_XEATERS_minus_1) }
+	return
+	
+// 食べる
+*Eat
+	if ( cidFood(iFood) >= 0 ) {		// 有効なアイテム
+		
+		// 違ったらダメ！
+		if ( crefType( cidFood(iFood) ) != crefType( cidXEater(targetEaterID) ) ) {
+			bGameOver = true
+			
+		} else {
+			score ++
+			eatingID = targetEaterID
+			iFood ++
+			
+			// 食べたら、位置が変わるかもしれない
+			if ( rnd(24) == 0 ) {
+				gosub *ShuffleXEaterPosition
+				gosub *SetBreakTime
+				
+			// 好みが変わるかもしれない
+			} else : if ( rnd(32) == 0 ) {
+				gosub *ChangeBaseColorOne
+				gosub *SetBreakTime
+				
+			// 全員変わるかもしれない
+			} else : if ( rnd(64) == 0 ) {
+				gosub *ChangeBaseColorAll
+				gosub *SetBreakTime
+				
+			// ゲーム速度が上がるかもしれない
+			} else : if ( (score \ 10) == 0 ) {
+				gosub *GameSpeedUp
+			}
+			iFood --
+		}
+		
+	}
+	
+	// えさを補給する
+	gosub *AddNewFood
+	return
+	
+// タイトル画面を用意する
+*SetWindowForTitle
+	winmode = WINMODE_TITLE
+	redraw 2
+	
+	font "", 86
+	color : boxf
+	color ,  255 : pos  40,  40 : mes "XEaters"
+	font "", 56
+	color ,, 255 : pos 200, 136 : mes "～唯食者たち～"
+	
+	color 192, 192
+	pos 44, 360 : mes "Press [Enter] to begin!"
+	
+	SetNormalFont; , 8
+	pos 100, 440 : mes "Press [F12] to see ranking."
+	
+;	SetNormalFont
+	color 255
+	pos 60, 260 : mes "Rule"
+	
+	color 128, 255, 192
+	pos 140, 250 : mes "↑ Up"
+/*	pos 160, 280:*/mes "↓ Down"
+	
+	redraw 1
+	return
+	
+// ゲームオーバー画面
+*SetWindowForGameOver
+	winmode = WINMODE_GAMEOVER
+	
+	redraw 2
+	color : boxf : color 255
+	font "", 112
+	pos 40, 80 : mes "Game Over...\n   "+ strf("%3d", score)
+	
+	font "", 50
+	color 192, 192, 192
+	pos 50, 360 : mes "Press [Enter] to continue..."
+	
+	redraw 1
+	return
+	
+// ランキング画面
+#const HSVCOLOR_H_FRAME (360 / MAX_RANK)
+*SetWindowForRanking
+	winmode = WINMODE_RANKING
+	hsptv_up -1, ""				// 最新データの取得
+	redraw 2
+	
+	color : boxf : color 255, 255, 255
+	
+	SetNormalFont
+	pos 20, 10 : mes "Ranking"
+	pos 30, 40
+	
+	repeat MAX_RANK
+		hsvcolor HSVCOLOR_H_FRAME * cnt, 255, 255
+		hsptv_getrank rankScore, rankName, rankComment, cnt
+		mes strf("#%2d", cnt + 1) +"："+ strf("Score %6d", rankScore) +" : "+ rankName +"\t< "+ rankComment
+	loop
+	
+	color 192, 192, 192
+	mes "\n    Press [Enter] to back."
+	
+	redraw 1
+	return
+	
+// ランキング入力画面
+*InputRankData
+	winmode = WINMODE_INPUT_RANKDATA
+	gsel 1 : title strf("XEaters - Rank(%2d)", rank + 1)
+	gsel 1, 1
+	return
+	
+// ランキングを入力する
+*UpRankData
+	hsptv_up score, comment
+	
+	gosub *ShowMainWindow			// メイン画面をトップに押しだし、ランキング入力画面を隠す
+	gosub *SetVariables				// 変数の値を初期化
+	gosub *SetWindowForRanking		// タイトル画面に移動
+	return
+	
+// ランキング入力を拒否する
+*CancelRankData
+	gsel 1, -1
+	gsel , 1
+	
+	winmode = WINMODE_GAMEOVER
+	return
+	
+//##############################################################################
+//        ミニ・サブルーチン群
+//##############################################################################
+// メイン画面の背景を描画する
+#const LowerFramePosY WINY - 60
+*DrawBackground
+	
+	color : boxf
+	color 192, 192, 192 : boxf , LowerFramePosY;, WINX, WINY
+	color 255, 255, 255
+	
+	return
+	
+// 唯食者たちを描画する
+*DrawMembers
+	
+	repeat MAX_XEATERS
+		cnt_mul_100 = 100 * cnt
+		
+		color32 crefType( cidXEater(cnt) )
+		
+		y = 30 + cnt_mul_100
+		circle 40, y, 104, y + 64
+		
+		color
+		pos 50, 36 + cnt_mul_100 : mes "- -"
+		if ( eatingID == cnt ) {
+			pos 64, 68 + cnt_mul_100 : mes  "~"
+		} else {
+			pos 64, 56 + cnt_mul_100 : mes  "o"
+		}
+	loop
+	
+	return
+	
+#const HEIGHT_FOODPIPE (HEIGHT_FOOD + 2)
+// えさを描画
+*DrawFood
+	// 管を描画する
+	color 192, 192, 225
+	repeat 2
+		y = 66 + 100 * targetEaterID + (cnt * HEIGHT_FOODPIPE)
+		line 74, y, WINX, y
+	loop
+	
+	// えさを描画
+	y = 67 + 100 * targetEaterID
+	
+	repeat MAX_CHARGE_FOOD
+		
+		tempID = (iFood + cnt) \ MAX_CHARGE_FOOD
+		
+		// 無効なえさを無視する
+		if ( cidFood(tempID) < 0 ) { continue }
+		
+		// 色のえさ
+		color32 crefType( cidFood(tempID) )
+		
+		x = 250 + (195 * (gameSpdIdx - 1)) + cnt * gameSpeed * 6 - (cntMLp \ gameSpeed) * 6
+		boxf x, y, x + 48, y + HEIGHT_FOOD
+	loop
+	
+	return
+	
+// スコアを描画
+#const ScorePosX WINX - 240
+#const ScorePosY WINY - 45
+*DrawScore
+	color
+	pos ScorePosX, ScorePosY : mes strf("score : %3d", score)
+	return
+	
+// えさを追加する
+*AddNewFood
+	
+	// 食べることの出来る唯食者のIDで選ぶ ( 負数ならなし )
+	eaterID_NewFood = rnd(MAX_XEATERS + numDummy) - numDummy
+	
+	if ( eaterID_NewFood >= 0 ) {	// 正常な場合のみ
+		cidNewFood = cidXEater(eaterID_NewFood)
+	} else {
+		cidNewFood = -1				// なし
+	}
+	
+;	logmes "add new food : "+ cidNewFood
+	
+	cidFood(iFood) = cidNewFood
+	iFood ++
+	
+	if ( iFood == MAX_CHARGE_FOOD ) {	// 一周したら
+		iFood = 0
+		if ( numDummy ) { numDummy -- }	// 空白出現率を減少させる
+	}
+	return
+	
+// えさをデフォルトの状態にする
+*SetDefaultFood
+	memset cidFood, 0xFF, 4			// 前の方を休憩時間とする
+	iFood = 1
+	repeat MAX_CHARGE_FOOD - 1
+		gosub *AddNewFood				// えさをランダムに追加する( 追加というか、変更 )
+	loop
+	dim iFood
+	return
+	
+// 休憩時間を若干いれる
+*SetBreakTime
+	repeat 1 + ( gameSpdIdx <= 1 )
+		cidFood((iFood + cnt) \ MAX_CHARGE_FOOD) = -1
+	loop
+	return
+	
+// 唯食者の立ち位置を変える( シャッフル )
+*ShuffleXEaterPosition
+	repeat MAX_XEATERS
+		tempID            = rnd(MAX_XEATERS)
+		cidTemp           = cidXEater(tempID)
+		cidXEater(tempID) = cidXEater(cnt)
+		cidXEater(cnt)    = cidTemp
+	loop
+	return
+	
+// 唯食者のベース好みを変える
+*ChangeBaseColorOne
+	gosub *randomColorref
+	crefType(targetEaterID) = stat
+	return
+	
+// ベース色をすべて変更する
+*ChangeBaseColorAll
+	repeat MAX_XEATERS
+		gosub *randomColorref
+		crefType(cnt) = stat
+	loop
+	return
+	
+// スピードを上げる ( ３段階だけ )
+*GameSpeedUp
+	if ( gameSpdIdx > 1 ) {
+		gameSpdIdx --									// 倍率を下げる
+		gameSpeed = gameSpeedMulti * gameSpdIdx			// 計算しておく
+		numDummy  =              6 - gameSpdIdx * 2		// リセット
+		gosub *SetBreakTime
+	}
+	return
+	
+// メイン画面をトップに押し出す
+*ShowMainWindow
+	gsel 1, -1
+	gsel , 1
+	return
+	
+//##############################################################################
+//      カラー・テーブル
+//##############################################################################
+*colors_init
+	// 色バリエーション・テーブル
+;	dim clrVariation, 22
+;	clrVariation( 0) = 0x007F00, 0x007F7F, 0x007FFF, 0x00FF00, 0x00FF7F, 0x00FFFF
+;	clrVariation( 6) = 0x7F0000, 0x7F007F, 0x7F00FF, 0x7F7F00, 0x7F7F7F, 0x7F7FFF, 0x7FFF00, 0x7FFF7F, 0x7FFFFF
+;	clrVariation(15) = 0xFF0000, 0xFF7F00, 0xFF7F7F, 0xFF7FFF, 0xFFFF00, 0xFFFF7F, 0xFFFFFF
+	clrVariation = 0x7F00, 0x7F7F, 0x7FFF, 0xFF00, 0xFF7F, 0xFFFF, 0x7F0000, 0x7F007F, 0x7F00FF, 0x7F7F00, 0xFF0000, 0xFF7F00, 0xFF7F7F, 0xFF7FFF, 0xFFFF00, 0xFFFF7F, 0xFFFFFF, 0x7F7F7F, 0x7F7FFF, 0x7FFF00, 0x7FFF7F, 0x7FFFFF, 0xFF0000, 0xFF7F00, 0xFF7F7F, 0xFF7FFF, 0xFFFF00, 0xFFFF7F, 0xFFFFFF
+	return
+	
+*randomColorref
+	return clrVariation( rnd(22) )
+	
