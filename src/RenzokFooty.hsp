@@ -7,8 +7,8 @@
 
 #include "dll/ODListbox/ODListbox.as"
 #include "dll/Footy2/Footy2.as"
-#include "dll/Footy2/Footy2mod.as"
-#include "dll/Footy2/ClrtxtOptimize.as"
+#include "Mo/Footy2mod.as"
+#include "Mo/ClrtxtOptimize.as"
 #include "hpi/hscallbk/hscallbk.as"
 #include "Mo/flexFrame.as"
 #include "Mo/FolderSelectDialog.as"
