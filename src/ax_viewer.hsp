@@ -1,9 +1,4 @@
-// ax-viewer
-
-// @ axファイルからコードを解析して表示する
-// @ base on: http://goo.gl/xV7Y6 (HSP開発wiki OpenHSPのチュートリアル/AXファイル構造)
-
-// use api, hspcmp.dll :: hsc3_getsym
+// ax_viewer
 
 #include "hspcmp.as"
 
@@ -16,7 +11,7 @@
 #define global ctype to32b_from16b(%1) cond_i( (%1) & 0x8000, 0 - ((%1) ^ 0xFFFF) - 1, (%1) )
 
 // consts for application
-#define global STR_APPNAME "ax-viewer"
+#define global STR_APPNAME "ax_viewer"
 #enum   global IDW_MAIN = 0
 
 #define CmpMode_Debug 1
