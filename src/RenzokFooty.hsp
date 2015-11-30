@@ -403,7 +403,8 @@
 	sdim buf,  65535			// 一時的にファイルを開くときのバッファ
 	sdim filepath, MAX_PATH		// 見ているファイルのパス
 	sdim path    , MAX_PATH		// 開いているフォルダのパス
-	path = dirinfo(0)
+	path = dir_cur
+	dir_exe_root = dir_cur
 	
 	sdim ClrtxtLib, MAX_PATH	// ClrtxtLib パス
 	sdim Clrtxt, 1024
@@ -597,7 +598,7 @@
 //######## Clrtxt 系ルーチン ###########################################################################
 // ClrtxtLib のパスを設定
 *SetClrtxtLibPath
-	ClrtxtLib = "D:/Docs/prg/hsp/Project/Renzok/src/ClrtxtLib/"
+	ClrtxtLib = dir_exe_root + "/ClrtxtLib/"
 	ClrtxtLibIs ClrtxtLib	// ClrtxtOptimize.as のモジュールに登録する
 	return
 	
