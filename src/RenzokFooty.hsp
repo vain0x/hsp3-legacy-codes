@@ -442,7 +442,7 @@
 	ODLbSetItemMargin  LbInfo(1), 1
 	ODLbSetMarginColor LbInfo(1), , 0xFFCCCC
 	
-	hFont = CreateFontByHSP("MS UI Gothic", 13, 0)
+	hFont = CreateFontByHSP(LISTBOX_FONT_FAMILY, LISTBOX_FONT_SIZE, 0)
 	ODLbSetFont LbInfo(1), hFont
 #else
 	objsize LBWIDTH, LBHEIGHT
@@ -661,8 +661,8 @@
 	gosub *SetCallbackToFooty
 	
 	// Font
-	Footy2SetFontFace footyID, FFM_ANSI_CHARSET, msgothic, false
-	Footy2SetFontSize footyID, 11, false
+	Footy2SetFontFace footyID, FFM_ANSI_CHARSET, EDITOR_FONT_FAMILY, false
+	Footy2SetFontSize footyID, EDITOR_FONT_SIZE, false
 	
 	// êîílê›íË
 		// ãLçÜÇÃâ¬éã

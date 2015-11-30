@@ -68,6 +68,11 @@
 #enum global CMD_SELALL
 #enum global CMD_MAX
 
+#define LISTBOX_FONT_FAMILY "IPAGothic"
+#define LISTBOX_FONT_SIZE 13
+#define EDITOR_FONT_FAMILY "IPAGothic"
+#define EDITOR_FONT_SIZE 11
+
 #ifndef __userdef__
  #define global true  1
  #define global false 0
