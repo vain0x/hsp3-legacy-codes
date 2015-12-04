@@ -1,0 +1,4 @@
+Copyright(C) 2007-2009, 2014-2015
+  original game design: Ume
+  programs and docs: ue_dai
+  card back design: かーみ
