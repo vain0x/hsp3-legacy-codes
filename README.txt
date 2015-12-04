@@ -8,7 +8,7 @@ DeckEditor で自由に作成することが可能です。
 【URL】
 「プログラ広場」 http://prograpark.ninja-web.net/
 
-Copyright(C) 2007-2009, 2014
- original game design: Ume
- programmings: 上大
- card back design: かーみ
+Copyright(C) 2007-2009, 2014-2015
+  original game design: Ume
+  programmings: ue_dai
+  card back design: かーみ
