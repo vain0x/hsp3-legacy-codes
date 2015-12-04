@@ -1,0 +1,174 @@
+
+
+#ifndef __MODULE_CONIC_CURVE_AS__
+#define __MODULE_CONIC_CURVE_AS__
+
+//########################################################
+// for HSP3
+// これは値をスムーズかつ素早く変化させるモジュールです。
+// 指定したフレーム数の時間をかけて現在の値を指定した値に変化させます。
+// 始めは大きく、終わりは小さく値を変化させながら指定した任意の値に数値を近づけていきます。
+// 
+// Val… Value
+// Chg… Change
+// Prbr… Parabola
+// ということでひとつ。
+//########################################################
+
+#module
+//【使い方】
+// m_SetValueChgPrbr命令で初期値と目標値を設定する。
+// m_GetValueChgPrbr関数を1回実行するたびに目標値に近づく。
+// 目標値に到達するとm_GetValueChgPrbr関数が真を返す。
+//
+
+//-------------------------------------------------
+// 初期化
+//	モジュールの最後で呼ぶので特に使う必要はありません。
+//	idの上限値を変更したいときに使ってください。
+#deffunc m_IniValChgPrbr int a
+	// 初期化（配列変数の確保）
+	ddim ac,     a
+	ddim target, a
+	dim time,    a
+	dim timecnt, a
+	return
+	
+//-------------------------------------------------
+// 目標値設定
+#deffunc m_SetValChgPrbr int _id, double _start, double _target, int _times
+//	_id		: 管理用の ID。任意で他とかぶらない値を指定する。
+//	_start	: 初期値
+//	_target	: 目標値
+//	_time	: 分割回数（time回m_GetValChgPrbrを実行すると目標値になる。）
+	id         = _id
+	target.id  = _target
+	time.id    = abs(_times)	// マイナスは指定させない
+	ac.id      = (_start - target.id) / (_times * _times)
+	timecnt.id = 0
+	return
+	
+// -------------------------------------------------
+// 現在の情報を取得
+// 現在の情報を取得するだけで、値は変化させない
+#defcfunc m_GetValChgPrbrInfo int tid, int infoid
+	// tid	: 管理用のid番号。m_SetValChgPrbr命令で指定した値を指定する。
+	
+	// 現在の値を取得
+	if ( infoid == 0 ) {
+		p = ac.tid * (timecnt.tid - time.tid) * (timecnt.tid - time.tid) + target.tid
+		return p	// 現在の値を返す
+	}
+	
+	// 残り時間（カウント）を返す。
+	if ( infoid = 1 ) {
+		return time.tid - timecnt.tid
+	}
+	
+	return
+	
+//-------------------------------------------------
+// 変化させた値を取得
+// １フレーム経過させて、現在の状態を取得する。完了したらdefを返す。
+#deffunc m_GetValChgPrbr int tid, double def
+	// tid	: 管理用のid番号。m_SetValChgPrbr命令で指定した値を指定する。
+	// def	: 移動が完了していた場合に返す値。デフォルト値。
+	if time.tid > timecnt.tid {
+		timecnt.tid ++
+		p = ac.tid * (timecnt.tid - time.tid) * (timecnt.tid - time.tid) + target.tid
+		
+	} else {
+		p = def	// デフォルト値を返す。
+	}
+	return p	// 移動後の値を返す
+	
+#global
+m_IniValChgPrbr 256
+//##################################################################################################
+
+// サンプル
+#if 0
+
+	dim tpos, 2		// 目標座標
+	tpos(0) = double(ginfo_winx / 2)
+	tpos(1) = double(ginfo_winy / 2)
+	ddim ppos, 2	// 現在座標（実数型）
+	ppos(0) = double( tpos(0) )
+	ppos(1) = double( tpos(1) )
+	
+*main
+	redraw 1 : await 16 : redraw 0
+	color 255, 255, 255 : boxf : color : pos 0, 0
+	
+	// キー取得
+	stick key
+	if ( (key & 256) || (key & 512) ) {
+		// 目標座標を設定する。
+		tpos(0) = mousex, mousey
+		m_SetValChgPrbr 0, ppos(0), double(tpos(0)), 60
+		m_SetValChgPrbr 1, ppos(1), double(tpos(1)), 60
+	}
+	
+	// 座標設定
+	m_GetValChgPrbr 0, ppos(0) : ppos(0) = refdval
+	m_GetValChgPrbr 1, ppos(1) : ppos(1) = refdval
+	
+	pos 10, 10
+	mes "ウィンドウ内をクリックしてください。"
+	mes "座標("+ int(ppos(0))+", "+ int(ppos(1)) +") - 目標("+ tpos(0) +", "+ tpos(1) +")"
+	mes "座標 double("+ ppos(0) +", "+ ppos(1) +")"
+	// 現在の情報を取得する
+	mes "移動終了までの残りカウント：" + m_GetValChgPrbrInfo(0, 1)
+	mes "現在座標：" + m_GetValChgPrbrInfo(0, 0) + ", " + m_GetValChgPrbrInfo(1, 0)
+	
+	// 描画
+	pos ppos(0), ppos(1) : mes "●"		// 移動するキャラクター
+	color 255, 0, 0
+	pos tpos(0), tpos(1) : mes "○"		// 目標位置
+	
+	goto *main
+
+#endif
+
+// サンプル２
+#if 0
+
+	tpos = 0
+	ppos = 0.0
+	font msmincho, 16
+	list = "項目１","項目２","項目３","項目４","項目５"
+*main
+	redraw 1 : await 16 : redraw 0
+	color 255, 255, 255 : boxf : color : pos 0, 0
+	
+	// キー取得
+	stick key
+	if ( key & 2 ) {
+		sct --
+		if ( sct < 0 ) { sct = 4 }
+		m_SetValChgPrbr 0, ppos, double(16 * sct), 15
+	}
+	if ( key & 8 ) {
+		sct ++ : sct \= 5
+		m_SetValChgPrbr 0, ppos, double(16 * sct), 15
+	}
+	
+	// 描画
+	m_GetValChgPrbr 0, ppos : ppos = refdval
+	
+	// リスト描画
+	pos 100, 100
+	repeat 5
+		mes list(cnt)
+	loop
+	
+	// カーソル
+	pos 80, 100 + ppos : mes "→"
+	
+	// 選択されている項目
+	color 255
+	pos 100,100 + 16 * sct : mes list(sct)
+	
+	goto *main
+	
+#endif
