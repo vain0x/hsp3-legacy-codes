@@ -20,7 +20,7 @@
 #define global Size_ZeoDeck 1540
 
 // フォルダ構造
-#define global PathToSingleCards (ownpath + "/singles.zeo_c")
+#define global PathToSingleCards (ownpath +"/singles.zeo_c")
 #define global PathToList (ownpath + "/decks/list.zeo_l")
 #define global PathToNewDeck PathToDeck(DeckName)
 #define global ctype PathToDeck(%1) (ownpath +"/decks/" + (%1) +".zeo_d")
@@ -87,5 +87,9 @@
 #const global ClsClr_Silver RGB(192, 192, 192)		// 銀
 
 #define global font_cardtext font msgothic, 13;font "",14;font msmincho, 14
+
+// 戦闘方式
+#const global CombatStyle_At 0
+#const global CombatStyle_Ig 1
 
 #endif

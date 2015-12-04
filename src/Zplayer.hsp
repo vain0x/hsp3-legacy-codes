@@ -33,15 +33,15 @@
 ///タイトル画面
 *Top
 	player = -1, -1
-	clrobj
 	gosub *RedrawTitle		// トップを描画
 	
-	objsize 120, 30, 40
+	objsize 120, 30
 	
-	pos 60, 420 : button gosub "デッキを開く", *OpenDeck
-	pos 60+(120+10)*1, 420 : button goto "CPU戦", *GameStart
-	pos 60+(120+10)*2, 420 : button gosub "ルール説明", *Rule
-	pos 60+(120+10)*3, 420 : button goto  "終了", *LExit
+	pos 60, 420 : button gosub "デッキを開く", *LOpenDeck
+		;: objId_TitleButtons = stat
+	pos 60 + (120 + 10) * 1, 420 : button goto "CPU戦", *LGameStart
+	pos 60 + (120 + 10) * 2, 420 : button gosub "ルール説明", *LRule
+	
 	gsel_show wID_Main
 	stop
 	
@@ -50,17 +50,20 @@
 		//ゲーム中のステータス変化を直すためにデッキをリロード
 		LoadZeoDeck ID_YOU, deckpath(ID_YOU), true // no pics
 	}
+	clrobj
 	goto *Top
 	
 //デッキを開く
-*OpenDeck
+*LOpenDeck
 	OpenDeckWithDialog ID_YOU
 	if (stat) { return true }
 	gosub *RedrawTitle
 	return false
 	
-//CPU戦を開始
-*GameStart
+//-------------------------------------------------
+// CPU戦
+//-------------------------------------------------
+*LGameStart
 #ifdef _DEBUG
 /*
 	// 開発時用のテストデータ
@@ -79,51 +82,48 @@
 	deckpath = "*", "*"
 //*/
 #endif
-
-	if (deckpath(ID_YOU) == "") { gosub *OpenDeck : if (stat) { stop } }
+	if (deckpath(ID_YOU) == "") { gosub *LOpenDeck : if (stat) { stop } }
 	OpenDeckWithDialog ID_EMY
 	if (stat) { stop }
 	
-	gosub *ClearVariableBeforeGameBeginning
-	gosub *ClearMainBeforeGameBeginning
+	gosub *ResetGameStatusVariables
+	gosub *ResetMainWindowForGame
 	gosub *W_SelectCard
 	gosub *E_SelectCard
-	;gosub *RedrawMain : redraw
 	bBeginning --
-	goto *mainlp
+	goto *LGameMainLoop
 	
-///ゲームのメインループ
-///再描画→判定→戦闘→死亡確認
-*mainlp
-	if ( bGameOver ) { stop }
+//ゲームのメインループ
+//再描画→判定→戦闘→死亡確認
+*LGameMainLoop
+	if (idWinner >= 0) { stop }
 	
-	// 再描画する
+	//先攻、後攻、の判定を行う
+	gosub *LJudgeSPD : idAttackPlayer = stat
 	gosub *RedrawMain : redraw
 	
-	// SPD 判定 (先攻の値が返る)
-	bAttackPlayer = JudgeSPD()
-	
-	// どっちで攻撃するか決める
+	//それぞれ攻撃方法を選択する
 	gosub *W_SelectWayToAttack
 	gosub *E_SelectWayToAttack
 	
-	// 先攻 → 後攻、
-	// 後攻 → 先攻 に攻撃
+	//先攻、後攻、の順に戦闘を行う
 	repeat 2
-		Attack bAttackPlayer
-		if ( stat ) {
-			Die bAttackPlayer ^ 1	// 相手側を倒した
-			bAttackPlayer ^= 1
-			break
-		}
-		bAttackPlayer ^= 1	// 反転
+		gosub *LCombat
+		if (stat) {break}
+		idAttackPlayer ^= 1	// 反転
 	loop
+	goto *LGameMainLoop
 	
-;	if ( bGameOver ) { goto *main }
-	
-	goto *mainlp
-	
-///終了割り込み
+//-------------------------------------------------
+// デッキ編集モード
+//-------------------------------------------------
+*LDeckEditMode
+	dialog "未実装"
+	return
+
+*LRule
+	exec ownpath + "/rule.html", exec_application
+	return
 *LExit
 	end : end
 	

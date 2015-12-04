@@ -7,18 +7,12 @@
 
 ///メインウィンドウの初期化
 *CreateMainScreen
-	screen wID_Main, ginfo_dispx, ginfo_dispy, 2, (ginfo_dispx - WIN_SIZEX)/2, (ginfo_dispy - WIN_SIZEY)/2 - 30
+	screen wID_Main, WIN_SIZEX, WIN_SIZEY, screen_hide
 	title Str_GameName
-	width WIN_SIZEX, WIN_SIZEY
 	return
 	
 ///各種画像をバッファに読み込む
 *LoadPictures
-	// 拡大戦闘画面の下地を準備
-;	bgscr wID_Battle, ginfo(20), ginfo(21), 2	// 戦闘拡大画面 // WIN_SIZEX, 647, 2, Wpx+3, WPy+32
-;	SetWindowLong hwnd, -20, GetWindowLong(hwnd, -20) | 0x0080		// ツールウィンドウにする
-;	picload "Zeo_Back/sc_Cosmo.jpg" , 1			// 背景をロード (宇宙
-	
 	// カード枠
 	buffer wID_CardTemp, SizeX_Card, SizeY_Card
 	
@@ -44,38 +38,10 @@
 		boxf 20, 37,  70, 47  // 横
 		boxf 40, 15,  50, 95  // 縦
 	
-	/*
-	buffer wID_SC_Back      ,  94, 111 : picload PathToPic("SC_Back.png")			// カード(裏面)
-	buffer wID_SC_Blue      ,  94, 111 : picload PathToPic("SC_Blue.png")			// 味方のカード
-	buffer wID_SC_Blue   + 1,  94, 111 : picload PathToPic("SC_Blue_Prom.png")		// 成り
-	buffer wID_SC_Red       ,  94, 111 : picload PathToPic("SC_Red.png")			// 敵カード
-	buffer wID_SC_Red    + 1,  94, 111 : picload PathToPic("SC_Red_Prom.png")			// 成り
-	buffer wID_SC_Blue_B    , 272, 332 : picload PathToPic("SC_Blue_B.png")		// 味方のカード (大)
-	buffer wID_SC_Blue_B + 1, 272, 332 : picload PathToPic("SC_Blue_B_Prom.png")		// 成り
-	buffer wID_SC_Red_B     , 272, 332 : picload PathToPic("SC_Red_B.png")			// 敵カード (大)
-	buffer wID_SC_Red_B  + 1, 272, 332 : picload PathToPic("SC_Red_B_Prom.png")		// 成り
-	//*/
-	
-	/*
-	buffer wID_Coffin : picload "coffin.bmp"
-	buffer wID_SC_Blue_Coffin, 94, 111 : font "", 14
-	pos 0,  0 : gcopy wID_SC_Blue, 0, 0, 91, 111
-	pos 6, 28 : gcopy wID_oke,     0, 0, 78,  42
-              : boxf 6, 6, 84, 21
-              : color 255, 255, 255
-	;pos 8,  8 : mes " 棺桶 Box "
-	//*/
-	
 	// フィールドの背景画像 (640*480を拡縮して使う)
 	buffer wID_Temp : picload PathToPic("BattleBg.jpg")
 	buffer wID_Back, WIN_SIZEX, WIN_SIZEY
 	           gzoom WIN_SIZEX, WIN_SIZEY, wID_Temp,  ,, 640, 480,  true
-	
-	;gsel   wID_Temp : picload "Zeo_Pics/SC_CombatBack.jpg"
-	;bgscr  wID_Battle, WIN_SIZEX, WIN_SIZEY, 2
-	;             gzoom WIN_SIZEX, WIN_SIZEY, wID_Temp, 0, 0, 1281, 1281, true
-	
-	;SetWindowLong hwnd, -20, GetWindowLong(hwnd, -20) | 0x0080
 	
 	// 小戦闘画面に罫線を引く
 	color 255
@@ -96,11 +62,6 @@
 		line pos_x + 1, 375,  pos_x + 1, 495  // 自分 手持ち枠(区切り線) 中
 		line pos_x    , 375,  pos_x    , 495  // 自分 手持ち枠(区切り線) 右
 	loop
-	color
-	
-	// 各カード画像のバッファを一応初期化しておく
-	;repeat 5 : buffer wID_wCardPic + cnt : loop
-	;repeat 5 : buffer wID_eCardPic + cnt : loop	
 	return
 	
 #endif

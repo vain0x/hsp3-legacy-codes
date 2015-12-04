@@ -60,111 +60,6 @@
 	return false
 	
 //-------------------------------------------------
-// メイン画面に2つのオブジェクトを配置する
-// 「物理/魔法」「続ける/終わる」ボタン
-//-------------------------------------------------
-#define PutTwoObjectsOnBattleWindow(%1,%2) \
-	objsize 260, 130 - SizeY_GameLogBox :\
-	objmode objmode_usefont : font msgothic, 37 :\
-	pos  50, 510 : gosub (%1) :\
-	pos 340, 510 : gosub (%2) : objmode objmode_guifont :
-	
-//-------------------------------------------------
-// ゲーム決着
-//-------------------------------------------------
-#deffunc GameOver int idPl,  local msg
-	redraw 2
-	gosub *RedrawMain
-	
-	msg = "You "+ cond_s(idPl, "win", "lose") +"..."
-	;AddGameLog "あなたの" + cwhich(idPl, "勝ちです！", "負けです……")
-	
-	//勝敗を影付きで大きく表示
-	font msgothic, 90, 3
-	pos 88, 243 : mes msg
-	
-	font msgothic, 90
-	if ( idPl ) { color ,, 255 } else { color 255 }
-	
-	pos 90, 245 : mes msg
-	color
-	
-	//続けるかどうかのボタン
-	PutTwoObjectsOnBattleWindow *LContinueButton, *LExitButton
-	redraw
-	
-	bGameOver ++
-	return
-	
-*LContinueButton:
-	button "続ける", *LContinue : return
-*LExitButton:
-	button "終わる", *LExit : return
-	
-//-------------------------------------------------
-// どちらの方が早いかを判定する関数
-//-------------------------------------------------
-#defcfunc JudgeSPD  local num
-	if ( ourSPD == emySPD ) {
-		// 王が勝つ
-		if ( ourMOV == 0 && emyMOV != 0 ) { return w }
-		if ( emyMOV == 0 && ourMOV != 0 ) { return e }
-		
-		// ほぼランダムに決める
-		dim num, 2
-	//	num(0) = HPの減り具合が大きい方 (自分 = 0, 相手 = 1)
-		num(0) = ((MAX_PRM - (ourSPD + ourATK + ourINT) - ourHP) >= (MAX_PRM - (emySPD + emyATK + emyINT) - emyHP))
-		num(1) = rnd(5) \ 2			// 0, 1, 0, 1, 0
-		
-		return num(0) ^ num(1)		// 受けているダメージの少ない方が有利 (少 : 多 = 3 : 2)
-	
-	} else {
-		assert ((ourSPD < emySPD) == cond_i(ourSPD < emySPD,  e, w))
-		return (ourSPD < emySPD)
-	}
-	
-//-------------------------------------------------
-// 死んでいるかどうかを判定する関数
-//-------------------------------------------------
-#defcfunc WasKilled int idPl
-	if ( HP(player(idPl), idPl) <= 0 ) {
-		 HP(player(idPl), idPl)  = 0
-		return true
-	}
-	return false
-	
-//-------------------------------------------------
-// 死んだ後の処理をする命令
-//-------------------------------------------------
-#deffunc Die int idPl
-	if ( Heads(idPl) <= 0 ) { GameOver idPl : return }
-	
-	AddGameLog playerName(idPl) + "の「" + cardname(player(idPl), idPl) + "」は倒れた。"
-	
-	player(idPl) = -1
-	if ( idPl == w ) {
-		gosub *W_SelectCard
-	} else {
-		gosub *E_SelectCard
-	}
-	return
-	
-//-------------------------------------------------
-// 戦闘カードを変更する命令
-//-------------------------------------------------
-#deffunc ChangeCard int idPl, int idCard
-	player (idPl) = idCard
-	Heads  (idPl) --			// 頭数を減らす
-	Ability(idPl) = -1		// 技使用状況をリセット
-	
-	if (Heads(idPl) < 0) {	// ゲーム終了
-		GameOver idPl			// 自分(0)なら敗北、敵(1)なら勝利
-	} else {
-		AddGameLog playerName(idPl) + "は「" + cardname(idCard, idPl) + "」を召喚。"
-	}
-	return
-	
-//-------------------------------------------------
 // HP を減少させる命令
 // 実際のデータをだんだん減らしつつ、再描画を繰り返す
 //-------------------------------------------------
@@ -187,40 +82,6 @@
 		if ( refdval == double(aftHP) || _hp <= 0 ) { break }
 	loop
 	return
-	
-//-------------------------------------------------
-// 攻撃する命令
-// idAP: attacking player
-//-------------------------------------------------
-#deffunc Attack int idAP,  local idBP, local attackprm
-	idBP = (idAP == 0)
-	AddGameLog cardname(player(idAP), idAP) + "の" + cond_s(ability(idAP), "物理", "魔法") + "攻撃！" 
-	
-	;gosub *RedrawCombat		// 拡大戦闘画面のセット
-	;gsel wID_Battle, 1
-	
-	// ダメージを与える
-	attackprm = cond_i(ability(idAP), A(player(idAP), idAP), I(player(idAP), idAP))
-	DealDamage HP(player(idBP), idBP), attackprm
-	
-	// 攻撃終了
-	;gosub *RedrawCombat		// 最終調整
-	;await 1200
-	;gsel wID_Battle, gsel_hide
-	gsel_show wID_Main
-	
-	gosub *RedrawMain
-	redraw
-	await 500
-	
-	// 攻撃方法を反転する
-	Ability(idAP) ^= 1
-	
-	// 死んでいたら真を返す
-	if ( HP(player(idBP), idBP) <= 0 ) {
-		return true
-	}
-	return false
 	
 //###########################################################
 //        描画命令
@@ -322,7 +183,6 @@
 	
 	// カード表面
 	DrawRedCardBlank
-	;pos x, y : gcopy wID_SC_Red, 0, 0, SizeX_Card, SizeY_Card
 	
 	// カード名部分
 	color32 ClassColorref(cardcls(idCard, e), e)
@@ -335,7 +195,7 @@
 	// パラメータ記入
 	font_cardtext : color
 	pos  8, 90 : mes cardname(idCard, e)
-	pos 48, 24 : mes strf("H%4d", HP(idCard, e)) : if ( player(e) == idCard && player(w) >= 0 ) { if ( emySPD >= ourSPD ) { color 255, 255 } else { color } }
+	pos 48, 24 : mes strf("H%4d", HP(idCard, e)) : if ( player(e) == idCard && player(w) >= 0 ) { if ( emySPD >= ourSPD ) { color 255, 255 } }
 	pos  6, 24 : mes strf("S%4d", S(idCard, e)) : if ( player(e) == idCard && Ability(e) == 1 ) { color 255, 255 } else { color }
 	pos 48,  6 : mes strf("A%4d", A(idCard, e)) : if ( player(e) == idCard && Ability(e) == 0 ) { color 255, 255 } else { color }
 	pos  6,  6 : mes strf("I%4d", I(idCard, e))

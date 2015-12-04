@@ -22,14 +22,14 @@
 	return
 	
 ///ゲーム開始時の初期化
-*ClearVariableBeforeGameBeginning
+*ResetGameStatusVariables
 	player    = -1, -1		// 戦闘しているカードの番号
 	heads     =  Count_CardsInDeck,  Count_CardsInDeck		// 生き残っているカード数
 	ability   = -1, -1		// 攻撃方法。正数は物理、0は魔法、負数は選択。
-	bGameOver = false
+	idWinner = -1
 	bBeginning ++
 	return
 	
-	declvar bAttackPlayer
+	declvar idAttackPlayer : declvar idDefencePlayer
 	
 #endif

@@ -1,21 +1,8 @@
-// Zplayer - Routine
-
 #ifndef IG_ZEOPLAYER_ROUTINE_AS
 #define IG_ZEOPLAYER_ROUTINE_AS
 
-//###########################################################
-//        設定
-//###########################################################
-*ClearMainBeforeGameBeginning
-	color_white : boxf
-	clrobj
-	
-	//ゲームログ設置
-	sdim gamelog, 1200
-	pos 0, WIN_SIZEY - SizeY_GameLogBox : mesbox gamelog,  WIN_SIZEX, SizeY_GameLogBox,  (mesbox_disable | mesbox_vscroll)
-	objIdGameLogBox = stat
-	return
-	
+// CPU戦用ルーチン
+
 //###########################################################
 //        画面の描画
 //###########################################################
@@ -26,15 +13,14 @@
 *RedrawTitle
 	gsel wID_Main
 	redraw 2
-	color_graylight : boxf
-	hsvcolor ,, 225 : boxf
+	hsvcolor ,, 255 : boxf
 	
 	// タイトルをでかでかと描画
-	color: font msgothic, 160
-	pos 70, 50 : mes "ZeoFive"
+	color: font msgothic, 120
+	pos 90, 30 : mes "ZeoFive"
 	
-	// デッキのカードを5枚並べる
-	repeat 5
+	// デッキのカードを並べる
+	repeat Count_CardsInDeck
 		pos_x = 80 + (110 * cnt)		// 描画基点
 		
 		pos pos_x, 240
@@ -43,97 +29,36 @@
 		} else {
 			DrawBlueCard cnt
 		}
-		//白で縁取り
-		color_white: boxl pos_x, 240, pos_x + 90, 350
-	loop
-	
-	// 三色の線を引く
-	repeat 3
-		// 赤緑青
-		hsvcolor 120 * cnt, 255, 255
-		;color 255 * (cnt == 0), 255 * (cnt == 1), 255 * (cnt == 2)
-		boxf , 360 + (3 * cnt),  , 363 + (3 * cnt)
-		;repeat 3, 380 + (3 * cnt)
-		;	line -1, cnt, WIN_SIZEX, cnt
-		;loop
 	loop
 	redraw
 	return
 	
 //-------------------------------------------------
-// 画面をきれいにする
+// メイン画面に2つのオブジェクトを配置する
+// 「物理/魔法」「続ける/終わる」ボタン
 //-------------------------------------------------
-*ClearCombatWindow
-	assert_sentinel /*
-	gsel wID_Battle
-	pos WPx +  25, WPy + 50 : gcopy wID_SC_Red_B , 0 ,0, 272, 332	// 敵カード貼り付け作業
-	pos WPx + 321, WPy + 50 : gcopy wID_SC_Blue_B, 0, 0, 272, 332	// 自分のカード貼り付け作業
-	
-	// カード名部分の背景色を上書き
-	dim iPos, Count_Players
-	repeat Count_Players
-		color32 ClassColorref(cardcls(player(cnt), cnt), cnt)
-		if ( cnt == w ) {
-			iPos(0) = WPx + 321
-			iPos(1) = WPy +  50
-			boxf iPos(0) + 16, iPos(1) + 16, iPos(0) + 254, iPos(1) + 65
-		} else {
-			iPos(0) = WPx + 25
-			iPos(1) = WPy + 50
-			boxf iPos(0) + 16, iPos(1) + 268, iPos(0) + 254, iPos(1) + 312
-		}
-	loop
-	return//*/
+#define PutTwoObjectsOnBattleWindow(%1,%2) \
+	objsize 260, 130 - SizeY_GameLogBox :\
+	objmode objmode_usefont : font msgothic, 37 :\
+	pos  50, 510 : gosub (%1) :\
+	pos 340, 510 : gosub (%2) : objmode objmode_guifont :
 	
 //-------------------------------------------------
-// 戦闘画面を再描画する
+// メインウィンドウを戦闘画面用にする
 //-------------------------------------------------
-*RedrawCombat
-	assert_sentinel/*
-	// 画面の位置をメインウィンドウに合わせる (元々戦闘画面が全画面だったことの名残り)
-	// ウィンドウフレームの分が合わないが
-	gsel wID_Main
-	posMainWindow = ginfo_wx1, ginfo_wy1
-	
-	gsel wID_Battle
-	width ,, posMainWindow(0), posMainWindow(1)
+*ResetMainWindowForGame
 	redraw 2
-	gosub *ClearCombatWindow		// 書く前に画面をきれいにする
+	color_white : boxf
+	clrobj
 	
-	if ( bPic ) {
-		pos WPx + 337, WPy + 132
-		gzoom 239, 128, wID_wCardPic + player(w), 0, 0, LOWORD(scrs(player(w))), HIWORD(scrs(player(w)))
-	}
-	
-	color
-	
-	// 自分のカードに自分の能力を描画
-	font "", 38, 16
-	pos WPx + 342, WPy +  68 : mes ourName
-	
-	font "", 40 : if ( bAttackPlayer == e ) { color 255, 255 } else { color }
-	pos WPx + 344, WPy + 275 : mes "HP"+ ourHP  : color
-	pos WPx + 480, WPy + 275 : mes "S" + ourSPD : if ( bAttackPlayer == w && Ability(w) == 1 ) { color 255, 255 } else { color }
-	pos WPx + 345, WPy + 320 : mes "A "+ ourATK : if ( bAttackPlayer == w && Ability(w) == 0 ) { color 255, 255 } else { color }
-	pos WPx + 480, WPy + 320 : mes "I "+ ourINT
-	
-	color
-	
-	// 敵のカードに描画
-	font "", 38
-	pos WPx + 43, WPy +320 : mes emyName
-	
-	font "", 40 : if ( bAttackPlayer == w ) { color 255, 255 } else { color }
-	pos WPx +168, WPy +120 : mes "HP" + emyHP  : color
-	pos WPx + 51, WPy +120 : mes "S " + emySPD : if ( bAttackPlayer == e && Ability(e) == 1 ) { color 255, 255 } else { color }
-	pos WPx +168, WPy + 70 : mes "A " + emyATK : if ( bAttackPlayer == e && Ability(e) == 0 ) { color 255, 255 } else { color }
-	pos WPx + 51, WPy + 70 : mes "I  "+ emyINT
-	
-	redraw
-	return//*/
+	//ゲームログを設置
+	sdim gamelog, 1200
+	pos 0, WIN_SIZEY - SizeY_GameLogBox : mesbox gamelog,  WIN_SIZEX, SizeY_GameLogBox,  (mesbox_disable | mesbox_vscroll)
+	objIdGameLogBox = stat
+	return
 	
 //-------------------------------------------------
-// 小戦闘画面
+// 戦闘画面
 //-------------------------------------------------
 *RedrawMain
 	redraw 2
@@ -191,29 +116,37 @@
 //        ゲーム中の動作
 //###########################################################
 //-------------------------------------------------
+// どちらの方が早いかを判定する関数
+// 結果は stat に返す。
+//-------------------------------------------------
+*LJudgeSPD
+	if ( ourSPD == emySPD ) {
+		// 王が勝つ
+		if ( ourMOV == 0 && emyMOV != 0 ) { return w }
+		if ( emyMOV == 0 && ourMOV != 0 ) { return e }
+		
+		// ほぼランダムに決める
+		declvar num0 : declvar num1
+	//	num0 = HPの減り具合が大きい方 (自分 = 0, 相手 = 1)
+		num1 = ((MAX_PRM - (ourSPD + ourATK + ourINT) - ourHP) >= (MAX_PRM - (emySPD + emyATK + emyINT) - emyHP))
+		num1 = rnd(5) \ 2			// 0, 1, 0, 1, 0
+		return (num0 ^ num1) != 0	// 受けているダメージの少ない方が有利 (少 : 多 = 3 : 2)
+	} else {
+		assert (ourSPD < emySPD) == cond_i(ourSPD < emySPD,  e, w)
+		return (ourSPD < emySPD)
+	}
+//-------------------------------------------------
 // 自分 -> 次のカードを選択する
 //-------------------------------------------------
 *W_SelectCard
 	redraw 2
 	gosub *RedrawMain
 	
-/*
-	font "", 64
-;	color 192, 192, 192		// 灰色
-	color 225, 225, 225 : boxf 70, 215, 600, 360
-	color 192, 192, 192 : boxl 70, 215, 600, 360
-	
-	color
-	pos 80, 225 : mes "場に出すカードを\n    選んでください。"
-/*/
-;	hsvcolor ,, 192		// 灰色
 	hsvcolor ,, 225 : boxf 50, 510, 580, 640 - SizeY_GameLogBox
 	hsvcolor ,, 192 : boxl 50, 510, 580, 640 - SizeY_GameLogBox
 	
-	color
-	font msgothic, 33
+	font msgothic, 33 : color
 	pos 60, 525 : mes "場に出すカードを選んでください"
-//*/
 	
 	objsize 89, 26
 	// 押したボタンの ID 値が *Decide_CardIntoPlay の stat 値になる
@@ -234,21 +167,29 @@
 	while ( bDecided == false ) : await 70 : wend
 	return
 	
-//-------------------------------------------------
-// 自分 -> 次に場に出すカードを決定する
-//-------------------------------------------------
+// 召喚するカードを決めたとき
 *Decide_CardIntoPlay
 	bDecided = true
-	num      = stat - objIdFirstCard
-	ChangeCard w, num
+	num0     = stat - objIdFirstCard
+	SummonCard w, num0
 	
 	//カード選択ボタンを消去
 	clrobj objIdFirstCard, objIdFirstCard + Count_CardsInDeck - 1
 	
-	redraw 2
-	color_white : boxf
 	gosub *RedrawMain
 	redraw
+	return
+	
+//-------------------------------------------------
+// 戦闘カードを変更する命令
+//-------------------------------------------------
+#deffunc SummonCard int idPl, int idCard
+	assert player(idPl) < 0 && HP(idCard, idPl) > 0 && heads(idPl) > 0
+	player (idPl) = idCard
+	Heads  (idPl) --		// 頭数を減らす
+	Ability(idPl) = -1		// 技使用状況をリセット
+	
+	AddGameLog playerName(idPl) + "は「" + cardname(idCard, idPl) + "」を召喚。"
 	return
 	
 //-------------------------------------------------
@@ -259,7 +200,7 @@
 //	その技の威力が最小のものを出す。なければランダム。
 //-------------------------------------------------
 *E_SelectCard
-	num = -1
+	num0 = -1
 	
 	// こちら側の攻撃方法が未定 => ゲームの開始時の選択 (こちら側のカードの情報を使ってはいけない)
 	if ( Ability(w) < 0 ) {
@@ -270,21 +211,21 @@
 		repeat Count_CardsInDeck
 			if ( (HP(cnt, e) > 0 && S(cnt, e) > ourSPD) || HP(cnt, e) > ourNextDamage ) {
 				if ( A(cnt, e) >= ourHP && emyNextDamage >= A(cnt, e) ) {
-					num = cnt : emyNextDamage = A(cnt, e)
+					num0 = cnt : emyNextDamage = A(cnt, e)
 				}
 				if ( I(cnt, e) >= ourHP && emyNextDamage >= I(cnt, e) ) {
-					num = cnt : emyNextDamage = I(cnt, e)
+					num0 = cnt : emyNextDamage = I(cnt, e)
 				}
 			}
 		loop
 	}
 	
 	// 思考ルーチンが答えを出さなかったらランダムに選ぶ
-	if ( num < 0 ) {
-		do: num = rnd(5)
-		until ( HP(num, e) > 0 )
+	if ( num0 < 0 ) {
+		do: num0 = rnd(5)
+		until ( HP(num0, e) > 0 )
 	}
-	ChangeCard e, num			// 変更
+	SummonCard e, num0			// 変更
 	return
 	
 //-------------------------------------------------
@@ -301,7 +242,7 @@
 	return
 	
 *LPhysicsButton:
-	if ( Ability(w) != 0 ) { button gosub " 物理で攻撃！", *Decide_WayToAttack } else { input num, 0, 0 }
+	if ( Ability(w) != 0 ) { button gosub " 物理で攻撃！", *Decide_WayToAttack } else { input num0, 0, 0 }
 	objIdAttackByPhysics = stat
 	return
 *LMagicButton:
@@ -333,14 +274,97 @@
 	}
 	return
 	
+//-------------------------------------------------
+// 戦闘
+// @global idAttackPlayer: 攻撃プレイヤー
+// @return 戦闘が中断される(後攻側が攻撃の機械を失う)かどうか
+//-------------------------------------------------
+*LCombat
+	assert (idAttackPlayer >= 0)
+	
+	idDefencePlayer = (idAttackPlayer ^ 1)
+	AddGameLog cardname(player(idAttackPlayer), idAttackPlayer) + "の" + cond_s(ability(idAttackPlayer), "物理", "魔法") + "攻撃！" 
+	
+	;gosub *RedrawCombat		// 拡大戦闘画面のセット
+	;gsel_show wID_Battle
+	
+	// ダメージを与える
+	DealDamage HP(player(idDefencePlayer), idDefencePlayer), cond_i(ability(idAttackPlayer), A(player(idAttackPlayer), idAttackPlayer), I(player(idAttackPlayer), idAttackPlayer))
+	
+	// 攻撃終了
+	;gosub *RedrawCombat		// 最終調整
+	;await 1200
+	;gsel_hide wID_Battle
+	gsel_show wID_Main
+	
+	gosub *RedrawMain : redraw
+	await 300
+	
+	// 攻撃方法を反転する
+	Ability(idAttackPlayer) ^= 1
+	
+	// 戦闘後の死亡判定
+	if ( HP(player(idDefencePlayer), idDefencePlayer) <= 0 ) {
+		;HP(player(idDefencePlayer), idDefencePlayer) = 0
+		
+		// idAttackPlayer の攻撃によって相手 idDefencePlayer のキャラが死亡した
+		if ( Heads(idDefencePlayer) > 0 ) {
+			AddGameLog playerName(idDefencePlayer) + "の「" + cardname(player(idDefencePlayer), idDefencePlayer) + "」は倒れた。"
+			
+			player(idDefencePlayer) = -1
+			if (idDefencePlayer) {
+				gosub *E_SelectCard
+			} else {
+				gosub *W_SelectCard
+			}
+		} else {
+			idWinner = idDefencePlayer : gosub *LGameEnd
+		}
+		return true
+	}
+	return false
+	
+//-------------------------------------------------
+// ゲーム決着
+// @global idWinner : 勝者
+//-------------------------------------------------
+*LGameEnd
+	assert (idWinner >= 0)
+	redraw 2
+	gosub *RedrawMain
+	
+/*
+	msg0 = "You "+ cond_s(idWinner, "win", "lose") +"..."
+	;AddGameLog "あなたの" + cond_s(idPl, "勝ちです！", "負けです……")
+	
+	//勝敗を影付きで大きく表示
+	font msgothic, 90, 3
+	pos 88, 243 : mes msg0
+	
+	font msgothic, 90
+	if ( idWinner ) { color ,, 255 } else { color 255 }
+	pos 90, 245 : mes msg0
+/*/
+	repeat 2
+		font msgothic, 90, (3 * (1-cnt))
+		if (cnt) { if (idWinner) { color ,, 255 } else { color 255 } } else { color }
+		pos 88, 243 + (2 * cnt) : mes "You "+ cond_s(idWinner, "win", "lose") +"..."
+	loop
+	AddGameLog "あなたの" + cond_s(idWinner, "勝ちです！", "負けです……")
+//*/
+	
+	//続けるかどうかのボタン
+	PutTwoObjectsOnBattleWindow *LContinueButton, *LExitButton
+	redraw
+	return
+	
+*LContinueButton:
+	button "続ける", *LContinue : return
+*LExitButton:
+	button "終わる", *LExit : return
+	
 //###########################################################
 //        その他
 //###########################################################
-//-------------------------------------------------
-// ブラウザでルールを設定する
-//-------------------------------------------------
-*Rule
-	exec ownpath + "/rule.html", exec_application
-	return
-	
+
 #endif

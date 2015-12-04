@@ -90,7 +90,7 @@
 		case ClsId_King:   return "â§"
 		case ClsId_Gold:   return "ã‡"
 		case ClsId_Silver: return "ã‚"
-		default: assert : return "ÅH"
+		default: assert_unreachable
 	swend
 
 //------------------------------------------------
@@ -101,7 +101,7 @@
 		case ClsId_King:   return cond_i(idPl, ClsClr_EKing, ClsClr_PKing)
 		case ClsId_Gold:   return ClsClr_Gold
 		case ClsId_Silver: return ClsClr_Silver
-		default: assert : return 0xFFFFFF
+		default: assert_unreachable
 	swend
 	
 #global
