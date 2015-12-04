@@ -1,370 +1,105 @@
 #ifndef IG_ZEOPLAYER_ROUTINE_AS
 #define IG_ZEOPLAYER_ROUTINE_AS
 
-// CPU戦用ルーチン
+//-------------------------------------------------
+// タイトル画面の構築
+//-------------------------------------------------
+#define SetTitleWindow \
+	objsize 120, 30 : objmode objmode_guifont                    :\
+	pos PosX1_TitleButton0, PosY1_TitleButtons                   :\
+	button gosub "デッキを開く", *LOpenDeck                      :\
+	assert (stat == ObjId_TitleButtons + 0)                      :\
+	pos PosX1_TitleButton1, PosY1_TitleButtons                   :\
+	button gosub "CPU戦", *LGameStart                            :\
+	assert (stat == ObjId_TitleButtons + 1)                      :\
+	pos PosX1_TitleButton2, PosY1_TitleButtons                   :\
+	button gosub "ルール", *LRule                                :\
+	assert (stat == ObjId_TitleButtons + 2)                      :\
+	//
+	
+#const PosX1_TitleButton0 (PosX1_TitleButtons + (130 * 0))
+#const PosX1_TitleButton1 (PosX1_TitleButtons + (130 * 1))
+#const PosX1_TitleButton2 (PosX1_TitleButtons + (130 * 2))
 
-//###########################################################
-//        画面の描画
-//###########################################################
+/*
+#define SetTitleWindow \
+	objsize 120, 30 : objmode objmode_guifont                    :\
+	_titleButtonsText = "デッキを開く", "CPU戦", "ルール"        :\
+	repeat 3                                                     :\
+		pos PosX1_TitleButtons + (130 * cnt), PosY1_TitleButtons :\
+		button gosub _titleButtonsText(cnt), *LTitleButtons      :\
+		assert (stat == ObjId_TitleButtons + cnt)                :\
+	loop :
+
+//タイトルボタンの行き先
+*LTitleButtons
+	on (stat - ObjId_TitleButtons) goto *LOpenDeck, *LGameStart, *LRule
+//*/
+
 //-------------------------------------------------
 // トップ画面の描画
 // あとボタンがある
 //-------------------------------------------------
-*RedrawTitle
-	gsel wID_Main
-	redraw 2
-	hsvcolor ,, 255 : boxf
+*LRedrawTitle
+	assert (ginfo_sel == wID_Main)
+	redraw redraw_off
+	pos 0, 0 : gcopy wID_TitleBg,  , ,  WIN_SIZEX, WIN_SIZEY
 	
 	// タイトルをでかでかと描画
-	color: font msgothic, 120
-	pos 90, 30 : mes "ZeoFive"
+	font msgothic, 120 : color
+	pos 190, 40 : mes zeofive_
 	
 	// デッキのカードを並べる
 	repeat Count_CardsInDeck
-		pos_x = 80 + (110 * cnt)		// 描画基点
-		
-		pos pos_x, 240
-		if ( deckpath(w) == "" ) {
-			DrawCardBack
-		} else {
-			DrawBlueCard cnt
-		}
+		pos PosX1_OurHandCard, PosY1_BothHandCard(cnt)
+		if (ourDeckPath != "") { DrawBlueCard cnt } else { DrawCardBack }
 	loop
 	redraw
-	return
-	
-//-------------------------------------------------
-// メイン画面に2つのオブジェクトを配置する
-// 「物理/魔法」「続ける/終わる」ボタン
-//-------------------------------------------------
-#define PutTwoObjectsOnBattleWindow(%1,%2) \
-	objsize 260, 130 - SizeY_GameLogBox :\
-	objmode objmode_usefont : font msgothic, 37 :\
-	pos  50, 510 : gosub (%1) :\
-	pos 340, 510 : gosub (%2) : objmode objmode_guifont :
-	
-//-------------------------------------------------
-// メインウィンドウを戦闘画面用にする
-//-------------------------------------------------
-*ResetMainWindowForGame
-	redraw 2
-	color_white : boxf
-	clrobj
-	
-	//ゲームログを設置
-	sdim gamelog, 1200
-	pos 0, WIN_SIZEY - SizeY_GameLogBox : mesbox gamelog,  WIN_SIZEX, SizeY_GameLogBox,  (mesbox_disable | mesbox_vscroll)
-	objIdGameLogBox = stat
-	return
-	
-//-------------------------------------------------
-// 戦闘画面
-//-------------------------------------------------
-*RedrawMain
-	redraw 2
-	
-	// 背景で塗りつぶす
-	pos 0, 0 : gcopy wID_Back, ,, WIN_SIZEX, WIN_SIZEY
-	
-	repeat Count_CardsInDeck
-		pos_x = 50 + (110 * cnt)  // 描画基点
-		gosub *DrawOurCards
-		gosub *DrawEnemyCards
-	loop
-	return
-	
-//-------------------------------------------------
-// 仲間のカードを描画
-// 
-// @ cnt が番号
-//-------------------------------------------------
-*DrawOurCards
-	if ( HP(cnt, w) > 0 ) {
-		//ゲーム開始時の初手は手持ち側に配置
-		if ( cnt == player(w) && bBeginning == false ) {
-			pos pos_x, 260 : DrawBlueCard cnt, true
-		} else {
-			pos pos_x, 380 : DrawBlueCard cnt
-		}
-	} else {
-		// 棺桶
-		pos pos_x, 380 : DrawCardCoffin
-	}
-	return
-	
-//-------------------------------------------------
-// 敵のカードを描画
-// 
-// @ cnt が番号
-//-------------------------------------------------
-*DrawEnemyCards
-	if ( HP(cnt, e) > 0 ) {
-		if ( cnt == player(e) && bBeginning == false ) {
-			// 戦闘カード
-			pos pos_x, 134 : DrawRedCard cnt, true
-		} else {
-			// 手持ちのカード (裏面)
-			pos pos_x,  10 : DrawCardBack;gcopy wID_SC_Back, 0, 0, SizeX_Card, SizeY_Card
-		}
-	} else {
-		// 棺桶
-		pos pos_x, 10 : DrawCardCoffin
-	}
 	return
 	
 //###########################################################
-//        ゲーム中の動作
-//###########################################################
-//-------------------------------------------------
-// どちらの方が早いかを判定する関数
-// 結果は stat に返す。
-//-------------------------------------------------
-*LJudgeSPD
-	if ( ourSPD == emySPD ) {
-		// 王が勝つ
-		if ( ourMOV == 0 && emyMOV != 0 ) { return w }
-		if ( emyMOV == 0 && ourMOV != 0 ) { return e }
-		
-		// ほぼランダムに決める
-		declvar num0 : declvar num1
-	//	num0 = HPの減り具合が大きい方 (自分 = 0, 相手 = 1)
-		num1 = ((MAX_PRM - (ourSPD + ourATK + ourINT) - ourHP) >= (MAX_PRM - (emySPD + emyATK + emyINT) - emyHP))
-		num1 = rnd(5) \ 2			// 0, 1, 0, 1, 0
-		return (num0 ^ num1) != 0	// 受けているダメージの少ない方が有利 (少 : 多 = 3 : 2)
-	} else {
-		assert (ourSPD < emySPD) == cond_i(ourSPD < emySPD,  e, w)
-		return (ourSPD < emySPD)
-	}
-//-------------------------------------------------
-// 自分 -> 次のカードを選択する
-//-------------------------------------------------
-*W_SelectCard
-	redraw 2
-	gosub *RedrawMain
-	
-	hsvcolor ,, 225 : boxf 50, 510, 580, 640 - SizeY_GameLogBox
-	hsvcolor ,, 192 : boxl 50, 510, 580, 640 - SizeY_GameLogBox
-	
-	font msgothic, 33 : color
-	pos 60, 525 : mes "場に出すカードを選んでください"
-	
-	objsize 89, 26
-	// 押したボタンの ID 値が *Decide_CardIntoPlay の stat 値になる
-	repeat Count_CardsInDeck
-		if ( HP(cnt, w) <= 0 ) {				// 死者
-			declvar __dummy
-			input __dummy, 0, 0
-		} else {
-			pos (110 * cnt) + 51, 381			// カード名と被る位置に置く
-			button gosub cardname(cnt, w), *Decide_CardIntoPlay
-		}
-		if (cnt == 0) { objIdFirstCard = stat }
-		assert (stat == objIdFirstCard + cnt)
-	loop
-	redraw
-	
-	bDecided = false
-	while ( bDecided == false ) : await 70 : wend
-	return
-	
-// 召喚するカードを決めたとき
-*Decide_CardIntoPlay
-	bDecided = true
-	num0     = stat - objIdFirstCard
-	SummonCard w, num0
-	
-	//カード選択ボタンを消去
-	clrobj objIdFirstCard, objIdFirstCard + Count_CardsInDeck - 1
-	
-	gosub *RedrawMain
-	redraw
-	return
-	
-//-------------------------------------------------
-// 戦闘カードを変更する命令
-//-------------------------------------------------
-#deffunc SummonCard int idPl, int idCard
-	assert player(idPl) < 0 && HP(idCard, idPl) > 0 && heads(idPl) > 0
-	player (idPl) = idCard
-	Heads  (idPl) --		// 頭数を減らす
-	Ability(idPl) = -1		// 技使用状況をリセット
-	
-	AddGameLog playerName(idPl) + "は「" + cardname(idCard, idPl) + "」を召喚。"
-	return
-	
-//-------------------------------------------------
-// 相手 -> 次に場に出すカードを選ぶ
-// 
-// スピードが上回っているか、次の攻撃を耐えられて、
-//	なおかつ相手を倒せる技を持つカードのうち、
-//	その技の威力が最小のものを出す。なければランダム。
-//-------------------------------------------------
-*E_SelectCard
-	num0 = -1
-	
-	// こちら側の攻撃方法が未定 => ゲームの開始時の選択 (こちら側のカードの情報を使ってはいけない)
-	if ( Ability(w) < 0 ) {
-		// ランダム
-	} else {
-		ourNextDamage = cond_i(Ability(w), ourATK, ourINT)	// 次に受けるダメージ量
-		emyNextDamage = 0x7FFFFFFF	// 番兵値
-		repeat Count_CardsInDeck
-			if ( (HP(cnt, e) > 0 && S(cnt, e) > ourSPD) || HP(cnt, e) > ourNextDamage ) {
-				if ( A(cnt, e) >= ourHP && emyNextDamage >= A(cnt, e) ) {
-					num0 = cnt : emyNextDamage = A(cnt, e)
-				}
-				if ( I(cnt, e) >= ourHP && emyNextDamage >= I(cnt, e) ) {
-					num0 = cnt : emyNextDamage = I(cnt, e)
-				}
-			}
-		loop
-	}
-	
-	// 思考ルーチンが答えを出さなかったらランダムに選ぶ
-	if ( num0 < 0 ) {
-		do: num0 = rnd(5)
-		until ( HP(num0, e) > 0 )
-	}
-	SummonCard e, num0			// 変更
-	return
-	
-//-------------------------------------------------
-// 自分 -> 攻撃方法の選択
-//-------------------------------------------------
-;#define objIdAttackByPhysics 1
-;#define objIdAttackByMagic   2
-*W_SelectWayToAttack
-	// 1だと魔法なし、0だと物理なし、どちらでもなければ両方選べる
-	PutTwoObjectsOnBattleWindow *LPhysicsButton, *LMagicButton
-	
-	bDecided = false
-	while ( bDecided == false ) : await 120 : wend
-	return
-	
-*LPhysicsButton:
-	if ( Ability(w) != 0 ) { button gosub " 物理で攻撃！", *Decide_WayToAttack } else { input num0, 0, 0 }
-	objIdAttackByPhysics = stat
-	return
-*LMagicButton:
-	if ( Ability(w) != 1 ) { button gosub " 魔法で攻撃！", *Decide_WayToAttack } ;: assert (stat == objIdAttackByMagic)
-	return
-	
-//-------------------------------------------------
-// 自分 -> 攻撃方法の選択を決定する
-//-------------------------------------------------
-*Decide_WayToAttack
-	bDecided   = true
-	Ability(w) = (stat == objIdAttackByPhysics)	// 物理を押したら、真(= 物理攻撃)
-	clrobj objIdAttackByPhysics, objIdAttackByPhysics + 1; objIdAttackByMagic
-	return
-	
-//-------------------------------------------------
-// 相手 -> 攻撃方法を決定する
-//-------------------------------------------------
-*E_SelectWayToAttack
-	if ( Ability(e) >= 0 ) { return }	// 決定済み
-	
-	// どちらでも殺せるなら、小さい方で攻撃 (同じならATK)
-	if ( ourHP <= emyATK && ourHP <= emyINT ) {
-		Ability(e) = ( emyATK <= emyINT )
-		
-	// 大きい方で攻撃 (同じならATK)
-	} else {
-		Ability(e) = ( emyATK >= emyINT )
-	}
-	return
-	
-//-------------------------------------------------
-// 戦闘
-// @global idAttackPlayer: 攻撃プレイヤー
-// @return 戦闘が中断される(後攻側が攻撃の機械を失う)かどうか
-//-------------------------------------------------
-*LCombat
-	assert (idAttackPlayer >= 0)
-	
-	idDefencePlayer = (idAttackPlayer ^ 1)
-	AddGameLog cardname(player(idAttackPlayer), idAttackPlayer) + "の" + cond_s(ability(idAttackPlayer), "物理", "魔法") + "攻撃！" 
-	
-	;gosub *RedrawCombat		// 拡大戦闘画面のセット
-	;gsel_show wID_Battle
-	
-	// ダメージを与える
-	DealDamage HP(player(idDefencePlayer), idDefencePlayer), cond_i(ability(idAttackPlayer), A(player(idAttackPlayer), idAttackPlayer), I(player(idAttackPlayer), idAttackPlayer))
-	
-	// 攻撃終了
-	;gosub *RedrawCombat		// 最終調整
-	;await 1200
-	;gsel_hide wID_Battle
-	gsel_show wID_Main
-	
-	gosub *RedrawMain : redraw
-	await 300
-	
-	// 攻撃方法を反転する
-	Ability(idAttackPlayer) ^= 1
-	
-	// 戦闘後の死亡判定
-	if ( HP(player(idDefencePlayer), idDefencePlayer) <= 0 ) {
-		;HP(player(idDefencePlayer), idDefencePlayer) = 0
-		
-		// idAttackPlayer の攻撃によって相手 idDefencePlayer のキャラが死亡した
-		if ( Heads(idDefencePlayer) > 0 ) {
-			AddGameLog playerName(idDefencePlayer) + "の「" + cardname(player(idDefencePlayer), idDefencePlayer) + "」は倒れた。"
-			
-			player(idDefencePlayer) = -1
-			if (idDefencePlayer) {
-				gosub *E_SelectCard
-			} else {
-				gosub *W_SelectCard
-			}
-		} else {
-			idWinner = idDefencePlayer : gosub *LGameEnd
-		}
-		return true
-	}
-	return false
-	
-//-------------------------------------------------
-// ゲーム決着
-// @global idWinner : 勝者
-//-------------------------------------------------
-*LGameEnd
-	assert (idWinner >= 0)
-	redraw 2
-	gosub *RedrawMain
-	
-/*
-	msg0 = "You "+ cond_s(idWinner, "win", "lose") +"..."
-	;AddGameLog "あなたの" + cond_s(idPl, "勝ちです！", "負けです……")
-	
-	//勝敗を影付きで大きく表示
-	font msgothic, 90, 3
-	pos 88, 243 : mes msg0
-	
-	font msgothic, 90
-	if ( idWinner ) { color ,, 255 } else { color 255 }
-	pos 90, 245 : mes msg0
-/*/
-	repeat 2
-		font msgothic, 90, (3 * (1-cnt))
-		if (cnt) { if (idWinner) { color ,, 255 } else { color 255 } } else { color }
-		pos 88, 243 + (2 * cnt) : mes "You "+ cond_s(idWinner, "win", "lose") +"..."
-	loop
-	AddGameLog "あなたの" + cond_s(idWinner, "勝ちです！", "負けです……")
-//*/
-	
-	//続けるかどうかのボタン
-	PutTwoObjectsOnBattleWindow *LContinueButton, *LExitButton
-	redraw
-	return
-	
-*LContinueButton:
-	button "続ける", *LContinue : return
-*LExitButton:
-	button "終わる", *LExit : return
-	
-//###########################################################
-//        その他
+//        タイトル画面の挙動
 //###########################################################
 
+#ifdef CMPOPT_FULLVER
+*LContinue
+	dim idActivePlayer
+	assert (idActivePlayer == ID_YOU)
+	
+	if (ourDeckPath != "") {
+		//ゲーム中のステータス変化を直すためにデッキをリロード
+		_path = ourDeckPath
+		gosub *LLoadDeck
+	}
+	
+	assert (ObjId_GameLogBox + 1) == 1
+	clrobj 1,
+	goto *Top
+#endif //defined(CMPOPT_FULLVER)
+
+//-------------------------------------------------
+// デッキを開く
+//-------------------------------------------------
+*LOpenDeck
+	gosub *LOpenDeckWithDialog
+	gosub *LRedrawTitle
+	return
+
+//-------------------------------------------------
+// デッキ編集モード
+//-------------------------------------------------
+;*LDeckEditMode
+;	dialog "未実装"
+;	return
+
+*LRule
+	exec "r.htm", exec_application
+	return
+	
+//コード短縮のため、サブルーチンジャンプもrepeat-loopもすべて無視して止まる
+#deffunc ErrorOnTitle str errtext
+	dialog errtext, dialog_warn, zeofive_
+	gosub *LRedrawTitle
+	stop
+	
 #endif

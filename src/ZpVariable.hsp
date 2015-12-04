@@ -2,34 +2,48 @@
 #define IG_ZEOPLAYER_VARIABLE_AS
 
 ///グローバル変数の初期化
-*ClearVariable
+*LInitVariables
 	ownpath = dir_exe2 + "/.."
 	
-	// パラメータ
-	sdim deckpath, MAX_PATH, 2	// デッキのパス
-;	dim CARD, 8, 5, 2	// カード構造体
-	sdim cardname,,Count_CardsInDeck, Count_Players
-	dim  HP, Count_CardsInDeck, Count_Players
-	dim  S , Count_CardsInDeck, Count_Players
-	dim  A , Count_CardsInDeck, Count_Players
-	dim  I , Count_CardsInDeck, Count_Players
-	dim  cardcls, Count_CardsInDeck, Count_Players
-	sdim picdat, MAX_PATH, Count_CardsInDeck, Count_Players
+	// デッキデータ
+	sdim deckpath, /*MAX_PATH*/;, 2	// デッキのパス
+	sdim cardname,, Count_CardsInDeck, Count_Players
+	dim  statuses, StatusId_Max, Count_CardsInDeck, Count_Players
+	sdim abilities,, Count_CardsInDeck, Count_Players, 2
 	
-	dim scrs, Count_CardsInDeck, Count_Players// カード画像の大きさ (loword = width, hiword = height)
-	
-	declvar objIdGameLogBox
+	//リソース
+	playerName = "あなた", "相手"
+	statusNames = "HP", "SP", "A ", "I "
+	combatStyle_text = "物理", "魔法"
 	return
 	
-///ゲーム開始時の初期化
-*ResetGameStatusVariables
-	player    = -1, -1		// 戦闘しているカードの番号
-	heads     =  Count_CardsInDeck,  Count_CardsInDeck		// 生き残っているカード数
-	ability   = -1, -1		// 攻撃方法。正数は物理、0は魔法、負数は選択。
-	idWinner = -1
-	bBeginning ++
-	return
+	declvar combatCard
+	declvar heads
+	declvar combatStyle
+	declvar ourStatuses
+	declvar emyStatuses
+	declvar idWinner
+	declvar idActivePlayer
+	declvar idDefencePlayer
+	#define idAttackPlayer idActivePlayer
 	
-	declvar idAttackPlayer : declvar idDefencePlayer
+	declvar bDecided
+	declvar __dummy@
+	
+//ゲーム開始時の初期化
+//1か所からしか呼ばないのでマクロ
+#define ResetGameStatusVariables :\
+	/* 戦闘しているカードの番号 */ \
+	combatCard  = CardId_Invalid :\
+	/* 手札の枚数 */ \
+	heads       = Count_CardsInDeck,  Count_CardsInDeck :\
+	/* 戦闘方式: combatStyle_at, ig, invalid */ \
+	combatStyle = combatStyle_Invalid, combatStyle_Invalid :\
+	/* 勝利プレイヤーの id、決まるまでは invalid */ \
+	idWinner = PlayerId_Invalid :\
+	/* ゲーム外：注目されているプレイヤーの id \
+	   ゲーム中：攻撃側プレイヤーの id */ \
+	dim idActivePlayer : assert idActivePlayer == ID_YOU :\
+	//
 	
 #endif

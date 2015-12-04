@@ -35,25 +35,24 @@
 #define global Count_CardsInDeck 5
 #define global Count_Players 2
 
-#define global ctype Card_makeStatus(%1,%2,%3,%4) MAKELONG2(%1,%2,%3,%4)//下から順にhp,spd,atk,int
-#define global ctype Card_hp(%1) byteAt(%1,0)
-#define global ctype Card_spd(%1) byteAt(%1,1)
-#define global ctype Card_atk(%1) byteAt(%1,2)
-#define global ctype Card_int(%1) byteAt(%1,3)
+#const CardId_Invalid 33
+#const PlayerId_Invalid 33
+#define ctype CardId_isValid(%1) ((%1) != CardId_Invalid)
+#define ctype PlayerId_isValid(%1) ((%1) != PlayerId_Invalid)
 
 #define global PrmValue_Max 200
 #define global PrmValue_Sum 200
+#define global MAX_PRM 200
 
-// パラメータの Id
-#enum global PrmId_HP   = 0
-#enum global PrmId_Spd
-#enum global PrmId_Atk
-#enum global PrmId_Int
-#enum global PrmId_Cls
-#enum global PrmId_Name
-#enum global PrmId_Str  = PrmId_Name
-#enum global PrmId_Max
+// ステータスの Id
+#enum global StatusId_None = 0
+#enum global StatusId_HP = 0
+#enum global StatusId_SP
+#enum global StatusId_AT
+#enum global StatusId_IG
+#enum global StatusId_Max
 
+/*
 // 戦闘パラメータの Id ( PrmID_* とリンクする )
 #enum global CombatPrmId_HP  = PrmId_HP
 #enum global CombatPrmId_Spd
@@ -70,26 +69,12 @@
 #enum global PrmErr_InvalidName		// 名前が異常
 #enum global PrmErr_InvlidPath		// 異常なファイルパス
 #enum global PrmErr_Max
-
-// 役職 Id
-#enum global ClsId_None   = 0
-#enum global ClsId_Silver = 0		// 銀将
-#enum global ClsId_Gold				// 金将
-#enum global ClsId_King				// 王将
-#enum global ClsId_Max
-
-// 役職の色
-;#const global ClsClr_PKing  RGB(  0, 200, 255)		// 王 (味方)
-;#const global ClsClr_EKing  RGB(220,  20,  60)		// 王 (敵)
-#const global ClsClr_PKing  RGB(175, 238, 255)		// 王 (味方)
-#const global ClsClr_EKing  RGB(255, 120, 120)		// 王 (敵)
-#const global ClsClr_Gold   RGB(184, 134,  11)		// 金
-#const global ClsClr_Silver RGB(192, 192, 192)		// 銀
-
-#define global font_cardtext font msgothic, 13;font "",14;font msmincho, 14
+//*/
 
 // 戦闘方式
+#const global combatStyle_Invalid 0x7E
 #const global CombatStyle_At 0
 #const global CombatStyle_Ig 1
+#define ctype CombatStyle_IgIf(%1) ((%1))
 
 #endif

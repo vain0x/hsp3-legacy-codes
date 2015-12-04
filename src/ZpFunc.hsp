@@ -5,202 +5,77 @@
 
 //-------------------------------------------------
 // ダイアログでデッキを開く
+//
+// @result 何らかの失敗があれば true
 //-------------------------------------------------
-#deffunc OpenDeckWithDialog int idPl,  local lcpath
+*LOpenDeckWithDialog
+	assert (idActivePlayer != PlayerId_Invalid)
+	
 	chdir ownpath + "/decks"
-	dialog "zeo_d", 16, playerName(idPl) + "用デッキファイル"
-	if (stat == 0) { return true }
-	
-	lcpath = refstr
-	LoadZeoDeck idPl, lcpath
-	if (stat) { return stat }
-	
-	deckpath(idPl) = lcpath
-	return false
-	
-//-------------------------------------------------
-// デッキ読み込み
-//-------------------------------------------------
-#deffunc LoadZeoDeck int idPl, str path, int bNoPics,  local lcname, local lprms, local lpicdat
-	sdim lcname, 20, 5
-	dim  lprms,   5, 5
-	sdim lpicdat, MAX_PATH, 5
-	
-	DeckLoad path, lcname, lprms, lpicdat
-	if ( stat ) { return stat }
-	
-	// パラメータをグローバル変数にコピー
-	repeat Count_CardsInDeck
-		cardname(cnt, idPl) = lcname(cnt)
-		HP(cnt, idPl) = lprms(0, cnt)
-		S (cnt, idPl) = lprms(1, cnt)
-		A (cnt, idPl) = lprms(2, cnt)
-		I (cnt, idPl) = lprms(3, cnt)
-		cardcls(cnt, idPl) = lprms(4, cnt)
-	loop
-	
-	if (bNoPics == false) {
-		// カード画像をバッファする
-		repeat Count_CardsInDeck
-			picdat(cnt, idPl) = lpicdat(cnt)
-			if (picdat(cnt, idPl) == "") { continue }
-			
-			exist picdat(cnt, idPl)
-			if ( strsize < 0 ) {
-				dialog "カード「" + cardname(cnt, idPl) +  "」の画像が見つかりません。\n" + picdat(cnt, idPl), 1, Str_GameName
-				picdat(cnt, idPl) = ""
-				continue
-			}
-			
-			buffer cond_i(idPl == w, wID_wCardPic, wID_eCardPic) + cnt
-			picload picdat(cnt, idPl)
-			scrs(cnt, idPl) = MAKELONG(ginfo_sx, ginfo_sy)
-		loop
+	dialog "zeo_d", dialog_open, playerName(idActivePlayer) + "用デッキ"
+	if (stat) {
+		_path = refstr
+		
+		//パスは有効
+		#ifdef _debug
+			exist _path
+			assert (strsize >= 0) // refstr は必ず有効である
+		#endif
+		
+		//デッキを閉じる
+		//カードデータを直接書き換えるため、途中で停止しても大丈夫なように。
+		poke deckpath(idActivePlayer)
+		
+		gosub *LLoadDeck
 	}
-	return false
+	return
 	
-//-------------------------------------------------
-// HP を減少させる命令
-// 実際のデータをだんだん減らしつつ、再描画を繰り返す
-//-------------------------------------------------
-#deffunc DealDamage var _hp, int attackprm,  local aftHP
-	if ( attackprm == 0 ) { return }
+*LLoadDeck
+	assert (idActivePlayer != PlayerId_Invalid)
+	assert (_path != "")
 	
-	aftHP = limit(_hp - attackprm, 0, 200)	// 最終的なHP残量
-	
-	// 初期値と目標値を設定する
-	m_SetValChgPrbr 0, _hp, afthp, attackprm / 5
-	await 500
-	repeat
-		m_GetValChgPrbr 0, double(aftHP)
-		_hp = int(refdval)
+	//ファイル内容を読み取る
+	declvar _decktext : declvar _buf
+	notesel _decktext
+	noteload _path
+	repeat notemax
+		noteget _buf, cnt
 		
-		;gosub *RedrawCombat
-		gosub *RedrawMain : redraw
-		await 60
+		//csv分割 -> name, hp, sp, at, ig, ab0, ab1
+		sdim _statusText
+		split _buf, ",", cardname(cnt, idActivePlayer), _statusText
+		if (length(_statusText) < 6) { ErrorOnTitle "エラー「" + cardname(cnt, idActivePlayer) + "」:ステータス未定義" }
 		
-		if ( refdval == double(aftHP) || _hp <= 0 ) { break }
+		_idCard = cnt // カードの番号
+		repeat StatusId_Max
+			statuses(cnt, _idCard, idActivePlayer) = 0 + _statusText(cnt)
+		loop
+		repeat 2, 4
+			abilities(_idCard, idActivePlayer, cnt) = _statusText(cnt)
+		loop
 	loop
-	return
 	
-//###########################################################
-//        描画命令
-//###########################################################
-#define DrawCardCommit gsel wID_Main: gcopy wID_CardTemp,  ,, SizeX_Card, SizeY_Card
-
-#define DrawCardBack   gcopy wID_CardBack,  ,,  SizeX_Card, SizeY_Card
-#define DrawCardCoffin gcopy wID_CardCoffin,  ,,  SizeX_Card, SizeY_Card
-
-//-------------------------------------------------
-// 味方の白紙カード
-//-------------------------------------------------
-#define DrawBlueCardBlank gosub *LDrawBlueCardBlank
-*LDrawBlueCardBlank
-	color   , 200, 255  // 表面
-;	color 23, 134, 255  // 成り
-	boxf
+	//正常性チェック
+	repeat Count_CardsInDeck
+		_buf = "エラー「" + cardname(cnt, idActivePlayer) + "」:"
+		
+		//各ステータスは正であること
+		_idCard = cnt
+		dim _sumStatuses //= 0
+		repeat StatusId_Max
+			_status = statuses(cnt, _idCard, idActivePlayer) //対象のステータス値
+			if (_status <= 0) { ErrorOnTitle _buf + statusNames(cnt) + "=" + _status }
+			_sumStatuses += _status
+		loop
+		
+		//合計値が200であること
+		if (_sumStatuses != 200) {
+			ErrorOnTitle _buf + "ステータス合計=" + _sumStatuses
+		}
+	loop
 	
-	//カード名
-	;color 175, 238, 255: boxf 6, 6,  84, 21
-	//イラスト
-	;color_graylight: boxf 6, 28, 84, 69
-	
-	//枠
-	color
-	boxl , ,     90, 110  // 外枠
-	boxl 5,  5,  85, 22   // 名前枠
-	boxl 5, 27,  85, 70   // イラスト枠
-	return
-	
-//-------------------------------------------------
-// 逆向き白紙カード (敵の場カード)
-//-------------------------------------------------
-#define DrawRedCardBlank gosub *LDrawRedCardBlank
-*LDrawRedCardBlank
-	color 220, 20, 60
-;	color 192, 11, 11
-	boxf
-	
-	//カード名
-	;color 255, 120, 120: boxf 6, 89, 84, 104
-	//イラスト
-	;color_graylight: boxf 6, 41, 84, 84
-	//枠
-	color
-	boxl , ,     90, 110  // 外枠
-	boxl 5, 88, 85, 105   // 名前枠
-	boxl 5, 40, 85,  85   // イラスト枠
-	return
-	
-//-------------------------------------------------
-// カードの影
-//-------------------------------------------------
-*LDrawCardShadow
-	hsvcolor ,, 125
-	boxf ginfo_cx + 5, ginfo_cy + 5,  ginfo_cx + 96, ginfo_cy + 116
-	return
-	
-//-------------------------------------------------
-// 自分側のカードを描画
-//-------------------------------------------------
-#deffunc DrawBlueCard int idCard, int bShadow
-	if (bShadow) { gosub *LDrawCardShadow }
-	
-	gsel wID_CardTemp
-	assert (HP(idCard, w) > 0)
-	
-	DrawBlueCardBlank
-	
-	// 階級に応じた色で塗る
-	color32 ClassColorref(cardcls(idCard, w), w)
-	boxf 6,  6,  84,  21   // カード名背景
-	repeat 2, 1 : boxl , , SizeX_Card - cnt, SizeY_Card - cnt : loop  // 外枠の内側2本
-	
-	// カードイラスト
-	if (picdat(idCard, w) != "") {
-		pos 6, 28 : gzoom 78, 43,  wID_wCardPic + idCard,  , ,  LOWORD(scrs(idCard, w)), HIWORD(scrs(idCard, w))
-	} else { color_graylight: boxf 6, 28, 84, 69 }
-	
-	// パラメータ
-	font_cardtext : color
-	pos  8,  8 : mes cardname(idCard, w)
-	pos  6, 75 : mes strf("H%4d", HP(idCard, w)) : if ( player(w) == idCard && player(e) >= 0 ) { if ( ourSPD >= emySPD ) { color 255, 255 } }
-	pos 52, 75 : mes strf("S%4d",  S(idCard, w)) : if ( player(w) == idCard && Ability(w) == 1 ) { color 255, 255 } else { color }
-	pos  6, 92 : mes strf("A%4d",  A(idCard, w)) : if ( player(w) == idCard && Ability(w) == 0 ) { color 255, 255 } else { color }
-	pos 52, 92 : mes strf("I%4d",  I(idCard, w))
-	
-	DrawCardCommit
-	return
-	
-//-------------------------------------------------
-// 相手側のカードを描画する
-//-------------------------------------------------
-#deffunc DrawRedCard int idCard, int bShadow
-	if (bShadow) { gosub *LDrawCardShadow }
-	
-	gsel wID_CardTemp
-	assert ( HP(idCard, e) > 0 )
-	
-	// カード表面
-	DrawRedCardBlank
-	
-	// カード名部分
-	color32 ClassColorref(cardcls(idCard, e), e)
-	boxf 6, 89,  84, 104
-	repeat 2, 1 : boxl , , SizeX_Card - cnt, SizeY_Card - cnt : loop  // 外枠の内側2本
-	
-	// イラスト
-	color_graylight: boxf 6, 41, 84, 84
-	
-	// パラメータ記入
-	font_cardtext : color
-	pos  8, 90 : mes cardname(idCard, e)
-	pos 48, 24 : mes strf("H%4d", HP(idCard, e)) : if ( player(e) == idCard && player(w) >= 0 ) { if ( emySPD >= ourSPD ) { color 255, 255 } }
-	pos  6, 24 : mes strf("S%4d", S(idCard, e)) : if ( player(e) == idCard && Ability(e) == 1 ) { color 255, 255 } else { color }
-	pos 48,  6 : mes strf("A%4d", A(idCard, e)) : if ( player(e) == idCard && Ability(e) == 0 ) { color 255, 255 } else { color }
-	pos  6,  6 : mes strf("I%4d", I(idCard, e))
-	
-	DrawCardCommit
+	//正常に開けたらファイルパスを設定する
+	deckpath(idActivePlayer) = _path
 	return
 	
 //-------------------------------------------------
@@ -208,14 +83,13 @@
 //-------------------------------------------------
 #deffunc AddGameLog str msg
 	gamelog += "\n" + msg
-	objprm objIdGameLogBox, gamelog
+	objprm ObjId_GameLogBox, gamelog
 	
 	//カーソルを末尾に移動
 	#define EM_SETSEL      0x000000B1
 	#define EM_SCROLLCARET 0x000000B7
-	sendmsg objinfo_hwnd(objIdGameLogBox), EM_SETSEL, , -1
-	sendmsg objinfo_hwnd(objIdGameLogBox), EM_SCROLLCARET
+	sendmsg objinfo_hwnd(ObjId_GameLogBox), EM_SETSEL, , -1
+	sendmsg objinfo_hwnd(ObjId_GameLogBox), EM_SCROLLCARET
 	return
 	
 #endif
-

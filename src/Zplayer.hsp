@@ -1,6 +1,5 @@
 #packopt name "ZeoFivePlayer"
 #packopt hide 1
-#packopt orgpath 1
 
 #ifdef _DEBUG
  #undef picload
@@ -8,122 +7,35 @@
 #endif
 
 #include "hsp_green/src/all.hsp"
-#include "Mo/mod_conicCurve.hsp"
-#include "Mo/boxl.hsp"
 
 #include "ZeoHeader.hsp"
 #include "ZpHeader.hsp"		// player ヘッダ
-#include "mod_ZeoFive.hsp"
 
-	goto *main
+#ifdef CMPOPT_FULLVER
+	#include "Mo/boxl.hsp"
+#endif //defined(CMPOPT_FULLVER)
 
+	if (false) {
 #include "ZpVariable.hsp"	// 変数の初期化
 #include "ZpFunc.hsp"		// 命令・関数
+#include "ZpBattle.hsp"
 #include "ZpRoutine.hsp"	// サブルーチン群
 #include "ZpScreen.hsp"		// 画面のセットなど
+	}
 
 ///前処理
-*main
-	randomize				// 乱数初期化
-	gosub *ClearVariable	// 変数初期化
-	gosub *CreateMainScreen	// メイン画面
-	gosub *LoadPictures		// 画像ファイルを読み込む
-	goto  *Top
+	randomize
+	gosub *LInitVariables
+	gosub *LInitScreens
+	//goto *Top
 
 ///タイトル画面
 *Top
-	player = -1, -1
-	gosub *RedrawTitle		// トップを描画
+	combatCard = CardId_Invalid, CardId_Invalid
 	
-	objsize 120, 30
+	gsel /*wID_Main*/
+	SetTitleWindow
+	gosub *LRedrawTitle
 	
-	pos 60, 420 : button gosub "デッキを開く", *LOpenDeck
-		;: objId_TitleButtons = stat
-	pos 60 + (120 + 10) * 1, 420 : button goto "CPU戦", *LGameStart
-	pos 60 + (120 + 10) * 2, 420 : button gosub "ルール説明", *LRule
-	
-	gsel_show wID_Main
-	stop
-	
-*LContinue
-	if (deckpath(ID_YOU) != "") {
-		//ゲーム中のステータス変化を直すためにデッキをリロード
-		LoadZeoDeck ID_YOU, deckpath(ID_YOU), true // no pics
-	}
-	clrobj
-	goto *Top
-	
-//デッキを開く
-*LOpenDeck
-	OpenDeckWithDialog ID_YOU
-	if (stat) { return true }
-	gosub *RedrawTitle
-	return false
-	
-//-------------------------------------------------
-// CPU戦
-//-------------------------------------------------
-*LGameStart
-#ifdef _DEBUG
-/*
-	// 開発時用のテストデータ
-	// デッキ選択画面を表示する
-	repeat 2
-		num = cnt
-		repeat Count_CardsInDeck
-			cardname(cnt, num) = strf("カード %c", 'A' + cnt)
-			HP(cnt, num) = 50
-			S (cnt, num) = 50
-			A (cnt, num) = 50
-			I (cnt, num) = 50
-		loop
-		cardcls(0, num) = ClsId_Silver, ClsId_Gold, ClsId_King, ClsId_Gold, ClsId_Silver
-	loop
-	deckpath = "*", "*"
-//*/
-#endif
-	if (deckpath(ID_YOU) == "") { gosub *LOpenDeck : if (stat) { stop } }
-	OpenDeckWithDialog ID_EMY
-	if (stat) { stop }
-	
-	gosub *ResetGameStatusVariables
-	gosub *ResetMainWindowForGame
-	gosub *W_SelectCard
-	gosub *E_SelectCard
-	bBeginning --
-	goto *LGameMainLoop
-	
-//ゲームのメインループ
-//再描画→判定→戦闘→死亡確認
-*LGameMainLoop
-	if (idWinner >= 0) { stop }
-	
-	//先攻、後攻、の判定を行う
-	gosub *LJudgeSPD : idAttackPlayer = stat
-	gosub *RedrawMain : redraw
-	
-	//それぞれ攻撃方法を選択する
-	gosub *W_SelectWayToAttack
-	gosub *E_SelectWayToAttack
-	
-	//先攻、後攻、の順に戦闘を行う
-	repeat 2
-		gosub *LCombat
-		if (stat) {break}
-		idAttackPlayer ^= 1	// 反転
-	loop
-	goto *LGameMainLoop
-	
-//-------------------------------------------------
-// デッキ編集モード
-//-------------------------------------------------
-*LDeckEditMode
-	dialog "未実装"
-	return
-
-*LRule
-	exec ownpath + "/rule.html", exec_application
-	return
-*LExit
-	end : end
-	
+	gsel_show /*wID_Main*/
+	//stop

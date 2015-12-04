@@ -1,49 +1,64 @@
 #ifndef IG_ZEOPLAYER_SCREEN_AS
 #define IG_ZEOPLAYER_SCREEN_AS
 
-#uselib "user32.dll"
-#cfunc  GetWindowLong "GetWindowLongA" int,int
-#func   SetWindowLong "SetWindowLongA" int,int,int
-
-///メインウィンドウの初期化
-*CreateMainScreen
-	screen wID_Main, WIN_SIZEX, WIN_SIZEY, screen_hide
-	title Str_GameName
-	return
-	
-///各種画像をバッファに読み込む
-*LoadPictures
-	// カード枠
-	buffer wID_CardTemp, SizeX_Card, SizeY_Card
-	
-	buffer wID_CardBack, SizeX_Card, SizeY_Card
-		//表面
-		color 184, 134, 11 : boxf
-		//外枠
-		color : boxl  0,0, 90,110
-		//円の模様
-		color , , 255 : circle  ,   ,   90, 110
-		color , , 200 : circle 10, 10,  80, 100
-		color , , 150 : circle 20, 20,  70,  90
-		color , , 100 : circle 30, 30,  60,  80
+*LInitScreens
+	//メインウィンドウの初期化
+	assert (wID_Main == 0 && WIN_SIZEX == 640 && WIN_SIZEY == 480)
+	screen /*wId_Main*/, /*WIN_SIZEX*/, /*WIN_SIZEY*/, screen_hide
+		title zeofive_
 		
-	buffer wID_CardCoffin, SizeX_Card, SizeY_Card
-		DrawCardBack
-		// 影
-		hsvcolor ,, 128    // 灰色
-		boxf 25, 42,  75,  52  // 横
-		boxf 45, 20,  55, 100  // 縦
-		// 黒い十字架
-		color
-		boxf 20, 37,  70, 47  // 横
-		boxf 40, 15,  50, 95  // 縦
+		#const MesboxStyle_GameLogBox (mesbox_disable | mesbox_vscroll)
+		//ゲームログを設置
+		sdim gamelog, 1200
+		pos PosX1_GameLogBox, PosY1_GameLogBox
+		mesbox gamelog,  SizeX_GameLogBox, SizeY_GameLogBox,  MesboxStyle_GameLogBox
+		assert (stat == ObjId_GameLogBox)
 	
-	// フィールドの背景画像 (640*480を拡縮して使う)
-	buffer wID_Temp : picload PathToPic("BattleBg.jpg")
-	buffer wID_Back, WIN_SIZEX, WIN_SIZEY
-	           gzoom WIN_SIZEX, WIN_SIZEY, wID_Temp,  ,, 640, 480,  true
+	//カード描画作業バッファ、カード裏面、棺桶カード、のバッファを作る
+	//コード短縮のため無理やりループにしている
+	assert (wID_CardBack   == wID_CardTemp + 1)
+	assert (wID_CardCoffin == wID_CardTemp + 2)
+	repeat 3
+		buffer wID_CardTemp + cnt, SizeX_Card, SizeY_Card
+		
+		//裏面を描く
+		//memo: 作業用バッファに描く必要はないが、わざわざ分岐する意味もない
+		//if (cnt >= 1) {
+			//茶色で塗り潰し
+			color 184, 134, 11 : boxf
+			//外枠
+			#ifdef CMPOPT_FULLVER
+			color : boxl , ,  SizeX_CardMinus1, SizeY_CardMinus1
+			#endif
+			//円の模様
+			repeat 4, 1
+				num0 = 8 * cnt
+				color , , 300 - (50*cnt) : circle num0, num0,  SizeX_Card - num0, SizeY_Card - num0
+			loop
+		//}
+		
+		//棺桶カードなら、十字架を描く
+		assert (cnt & 2) == cond_i(cnt == 2, 2, 0)
+		repeat (cnt & 2)
+			hsvcolor ,, 128 * (1-cnt) //文字は黒、影は灰色
+			num0 = 3 * (1-cnt) // 影のためのずれ
+			boxf num0 + 45, num0 + 17,  num0 + 85, num0 + 27  // 横
+			boxf num0 + 60, num0 +  3,  num0 + 70, num0 + 51  // 縦
+		loop
+	loop
+	
+	// メイン画面の背景画像
+	buffer wID_TitleBg : picload PathToPic("BattleBg.jpg")
+	assert (ginfo_sx == WIN_SIZEX && ginfo_sy == WIN_SIZEY)
+	
+	// フィールドの背景画像
+	#ifdef CMPOPT_FULLVER
+	buffer wID_BattleBg : picload PathToPic("BattleBg.jpg")
+	assert (ginfo_sx == WIN_SIZEX && ginfo_sy == WIN_SIZEY)
+	#endif //defined(CMPOPT_FULLVER)
 	
 	// 小戦闘画面に罫線を引く
+	#ifdef CMPOPT_FULLVER
 	color 255
 	repeat 3 : boxl 39 + cnt,   3 + cnt, 590 - cnt, 130 - cnt : loop	// 敵　 手持ち枠
 	
@@ -62,6 +77,7 @@
 		line pos_x + 1, 375,  pos_x + 1, 495  // 自分 手持ち枠(区切り線) 中
 		line pos_x    , 375,  pos_x    , 495  // 自分 手持ち枠(区切り線) 右
 	loop
+	#endif //defined(CMPOPT_FULLVER)
 	return
 	
 #endif
