@@ -1,0 +1,91 @@
+// ZeoFive - Header (Core)
+
+#ifndef IG_ZEOFIVE_CORE_HEADER_AS
+#define IG_ZEOFIVE_CORE_HEADER_AS
+
+#define global ZEO_VERSION_M 1
+#define global ZEO_VERSION_L 00
+#define global ZEO_BETAVER   2
+#define global ZEO_ISBETA    true
+
+#if ZEO_ISBETA
+ #define global ZEO_BETA_STR ("beta" + ZEO_BETAVER)
+#else
+ #define global ZEO_BETA_STR ""
+#endif
+
+#define global ZEO_APPNAME "ZeoFive"
+
+#define global Str_GameName ZEO_APPNAME
+#define global Size_ZeoDeck 1540
+
+// フォルダ構造
+#define global PathToSingleCards (ownpath + "/singles.zeo_c")
+#define global PathToList (ownpath + "/decks/list.zeo_l")
+#define global PathToNewDeck PathToDeck(DeckName)
+#define global ctype PathToDeck(%1) (ownpath +"/decks/" + (%1) +".zeo_d")
+#define global ctype PathToPic(%1) (ownpath + "/pics/" + (%1))
+
+#define global PathToOnceCards PathToSingleCards
+#define global PathToDeckList PathToList
+
+//------------------------------------------------
+// パラメータ
+//------------------------------------------------
+#define global Count_CardsInDeck 5
+#define global Count_Players 2
+
+#define global ctype Card_makeStatus(%1,%2,%3,%4) MAKELONG2(%1,%2,%3,%4)//下から順にhp,spd,atk,int
+#define global ctype Card_hp(%1) byteAt(%1,0)
+#define global ctype Card_spd(%1) byteAt(%1,1)
+#define global ctype Card_atk(%1) byteAt(%1,2)
+#define global ctype Card_int(%1) byteAt(%1,3)
+
+#define global PrmValue_Max 200
+#define global PrmValue_Sum 200
+
+// パラメータの Id
+#enum global PrmId_HP   = 0
+#enum global PrmId_Spd
+#enum global PrmId_Atk
+#enum global PrmId_Int
+#enum global PrmId_Cls
+#enum global PrmId_Name
+#enum global PrmId_Str  = PrmId_Name
+#enum global PrmId_Max
+
+// 戦闘パラメータの Id ( PrmID_* とリンクする )
+#enum global CombatPrmId_HP  = PrmId_HP
+#enum global CombatPrmId_Spd
+#enum global CombatPrmId_Atk
+#enum global CombatPrmId_Int
+#enum global CombatPrmId_Max
+
+// パラメータに関するエラー定数
+#enum global PrmErr_None = 0
+#enum global PrmErr_InvalidValue	// 値が異常なパラメータがある
+#enum global PrmErr_InvalidCls		// 異常なクラスに属する
+#enum global PrmErr_InvalidSum		// 戦闘パラメータの総和がおかしい
+#enum global PrmErr_EmptyName		// 名前が空っぽ
+#enum global PrmErr_InvalidName		// 名前が異常
+#enum global PrmErr_InvlidPath		// 異常なファイルパス
+#enum global PrmErr_Max
+
+// 役職 Id
+#enum global ClsId_None   = 0
+#enum global ClsId_Silver = 0		// 銀将
+#enum global ClsId_Gold				// 金将
+#enum global ClsId_King				// 王将
+#enum global ClsId_Max
+
+// 役職の色
+;#const global ClsClr_PKing  RGB(  0, 200, 255)		// 王 (味方)
+;#const global ClsClr_EKing  RGB(220,  20,  60)		// 王 (敵)
+#const global ClsClr_PKing  RGB(175, 238, 255)		// 王 (味方)
+#const global ClsClr_EKing  RGB(255, 120, 120)		// 王 (敵)
+#const global ClsClr_Gold   RGB(184, 134,  11)		// 金
+#const global ClsClr_Silver RGB(192, 192, 192)		// 銀
+
+#define global font_cardtext font msgothic, 13;font "",14;font msmincho, 14
+
+#endif

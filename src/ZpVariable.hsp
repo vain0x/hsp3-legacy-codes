@@ -1,0 +1,35 @@
+#ifndef IG_ZEOPLAYER_VARIABLE_AS
+#define IG_ZEOPLAYER_VARIABLE_AS
+
+///グローバル変数の初期化
+*ClearVariable
+	ownpath = dir_exe2 + "/.."
+	
+	// パラメータ
+	sdim deckpath, MAX_PATH, 2	// デッキのパス
+;	dim CARD, 8, 5, 2	// カード構造体
+	sdim cardname,,Count_CardsInDeck, Count_Players
+	dim  HP, Count_CardsInDeck, Count_Players
+	dim  S , Count_CardsInDeck, Count_Players
+	dim  A , Count_CardsInDeck, Count_Players
+	dim  I , Count_CardsInDeck, Count_Players
+	dim  cardcls, Count_CardsInDeck, Count_Players
+	sdim picdat, MAX_PATH, Count_CardsInDeck, Count_Players
+	
+	dim scrs, Count_CardsInDeck, Count_Players// カード画像の大きさ (loword = width, hiword = height)
+	
+	declvar objIdGameLogBox
+	return
+	
+///ゲーム開始時の初期化
+*ClearVariableBeforeGameBeginning
+	player    = -1, -1		// 戦闘しているカードの番号
+	heads     =  Count_CardsInDeck,  Count_CardsInDeck		// 生き残っているカード数
+	ability   = -1, -1		// 攻撃方法。正数は物理、0は魔法、負数は選択。
+	bGameOver = false
+	bBeginning ++
+	return
+	
+	declvar bAttackPlayer
+	
+#endif

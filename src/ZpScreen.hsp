@@ -1,0 +1,106 @@
+#ifndef IG_ZEOPLAYER_SCREEN_AS
+#define IG_ZEOPLAYER_SCREEN_AS
+
+#uselib "user32.dll"
+#cfunc  GetWindowLong "GetWindowLongA" int,int
+#func   SetWindowLong "SetWindowLongA" int,int,int
+
+///メインウィンドウの初期化
+*CreateMainScreen
+	screen wID_Main, ginfo_dispx, ginfo_dispy, 2, (ginfo_dispx - WIN_SIZEX)/2, (ginfo_dispy - WIN_SIZEY)/2 - 30
+	title Str_GameName
+	width WIN_SIZEX, WIN_SIZEY
+	return
+	
+///各種画像をバッファに読み込む
+*LoadPictures
+	// 拡大戦闘画面の下地を準備
+;	bgscr wID_Battle, ginfo(20), ginfo(21), 2	// 戦闘拡大画面 // WIN_SIZEX, 647, 2, Wpx+3, WPy+32
+;	SetWindowLong hwnd, -20, GetWindowLong(hwnd, -20) | 0x0080		// ツールウィンドウにする
+;	picload "Zeo_Back/sc_Cosmo.jpg" , 1			// 背景をロード (宇宙
+	
+	// カード枠
+	buffer wID_CardTemp, SizeX_Card, SizeY_Card
+	
+	buffer wID_CardBack, SizeX_Card, SizeY_Card
+		//表面
+		color 184, 134, 11 : boxf
+		//外枠
+		color : boxl  0,0, 90,110
+		//円の模様
+		color , , 255 : circle  ,   ,   90, 110
+		color , , 200 : circle 10, 10,  80, 100
+		color , , 150 : circle 20, 20,  70,  90
+		color , , 100 : circle 30, 30,  60,  80
+		
+	buffer wID_CardCoffin, SizeX_Card, SizeY_Card
+		DrawCardBack
+		// 影
+		hsvcolor ,, 128    // 灰色
+		boxf 25, 42,  75,  52  // 横
+		boxf 45, 20,  55, 100  // 縦
+		// 黒い十字架
+		color
+		boxf 20, 37,  70, 47  // 横
+		boxf 40, 15,  50, 95  // 縦
+	
+	/*
+	buffer wID_SC_Back      ,  94, 111 : picload PathToPic("SC_Back.png")			// カード(裏面)
+	buffer wID_SC_Blue      ,  94, 111 : picload PathToPic("SC_Blue.png")			// 味方のカード
+	buffer wID_SC_Blue   + 1,  94, 111 : picload PathToPic("SC_Blue_Prom.png")		// 成り
+	buffer wID_SC_Red       ,  94, 111 : picload PathToPic("SC_Red.png")			// 敵カード
+	buffer wID_SC_Red    + 1,  94, 111 : picload PathToPic("SC_Red_Prom.png")			// 成り
+	buffer wID_SC_Blue_B    , 272, 332 : picload PathToPic("SC_Blue_B.png")		// 味方のカード (大)
+	buffer wID_SC_Blue_B + 1, 272, 332 : picload PathToPic("SC_Blue_B_Prom.png")		// 成り
+	buffer wID_SC_Red_B     , 272, 332 : picload PathToPic("SC_Red_B.png")			// 敵カード (大)
+	buffer wID_SC_Red_B  + 1, 272, 332 : picload PathToPic("SC_Red_B_Prom.png")		// 成り
+	//*/
+	
+	/*
+	buffer wID_Coffin : picload "coffin.bmp"
+	buffer wID_SC_Blue_Coffin, 94, 111 : font "", 14
+	pos 0,  0 : gcopy wID_SC_Blue, 0, 0, 91, 111
+	pos 6, 28 : gcopy wID_oke,     0, 0, 78,  42
+              : boxf 6, 6, 84, 21
+              : color 255, 255, 255
+	;pos 8,  8 : mes " 棺桶 Box "
+	//*/
+	
+	// フィールドの背景画像 (640*480を拡縮して使う)
+	buffer wID_Temp : picload PathToPic("BattleBg.jpg")
+	buffer wID_Back, WIN_SIZEX, WIN_SIZEY
+	           gzoom WIN_SIZEX, WIN_SIZEY, wID_Temp,  ,, 640, 480,  true
+	
+	;gsel   wID_Temp : picload "Zeo_Pics/SC_CombatBack.jpg"
+	;bgscr  wID_Battle, WIN_SIZEX, WIN_SIZEY, 2
+	;             gzoom WIN_SIZEX, WIN_SIZEY, wID_Temp, 0, 0, 1281, 1281, true
+	
+	;SetWindowLong hwnd, -20, GetWindowLong(hwnd, -20) | 0x0080
+	
+	// 小戦闘画面に罫線を引く
+	color 255
+	repeat 3 : boxl 39 + cnt,   3 + cnt, 590 - cnt, 130 - cnt : loop	// 敵　 手持ち枠
+	
+	color 180, 180, 255
+	repeat 3 : boxl 39 + cnt, 374 + cnt, 590 - cnt, 496 - cnt : loop	// 自分 手持ち枠
+	
+	repeat 4, 1 		// cnt == 1 からスタート
+		pos_x = 40 + 110 * cnt
+		color 255
+		line pos_x + 2,   5,  pos_x + 2, 127  // 敵 手持ち枠(区切り線) 左
+		line pos_x + 1,   5,  pos_x + 1, 127  // 敵 手持ち枠(区切り線) 中
+		line pos_x    ,   5,  pos_x    , 127  // 敵 手持ち枠(区切り線) 右
+		
+		color 180, 180, 255
+		line pos_x + 2, 375,  pos_x + 2, 495  // 自分 手持ち枠(区切り線) 左
+		line pos_x + 1, 375,  pos_x + 1, 495  // 自分 手持ち枠(区切り線) 中
+		line pos_x    , 375,  pos_x    , 495  // 自分 手持ち枠(区切り線) 右
+	loop
+	color
+	
+	// 各カード画像のバッファを一応初期化しておく
+	;repeat 5 : buffer wID_wCardPic + cnt : loop
+	;repeat 5 : buffer wID_eCardPic + cnt : loop	
+	return
+	
+#endif

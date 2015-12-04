@@ -1,0 +1,94 @@
+// Zplayer - Header
+
+#ifndef IG_ZEOPLAYER_HEADER_AS
+#define IG_ZEOPLAYER_HEADER_AS
+
+#define global WIN_SIZEX 680
+#define global WIN_SIZEY 650
+#define global SizeY_GameLogBox 65
+#define global SizeX_Card 91
+#define global SizeY_Card 111
+
+#define global WPx ((ginfo_winx - 700)/2)
+#define global WPy ((ginfo_winy - 700)/2)
+#define global Posx WPx
+#define global Posy (WPy/2 + 10)
+
+#define global MAX_PRM 200
+
+#define global ctype playerName(%1) cond_s((%1), "相手", "あなた")
+
+//Window ID
+#const global wID_Main       0   // メイン画面
+#const global wID_Temp       1   // 背景の一時読み込み用
+#const global wID_Back       2   // 小戦闘背景(680*650)
+#const global wID_CardTemp   3   // カード描画用
+#const global wID_CardBack   4   // カード裏面
+#const global wID_CardCoffin 5   // 棺桶カード
+#const global wID_wCardPic	 6   // カードの画像
+#const global wID_eCardPic	(wID_wCardPic + Count_CardsInDeck)
+/*
+#const global wID_SC_Back	20			// カード裏面
+#const global wID_SC_Blue	21			// 自分のカード表面
+#const global wID_SC_Red	23			// 相手のカード表面 (逆向き
+#const global wID_SC_Blue_B	25			// 拡大したカード
+#const global wID_SC_Red_B	27			// 敵
+#const global wID_Coffin	29			// 棺桶
+#const global wID_SC_Blue_Coffin 30		// 青棺桶カード
+#const global wID_SC_Red_Coffin	31		// 赤棺桶カード
+#const global wID_UserPics	50
+#const global wID_Battle    9   // 戦闘拡大画面(FullScreen)
+//*/
+
+// 相対的位置
+// カードの左上を起点とする
+#define global C_PicX	6
+#define global C_PicY	28
+#define global C_NameX	8
+#define global C_NameY	8
+#define global C_HPX	6
+#define global C_HPY	71
+#define global C_SPDX	52
+#define global C_SPDY	71
+#define global C_ATKX	7
+#define global C_ATKY	90
+#define global C_INTX	52
+#define global C_INTY	90
+
+// ゲーム用の定数群
+#const global w		0		// 味方
+#const global e		1		// 敵
+#define global ID_YOU	w	// 味方
+#define global ID_EMY	e	// 敵
+
+#define global King    !!"ClsId_King"
+#define global Gold    !!"ClsId_Gold"
+#define global Silver  !!"ClsId_Silver"
+
+// 戦闘カードのステータス参照マクロ
+#define global ourName	cardname(player(w), w)
+#define global ourHP	hp(player(w), w)
+#define global ourSPD	S (player(w), w)
+#define global ourATK	A (player(w), w)
+#define global ourINT	I (player(w), w)
+#define global ourMOV	cardcls(player(w), w)
+#define global emyName	cardname(player(e), e)
+#define global emyHP	HP(player(e), e)
+#define global emySPD	S (player(e), e)
+#define global emyATK	A (player(e), e)
+#define global emyINT	I (player(e), e)
+#define global emyMOV	cardcls(player(e), e)
+
+;#const global wKingColor	RGB(  0, 200, 255)		// 王 (味方)
+;#const global eKingColor	RGB(220,  20,  60)		// 王 (敵)
+#const global wKingColor	RGB(175, 238, 255)		// 王 (味方)
+#const global eKingColor	RGB(255, 120, 120)		// 王 (敵)
+#const global GoldColor		RGB(184, 134,  11)		// 金
+#const global SilverColor	RGB(192, 192, 192)		// 銀
+
+// statements for short
+#define color_graylight hsvcolor ,, 200
+#define color_graydark  hsvcolor ,, 64
+#define color_white hsvcolor ,, 255
+
+#endif

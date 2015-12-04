@@ -1,0 +1,110 @@
+#ifndef IG_ZEOFIVE_MODULE_AS
+#define IG_ZEOFIVE_MODULE_AS
+
+#module mod_ZeoFive
+
+// prms は、(5, 2) の二次元配列変数(int)
+
+#define global SIZE_ZEO_DECK 1540
+
+//-------------------------------------------------
+// デッキ読みだし準備命令
+//-------------------------------------------------
+#deffunc DeckLoad_init str path, var deck
+	exist path
+	if ( strsize < 0 ) { return true }
+	
+	// 読み込む
+	sdim        deck, SIZE_ZEO_DECK
+	bload path, deck, SIZE_ZEO_DECK
+	
+	// チェック
+	if ( peek(deck, 1) != 'Z' ) {
+		return true
+	}
+	return false
+	
+//-------------------------------------------------
+// デッキロード命令
+//-------------------------------------------------
+#deffunc DeckLoad str path, array cardname, array prms, array picpath
+	
+	sdim deck
+	DeckLoad_init path, deck
+	if ( stat ) { return true }
+	
+	// 受け取り用変数に格納
+	offset = 20
+	for i, 0, 5
+		getstr cardname(i), deck, offset				// カード名
+		getstr picpath(i), deck, offset + 25,, 260	// カード画像へのパス
+		
+		// 各種パラメータ (1byte)
+		repeat 5
+			prms(cnt, i) = peek(deck, offset + 20 + cnt)
+		loop
+		
+		offset += 300
+	next
+	return false
+	
+//-------------------------------------------------
+// デッキ保存命令
+//-------------------------------------------------
+#deffunc DeckSave str path, array cardname, array prms, array picpath
+	exist path
+	if ( strsize < 0 ) { bsave path, cardname, 0 }
+	
+	// deck に値を格納
+	sdim   deck,    SIZE_ZEO_DECK
+	memset deck, 0, SIZE_ZEO_DECK
+	
+	// 決まり文句
+	poke deck,    1, "Zeo    Deck"
+	poke deck, 1524, "Zeo    Deck"+ " End"
+	
+	// カード・データ
+	offset = 20
+	for i, 0, 5
+		poke deck, offset     , cardname(i)		// カード名
+		poke deck, offset + 25, picpath(i)		// カード画像へのパス
+		
+		// 各種パラメータ (1byte)
+		repeat 5
+;			logmes ""+ cnt +" : "+ prms(cnt, i)
+			poke deck, offset + 20 + cnt, prms(cnt, i)	// 255以下の数値
+		loop
+		
+		offset += 300
+	next
+	
+	// 保存
+	bsave path, deck, SIZE_ZEO_DECK
+	return
+	
+//-------------------------------------------------
+// クラスの文字列化
+//-------------------------------------------------
+#defcfunc ClassString int klsId
+	switch (klsId)
+		case ClsId_King:   return "王"
+		case ClsId_Gold:   return "金"
+		case ClsId_Silver: return "銀"
+		default: assert : return "？"
+	swend
+
+//------------------------------------------------
+// クラスに対応する色コード
+//------------------------------------------------
+#defcfunc ClassColorref int klsId, int idPl
+	switch (klsId)
+		case ClsId_King:   return cond_i(idPl, ClsClr_EKing, ClsClr_PKing)
+		case ClsId_Gold:   return ClsClr_Gold
+		case ClsId_Silver: return ClsClr_Silver
+		default: assert : return 0xFFFFFF
+	swend
+	
+#global
+
+#endif
+
