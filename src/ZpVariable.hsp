@@ -1,0 +1,52 @@
+#ifndef IG_ZEOPLAYER_VARIABLE_AS
+#define IG_ZEOPLAYER_VARIABLE_AS
+
+///グローバル変数の初期化
+*LInitVariables
+	ownpath = dir_cur
+	#ifdef _debug
+		ownpath += "/.."
+	#endif
+	
+	// デッキデータ
+	sdim deckpath, /*MAX_PATH*/;, 2	// デッキのパス
+	sdim cardname,, Count_CardsInDeck, Count_Players
+	dim  statuses, StatusId_Max, Count_CardsInDeck, Count_Players
+	sdim abilities,, Count_CardsInDeck, Count_Players, 2
+	
+	//リソース
+	playerName = "あなた", "相手"
+	statusNames = "HP", "SP", "A ", "I "
+	combatStyle_text = "物理", "魔法"
+	return
+	
+	declvar combatCard
+	declvar heads
+	declvar combatStyle
+	declvar ourStatuses
+	declvar emyStatuses
+	declvar idWinner
+	declvar idActivePlayer
+	declvar idDefencePlayer
+	#define idAttackPlayer idActivePlayer
+	
+	declvar bDecided
+	declvar __dummy@
+	
+//ゲーム開始時の初期化
+//1か所からしか呼ばないのでマクロ
+#define ResetGameStatusVariables :\
+	/* 戦闘しているカードの番号 */ \
+	combatCard  = CardId_Invalid :\
+	/* 手札の枚数 */ \
+	heads       = Count_CardsInDeck,  Count_CardsInDeck :\
+	/* 戦闘方式: combatStyle_at, ig, invalid */ \
+	combatStyle = combatStyle_Invalid, combatStyle_Invalid :\
+	/* 勝利プレイヤーの id、決まるまでは invalid */ \
+	idWinner = PlayerId_Invalid :\
+	/* ゲーム外：注目されているプレイヤーの id \
+	   ゲーム中：攻撃側プレイヤーの id */ \
+	dim idActivePlayer : assert idActivePlayer == ID_YOU :\
+	//
+	
+#endif
