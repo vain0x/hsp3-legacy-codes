@@ -1,14 +1,14 @@
 // FifPz
 
 #packopt name "FifPz"
-#packopt hide 1
-#packopt orgpath 1
+#packopt hide    true
+#packopt orgpath true
 
 #include "Mo/CreateChildWindow.as"
 #include "Mo/MCKeyboard.as"
 #include "Mo/MenuBarAPI.as"
 
-goto *main
+	goto *main
 
 #include "FifPz.as"
 #include "Sub_Control.hsp"
@@ -64,7 +64,7 @@ goto *main
 	cntShards     = cntShardsRoot * cntShardsRoot
 	idxDisShard   = cntShards - 1	// 無効断片の位置
 	dirExchange   = -1				// 無効断片の移動する方向
-	crefDisShard  = RGB(16, 16, 32)	// 無効断片の色
+	crefDisShard  = RGB(0, 0, 0)	// 無効断片の色
 	
 	// 局所的なもの
 	dim infCombox_ShardsNumber, 2
@@ -75,11 +75,11 @@ goto *main
 	
 // ウィンドウを初期状態にセットする
 *LSetWindow
-	screen IDW_MAIN, ginfo(20) * 2, ginfo(21) * 2, 2, (ginfo(20) - 360) / 2, (ginfo(21) - 300) / 2, 360, 300
+	screen IDW_MAIN, ginfo(20) * 2, ginfo(21) * 2, 2 + 16, (ginfo(20) - 360) / 2, (ginfo(21) - 300) / 2, 360, 300
 	title "FifPz"
 		gosub *LCreateMenuBar
 		
-	buffer IDW_PICFULL, 0, 0
+	buffer IDW_PICFULL, 320, 320
 	
 	return
 	

@@ -1,7 +1,7 @@
 // FifPz - Sub Control
 
-#ifndef __FIFPZ_SUB_CONTROL_HSP__
-#define __FIFPZ_SUB_CONTROL_HSP__
+#ifndef IG_FIFPZ_SUB_CONTROL_HSP
+#define IG_FIFPZ_SUB_CONTROL_HSP
 
 #include "FifPz.as"
 

@@ -1,7 +1,9 @@
 // FifPz - Sub Function
 
-#ifndef __FIFPZ_SUB_FUNCTION_HSP__
-#define __FIFPZ_SUB_FUNCTION_HSP__
+#ifndef IG_FIFPZ_SUB_FUNCTION_HSP
+#define IG_FIFPZ_SUB_FUNCTION_HSP
+
+#define global ctype isDisShard(%1) ( (%1) < 0 )
 
 //##############################################################################
 //        モジュール定義
@@ -21,18 +23,13 @@
 	loop
 	return
 	
-#undef    getkey
-#defcfunc getkey int keycode
-	getkey@hsp bKey, keycode
-	return bKey
-	
 #global
 
 //##############################################################################
 //        グローバル定義
 //##############################################################################
 
-// 断片の場所IDから実際の位置を得る
+// 断片ID から実際の座標を得る
 #defcfunc posidToPos int p1, int x_or_y
 	if ( x_or_y == x ) {
 		return ( (p1 \ cntShardsRoot) * sizePicShard.x )
@@ -41,7 +38,7 @@
 	}
 	return
 	
-// 断片一枚をコピーする
+// 断片を1つコピーする
 #deffunc copyShard int wid_from, int id_shard
 	gcopy wid_from, posidToPos(id_shard, x), posidToPos(id_shard, y), sizePicShard.x, sizePicShard.y
 	return

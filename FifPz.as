@@ -1,7 +1,7 @@
 // FifPz - public header
 
-#ifndef __FIFPZ_HEADER_AS__
-#define __FIFPZ_HEADER_AS__
+#ifndef IG_FIFPZ_HEADER_AS
+#define IG_FIFPZ_HEADER_AS
 
 #uselib "user32.dll"
 #func   PostMessage      "PostMessageA" int,int,int,sptr
@@ -60,7 +60,7 @@
  #define global ctype MAKELONG(%1,%2) (LOWORD(%1) | (LOWORD(%2) << 16))
  #define global ctype HIWORD(%1) (((%1) >> 16) & 0xFFFF)
  #define global ctype LOWORD(%1) ((%1) & 0xFFFF)
- #define global ctype BITOFF(%1,%2=0) ( bturn(%2) & (%1) )//		: ç≈ë¨
+ #define global ctype BITOFF(%1,%2=0) ( bturn(%2) & (%1) )
  #define global ctype RGB(%1,%2,%3) (GETBYTE(%1) | GETBYTE(%2) << 8 | GETBYTE(%3) << 16)
  #define global ctype BITNUM(%1) (1 << (%1))
  #define global ctype bturn(%1) ((%1) ^ 0xFFFFFFFF)
