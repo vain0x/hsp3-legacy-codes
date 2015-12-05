@@ -12,6 +12,7 @@
 #include "Mo/CreateChildWindow.as"
 #include "Mo/MCTab.as"
 #include "Mo/mod_window.as"
+#include "Mo/priority.as"
 #include "Mo/trayicon.as"
 
 #uselib "user32.dll"
@@ -31,6 +32,7 @@
 #cfunc  IsChild  "IsChild"  int
 #cfunc  GetSystemMetrics "GetSystemMetrics" int
 
+//#define MODE_SHOW_INFO	// ウィンドウ情報表示モード
 //#define MODE_NEGATOR	// ウィンドウ抹殺モード
 #ifdef MODE_NEGATOR
  #define STR_APPNAME "WinNegator"
@@ -72,7 +74,10 @@
 	gosub *LSetWindow		// ウィンドウを準備
 	gosub *LSetInterrupt	// 割り込み設定
 	gsel IDW_Main, 1
-;	gsel IDW_FindWinTitle, 2
+	
+#ifdef MODE_SHOW_INFO
+	gsel IDW_FindWinTitle, 2
+#endif
 	
 	goto *LMainLoop
 	
@@ -80,15 +85,19 @@
 // メイン・ループ
 //------------------------------------------------
 *LMainLoop
-	redraw 2
+	if ( bIconic ) { wait 1000 : goto *LMainLoop }
 	
 	gosub *LGetPointWinData				// カーソル下のウィンドウの情報を得る
-	if ( (cnt \ 6) == 0 ) {
-		gosub *LRedraw_FindWinTitle		// ウィンドウ情報を描画
-	}
 	gosub *LCheckKey					// キー入力のチェック
 	
-	redraw 1
+#ifdef MODE_SHOW_INFO
+	if ( (cnt \ 6) == 0 ) {
+		redraw 2
+		gosub *LRedraw_FindWinTitle		// ウィンドウ情報を描画
+		redraw 1
+	}
+#endif
+	
 	wait 2
 	goto *LMainLoop
 	
@@ -133,10 +142,12 @@
 		line CX_TASKBAR - 1, -1, CX_TASKBAR - 1, ginfo(21)
 //*/
 	
+#ifdef MODE_SHOW_INFO
 	screen IDW_FindWinTitle, 480, 40, 2, 60, 60, 240,40
 	title STR_APPNAME +" - Find WinTitle"
 		font msgothic, 12
-		
+#endif
+	
 	return
 	
 //------------------------------------------------
@@ -157,6 +168,7 @@
 	GetWindowDataFromPoint ginfo_mx, ginfo_my, sClsName, sWinTitle
 	return
 	
+#ifdef MODE_SHOW_INFO
 //------------------------------------------------
 // IDW_FindWinTitle を再描画する
 //------------------------------------------------
@@ -167,7 +179,8 @@
 		pos 5, 20 : mes "WinTitle : "+ sWinTitle
 	
 	return
-	
+#endif
+
 //------------------------------------------------
 // キー入力を検知する
 //------------------------------------------------
@@ -203,8 +216,8 @@
 			return
 		}
 		
-		// 新しいタブを追加
-		tab_insert mTab, sWinTitle : idxItem = stat
+		// 新しいタブを追加 (右側)
+		tab_insert mTab, sWinTitle, cntWin : idxItem = stat
 		
 		// 通常サイズに戻す
 		Window_Restore hWindow(cntWin)
@@ -294,6 +307,10 @@
 ;	logmes "OnSize!"
 	
 	// タブのサイズを直す
+	gosub *LResizeTab
+	return
+	
+*LResizeTab
 	MoveWindow hTab, 2, 0, LOWORD(lparam), HIWORD(lparam)
 	
 	tab_getFittingPageRect mTab, rc
@@ -319,7 +336,6 @@
 		// 選択項目の変更
 		if ( nmhdr(2) == -551 ) {
 			tab_showActive mTab
-			gsel IDW_TabTop + stat, 1
 		}
 		
 	}
@@ -333,6 +349,7 @@
 	switch ( lparam )
 		case 0x0202		// 左::解放
 		case 0x0205		// 右::解放
+			gosub *LShowFromTray
 			sendmsg whMain, 0x0112, 0xF120, 0		// 元に戻す (WM_SIZE が起こる)
 			swbreak
 	swend
@@ -348,6 +365,8 @@
 	CreateTrayIcon "WinChild", , IDI_Main	// アイコン作成
 	SetStyle whMain, -20, 0x00000080		// ツールウィンドウにし、タスクバーから排除
 	bIconic = true
+	
+	IdlePriority							// 優先度クラスを最低にする
 	return
 	
 //------------------------------------------------
@@ -357,10 +376,13 @@
 	if ( bIconic == false ) { return }		// 今は常駐していない
 	bIconic = false
 	
+	NormalPriority							// 優先度クラスを戻す
 	gsel IDW_Main
 	SetStyle whMain, -20, , 0x00000080		// ツールウィンドウ解除
 	gsel IDW_Main, 2						// MainWindow を公開 (一時的に最前面)
 	DestroyTrayIcon IDI_Main				// アイコン削除
+	
+;	gosub *LResizeTab
 	
 	gsel IDW_Main, 1
 	return
@@ -385,6 +407,7 @@
 		GetWindowText hWinTmp, varptr(vWinTitle), 320
 		return true
 	}
-	return false
+	
+	return false		// 失敗
 	
 #global

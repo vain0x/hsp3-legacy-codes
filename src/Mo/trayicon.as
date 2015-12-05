@@ -1,15 +1,16 @@
-/* trayicon.as */
+// trayicon
+
+// @author: 月影とも 氏
+// @ 上大->改変
 
 #ifndef IG_TRAYICON_AS
 #define IG_TRAYICON_AS
 
 #module trayicon
 
-// HSP3 で タスクトレイアイコンを作るモジュール 0.02 / 月影とも 2005. 8.12
-
 #define WM_TRAYEVENTSTART 0x0900
-#define MAX_ICONS  16		// ←アイコン最大数定義
-#define POPUP_TIME 30		// タイムアウト時間(sec)
+#define MAX_ICONS  16		// アイコンの最大数
+#define POPUP_TIME 30		// タイムアウト時間[sec]
 
 #define NIF_MESSAGE	0x0001
 #define NIF_ICON	0x0002
@@ -19,19 +20,18 @@
 #define NIM_MODIFY	0x001
 #define NIM_DELETE	0x002
 
-#define ERROR_TIMEOUT 1460	// This operation returned because the timeout period expired.
+#define ERROR_TIMEOUT 1460
 
-// 使用するAPIの定義。
-#uselib "Kernel32.dll"
-#func   GetModuleFileName@trayicon "GetModuleFileNameA" nullptr,prefstr,int	// 自分自身の名前を得るAPI
+#uselib "kernel32.dll"
+#func   GetModuleFileName@trayicon "GetModuleFileNameA" nullptr, prefstr, int
 #cfunc  GetLastError@trayicon      "GetLastError"
 
-#uselib "Shell32.dll"
-#func   ExtractIconEx@trayicon    "ExtractIconExA" sptr,int,nullptr,var,int	// ファイルからアイコンを抽出する
-#func   Shell_NotifyIcon@trayicon "Shell_NotifyIconA" int,int				// タスクトレイアイコンを制御する
+#uselib "shell32.dll"
+#func   ExtractIconEx@trayicon    "ExtractIconExA"    sptr, int, nullptr, var, int
+#func   Shell_NotifyIcon@trayicon "Shell_NotifyIconA" int, int
 
 #uselib "user32.dll"
-#func   DestroyIcon@trayicon "DestroyIcon" int		// 抽出したアイコンを破棄する
+#func   DestroyIcon@trayicon "DestroyIcon" int
 
 //------------------------------------------------
 // タスクトレイにアイコンを追加する
