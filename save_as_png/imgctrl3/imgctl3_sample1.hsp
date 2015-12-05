@@ -1,0 +1,117 @@
+/*--------------------------------------------------------------------
+	imgctl.dll Sapmle Code for HSP3 (2006/10/14)
+	by Kpan
+	http://lhsp.s206.xrea.com/
+
+	imgctl.dll
+	by ルーチェ (ruche)
+	http://www.ruche-home.net/
+
+	読み込んだBMPファイルをGIF、JPEG、PNGの形式に変換して出力
+	するサンプルです。
+--------------------------------------------------------------------*/
+
+#include "imgctl3.as"
+
+
+/*--------------------------------------------------------------------
+	Windows API
+--------------------------------------------------------------------*/
+#uselib "user32"
+#cfunc GetSystemMenu "GetSystemMenu" int, nullptr
+#func InsertMenu "InsertMenuA" int, int, int, int, str
+
+#define ctype LOWORD(%1) (%1 & $FFFF)
+
+
+/*--------------------------------------------------------------------
+	メイン
+--------------------------------------------------------------------*/
+	title "imgctl.dll Sapmle Code for HSP3"
+
+;	imgctl.dll ファイルの確認
+	exist "imgctl.dll"
+	if strsize = -1 : dialog "imgctl.dll ファイルが見つかりません。", 1, "エラー" : end
+
+;	ウィンドウメッセージ
+	onexit *exit
+	oncmd gosub *syscommand, $112
+
+;	バージョン情報用システムメニュー
+	hSystemMenu = GetSystemMenu (hwnd)
+		InsertMenu hSystemMenu, 0, $400, 1, "バージョン情報(&A)..."
+		InsertMenu hSystemMenu, 1, $400 | $800, , ""
+
+	button "ろーど。", *load
+
+;	仮想ウィンドウ作成
+	buffer 1
+	gsel
+
+	stop
+
+
+/*--------------------------------------------------------------------
+	WM_SYSCOMMAND (バージョン情報表示)
+--------------------------------------------------------------------*/
+*syscommand
+	if wparam = 1 {
+		ImgctlVersion
+		version = LOWORD (stat)
+		dialog "\nimgctl.dll Sapmle Code for HSP3\nCopyright (C) 2006 Kpan\n\nimgctl.dll v"+version / 100+"."+version \ 100+"\nby ルーチェ (ruche)", , "バージョン情報"
+	}
+	return
+
+
+/*--------------------------------------------------------------------
+	画像読み込み
+--------------------------------------------------------------------*/
+*load
+	dialog "bmp", 16, "BMPファイル"
+	if stat = 0 : stop
+	filepath = refstr
+
+	wait 1
+	color 255, 255, 255 : boxf
+
+;	直前のDIBデータハンドルを開放
+	if hDib != 0 : DeleteDIB hDib
+
+;	仮想ウィンドウに画像表示
+	gsel 1
+	picload filepath
+
+;	画像サイズを取得
+	imagesize.0 = ginfo (12)
+	imagesize.1 = ginfo (13)
+
+;	デバイスコンテキストからDIBデータハンドルを取得
+	DCtoDIB hdc, 0, 0, imagesize.0, imagesize.1
+	hDib = stat
+
+;	描画先を元に戻す
+	gsel
+
+;	ちょっくら180度回転
+	TurnDIB hDib, 180
+
+;	自ウィンドウに描画
+	DIBtoDC hdc, 0, 40, imagesize.0, imagesize.1, hDib, 0, 0, $CC0020
+	redraw
+
+;	DIBデータハンドルから画像ファイルを出力
+//	DIBtoJPG dirinfo (1) + "/imgctl3_test.jpg", hDib, 100, 0
+//	DIBtoPNG dirinfo (1) + "/imgctl3_test.png", hDib, 0
+	DIBtoGIF dirinfo (1) + "/imgctl3_test.gif", hDib, 0
+
+	stop
+
+
+/*--------------------------------------------------------------------
+	終了
+--------------------------------------------------------------------*/
+*exit
+;	DIBデータハンドルを開放
+	if hDib != 0 : DeleteDIB hDib
+
+	end
