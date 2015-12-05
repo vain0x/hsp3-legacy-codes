@@ -1,0 +1,80 @@
+// FifPz - Sub Function
+
+#ifndef __FIFPZ_SUB_FUNCTION_HSP__
+#define __FIFPZ_SUB_FUNCTION_HSP__
+
+//##############################################################################
+//        モジュール定義
+//##############################################################################
+#module
+
+#deffunc swap var p1, var p2
+	tmptoSwap = p1
+	p1        = p2
+	p2        = tmptoSwap
+	return
+	
+#deffunc shuffleArray array p1, local lenArray
+	lenArray = length(p1)
+	repeat lenArray - 1
+		swap p1(cnt), p1(cnt + rnd(lenArray - cnt))
+	loop
+	return
+	
+#global
+
+//##############################################################################
+//        グローバル定義
+//##############################################################################
+
+// 断片の場所IDから実際の位置を得る
+#defcfunc posidToPos int p1, int x_or_y
+	if ( x_or_y == x ) {
+		return ( (p1 \ cntShardsRoot) * sizePicShard.x )
+	} else {
+		return ( (p1 / cntShardsRoot) * sizePicShard.y )
+	}
+	return
+	
+// 断片一枚をコピーする
+#deffunc copyShard int wid_from, int id_shard
+	gcopy wid_from, posidToPos(id_shard, x), posidToPos(id_shard, y), sizePicShard.x, sizePicShard.y
+	return
+	
+// ある断片indexの、ある方向の断片indexを得る
+#defcfunc getNexttoShardID int idx, int dir
+	switch ( dir )
+		case DIR_UPPER
+			if ( idx < cntShardsRoot ) {
+				swbreak		; return idx + cntShardsRoot * (cntShardsRoot - 1)
+			}
+			return idx - cntShardsRoot
+			
+		case DIR_LOWER
+			if ( idx >= ( cntShards - cntShardsRoot ) ) {
+				swbreak		; return idx \ cntShardsRoot
+			}
+			return idx + cntShardsRoot
+			
+		case DIR_RIGHT
+			if ( idx \ cntShardsRoot == (cntShardsRoot - 1) ) { swbreak }
+			return idx + 1
+			
+		case DIR_LEFT
+			if ( idx \ cntShardsRoot == 0 ) { swbreak }
+			return idx - 1
+	swend
+	return idx
+	
+// 断片を移動させる
+#deffunc moveShard int idx, int dir
+	swap placePics(idx), placePics( getNexttoShardID(idx, dir) )
+	return
+	
+// 無効断片を移動させる
+#deffunc moveDisShard int dir
+	moveShard idxDisShard, dir
+	idxDisShard = getNexttoShardID(idxDisShard, dir)
+	return
+	
+#endif
