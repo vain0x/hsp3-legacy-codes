@@ -1,54 +1,27 @@
 ; タブ+分割、(2分割でない)多分割、多分(メモ帳に)勝つ　という意味で　タブンカツ・テキスト・エディタ
 
-	; さくらさんのモジュール使用前に
-
-	;▼初期設定 (必要となる APIモジュール・マクロを定義)
-	;#include "../stdlib/sysval.as"
-	;#include "../stdlib/gblconst.as"
-	;#include "../stdlib/winapi32.as"
-	;#include "../stdlib/exwinstyle.as"
-	;#include "../stdlib/exgeneral.as"
-
-#packopt name " - ワリガキ・エディタ - ver 1"+".0"	; デフォルトの名前
-#packopt hide 1				; 一瞬のちらつきを抑える
-#packopt xsize 800			; いきなりこれ。一瞬画面が大きくなるのを抑える
-#packopt ysize 680			; 同上
+#packopt name "WarigakiEditor"
+#packopt hide 1
+#packopt xsize 800
+#packopt ysize 680
 
 #pack	 "Readme.txt"		; ヘルプ用
 
 #include "mod_menu.as"		; メニューバー作成用
-#pack	 "mod_menu.as"		; HSP3.1に同梱されているもの
-
-#include "obj.as"			; ?
-#pack	 "obj.as"			; 同梱
-
 #include "hspda.as"			; Vsave & Vload 命令用
-#pack	 "hspda.as"			; 同梱
-
 #include "l_tooltips.as"	; ツールチップス(カーソル合わせると出てくるあれ)作成用
-#pack	 "l_tooltips.as"	; Kpan 様の配布していたものを転用させていただきました。
-
 #include "l_dialogex.as"	; ダイアログ Ｘ 用
-#pack	 "l_dialogex.as"	; Kpan 様の掲載していたものです ……　←頼りすぎ
-
-#include "TabMaker.as"	; タブ作成用
-#pack	 "TabMaker.as"	; Kpan 様の掲載していたモノを転用させていただきました
+#include "Mo/TabMaker.as"	; タブ作成用
 
 #include "erasureEx.hsp"	; 画面消去用命令 esr の強化版。省略時はsyscolor 15で塗りつぶします。
-#pack	 "erasureEx.hsp"	; 自作
 
 #uselib "kernel32"			; [新ワリガキ]起動用に、自身のファイルパスを取得するためのもの
 #func GetModuleFileName "GetModuleFileNameA" int, int, int ; (Kpanさんのサンプルを参考にさせていただきました)
 
-		goto *top	; 飛ばす
-#include "NewS.as"			; 新規命令・関数。New Statements and Functions の略。("ニュース"とかけてます
-#pack	 "NewS.as"			; 自作
+	goto *top	; 飛ばす
+#include "NewS.as"			; 新規命令・関数。New Statements and Functions の略。
 
 *top
-; オープナーで開いた場合
-	if dir_cmdline = "PerfectMode" {
-		dialog "ここに行動内容を描きます", 0, "確認"
-	}
 ; 変数の定義 #######################################################################################
 	gosub *reset_vals		; サブルーチンに小分け
 	gosub *Set_Start_Val	; 初期変数値を外部から入手
@@ -810,7 +783,7 @@
 *Current_Change
 ; 表裏一体のサブルーチン
 	; txt か pf ファイルを選択させる
-	dialogEx 0, "指定ﾌｧｲﾙ (*.pf;*.txt)|(*.pf;*.txt)|", ""+Current_File+"", "指定ファイル選択", ""
+	dialogEx 0, "指定ファイル (*.pf;*.txt)|(*.pf;*.txt)|", Current_File, "指定ファイル選択", ""
 	if stat = 1 : Current_File = refstr			; 指定ファイル変更
 	
 	gsel 1,1
@@ -1293,16 +1266,16 @@
 *Tabkey_ok
 	Back
 	gosub *Tabkey
-		return "ON"
+	return "ON"
 	
 *Tabkey
 	; アルティメットさん、ありがとうございました。
 	repeat 6
-	tabstops = (fontsize(cnt)+1) / 4 * tabsize
-	if mode = 1 : gsel 100 +cnt, 0
-	sendmsg hMain(cnt), 0x00CB, 1, varptr(tabstops) // EM_SETTABSTOPS
+		tabstops = (fontsize(cnt) + 1) / 4 * tabsize
+		if mode = 1 : gsel 100 + cnt, 0
+		sendmsg hMain(cnt), 0x00CB, 1, varptr(tabstops) // EM_SETTABSTOPS
 	loop
-		return
+	return
 	
 ; 右端で折り返す#############################
 *MiGiHaShi_Select
@@ -1314,8 +1287,8 @@
 	
 	; 適合
 	repeat 6
-	MiGi_set(cnt) = MiGiHaShi(cnt)
-	if MiGi_set(cnt) = 5 : MiGi_set(cnt) = 0
+		MiGi_set(cnt) = MiGiHaShi(cnt)
+		if MiGi_set(cnt) = 5 : MiGi_set(cnt) = 0
 	loop
 	
 	pos 20, 30
@@ -1341,7 +1314,7 @@
 	
 	Back
 	on mode gosub *Schange, *RemakeTabBox	; 再描画
-		return
+	return
 	
 *MiGiHaShi_Change
 	repeat 6
@@ -1349,7 +1322,7 @@
 	if MiGi_set(cnt) = 1 : MiGiHaShi(cnt) = 1 ; 1は折り返しありなのでON。
 	if MiGi_set(cnt) = 0 : MiGiHaShi(cnt) = 5 ; 5は折り返し無しなのでOFF。スクロールバーあり。
 	loop
-		return "ON"
+	return "ON"
 	
 ; ツール########################################################################
 *Tab_or_Bunkatsu
@@ -1358,10 +1331,10 @@
 	if mode = 1 : dialog "分割モードに切り替えますか？", 2, "モード切り替えインフォ"
 	if stat = 7 : return	; [いいえ]を選んだらすぐに戻る
 	
-	if mode = 0 : mode = 1 : else : mode = 0	; 0は分割、1はタブ
+	mode ^= 1		; 0は分割、1はタブ
 	gosub *Mode_Change
-		return
-		
+	return
+	
 *Mode_Change
 	if mode = 0 {
 		number = boxs
@@ -1379,7 +1352,7 @@
 		gsel 0, -1
 		gsel 3, 0
 	}
-		return
+	return
 	
 	
 ; ###########################################
@@ -1387,57 +1360,57 @@
 ; 色変更#####################################
 *Changer
 	repeat 6
-	wr_set(cnt) = wr(cnt)
-	wg_set(cnt) = wg(cnt)
-	wb_set(cnt) = wb(cnt)
-	
-	br_set(cnt) = br(cnt)
-	bg_set(cnt) = bg(cnt)
-	bb_set(cnt) = bb(cnt)
+		wr_set(cnt) = wr(cnt)
+		wg_set(cnt) = wg(cnt)
+		wb_set(cnt) = wb(cnt)
+		
+		br_set(cnt) = br(cnt)
+		bg_set(cnt) = bg(cnt)
+		bb_set(cnt) = bb(cnt)
 	loop
 	
-	gsel 1,1
+	gsel 1, 1
 	redraw 2
 	esr
 	title "Color Changer"
-	objmode 1,1
+	objmode 1, 1
 	
-	pos 20,30
-	objsize 60,20,25
-	font "",16
+	pos 20, 30
+	objsize 60, 20, 25
+	font "", 16
 	mes "色のバランスを指定して下さい"
-	pos 20,50
-	color 255,0,0
+	pos 20, 50
+	color 255
 	mes "　赤"
-	color 0,255,0
+	color , 255
 	pos 90,50
 	mes "　緑"
-	color 0,0,255
-	pos 160,50
+	color , , 255
+	pos 160, 50
 	mes "　青"
-	color 0,0,0
+	color
 	
-	pos 20,70
+	pos 20, 70
 	repeat number
-	if wc = 1 : input wr_set(cnt) : else : input br_set(cnt)
-	clIDr(cnt) = stat
+		if wc = 1 : input wr_set(cnt) : else : input br_set(cnt)
+		clIDr(cnt) = stat
 	loop
 	
-	pos 90,70
+	pos 90, 70
 	repeat number
-	if wc = 1 : input wg_set(cnt) : else : input bg_set(cnt)
-	clIDg(cnt) = stat
+		if wc = 1 : input wg_set(cnt) : else : input bg_set(cnt)
+		clIDg(cnt) = stat
 	loop
 	
-	pos 160,70
+	pos 160, 70
 	repeat number
-	if wc = 1 : input wb_set(cnt) : else : input bb_set(cnt)
-	clIDb(cnt) = stat
+		if wc = 1 : input wb_set(cnt) : else : input bb_set(cnt)
+		clIDb(cnt) = stat
 	loop
 	
 	pos 230, 70
 	repeat number
-	button gosub "参照",*colordialog
+		button gosub "参照",*colordialog
 	loop
 	
 	wc = 0		; リセット
@@ -1449,25 +1422,25 @@
 	objmode 2, 1
 	redraw 1
 	gosub *waitstay
-		return
+	return
 	
 *Changing
 	; 背景色変更
 	repeat 6
-	wr(cnt) = wr_set(cnt)
-	wg(cnt) = wg_set(cnt)
-	wb(cnt) = wb_set(cnt)
-	
-	br(cnt) = br_set(cnt)
-	bg(cnt) = bg_set(cnt)
-	bb(cnt) = bb_set(cnt)
+		wr(cnt) = wr_set(cnt)
+		wg(cnt) = wg_set(cnt)
+		wb(cnt) = wb_set(cnt)
+		
+		br(cnt) = br_set(cnt)
+		bg(cnt) = bg_set(cnt)
+		bb(cnt) = bb_set(cnt)
 	loop
 	
 	Back
 	; 再描画
 	makeonly = 1
 	on mode gosub *makebox, *ReMakeTabBox
-		return "ON"
+	return "ON"
 	
 *colordialog
 	n = stat - number*3		; 色用のボックスの数を引く
@@ -1475,13 +1448,13 @@
 	dialog "", 33	; 色ダイアログ
 	if stat = 0 {	; [キャンセル]を押された
 		n = 0
-			return
+		return
 	}
 	objprm clIDr(n), ginfo_r
 	objprm clIDg(n), ginfo_g
 	objprm clIDb(n), ginfo_b
 	n = 0
-		return
+	return
 	
 ; 分割数#####################################
 *bunkatsu
@@ -1516,7 +1489,7 @@
 	gosub *waitstay
 	
 	Back
-		return
+	return
 	
 *boxsc
 	boxs = stat 					; 箱数決定
@@ -1525,13 +1498,13 @@
 	if boxs = 4 and box_special = 1 : bju = 1 	; 十字型に分割
 	gsel 0, 1
 	gosub *Schange 				; 箱サイズ適正チェック &再描画
-		return "ON"
+	return "ON"
 	
 ; バランス###################################
 *Blance_Change
 	if boxs = 1 {
 		dialog "変えようがありません。。。", 0, "無分割です"
-			return
+		return
 	}
 	; 適合
 	repeat 6
@@ -1544,7 +1517,7 @@
 	esr
 	title "バランス調整"
 	gosub *BoxBlanceChangeWindow
-		return
+	return
 	
 ;###############################################################################
 *BoxBlanceChangeWindow
@@ -1672,7 +1645,7 @@
 	redraw 1
 	gsel 1,1
 	gosub *waitstay
-		return
+	return
 	
 *Blance_set
 	Back
@@ -1693,7 +1666,7 @@
 	if cnt <= 2 : sizey(cnt) = sizey_set(cnt)
 	loop
 	gosub *Schange
-		return "ON"
+	return "ON"
 	
 ; ##############################################################################
 *Schange
@@ -1766,19 +1739,19 @@
 	
 	Back
 	makeonly = 1 : gosub *makebox	; 再描画
-		return "ON"
+	return "ON"
 	
 ; ヘルプ########################################################################
 ; ヘルプ#####################################
 *help_print
 	dialog "ヘルプを表示しますか？", 3, "ヘルプ"
 	if stat = 6 : exec "Readme.txt",16
-		return
+	return
 	
 ; バージョン情報#############################
 *version
 	dialog "Split Text Editor (Warigaki Editor)  \n   ver. 1.0  \nby Ue-Dai", 0, "Version 情報"
-		return
+	return
 	
 ;##################～背景色変更 (引用) ～###########################################################
 *ctlcoloredit
@@ -1838,15 +1811,15 @@
 	return hBrush(5)
 	};*/
 	
-		return
+	return
 	
 ; 待機 #############################################################################################
 *waitstay
 	repeat
-	if refstr = "ON" : break
-	wait 10	; 無いと固まる
+		if refstr = "ON" : break
+		wait 10	; 無いと固まる
 	loop
-		return "OFF"	; スイッチを切る
+	return "OFF"	; スイッチを切る
 	
 ; エラー ###################################################
 *error
@@ -1859,7 +1832,7 @@
 	repeat 6
 	DeleteObject hBrush(cnt)
 	loop
-		return
+	return
 	
 *exit
 	if iparam = 1 : dialog "終わりますか？", 2,"強制終了対策": if stat = 7 : stop ; Windows の強制終了を食い止める。
@@ -1886,7 +1859,7 @@
 	redraw 1
 	gosub *waitstay
 	;*/
-		return
+	return
 	
 *exit_save
 	gsel 5,1
@@ -1910,13 +1883,13 @@
 	
 	redraw 1
 	gosub *waitstay
-		return "ON"
+	return "ON"
 	
 *E_save
 	n = stat
 	dialog "txt", 17
 	if stat = 1 : notesel edit(n) : notesave refstr
-		return
+	return
 	
 *E_Vsv
 	dialog "pf", 17, "ﾊﾟｰﾌｪｸﾄ ﾌｧｲﾙ"	; セーブするファイルを選択させる
@@ -1931,7 +1904,7 @@
 	
 	if file_Ext !=".pf" and file_Ext != "" {
 		dialog "ファイルが違います\n やり直してください", 2, "エラー"
-			return
+		return
 	}
 	
 	savedl = ""+refstr+""+file_Ext	; セーブファイル情報
@@ -1939,11 +1912,11 @@
 	
 	sdim savedl, 510				; 変数リセット
 	sdim file_Ext, 24				; 変数リセット
-		return
+	return
 		
 *go_end
 	if new_end = 1 : new_end = 0 : return "ON"
-		end			; 終了
+	end
 	
 ; 動作無し #########################################################################################
 *sleep
@@ -1968,31 +1941,25 @@
 	
 ; 秘密コマンド##################################################################
 *srt
-;#include "secret.hsp"	
-;#epack	 "secret.hsp"
 	return
 	
 ; 変数リスト＆初期値指定 #######################################################
 *reset_vals
-#include "defolt_Vals.hsp"
-#pack	 "defolt_Vals.hsp"
+#include "default_Vals.hsp"
 	return
 	
 ; 初期設定######################################################################
 *Set_Start_Val
 #include "Val.hsp"
-#pack	 "Val.hsp"
 	return
 
 ; ショートカットキー############################################################
 *shortkey
 #include "ShortCutKey.hsp"
-#pack	 "ShortCutKey.hsp"
 	return
 	
 ; 変数保存用 ###################################################################
 *Vsave_Vals
 #include "Vsave_Vals.hsp"	; 必要な変数をvsaveする命令(手書き)
-#pack	 "Vsave_Vals.hsp"	; Vsave_Vals
 	return
 	
