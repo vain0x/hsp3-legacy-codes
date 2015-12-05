@@ -93,7 +93,7 @@
 ;	return
 
 *LRule
-	exec "docs/index.html", exec_application
+	exec ownpath + "/docs/index.html", exec_application
 	return
 	
 //コード短縮のため、サブルーチンジャンプもrepeat-loopもすべて無視して止まる

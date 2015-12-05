@@ -3,7 +3,10 @@
 
 ///グローバル変数の初期化
 *LInitVariables
-	ownpath = dir_exe2 + "/.."
+	ownpath = dir_cur
+	#ifdef _debug
+		ownpath += "/.."
+	#endif
 	
 	// デッキデータ
 	sdim deckpath, /*MAX_PATH*/;, 2	// デッキのパス
