@@ -21,6 +21,11 @@
 	loop
 	return
 	
+#undef    getkey
+#defcfunc getkey int keycode
+	getkey@hsp bKey, keycode
+	return bKey
+	
 #global
 
 //##############################################################################

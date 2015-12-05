@@ -5,6 +5,8 @@
 #packopt orgpath 1
 
 #include "Mo/CreateChildWindow.as"
+#include "Mo/MCKeyboard.as"
+#include "Mo/MenuBarAPI.as"
 
 goto *main
 
@@ -23,6 +25,8 @@ goto *main
 //        メインループ
 //*--------------------------------------------------------*
 *mainlp
+	gosub *LCmd_KeyCheck	// ショートカットキー・チェック
+	
 	if ( bPlaying ) {
 		gosub *LCheckKeyEvent		// キーイベント
 	}
@@ -44,8 +48,7 @@ goto *main
 	gosub *LSetWindow
 	gosub *LSetInterrupt
 	
-	gsel IDW_MAIN,   1
-	gsel IDW_PUZZLE, 1
+	gsel IDW_MAIN, 1
 	return
 	
 // 変数を初期状態にセットする
@@ -66,25 +69,15 @@ goto *main
 	// 局所的なもの
 	dim infCombox_ShardsNumber, 2
 	
+	newmod mKeybd, MCKeyboard		// キーボード状態
+	
 	return
 	
 // ウィンドウを初期状態にセットする
 *LSetWindow
 	screen IDW_MAIN, ginfo(20) * 2, ginfo(21) * 2, 2, (ginfo(20) - 360) / 2, (ginfo(21) - 300) / 2, 360, 300
 	title "FifPz"
-		syscolor 15 : boxf , , , 30
-		
-		objsize 70, 20
-		pos  10, 5 : button gosub "開く",   *OnBtn_OpenPicfile
-		pos  90, 5 : button gosub "再配置", *OnBtn_ReplaceShards
-		objsize 60, 20
-		pos 170, 5 : combox id_cntShards, 120, "2×2\n3×3\n4×4\n5×5\n6×6\n7×7\n8×8"
-		           : infCombox_ShardsNumber = objinfo(stat, 2), stat
-		objsize 30, 20
-		pos 240, 5 : button gosub "色", *OnBtn_ChangeColorOfDisShard
-		
-		CreateChildWindow hwnd, IDW_PUZZLE, ginfo(20) * 2, ginfo(21) * 2, 2 + 32
-		width 360, 270, 0, 30
+		gosub *LCreateMenuBar
 		
 	buffer IDW_PICFULL, 0, 0
 	
@@ -93,7 +86,11 @@ goto *main
 // 割り込みを設定する
 *LSetInterrupt
 	gsel IDW_MAIN
-		oncmd gosub *OnCommand, 0x0111
+		oncmd gosub *OnCommand,   0x0111
+		oncmd gosub *OnDropFiles, WM_DROPFILES
+		
+		DragAcceptFiles hwnd, true	// Ｄ＆Ｄ受付
+		
 	return
 	
 //*--------------------------------------------------------*
@@ -101,20 +98,31 @@ goto *main
 //*--------------------------------------------------------*
 
 // 画像ファイルを開く
-*OnBtn_OpenPicfile
+*LCmd_OpenPicfile
 	dialog "jpg;*.bmp;*.gif", 16, "画像ファイル"
 	if ( stat == 0 ) { return }
 	filepath = refstr
 	bPlaying = true
 	
-	// 画像を読み込む
+	gosub *LLoadPicfile	// 画像を読み込む
+	gosub *LResetPic	// 断片の処理
+	
+	return
+	
+// 画像ファイルを読み込む
+*LLoadPicfile
 	gsel IDW_PICFULL
 	picload filepath
 	sizePicFull  = ginfo(12), ginfo(13)
+	return
 	
-	// 断片の処理
-	gosub *LResetPic
-	
+// 画像ファイルを閉じる
+*LCmd_ClosePicfile
+	if ( bPlaying ) {
+		gsel IDW_MAIN : color 255, 255, 255 : boxf
+		poke filepath
+		bPlaying = false
+	}
 	return
 	
 // 画像を再設定する
@@ -133,13 +141,6 @@ goto *main
 	gosub *LResetWindowSize	// ウィンドウをパズルの大きさに合わせる
 	gosub *LRedrawPuzzle	// パズル部分を再描画する
 	
-	return
-	
-// 再配置コマンド
-*OnBtn_ReplaceShards
-	if ( bPlaying == false ) { return }
-	gosub *LReplaceShards
-	gosub *LRedrawPuzzle
 	return
 	
 // 正解の配置
@@ -174,16 +175,19 @@ goto *main
 //*--------------------------------------------------------*
 // パズル部分の再描画
 *LRedrawPuzzle
-	gsel IDW_PUZZLE
+	gsel IDW_MAIN
 	redraw 2
 	
-	color32 crefDisShard : boxf
+	color 255, 255, 255 : boxf
 	
 	// パズル部分に断片をコピー ( 順番は placePics 参照 )
 	repeat cntShards
-		if ( placePics(cnt) < 0 ) { continue }
-		pos posidToPos(cnt, x), posidToPos(cnt, y)
-		copyShard IDW_PICSHARD_TOP + placePics(cnt)
+		if ( placePics(cnt) < 0 ) {
+			gosub *LPaintDisShard		// 無効断片の描画
+		} else {
+			pos posidToPos(cnt, x), posidToPos(cnt, y)
+			copyShard IDW_PICSHARD_TOP + placePics(cnt)
+		}
 	loop
 	
 	redraw 1
@@ -191,24 +195,18 @@ goto *main
 	
 // ウィンドウを画像の大きさに合わせる
 *LResetWindowSize
-	gsel IDW_MAIN   : width sizePicFull.x, sizePicFull.y + 30
-	gsel IDW_PUZZLE : width sizePicFull.x, sizePicFull.y, 0, 30
+	gsel IDW_MAIN : width sizePicFull.x, sizePicFull.y + 20
 	return
 	
-// 無効断片の色を変える
-*OnBtn_ChangeColorOfDisShard
-	dialog "", 33
-	if ( stat == 0 ) { return }
-	crefDisShard = RGB(ginfo_r, ginfo_g, ginfo_b)
+// 無効断片を塗りつぶす
+*LPaintDisShard
+	if ( bPlaying == false ) { return }
 	
-	// 無効断片を塗り潰し直す
-	if ( bPlaying ) {
-		gsel IDW_PUZZLE
-		color32 crefDisShard
-		px = posidToPos(idxDisShard, x)
-		py = posidToPos(idxDisShard, y)
-		boxf px, py, px + sizePicShard.x, py + sizePicShard.y
-	}
+	gsel IDW_MAIN
+	color32 crefDisShard
+	px = posidToPos(idxDisShard, x)
+	py = posidToPos(idxDisShard, y)
+	boxf px, py, px + sizePicShard.x, py + sizePicShard.y
 	return
 	
 // キーイベントを調べる
@@ -225,12 +223,69 @@ goto *main
 	// 無効断片の周り4つを動かすように見せるため、キーと反対方向に無効断片を動かす
 	if ( dirExchange >= 0 ) {
 		dirExchange = ( dirExchange + DIR_MAX / 2 ) \ DIR_MAX
-		
+		gosub *LMoveDisShard
+	}
+	
+	return
+	
+// ショートカットキー・チェック
+*LCmd_KeyCheck
+	
+	KeyBd_check mKeybd
+	
+	if ( KeyBd_isPut(mKeybd, 17) ) {
+		if ( false ) {
+			return
+		} else : if ( KeyBd_isPut(mKeybd, 'C') ) { gosub *LCmd_ClosePicfile
+		} else : if ( KeyBd_isPut(mKeybd, 'O') ) { gosub *LCmd_OpenPicfile
+		} else : if ( KeyBd_isPut(mKeybd, 'Q') ) { gosub *LCmd_Quit
+		} else : if ( KeyBd_isPut(mKeybd, 'S') ) { gosub *LCmd_Shuffle
+		} else : if ( KeyBd_isPut(mKeybd, 'A') ) { gosub *LCmd_PlaceAnswer
+		}
+	}
+	return
+	
+// 無効断片を移動させる
+*LMoveDisShard
+	if ( dirExchange >= 0 ) {
 		moveDisShard dirExchange
 		gosub *LRedrawPuzzle
 		dirExchange = -1
 	}
+	return
 	
+//*--------------------------------------------------------*
+//        コマンド
+//*--------------------------------------------------------*
+
+// ランダム再配置のコマンド
+*LCmd_Shuffle
+	if ( bPlaying == false ) { return }
+	gosub *LReplaceShards
+	gosub *LRedrawPuzzle
+	return
+	
+// 正解再配置のコマンド
+*LCmd_PlaceAnswer
+	if ( bPlaying == false ) { return }
+	gosub *LPlaceAnswerShards
+	gosub *LRedrawPuzzle
+	return
+	
+// 無効断片の色を変える
+*LCmd_ChangeColorDisShard
+	dialog "", 33
+	if ( stat == 0 ) { return }
+	crefDisShard = RGB(ginfo_r, ginfo_g, ginfo_b)
+	
+	// 無効断片を塗り潰し直す
+	gosub *LPaintDisShard
+	return
+	
+// 終了コマンド
+*LCmd_Quit
+	gsel IDW_MAIN
+	PostMessage hwnd, 0x0010, 0, 0
 	return
 	
 //##############################################################################
@@ -240,21 +295,57 @@ goto *main
 // WM_COMMAND
 *OnCommand
 	switch ( lparam )
-		// 断片数のコンボボックス
-		case infCombox_ShardsNumber
-			if ( HIWORD(wparam) == 1 ) {		// CBN_SELCHANGE (選択項目が変化した)
-				sendmsg lparam, 0x0147, 0, 0	// CB_GETCURSEL (選択項目のインデックス)
-				cntShardsRoot = stat + 2
+		// メニューバー
+		case NULL : gosub *OnCommand_MenuProc : swbreak
+	swend
+	return
+	
+// メニューのコマンド
+*OnCommand_MenuProc
+	cmd = LOWORD(wparam)
+	
+	switch ( cmd )
+		case IDM_OPEN  : gosub *LCmd_OpenPicfile  : swbreak
+		case IDM_CLOSE : gosub *LCmd_ClosePicfile : swbreak
+		case IDM_QUIT  : gosub *LCmd_Quit         : swbreak
+		
+		case IDM_SHUFFLE         : gosub *LCmd_Shuffle     : swbreak
+		case IDM_PLACE_ANS       : gosub *LCmd_PlaceAnswer : swbreak
+		case IDM_CHGCLR_DISSHARD : gosub *LCmd_ChangeColorDisShard : swbreak
+		
+		default
+			// 断片数の変更
+			if ( numrg(cmd, IDM_SHARDS_NUMBER, IDM_SHARDS_NUMBER_END - 1) ) {
+				cntShardsRoot = cmd - IDM_SHARDS_NUMBER + 2
 				cntShards     = cntShardsRoot * cntShardsRoot
+				
+				SetRadioMenu hShardMenu, IDM_SHARDS_NUMBER, IDM_SHARDS_NUMBER_END, cntShardsRoot - 2
 				
 				if ( bPlaying ) {
 					gosub *LResetPic
 				}
-				
-				gsel IDW_MAIN : objsel 1
 			}
 			swbreak
-			
 	swend
+	return
+	
+// WM_DROPFILES
+*OnDropFiles
+	
+	// ドロップされたファイルの数
+	hDrop   = wparam                  // ドロップファイル情報のハンドル
+	DragQueryFile hDrop, -1, 0, 0
+	
+	// ファイル名を取得して表示
+	DragQueryFile hDrop, 0, varptr(filepath), MAX_PATH
+	
+	// ドロップファイル情報をクリア (メモリリーク防止)
+	DragFinish hDrop
+	
+	// 読み込み後の処理
+	bPlaying = true
+	gosub *LLoadPicfile
+	gosub *LResetPic
+	
 	return
 	
