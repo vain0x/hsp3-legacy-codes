@@ -136,17 +136,21 @@ h_font: フォントオブジェクトのハンドル
 //------------------------------------------------
 #if 0
 	// StaticText Control を作成
-	winobj "static", " \n表示するテキスト ", 0, 0x50000000, ginfo(12), ginfo(13)
-	hStatic = objinfo(stat, 2)		// ハンドル
+	winobj "static", " \n表示するテキスト ", 0, 0x50000000, ginfo_winx, ginfo_winy
+	h_static = objinfo_hwnd(stat)
 	
-	ChangeControlFont hStatic, "ＭＳ 明朝", 58, 1 | 2	// 太字・斜体
-	hFont = stat										// フォントハンドルが返る
+	wait 100
 	
-	onexit goto *exit	// 終了に割り込む
+	// 太字, 斜体
+	objfont h_static, msmincho, 16, 1 | 2
+	h_font = stat
+	
+	onexit goto *LOnExit
 	stop
 	
-*exit
-	DeleteFont hFont	// 最後に解放
+*LOnExit
+	// プログラム終了時にフォントオブジェクトを解放
+	font_delete h_font
 	end
 	
 #endif
