@@ -53,6 +53,7 @@ font 命令に指定されたパラメータを取得する。
 	getstr face, lf(7)
 	pt = (lf(0) ^ 0xFFFFFFFF) + 1
 	
+	style = 0
 	style |= (  lf(4) >= 700             ) << 0	// Bold
 	style |= ( (lf(5) & 0x000000FF) != 0 ) << 1	// Italic
 	style |= ( (lf(5) & 0x0000FF00) != 0 ) << 2	// UnderLine
