@@ -8,12 +8,12 @@ HSP の font 命令を利用してフォントオブジェクトを作成するモジュール
 Windows GUI 32bit版限定
 %*/
 
-#module
+#module font_from_hsp
 
 #uselib "gdi32.dll"
-#func   CreateFontIndirect@gfoh_mod "CreateFontIndirectA" int
-#func   GetObject@gfoh_mod    "GetObjectA"   int,int,int
-#func   DeleteObject@gfoh_mod "DeleteObject" int
+#func   CreateFontIndirect@font_from_hsp "CreateFontIndirectA" int
+#func   GetObject@font_from_hsp    "GetObjectA"   int,int,int
+#func   DeleteObject@font_from_hsp "DeleteObject" int
 
 /*
 %index
@@ -59,32 +59,35 @@ font 命令に指定されたパラメータを取得する。
 	style |= ( (lf(6) & 0x00040000) != 0 ) << 4	// AntiAlias
 	return
 	
-//------------------------------------------------
-// フォントオブジェクトを作成する
-// 
-// @return int
-// 		フォントハンドル (int)
-// 		@! 最後に「必ず」 DeleteFont で解放してください！！
-// @ HSP のウィンドウを利用している
-//------------------------------------------------
-#defcfunc CreateFontByHSP str p1, int p2, int p3, local sFontName, local nFontData
-	sdim sFontName, 64		// name
-	dim  nFontData, 2		// size, style
+/*
+%index
+font_from_hsp
+フォントオブジェクトの作成
+%prm
+(face, pt, size)
+return: フォントハンドル
+%inst
+新しいフォントオブジェクトを作成して、そのハンドルを返す。
+パラメータは font 命令と同一。
+
+返却されたフォントハンドルは、不必要になった後に必ず font_delete 命令に渡すこと。
+%*/
+#defcfunc font_from_hsp str face, int pt, int style,  \
+	local face_bak, local pt_bak, local style_bak,  \
+	local lf, local h_font
 	
-	// 元のフォントデータを記憶
-	sFontName = GetFontName()				// 変数 logfont に値が格納される
-	nFontData = GetFontSize(1), GetFontStyle(1)
+	// Backup
+	font_get_current_setting face_bak, pt_bak, style_bak
 	
-	// logfont 構造体を作成
-	font p1, p2, p3
-	GetStructLogfont          logfont		// フォント情報 (LOGFONT) を取得
-	CreateFontIndirect varptr(logfont)		// 新しいフォントオブジェクトを作成
-	hFont = stat							// HSPウィンドウから作ったフォントハンドル
+	// Create new font
+	font face, pt, style
+	font_get_current_logfont lf
+	CreateFontIndirect varptr(lf)
+	h_font = stat
 	
-	// 元に戻す
-	font sFontName, nFontData(0), nFontData(1)
-	
-	return hFont
+	// Restore
+	font face_bak, pt_bak, style_bak
+	return h_font
 	
 //------------------------------------------------
 // コントロールのフォントを設定
