@@ -50,7 +50,7 @@ font 命令に指定されたパラメータを取得する。
 	sdim face
 	font_get_current_logfont lf
 	getstr face, lf(7)
-	pt = (logfont(0) ^ 0xFFFFFFFF) + 1
+	pt = (lf(0) ^ 0xFFFFFFFF) + 1
 	
 	style |= (  lf(4) >= 700             ) << 0	// Bold
 	style |= ( (lf(5) & 0x000000FF) != 0 ) << 1	// Italic
