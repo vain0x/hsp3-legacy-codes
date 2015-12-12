@@ -89,17 +89,31 @@ return: フォントハンドル
 	font face_bak, pt_bak, style_bak
 	return h_font
 	
-//------------------------------------------------
-// コントロールのフォントを設定
-// 
-// @ WM_SETFONT を送る ( hFont, bRefresh )
-//------------------------------------------------
-#define global ChangeControlFont(%1,%2="",%3,%4=0,%5=1) _ChangeControlFont %1,%2,%3,%4,%5
-#deffunc ChangeControlFont int p1, str p2, int p3, int p4, int bRefresh
-	hFont = CreateFontByHSP(p2, p3, p4)
-	sendmsg p1, 0x0030, hFont, bRefresh
-	return hFont
+/*
+%index
+objfont
+コントロールのフォントを変更
+%prm
+h_control, face, pt, style
+h_control: 対象のコントロールのハンドル
+face, pt, style: font 命令と同じ
+return: 作成されたフォントハンドル
+%inst
+コントロールのフォントを変更する。
+
+返却されたフォントハンドルは、プログラムの終了前に font_delete 命令に渡すこと。
+%*/
+#define global objfont(%1, %2, %3, %4 = 0, %5 = 1) \
+	objfont_ %1, %2, %3, %4, %5
+
+#deffunc objfont_ int h_control, str face, int pt, int style, int refresh,  \
+	local h_font
 	
+	h_font = font_from_hsp(face, pt, style)
+	// WM_SETFONT
+	sendmsg h_control, 0x0030, h_font, refresh
+	return h_font
+
 /*
 %index
 font_delete
