@@ -162,50 +162,48 @@ h_font: フォントオブジェクトのハンドル
 //------------------------------------------------
 #if 0
 
-#define WAITTIME 120
-
-	// A と B のフォント入れ替え
-	screen 0, 320, 240,,  20, 60 : title "Window A" : mes "Window A です"
-	screen 1, 320, 240,, 350, 60 : title "Window B" : mes "Window B です"
+	repeat 2
+		screen cnt, 320, 240, , cnt * 320, 0
+		title "Window #" + cnt
+		
+		// ウィンドウにそれぞれ異なるフォントを設定
+		if (cnt == 0) {
+			font msgothic, 12, 1 // 太字
+		} else {
+			font "游ゴシック", 14, 2 // 斜体
+		}
+	loop
 	
-	wait WAITTIME
+	onclick gosub *LFontSwap
 	
-	sdim sFontName, 64, 2
-	dim  nFontSize,  2
-	dim  nFontStyle, 2
-	
-	gsel 0, 1
-	mes  "sysfont 0"
-	font "ＭＳ ゴシック", 24, 2 | 4 | 16
-	mes " ＭＳ ゴシック , 24, 2 | 4 | 16"
-	
-	wait WAITTIME
-	
-	// ゴシックのデータ
-	sFontName (0) = GetFontName()
-	nFontSize (0) = GetFontSize()
-	nFontStyle(0) = GetFontStyle()
-	
-	font "ＭＳ 明朝", 16
-	mes  "ＭＳ 明朝, 16 に変更"
-	
-	wait WAITTIME
-	
-	// 明朝のデータ
-	sFontName (1) = GetFontName()
-	nFontSize (1) = GetFontSize()
-	nFontStyle(1) = GetFontStyle()
-	
-	gsel 1, 1
-	font sFontName(1), nFontSize(1), nFontStyle(1)
-	mes "明朝体にしました"
-	
-	wait WAITTIME
-	
-	gsel 0, 1
-	font sFontName(0), nFontSize(0), nFontStyle(0)
-	mes "ＭＳ ゴシックに戻しました"
+	repeat
+		repeat 2
+			gsel cnt
+			redraw 0
+			hsvcolor ,, 255 : boxf
+			color
+			
+			pos 0, 0
+			mes "画面をクリックするとフォントが交換されます"
+			mes strf("これはウィンドウID %d", cnt)
+			redraw
+		loop
+		
+		await 17
+	loop
 	stop
+	
+*LFontSwap
+	sdim face, , 2
+	repeat 2
+		gsel cnt
+		font_get_current_setting face(cnt), pt(cnt), style(cnt)
+	loop
+	repeat 2
+		gsel cnt
+		font face(1 - cnt), pt(1 - cnt), style(1 - cnt)
+	loop
+	return
 	
 #endif
 
