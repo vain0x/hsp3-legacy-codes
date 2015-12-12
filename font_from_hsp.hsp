@@ -47,7 +47,8 @@ font 命令に指定されたパラメータを取得する。
 #deffunc font_get_current_setting var face, var pt, var style,  \
 	local lf
 	
-	sdim face
+	if ( vartype(face) != 2 ) { sdim face }
+	
 	font_get_current_logfont lf
 	getstr face, lf(7)
 	pt = (lf(0) ^ 0xFFFFFFFF) + 1
