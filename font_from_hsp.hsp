@@ -17,6 +17,11 @@ Windows GUI 32bit版限定
 #func   GetObject@__font_from_hsp    "GetObjectA"   int,int,int
 #func   DeleteObject@__font_from_hsp "DeleteObject" int
 
+#ifdef _debug
+	dim stt_font_handles_
+	dim stt_font_handles_len_
+#endif
+
 /*
 %index
 font_get_current_logfont
@@ -74,7 +79,7 @@ return: フォントハンドル
 新しいフォントオブジェクトを作成して、そのハンドルを返す。
 パラメータは font 命令と同一。
 
-返却されたフォントハンドルは、不必要になった後に必ず font_delete 命令に渡すこと。
+返却されたフォントオブジェクトは自動的に破棄される。DeleteObject に渡してはいけない。
 %*/
 #defcfunc font_from_hsp str face, int pt, int style,  \
 	local face_bak, local pt_bak, local style_bak,  \
@@ -88,6 +93,8 @@ return: フォントハンドル
 	font_get_current_logfont lf
 	CreateFontIndirect varptr(lf)
 	h_font = stat
+	
+	font_delete_on_exit h_font
 	
 	// Restore
 	font face_bak, pt_bak, style_bak
@@ -105,7 +112,7 @@ return: 作成されたフォントハンドル
 %inst
 コントロールのフォントを変更する。
 
-返却されたフォントハンドルは、プログラムの終了前に font_delete 命令に渡すこと。
+返却されたフォントオブジェクトは自動的に破棄される。DeleteObject に渡してはいけない。
 %*/
 #define global objfont(%1, %2, %3, %4 = 0, %5 = 1) \
 	objfont_ %1, %2, %3, %4, %5
@@ -120,14 +127,23 @@ return: 作成されたフォントハンドル
 
 /*
 %index
-font_delete
-フォントオブジェクトの解放
+font_delete_on_exit
+フォントオブジェクトを解放予約
 %prm
 h_font
-h_font: フォントオブジェクトのハンドル
+%inst
+指定されたフォントをプログラム終了時に解放(DeleteObject)する。
 %*/
-#deffunc font_delete int h
-	if ( h ) { DeleteObject h }
+#deffunc font_delete_on_exit int h_font
+	stt_font_handles_(stt_font_handles_len_) = h_font
+	stt_font_handles_len_ ++
+	return
+	
+#deffunc font_delete_all_ onexit
+	repeat stt_font_handles_len_
+		DeleteObject stt_font_handles_(cnt)
+	loop
+	stt_font_handles_len_ = 0
 	return
 	
 #global

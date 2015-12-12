@@ -10,12 +10,4 @@
 	
 	// 太字, 斜体
 	objfont h_static, msmincho, 16, 1 | 2
-	h_font = stat
-	
-	onexit goto *LOnExit
 	stop
-	
-*LOnExit
-	// プログラム終了時にフォントオブジェクトを解放
-	font_delete h_font
-	end
