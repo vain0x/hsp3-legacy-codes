@@ -4,6 +4,8 @@
 /*
 HSP の font 命令を利用してフォントオブジェクトを作成するモジュール
 
+参考: http://chokuto.ifdef.jp/urawaza/setfont.html
+
 %port
 Windows GUI 32bit版限定
 %*/
