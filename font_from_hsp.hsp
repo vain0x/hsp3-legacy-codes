@@ -8,12 +8,12 @@ HSP の font 命令を利用してフォントオブジェクトを作成するモジュール
 Windows GUI 32bit版限定
 %*/
 
-#module font_from_hsp
+#module __font_from_hsp
 
 #uselib "gdi32.dll"
-#func   CreateFontIndirect@font_from_hsp "CreateFontIndirectA" int
-#func   GetObject@font_from_hsp    "GetObjectA"   int,int,int
-#func   DeleteObject@font_from_hsp "DeleteObject" int
+#func   CreateFontIndirect@__font_from_hsp "CreateFontIndirectA" int
+#func   GetObject@__font_from_hsp    "GetObjectA"   int,int,int
+#func   DeleteObject@__font_from_hsp "DeleteObject" int
 
 /*
 %index
