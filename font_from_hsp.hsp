@@ -100,11 +100,16 @@ return: フォントハンドル
 	sendmsg p1, 0x0030, hFont, bRefresh
 	return hFont
 	
-//------------------------------------------------
-// 不要なフォントハンドルの解放
-//------------------------------------------------
-#deffunc DeleteFont int p1
-	if ( p1 ) { DeleteObject p1 }
+/*
+%index
+font_delete
+フォントオブジェクトの解放
+%prm
+h_font
+h_font: フォントオブジェクトのハンドル
+%*/
+#deffunc font_delete int h
+	if ( h ) { DeleteObject h }
 	return
 	
 #global
