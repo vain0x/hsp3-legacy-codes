@@ -1,9 +1,12 @@
-// font 命令での設定を取得する
-
 #ifndef ig_font_from_hsp_hsp
 #define ig_font_from_hsp_hsp
 
-// @ コントロールのフォントを簡単に設定する
+/*
+HSP の font 命令を利用してフォントオブジェクトを作成するモジュール
+
+%port
+Windows GUI 32bit版限定
+%*/
 
 #module
 
@@ -12,58 +15,65 @@
 #func   GetObject@gfoh_mod    "GetObjectA"   int,int,int
 #func   DeleteObject@gfoh_mod "DeleteObject" int
 
-//------------------------------------------------
-// HSP の LOGFONT 構造体を取得する
-//------------------------------------------------
-#deffunc GetStructLogfont array _logfont
-	dim    _logfont, 15
-	mref      bmscr, 67
-	GetObject bmscr(38), 60, varptr(_logfont)	// LOGFONT 構造体を取得する
-	
-;	foreach logfont
-;		logmes strf("logfont(%2d)", cnt) +" = "+ logfont(cnt)
-;	loop
-	
-	dim bmscr	// 一応通常の変数に戻しておく
+/*
+%index
+font_get_current_logfont
+現在のLOGFONT構造体を取得
+%prm
+array lf: LOGFONT構造体をコピーする配列変数
+%inst
+カレントウィンドウに設定されている font の LOGFONT 構造体を lf にコピーする。
+%*/
+#deffunc font_get_current_logfont array lf,  \
+	local bmscr
+
+	dim lf, 15
+	mref bmscr, 67
+	GetObject bmscr(38), 60, varptr(lf)
 	return
 	
-//------------------------------------------------
-// 現在のフォント名取得
-//------------------------------------------------
-#defcfunc GetFontName local sRet
-	sdim   sRet, 64
-	GetStructLogfont logfont 
-	getstr sRet,     logfont(7)
-	return sRet
-	
-//------------------------------------------------
-// 現在のフォントサイズ取得
-//------------------------------------------------
-#defcfunc GetFontSize int bStillGotLogfont
-	if ( bStillGotLogfont == 0 ) {
-		GetStructLogfont logfont			// LOGFONT構造体
-	}
-	return ( logfont(0) ^ 0xFFFFFFFF ) + 1
-	
-//------------------------------------------------
-// 現在のフォントスタイル取得
-//------------------------------------------------
-#defcfunc GetFontStyle int bStillGotLogfont
-	if ( bStillGotLogfont == 0 ) {
-		GetStructLogfont logfont			// LOGFONT構造体
-	}
 /*
-	style |= (  logfont(4) >= 700             ) << 0	// Bold
-	style |= ( (logfont(5) & 0x000000FF) != 0 ) << 1	// Italic
-	style |= ( (logfont(5) & 0x0000FF00) != 0 ) << 2	// UnderLine
-	style |= ( (logfont(5) & 0x00FF0000) != 0 ) << 3	// StrikeLine
-	style |= ( (logfont(6) & 0x00040000) != 0 ) << 4	// AntiAlias
+%index
+font_current_face
+現在のフォント名を返す
+%prm
+()
+%*/
+#defcfunc font_current_face  \
+	local result, local lf
+	
+	sdim result
+	font_get_current_logfont lf
+	getstr result, lf(7)
+	return result
+	
+/*
+%index
+font_current_size
+現在のフォントサイズを取得
+%*/
+#defcfunc font_current_size  \
+	local lf
+	
+	font_get_current_logfont lf
+	return (logfont(0) ^ 0xFFFFFFFF) + 1
+	
+/*
+%index
+font_current_style
+現在のフォントスタイルを取得
+%*/
+#defcfunc font_current_style  \
+	local lf, local style
+	
+	font_get_current_logfont lf
+	style |= (  lf(4) >= 700             ) << 0	// Bold
+	style |= ( (lf(5) & 0x000000FF) != 0 ) << 1	// Italic
+	style |= ( (lf(5) & 0x0000FF00) != 0 ) << 2	// UnderLine
+	style |= ( (lf(5) & 0x00FF0000) != 0 ) << 3	// StrikeLine
+	style |= ( (lf(6) & 0x00040000) != 0 ) << 4	// AntiAlias
 	return style
-/*///
-// Compact version ↓
-	return ((logfont(4) >= 700)) | (((logfont(5) & 0x000000FF) != 0) << 1) | (((logfont(5) & 0x0000FF00) != 0) << 2) | (((logfont(5) & 0x00FF0000) != 0) << 3) | (((logfont(6) & 0x00040000) != 0) << 4)
-//*/
-
+	
 //------------------------------------------------
 // フォントオブジェクトを作成する
 // 
