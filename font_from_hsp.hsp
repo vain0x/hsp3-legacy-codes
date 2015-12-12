@@ -1,11 +1,11 @@
 // font 命令での設定を取得する
 
-#ifndef IG_GETFONT_OF_HSP_AS
-#define IG_GETFONT_OF_HSP_AS
+#ifndef ig_font_from_hsp_hsp
+#define ig_font_from_hsp_hsp
 
 // @ コントロールのフォントを簡単に設定する
 
-#module gfoh_mod
+#module
 
 #uselib "gdi32.dll"
 #func   CreateFontIndirect@gfoh_mod "CreateFontIndirectA" int
