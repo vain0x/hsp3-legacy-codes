@@ -1,6 +1,4 @@
-// ›~ƒQ[ƒ€
-
-#packopt name "CircleAndBatten"
+#packopt name "tiny_tic_tac_toe"
 #packopt hide 1
 #packopt orgpath 1
 
