@@ -5,8 +5,6 @@
 #packopt xsize 800
 #packopt ysize 680
 
-#pack	 "Readme.txt"		; ヘルプ用
-
 #include "mod_menu.as"
 #include "hspda.as"         // for vsave/vload
 
@@ -1747,7 +1745,12 @@
 ; ヘルプ#####################################
 *help_print
 	dialog "ヘルプを表示しますか？", 3, "ヘルプ"
-	if stat = 6 : exec "Readme.txt",16
+	#ifdef _debug
+		chdir dir_cur + "/.."
+	#else
+		chdir dir_exe
+	#endif
+	if stat = 6 : exec "README.md",16
 	return
 	
 ; バージョン情報#############################
