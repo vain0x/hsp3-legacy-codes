@@ -21,8 +21,8 @@
 	getkey@hsp nRet, p1
 	return nRet
 
-#deffunc StrDel var self, int n
-	self = strmid(self, n, strlen(self) - n)
+#deffunc StrDel var self, int i, int n
+	poke self, i, strmid(self, i + n, strlen(self) - (i + n))
 	return
 	
 // Favorite Menu ‚ğì¬
