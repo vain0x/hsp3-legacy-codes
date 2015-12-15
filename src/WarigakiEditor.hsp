@@ -1032,7 +1032,7 @@
 		makeonly = 1 : gosub *makebox
 	}
 	if mode = 1 {
-		number = 4
+		number = count_boxes
 		gosub *ReMakeTabBox
 		gsel wid_tab_first, 1
 		objsel 0
