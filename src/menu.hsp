@@ -1,0 +1,225 @@
+
+	; メニューアイテムIDを定義 (この辺からは意味不明)
+#enum global CMD_NONE = 0	; NULL・セパレータ
+	; ファイル
+#enum CMD_FIF			; [初期ファイル設定]アイテムのID
+#enum CMD_NEW			; [新規]アイテムのID
+#enum CMD_OPEN			; [開く]アイテムのID
+#enum CMD_SAVE			; [保存]アイテムのID
+#enum CMD_CRC			; [指定物変更]アイテムID
+#enum CMD_OWS			; [上書き保存]アイテムのID 
+#enum CMD_NOTE			; [メモ帳]アイテムのID
+#enum CMD_NOP			; [新ワリガキ]アイテムのID
+#enum CMD_QUIT			; [終了]アイテムのID
+	; 編集
+#enum CMD_UNDO			; [元に戻す]アイテムのID
+#enum CMD_GFT			; [移植]アイテムのID
+#enum CMD_SEARCH		; [検索]アイテムのID
+#enum CMD_CUT			; [切り取り]アイテムのID
+#enum CMD_COPY			; [コピー]アイテムのID
+#enum CMD_PAST			; [貼り付け]アイテムのID
+#enum CMD_DEL			; [削除]アイテムのID
+#enum CMD_ASL			; [すべて選択]アイテムのID
+	; 書式
+#enum CMD_MESS			; [表示]アイテムのID
+#enum CMD_FONT			; [フォント]アイテムのID
+#enum CMD_TAL			; [タブ長さ調整]アイテムのID
+#enum CMD_RB			; [右端で折り返す]アイテムのID
+	; ツール
+#enum CMD_TAB			; [書式切り替え]アイテムのID
+#enum CMD_BCL			; [背景色]アイテムのID
+#enum CMD_WCL			; [文字色]アイテムのID
+#enum CMD_BOXS			; [分割数]アイテムのID
+#enum CMD_BLN			; [バランス]アイテムのID
+#enum CMD_SRT			; [____]アイテムのID (秘密のコマンド)
+	; ヘルプ
+#enum CMD_HELP			; [ヘルプ]アイテムのID
+#enum CMD_VER			; [バージョン情報]アイテムのID
+
+*LCreateMenu
+	gsel 0, 0
+	repeat 2			; 本格作成
+	
+	if cnt = 1 : gsel 3, 0	; タブ画面(3)のメニューバー作成用
+
+; ポップアップメニューの作成
+        ; [ファイル]メニュー
+	newmenu hfilemenu,1							; サブメニュー作成
+		addmenu hfilemenu, "初期ファイル設定(F)", CMD_FIF	; 初期ファイル設定
+		addmenu hfilemenu, "", NULL, 0x800			; セパレータ(―)
+		addmenu hfilemenu, "新規(&N)", CMD_NEW				; 新規
+		addmenu hfilemenu, "開く(&O)", CMD_OPEN				; 開く
+		addmenu hfilemenu, "保存(&S)", CMD_SAVE				; 保存
+		addmenu hfilemenu, "指定物変更(&C)", CMD_CRC		; 指定物変更
+		addmenu hfilemenu, "上書き保存", CMD_OWS			; 上書き保存
+		addmenu hfilemenu, "", NULL, 0x800			; セパレータ(―)
+		addmenu hfilemenu, "メモ帳(&P)", CMD_NOTE			; メモ帳(を新規に開く)
+		addmenu hfilemenu, "新ワリガキ(&W)", CMD_NOP		; 新ワリガキ (これをもう一つ開く)
+		addmenu hfilemenu, "", NULL, 0x800			; セパレータ(―)
+		addmenu hfilemenu, "終了(&Q)", CMD_QUIT				; 終了
+		
+		; [編集]メニュー
+	newmenu hhensyumenu,1						; サブメニュー作成
+		addmenu hhensyumenu, "元に戻す(&U)", CMD_UNDO		; 元に戻す
+		addmenu hhensyumenu, "移植(&G)", CMD_GFT			; 移植
+		addmenu hhensyumenu, "検索(&S)", CMD_SEARCH			; 検索
+		addmenu hhensyumenu, "", NULL, 0x800		; セパレータ(―)
+		addmenu hhensyumenu, "切り取り(&T)", CMD_CUT		; 切り取り
+		addmenu hhensyumenu, "コピー(&C)", CMD_COPY			; コピー
+		addmenu hhensyumenu, "貼り付け(&P)", CMD_PAST		; 貼り付け
+		addmenu hhensyumenu, "削除(&D)", CMD_DEL			; 削除
+		addmenu hhensyumenu, "", NULL, 0x800		; セパレータ(―)
+		addmenu hhensyumenu, "すべて選択(&A)", CMD_ASL		; すべて選択
+		
+        ; [書式]メニュー
+	newmenu hsyoshikimenu,1					; サブメニュー作成
+		addmenu hsyoshikimenu, "表示(&V)", CMD_MESS			; 表示
+		addmenu hsyoshikimenu, "フォント(&F)", CMD_FONT 	; フォント
+		addmenu hsyoshikimenu, "タブ長さ調整(&T)", CMD_TAL	; タブ長さ調整
+		addmenu hsyoshikimenu, "右端で折り返す(&R)", CMD_RB	; 右端を折り返す
+		
+		; [ツール]メニュー
+	newmenu htoolmenu,1						; サブメニュー作成
+		addmenu htoolmenu, "書式切り替え(&M)", CMD_TAB		; 書式切り替え
+				if cnt = 0 {
+		addmenu htoolmenu, "", NULL, 0x800			; セパレータ(―)
+		addmenu htoolmenu, "背景色(&C)", CMD_BCL			; 背景色
+		addmenu htoolmenu, "文字色(&W)", CMD_WCL			; 文字色
+		addmenu htoolmenu, "", NULL, 0x800			; セパレータ(―)
+		addmenu htoolmenu, "分割数(&K)", CMD_BOXS			; 分割数
+		addmenu htoolmenu, "バランス(&B)", CMD_BLN			; バランス
+				}	; タブモードでは必要なし(前2つは出来ない)
+		addmenu htoolmenu, "", NULL, 0x800			; セパレータ(―)
+		addmenu htoolmenu, "__________(&X)", CMD_SRT		; ____
+		
+		; [ヘルプ]メニュー
+	newmenu hhelpmenu,1						; サブメニュー作成
+		addmenu hhelpmenu, "ヘルプ(&H)", CMD_HELP			; ヘルプ
+		addmenu hhelpmenu, "バージョン情報(&A)", CMD_VER	; バージョン情報
+		
+		; [終了]メニュー
+	newmenu hendmenu,0
+		
+; メニューバーの作成
+	newmenu hmenu,0										; メニューバー作成
+		addmenu hmenu, "ファイル(&F)", hfilemenu, 0x10		; ファイル
+		addmenu hmenu, "編集(&E)", hhensyumenu, 0x10		; 編集
+		addmenu hmenu, "書式(&O)", hsyoshikimenu, 0x10		; 書式
+		addmenu hmenu, "ツール(&T)", htoolmenu, 0x10		; ツール
+		addmenu hmenu, "ヘルプ(&H)", hhelpmenu, 0x10		; ヘルプ
+		addmenu hmenu, "終了(&Q)", CMD_QUIT					; 終了
+		
+	applymenu hmenu						; メニュー割り当て
+	
+	loop
+	return
+
+*LMenuDispatch
+	switch (LOWORD(wparam))
+		case CMD_FIF	; 初期ファイル設定
+				gosub *First_File
+			swbreak
+		case CMD_NEW	; 新規
+				gosub *NewEditor
+			swbreak
+		case CMD_OPEN   ; 開く
+				gosub *open
+			swbreak
+		case CMD_SAVE   ; 保存
+				gosub *close
+			swbreak
+		case CMD_CRC	; 指定物変更
+				gosub *Current_Change
+			swbreak
+		case CMD_OWS	; 上書き保存
+				gosub *OverWriteSave
+			swbreak
+		case CMD_NOTE	; メモ帳
+				gosub *open_notepad
+			swbreak
+		case CMD_NOP	; 新ワリガキ
+				gosub *open_newWarigaki
+			swbreak
+		case CMD_QUIT   ; 終了
+				; ( Send だと終了できないので注意 )
+				PostMessage hwnd, WM_CLOSE, 0, 0
+			swbreak
+		
+		case CMD_UNDO	; 元に戻す
+				gosub *Undo
+			swbreak
+		case CMD_GFT	; 移植
+				gosub *Graft
+			swbreak
+		case CMD_SEARCH	; 検索
+				on mode gosub *Search, *Search_T
+			swbreak
+		case CMD_CUT	; 切り取り
+				gosub *Cut
+			swbreak
+		case CMD_COPY	; コピー
+				gosub *Copy
+			swbreak
+		case CMD_PAST	; 貼り付け
+				gosub *Past
+			swbreak
+		case CMD_DEL	; 削除
+				gosub *Del
+			swbreak
+		case CMD_ASL	; すべて選択
+				gosub *AllSelect
+			swbreak
+		
+		case CMD_MESS   ; 表示
+				gosub *printmes
+			swbreak
+		case CMD_FONT	; フォント
+				gosub *font_edit
+			swbreak
+		case CMD_TAL	; タブ長さ調整
+				gosub *TabKey_Long
+			swbreak
+		case CMD_RB		; 右端で折り返す
+				gosub *MiGiHaShi_Select
+			swbreak
+			
+		case CMD_TAB	; 書式切り替え
+				gosub *Tab_or_Bunkatsu
+			swbreak
+		case CMD_BCL	; 背景色
+				gosub *Changer
+			swbreak
+		case CMD_WCL	; 文字色
+				wc = 1
+				gosub *Changer
+			swbreak
+		case CMD_BOXS	; 分割数
+				gosub *Bunkatsu
+			swbreak
+		case CMD_BLN	; バランス
+				gosub *Blance_change
+			swbreak
+		case CMD_SRT	; ________ (秘密)
+				gosub *srt
+			swbreak
+			
+		case CMD_HELP	; ヘルプ
+				gosub *help_print
+			swbreak	
+		case CMD_VER	; バージョン情報
+				gosub *version
+			swbreak	
+	default
+			swbreak
+		swend
+	
+	if refstr = "reset" {
+		if mode {
+			gsel 3,0
+			gosub *ReMakeTabBox	; 初期化してから戻す
+			gsel 3,-1
+			mode = 0	; 初期状態に変更
+			}
+		goto *makebox	; 初期化
+	}
+	return
