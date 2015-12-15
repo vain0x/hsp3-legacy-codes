@@ -15,9 +15,6 @@
 #include "util/TabMaker.as"
 #include "util/erasureEx.hsp"
 
-#uselib "kernel32"			; [新ワリガキ]起動用に、自身のファイルパスを取得するためのもの
-#func GetModuleFileName "GetModuleFileNameA" int, int, int ; (Kpanさんのサンプルを参考にさせていただきました)
-
 	goto *top	; 飛ばす
 #include "NewS.as"			; 新規命令・関数。New Statements and Functions の略。
 
@@ -1745,12 +1742,7 @@
 ; ヘルプ#####################################
 *help_print
 	dialog "ヘルプを表示しますか？", 3, "ヘルプ"
-	#ifdef _debug
-		chdir dir_cur + "/.."
-	#else
-		chdir dir_exe
-	#endif
-	if stat = 6 : exec "README.md",16
+	if stat = 6 : exec ownpath + "/README.md",16
 	return
 	
 ; バージョン情報#############################

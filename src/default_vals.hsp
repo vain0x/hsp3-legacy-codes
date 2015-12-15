@@ -78,7 +78,11 @@
 	
 	; 新規
 	sdim ownpath, 256					; [新ワリガキ]のための変数。自身のファイルパスを格納するため
-	GetModuleFileName , varptr(ownpath), 256	; 自身のファイルパスを取得＆格納
+	#ifdef _debug
+		ownpath = dir_cur + "/.."
+	#else
+		ownpath = dir_exe
+	#endif
 	
 	; セーブ&ロード関連
 	n = 0 								; note の略。略しすぎにご注意
