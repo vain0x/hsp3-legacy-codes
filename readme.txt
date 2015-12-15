@@ -1,43 +1,43 @@
 
 	FifPz
 
-‘Î‰žFWindows XP
-ŒöŠJF2009 2/15 (Sun)
-XVF2008 2/15 (Sun)
- DL Fhttp://prograpark.ninja-web.net/
-@@@¨ ƒ\ƒtƒgEƒ‚ƒWƒ…[ƒ‹‚Ì‚½‚Ü‚èê
+å¯¾å¿œï¼šWindows XP
+å…¬é–‹ï¼š2009 2/15 (Sun)
+æ›´æ–°ï¼š2008 2/15 (Sun)
+ DL ï¼šhttp://prograpark.ninja-web.net/
+ã€€ã€€ã€€â†’ ã‚½ãƒ•ãƒˆãƒ»ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã®ãŸã¾ã‚Šå ´
 
-EŠT—v
-	‰æ‘œ‚ðŽg‚Á‚½15ƒpƒYƒ‹‚Å‚·B‰E‰º‚ªŒ‡‚¯‚Ü‚·‚ªAŽd—l‚Å‚·B
+ãƒ»æ¦‚è¦
+	ç”»åƒã‚’ä½¿ã£ãŸ15ãƒ‘ã‚ºãƒ«ã§ã™ã€‚å³ä¸‹ãŒæ¬ ã‘ã¾ã™ãŒã€ä»•æ§˜ã§ã™ã€‚
 	
-EŽg‚¢•û
-	‰æ‘œ‚ðŠJ‚«A\ŽšƒL[ƒ{ƒ^ƒ“‚Å‰æ‘œ‚Ì’f•Ð‚ðƒXƒ‰ƒCƒh‚³‚¹‚Ü‚·B
-	ˆÈãB³‰ð‚µ‚Ä‚à‰½‚à‚¨‚«‚Ü‚¹‚ñB‚â‚Á‚½‚ËI
+ãƒ»ä½¿ã„æ–¹
+	ç”»åƒã‚’é–‹ãã€åå­—ã‚­ãƒ¼ãƒœã‚¿ãƒ³ã§ç”»åƒã®æ–­ç‰‡ã‚’ã‚¹ãƒ©ã‚¤ãƒ‰ã•ã›ã¾ã™ã€‚
+	ä»¥ä¸Šã€‚æ­£è§£ã—ã¦ã‚‚ä½•ã‚‚ãŠãã¾ã›ã‚“ã€‚ã‚„ã£ãŸã­ï¼
 	
-	‰æ‘œ‚ðŠJ‚­‚É‚ÍA‰æ–Ê‚Éƒtƒ@ƒCƒ‹‚ðƒhƒƒbƒv‚·‚é‚©A
-	ƒƒjƒ…[ƒo[¨ƒtƒ@ƒCƒ‹¨ŠJ‚­‚Å‘I‘ð‚·‚é‚©ACtrl + O ‚Å
-	‘I‘ð‚µ‚Ä‚­‚¾‚³‚¢B
+	ç”»åƒã‚’é–‹ãã«ã¯ã€ç”»é¢ã«ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ãƒ‰ãƒ­ãƒƒãƒ—ã™ã‚‹ã‹ã€
+	ãƒ¡ãƒ‹ãƒ¥ãƒ¼ãƒãƒ¼â†’ãƒ•ã‚¡ã‚¤ãƒ«â†’é–‹ãã§é¸æŠžã™ã‚‹ã‹ã€Ctrl + O ã§
+	é¸æŠžã—ã¦ãã ã•ã„ã€‚
 	
-	ƒƒjƒ…[‚Ì’f•Ð”‚ð•ÏX‚·‚é‚ÆA15ƒpƒYƒ‹ˆÈŠO‚É
-	3ƒpƒYƒ‹‚â48ƒpƒYƒ‹‚Ý‚½‚¢‚É‚È‚è‚Ü‚·B
+	ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã®æ–­ç‰‡æ•°ã‚’å¤‰æ›´ã™ã‚‹ã¨ã€15ãƒ‘ã‚ºãƒ«ä»¥å¤–ã«
+	3ãƒ‘ã‚ºãƒ«ã‚„48ãƒ‘ã‚ºãƒ«ã¿ãŸã„ã«ãªã‚Šã¾ã™ã€‚
 	
-EƒŒƒWƒXƒgƒŠ
-	‘S‚­‚¢‚¶‚è‚Ü‚¹‚ñB
+ãƒ»ãƒ¬ã‚¸ã‚¹ãƒˆãƒª
+	å…¨ãã„ã˜ã‚Šã¾ã›ã‚“ã€‚
 	
-EƒL[ƒ{[ƒhEƒVƒ‡[ƒgƒJƒbƒg
+ãƒ»ã‚­ãƒ¼ãƒœãƒ¼ãƒ‰ãƒ»ã‚·ãƒ§ãƒ¼ãƒˆã‚«ãƒƒãƒˆ
 	[Ctrl + ?]
-	@O : ŠJ‚­
-	@C : •Â‚¶‚é
-	@S : ’f•Ð‚ðƒ‰ƒ“ƒ_ƒ€‚ÉÄ”z’u
-	@A : “š‚¦‚Ì”z’u
-	@
-	@Q : Quit I—¹‚·‚é
+	ã€€O : é–‹ã
+	ã€€C : é–‰ã˜ã‚‹
+	ã€€S : æ–­ç‰‡ã‚’ãƒ©ãƒ³ãƒ€ãƒ ã«å†é…ç½®
+	ã€€A : ç­”ãˆã®é…ç½®
+	ã€€
+	ã€€Q : Quit çµ‚äº†ã™ã‚‹
 	
-EŽÓŽ«
-	HSPìŽÒ‚Å‚ ‚é‚¨‚É‚½‚Ü‚³‚ñ‚ÉAS‚©‚çŠ´ŽÓ‚¢‚½‚µ‚Ü‚·B
+ãƒ»è¬è¾ž
+	HSPä½œè€…ã§ã‚ã‚‹ãŠã«ãŸã¾ã•ã‚“ã«ã€å¿ƒã‹ã‚‰æ„Ÿè¬ã„ãŸã—ã¾ã™ã€‚
 	
-EXV—š—ð
-@2009 02/15 (Sun)
-	ŒöŠJB
+ãƒ»æ›´æ–°å±¥æ­´
+ã€€2009 02/15 (Sun)
+	å…¬é–‹ã€‚
 
 Copyright(C) Ue-dai 2009.
