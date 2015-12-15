@@ -7,13 +7,13 @@
 
 #pack	 "Readme.txt"		; ヘルプ用
 
-#include "mod_menu.as"		; メニューバー作成用
-#include "hspda.as"			; Vsave & Vload 命令用
-#include "l_tooltips.as"	; ツールチップス(カーソル合わせると出てくるあれ)作成用
-#include "l_dialogex.as"	; ダイアログ Ｘ 用
-#include "Mo/TabMaker.as"	; タブ作成用
+#include "mod_menu.as"
+#include "hspda.as"         // for vsave/vload
 
-#include "erasureEx.hsp"	; 画面消去用命令 esr の強化版。省略時はsyscolor 15で塗りつぶします。
+#include "util/l_tooltips.as"
+#include "util/l_dialogex.as"
+#include "util/TabMaker.as"
+#include "util/erasureEx.hsp"
 
 #uselib "kernel32"			; [新ワリガキ]起動用に、自身のファイルパスを取得するためのもの
 #func GetModuleFileName "GetModuleFileNameA" int, int, int ; (Kpanさんのサンプルを参考にさせていただきました)
