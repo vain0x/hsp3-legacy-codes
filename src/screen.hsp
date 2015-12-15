@@ -28,7 +28,7 @@
 	
 	pos 20,30
 	objsize 60,20,20
-	font "",16,1
+	font_gui
 	mes "どの部分を保存しますか？"
 	; ボタン押した時、stst にそのオブジェクトID が代入される
 	routine = *save
@@ -56,7 +56,7 @@
 	
 	pos 20,30
 	objsize 60,20,20
-	font "",16,1
+	font_gui
 	mes "どの部分に開きますか？"
 	; ボタン押した時、stst にそのオブジェクトID が代入される
 	routine = *load

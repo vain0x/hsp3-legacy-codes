@@ -148,7 +148,7 @@
 	mesbox edit(TBC), 785, 605, MiGiHaShi(TBC), 500000	; ID 0
 	hMain(TBC) = objinfo(stat, 2)				; ハンドル取得
 	pos 5,1
-	font "", 16, 1
+	font_gui
 	mes "ファイル名 ："
 	pos 105, 1
 	objmode objmode_guifont
@@ -482,7 +482,7 @@
 	
 	pos 20,30
 	objsize 60,20,20
-	font "",16,1
+	font_gui
 	mes "どれにしますか？"
 	routine = *CB
 	SetButton
@@ -579,7 +579,7 @@
 	
 	pos 20,30
 	objsize 100, 20, 25
-	font "",16,1
+	font_gui
 	mes "　↓　の　情 報　　　 を　　　　↓　　　　　に送る"
 	
 	pos 22, 60
@@ -674,7 +674,7 @@
 	objmode objmode_guifont, true
 	
 	
-	font "", 15
+	font_gui
 	
 	pos 20, 30 : mes " 検索する文字"
 	pos 20, 50 : input SearchWord, 130, 25, 1024
@@ -835,7 +835,7 @@
 	loop
 	
 	pos 30, 30
-	font "", 16,1
+	font_gui
 	objsize 150,20, 30
 	
 	mes "フォント名"
@@ -919,7 +919,7 @@
 	title "タブ長さ調整"
 	objmode objmode_guifont, true
 	
-	font "", 16, 1
+	font_gui
 	pos 20, 30
 	mes "タブの長さを指定してください。"
 	pos 50,50
@@ -938,7 +938,7 @@
 	objprm 0, 8
 	
 	pos 110, 52
-	font "", 16
+	font_gui
 	mes "byte"
 	
 	pos 20, 150
@@ -980,10 +980,10 @@
 	loop
 	
 	pos 20, 30
-	font "",16
+	font_gui
 	mes "右端で折り返す場合はONにしてください。"
 	
-	font "",12
+	font_gui 12
 	objsize 70,30,25
 	pos 20,50
 	repeat 6
@@ -1065,7 +1065,7 @@
 	
 	pos 20, 30
 	objsize 60, 20, 25
-	font "", 16
+	font_gui
 	mes "色のバランスを指定して下さい"
 	pos 20, 50
 	color 255
@@ -1153,9 +1153,9 @@
 	title "分割数選択"
 		
 	pos 30,30
-	font "",17,1
-	mes "分割する数を決めてください  (- -；)"
-	font "",12
+	font_gui
+	mes "分割する数を決めてください"
+	font_gui 12
 	objsize 70, 25, 28
 	pos 120, 60
 	button "やめる",*sleep
@@ -1323,7 +1323,7 @@
 	dim mi, 100, 50, 20, 5		; リセット
 	
 	; 終わりに -----------------------------------
-	font "",12
+	font_gui 12
 	pos 20,220
 	objsize 60,25
 	button gosub "決定",*Blance_set
@@ -1534,7 +1534,7 @@
 	redraw 2
 	esr
 	pos 20,30
-	font "",15,1
+	font_gui
 	mes "変更を保存しますか？"
 	objmode objmode_guifont
 	objsize 110, 27, 30
@@ -1556,7 +1556,7 @@
 	
 	pos 20,30
 	objsize 60, 20, 20
-	font "", 16, 1
+	font_gui
 	mes "どの部分を保存しますか？"
 	
 ; ロードとほぼ同じ
