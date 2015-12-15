@@ -59,7 +59,7 @@
 	gosub *Tabmake ; タブ画面を準備
 	gsel 3, -1
 	gsel 0, 0
-	objmode 2, 1
+	objmode objmode_usefont, true
 	goto *makebox
 	
 ;###################################################################################################
@@ -143,7 +143,7 @@
 		
 *MakeTabBox
 	pos 5, 24
-	objmode 2, 1
+	objmode objmode_usefont, true
 	font fontmode(TBC), fontsize(TBC), fontstile(TBC)
 	mesbox edit(TBC), 785, 605, MiGiHaShi(TBC), 500000	; ID 0
 	hMain(TBC) = objinfo(stat, 2)				; ハンドル取得
@@ -151,7 +151,7 @@
 	font "", 16, 1
 	mes "ファイル名 ："
 	pos 105, 1
-	objmode 1
+	objmode objmode_guifont
 	input file(TBC), 190, 22	; ID 1
 	
 	TBC ++		; カウントup
@@ -478,7 +478,7 @@
 	redraw 2
 	esr
 	title "箱を指定"
-	objmode 1,1
+	objmode objmode_guifont, true
 	
 	pos 20,30
 	objsize 60,20,20
@@ -496,7 +496,7 @@
 	
 	if mode = 0 : DelButton
 	
-	objmode 2,1
+	objmode objmode_usefont, true
 	redraw 1
 	gosub *waitstay
 	
@@ -575,7 +575,7 @@
 	redraw 2
 	esr
 	title "情報移植"
-	objmode 1,1
+	objmode objmode_guifont, true
 	
 	pos 20,30
 	objsize 100, 20, 25
@@ -602,7 +602,7 @@
 	button gosub " 送る / 換える ",*Graft_send
 	button " や め る ",*sleep
 	
-	objmode 2,1
+	objmode objmode_usefont, true
 	redraw 1
 	gosub *waitstay
 	Back
@@ -671,7 +671,7 @@
 	redraw 2
 	esr
 	title " - Word Searcher - "
-	objmode 1,1
+	objmode objmode_guifont, true
 	
 	
 	font "", 15
@@ -698,7 +698,7 @@
 	button "やめる", *sleep
 	
 	gsel 1, 1
-	objmode 2,1
+	objmode objmode_usefont, true
 	redraw 1
 	gosub *waitstay
 	;*/
@@ -825,7 +825,7 @@
 	redraw 2
 	esr
 	title "フォント設定"
-	objmode 1,1
+	objmode objmode_guifont, true
 	
 	repeat 6
 	fontname_set(cnt) = fontname(cnt)
@@ -870,7 +870,7 @@
 	button gosub "決定",*font_edit_end
 	button goto  "やめる",*sleep
 	
-	objmode 2,1
+	objmode objmode_usefont, true
 	redraw 1
 	
 	gsel 1,1	; 表示
@@ -917,7 +917,7 @@
 	redraw 2
 	esr
 	title "タブ長さ調整"
-	objmode 1,1
+	objmode objmode_guifont, true
 	
 	font "", 16, 1
 	pos 20, 30
@@ -945,7 +945,7 @@
 	button gosub "決定", *Tabkey_ok
 	button "やめる", *sleep
 	
-	objmode 2,1
+	objmode objmode_usefont, true
 	redraw 1
 	
 	gosub *waitstay
@@ -971,7 +971,7 @@
 	redraw 2
 	esr
 	title "右端で折り返す"
-	objmode 1,1
+	objmode objmode_guifont, true
 	
 	; 適合
 	repeat 6
@@ -996,7 +996,7 @@
 	button gosub "決定",*MiGiHaShi_Change
 	button goto  "やめる",*sleep
 	
-	objmode 2,1
+	objmode objmode_usefont, true
 	redraw 1
 	gosub *waitstay
 	
@@ -1061,7 +1061,7 @@
 	redraw 2
 	esr
 	title "Color Changer"
-	objmode 1, 1
+	objmode objmode_guifont, true
 	
 	pos 20, 30
 	objsize 60, 20, 25
@@ -1107,7 +1107,7 @@
 	button gosub "決定", *Changing
 	button "やめる", *sleep
 	
-	objmode 2, 1
+	objmode objmode_usefont, true
 	redraw 1
 	gosub *waitstay
 	return
@@ -1149,7 +1149,7 @@
 	gsel 1,1
 	redraw 2
 	esr
-	objmode 1,1
+	objmode objmode_guifont, true
 	title "分割数選択"
 		
 	pos 30,30
@@ -1172,7 +1172,7 @@
 	objsize 100, 28
 	combox box_special, 100, " - - - - - - - \n 特殊 分割 "
 	
-	objmode 2,1
+	objmode objmode_usefont, true
 	redraw 1
 	gosub *waitstay
 	
@@ -1213,7 +1213,7 @@
 	pos 20, 30
 	font "ＭＳ ゴシック",14,1
 	objsize 60, 20, 20
-	objmode 1, 1
+	objmode objmode_guifont, true
 	mi = 0
 	ms = "一", "二", "三"	; 文字を代入
 	
@@ -1329,7 +1329,7 @@
 	button gosub "決定",*Blance_set
 	button "やめる",*sleep
 	
-	objmode 2,1
+	objmode objmode_usefont, true
 	redraw 1
 	gsel 1,1
 	gosub *waitstay
@@ -1536,14 +1536,14 @@
 	pos 20,30
 	font "",15,1
 	mes "変更を保存しますか？"
-	objmode 1
+	objmode objmode_guifont
 	objsize 110, 27, 30
 	pos 30,50
 	
 	button gosub "保存する",*exit_save
 	button gosub "保存せず終了",*go_end
 	button "キャンセル",*sleep
-	objmode 2
+	objmode objmode_usefont
 	redraw 1
 	gosub *waitstay
 	;*/
