@@ -2,171 +2,171 @@
 
 <html lang="ja">
 <head>
-	<title>Favorite �̎g����</title>
-	<meta name="editor" content="����ł�HTML">
-	<meta http-equiv="Content-Type"          content="text/html; charset=SHIFT_JIS">
+	<title>Favorite の使い方</title>
+	<meta name="editor" content="だれでもHTML">
+	<meta http-equiv="Content-Type"          content="text/html; charset=utf-8">
 	<meta http-equiv="Content-Style-Type"    content="text/css">
 	<link rel="stylesheet" href="doc/style.css" type="text/css">
 </head>
 
 <body><br />
 
-<span id="top">�@<a name="UseFavorite">Favorite �̎g����</a>�@</span><br />
+<span id="top">　<a name="UseFavorite">Favorite の使い方</a>　</span><br />
 
 <p>
-	���C�ɓ���̃��j���[�́AFavorite �t�H���_���Q�Ƃ��č\�z����܂��B<br /><br />
-	
-	�����N�▼�̂́AFavorite.lbf �Ƃ����t�@�C���ɋL�q���܂��B<br /><br />
-	
-	����́A����<span class="emphasis">�L�q�̃��[��</span>��������Ă����܂��B<br /><br />
-	
+	お気に入りのメニューは、Favorite フォルダを参照して構築されます。<br /><br />
+
+	リンクや名称は、Favorite.lbf というファイルに記述します。<br /><br />
+
+	今回は、その<span class="emphasis">記述のルール</span>を説明していきます。<br /><br />
+
 </p>
 
 <br />
 <hr noshade />
 <br />
 
-<span class="content">�@<a name="Writing">�����N�̋L�q</a>�@</span><br />
-	
+<span class="content">　<a name="Writing">リンクの記述</a>　</span><br />
+
 <p>
-	�܂��AFavorite �t�H���_�� Favorite.lbf �t�@�C�����A<br /><br />
-	
-	<a href="http://ja.wikipedia.org/wiki/�e�L�X�g�G�f�B�^">�e�L�X�g�G�f�B�^</a>�ŊJ���Ă��������B<br /><br />
-	
+	まず、Favorite フォルダの Favorite.lbf ファイルを、<br /><br />
+
+	<a href="http://ja.wikipedia.org/wiki/テキストエディタ">テキストエディタ</a>で開いてください。<br /><br />
+
 	<a href="doc/texteditor.png"><img src="doc/texteditor.png" alt="Favorite.lbf" border="0" /></a><br />
-	<span class="min">����������Ă��Ă����܂��܂���B</span><br /><br />
-	
-	�f�t�H���g�͂���Ȋ����ł��ˁB<br /><br />
-	
-	�܂��A<span class="emphasis">���ʂ̃����N</span>��ݒ肵�܂��傤�B<br /><br />
-	
-	��s�ڂ����Ă��������B<br /><br />
-	
-	<span style="margin:2em;">http://prograpark.ninja-web.net/|�v���O���L��</span><br /><br />
-	
-	�悭����ƁA�A�h���X�̏I���Ɂ@|�@���t���Ă��āA<br /><br />
-	
-	���̉E�Ɂu�v���O���L��v�Ƃ����A���j���[�ɕ\������镶��������܂��ˁB<br /><br />
-	
-	���[���͔��ɊȒP�ł��B<br /><br />
-	
-	<span class="bold"><span style="color:blue;">�A�h���X</span>|<span style="color:orange;" title="alias">�G�C���A�X</span></span><br /><br />
-	
-	�Ƃ����`�ŋL�q����΁A�����N�ɒǉ��o���܂��B<br /><br />
-	
-	<a href="http://e-words.jp/w/E382A8E382A4E383AAE382A2E382B9.html" title="IT �p�ꎫ�T">�u�G�C���A�X�v</a>�Ƃ����̂́A���j���[�ɕ\�������Ƃ��̖��O�ł��B<br /><br />
-	
-	�����̕ʖ��̂��Ƃ��A�G�C���A�X�ƌĂԂ��Ƃ������̂ł��B<br /><br />
-	
-	��؂蕶�� | �́A�o�b�N�X�y�[�X�̍��ɂ���L�[�ƁA<br /><br />
-	
-	Shift �L�[�������Γ��͂ł��܂��B( �l�̃L�[�{�[�h�ł� )<br /><br />
-	
+	<span class="min">※多少違っていてもかまいません。</span><br /><br />
+
+	デフォルトはこんな感じですね。<br /><br />
+
+	まず、<span class="emphasis">普通のリンク</span>を設定しましょう。<br /><br />
+
+	一行目を見てください。<br /><br />
+
+	<span style="margin:2em;">http://prograpark.ninja-web.net/|プログラ広場</span><br /><br />
+
+	よく見ると、アドレスの終わりに　|　が付いていて、<br /><br />
+
+	その右に「プログラ広場」という、メニューに表示される文字がありますね。<br /><br />
+
+	ルールは非常に簡単です。<br /><br />
+
+	<span class="bold"><span style="color:blue;">アドレス</span>|<span style="color:orange;" title="alias">エイリアス</span></span><br /><br />
+
+	という形で記述すれば、リンクに追加出来ます。<br /><br />
+
+	<a href="http://e-words.jp/w/E382A8E382A4E383AAE382A2E382B9.html" title="IT 用語辞典">「エイリアス」</a>というのは、メニューに表示されるときの名前です。<br /><br />
+
+	何かの別名のことを、エイリアスと呼ぶことが多いのです。<br /><br />
+
+	区切り文字 | は、バックスペースの左にあるキーと、<br /><br />
+
+	Shift キーを押せば入力できます。( 僕のキーボードでは )<br /><br />
+
 </p>
 
 <br />
 <hr noshade />
 <br />
 
-<span class="content">�@<a name="Separator">�Z�p���[�^�̋L�q</a>�@</span><br />
+<span class="content">　<a name="Separator">セパレータの記述</a>　</span><br />
 
 <p>
-	�Z�p���[�^�̓��͕��@���A�����Ă����܂��傤�B<br /><br />
-	
-	�Z�p���[�^�Ƃ́A����̂��Ƃł��B<br /><br />
-	
-	<a href="doc/separator.png"><img src="doc/separator.png" alt="�Z�p���[�^" border="1" style="border-color:black;"/></a><br />
-	<span class="min">���摜�� ver 1.0 ��1 �̂��̂ł��B</span><br /><br />
-	
-	�Z�p���[�^�ɂ́u��؂���́v�Ƃ����Ӗ�������A<br /><br />
-	
-	���̖��̒ʂ�A���j���[����؂��Ă��܂��B<br /><br />
-	
-	����͓���ȃA�C�e���ł��̂ŁA���ʂȕ��@�Ń��j���[�ɒǉ�����܂��B<br /><br />
-	
-	����āA�ʏ�Ƃ͕ʂ�<span title="�L�q������@">�L�@</span>���K�v�ł��B<br /><br />
-	
-	��̓I�ɂ́A�ȉ��̂悤�ɂȂ�܂��B<br /><br />
-	
+	セパレータの入力方法も、書いておきましょう。<br /><br />
+
+	セパレータとは、これのことです。<br /><br />
+
+	<a href="doc/separator.png"><img src="doc/separator.png" alt="セパレータ" border="1" style="border-color:black;"/></a><br />
+	<span class="min">※画像は ver 1.0 β1 のものです。</span><br /><br />
+
+	セパレータには「区切るもの」という意味があり、<br /><br />
+
+	その名の通り、メニューを区切っています。<br /><br />
+
+	これは特殊なアイテムですので、特別な方法でメニューに追加されます。<br /><br />
+
+	よって、通常とは別の<span title="記述する方法">記法</span>が必要です。<br /><br />
+
+	具体的には、以下のようになります。<br /><br />
+
 	<span class="bold" style="color:blue;">--</span><br /><br />
-	
-	�n�C�t��2�ł��B<br /><br />
-	
-	�擪2�������n�C�t��2�̏ꍇ�A���̍s�̂���ȍ~�͖�������܂��B<br /><br />
-	
-	�܂��A�u�č\���v���ڂ̏�ɂ���Z�p���[�^�@( �摜�̂��� )�@�́A�����Œǉ�����Ă��܂��B<br /><br />
-	
+
+	ハイフン2つです。<br /><br />
+
+	先頭2文字がハイフン2つの場合、その行のそれ以降は無視されます。<br /><br />
+
+	また、「再構成」項目の上にあるセパレータ　( 画像のもの )　は、自動で追加されています。<br /><br />
+
 </p>
 
 <br />
 <hr noshade />
 <br />
 
-<span class="content">�@<a name="Folder">�t�H���_�̑}��</a>�@</span><br /><br />
+<span class="content">　<a name="Folder">フォルダの挿入</a>　</span><br /><br />
 
 <p>
-	�t�H���_�Ƃ́A�������̃t�@�C�����܂Ƃ߂���̂ł��ˁB<br /><br />
-	
-	���̏ꍇ�������A<span class="emphasis">�������̃����N��<span title="�܂Ƃ߂�">�Z�߂�</span>����</span>�̂��Ƃł��B<br /><br />
-	
-	���j���[�ł́A�ȉ��̂悤�ɕ\������܂��B<br /><br />
-	
-	<a href="doc/folderpopup.png"><img src="doc/folderpopup.png" alt="�t�H���_�̃|�b�v�A�b�v�̗l�q" border="1" style="border-color:black;" /></a><br />
-	<span class="min">���摜�� ver 1.0 ��1 �̂��̂ł��B</span><br /><br />
-	
-	����Ȋ����ł��B���j���[�̉E���Ɂu<span class="bold">&gt;</span>�v������̂������ł��B<br /><br />
-	
-	�t�H���_��}������ɂ́A�ȉ��̂悤�ɂ��܂��B<br /><br />
-	
-	<span class="bold"><span class="emphasis">F:</span><span style="color:blue;">�t�H���_��</span>|<span style="color:orange;">�G�C���A�X</span></span><br /><br />
-	
-	�t�H���_���́AFavorite �t�H���_�̒��ɂ���A���ۂ̃t�H���_���ł��B<br /><br />
-	
-	�G�C���A�X�ɂ��Ă͏�L�Q�ƁB<br /><br />
-	
-	�t�H���_�̑}���ɂ́A�s�̍ŏ��ɁuF:�v��t���܂��B<br /><br />
-	
-	�������I<br />
-	���b�͂�������Ȃ̂ł��I�I<br /><br />
-	
+	フォルダとは、いくつかのファイルをまとめるものですね。<br /><br />
+
+	この場合も同じ、<span class="emphasis">いくつかのリンクを<span title="まとめる">纏める</span>もの</span>のことです。<br /><br />
+
+	メニューでは、以下のように表示されます。<br /><br />
+
+	<a href="doc/folderpopup.png"><img src="doc/folderpopup.png" alt="フォルダのポップアップの様子" border="1" style="border-color:black;" /></a><br />
+	<span class="min">※画像は ver 1.0 β1 のものです。</span><br /><br />
+
+	こんな感じです。メニューの右側に「<span class="bold">&gt;</span>」があるのが特徴です。<br /><br />
+
+	フォルダを挿入するには、以下のようにします。<br /><br />
+
+	<span class="bold"><span class="emphasis">F:</span><span style="color:blue;">フォルダ名</span>|<span style="color:orange;">エイリアス</span></span><br /><br />
+
+	フォルダ名は、Favorite フォルダの中にある、実際のフォルダ名です。<br /><br />
+
+	エイリアスについては上記参照。<br /><br />
+
+	フォルダの挿入には、行の最初に「F:」を付けます。<br /><br />
+
+	ただし！<br />
+	お話はここからなのです！！<br /><br />
+
 </p>
 
 <br />
 <hr noshade />
 <br />
 
-<span class="content">�@<a name="LinkInFolder">�t�H���_���̃����N</a>�@</span><br />
+<span class="content">　<a name="LinkInFolder">フォルダ内のリンク</a>　</span><br />
 
 <p>
-	��قǁA�t�H���_��}�����邱�Ƃ͏o���܂����B<br /><br />
-	
-	�����A<span class="emphasis">�t�H���_���Ƀ����N������</span>���@�͌����Ă��܂���B<br /><br />
-	
-	�t�H���_���Ƀ����N�������ɂ́A<span class="emphasis">�t�H���_���m�̊֌W</span>���K�v�ɂȂ��Ă��܂��B<br /><br />
-	
-	<a href="doc/folders.png"><img src="doc/folders.png" alt="�t�H���_�̑��݊֌W" border="1" style="border-color:black;" /></a><br /><br />
-	
-	�n�߂̉摜�́A���̉摜�̂悤�ȃt�H���_�\���ɂȂ��Ă��܂����B<br /><br />
-	
-	���_���猾���Ă��܂��ƁA<br /><br />
-	
-	�t�H���_���̃����N�́A<span class="emphasis">���ۂ̃t�H���_��</span>�ɐ�������� <span class="emphasis">Favorite.lbf</span> �ɏ������݂܂��B<br /><br />
-	
-	�܂��A�u<span class="ascii">F:</span>�v���g���ăt�H���_��}�������A<br /><br />
-	
-	<span class="ascii">LightBrowser</span> ���N������΁A�����I�Ƀt�H���_�ƃt�@�C������������܂��B<br /><br />
-	
-	���̂Ƃ��ł��� Favorite.lbf �ɏ������߂΁A�����Ɋ����ł��B<br /><br />
-	
-	�������A�t�H���_�̒��Ƀt�H���_�����邱�Ƃ��o���܂��B<br /><br />
-	
-	���C�ɓ�����X�V����ɂ́A�u�č\������v���g���Ă��������B<br /><br />
-	
+	先ほど、フォルダを挿入することは出来ました。<br /><br />
+
+	ただ、<span class="emphasis">フォルダ内にリンクを書く</span>方法は言っていません。<br /><br />
+
+	フォルダ内にリンクを書くには、<span class="emphasis">フォルダ同士の関係</span>が必要になってきます。<br /><br />
+
+	<a href="doc/folders.png"><img src="doc/folders.png" alt="フォルダの相互関係" border="1" style="border-color:black;" /></a><br /><br />
+
+	始めの画像は、↑の画像のようなフォルダ構成になっていました。<br /><br />
+
+	結論から言ってしまうと、<br /><br />
+
+	フォルダ内のリンクは、<span class="emphasis">実際のフォルダ内</span>に生成される <span class="emphasis">Favorite.lbf</span> に書き込みます。<br /><br />
+
+	まず、「<span class="ascii">F:</span>」を使ってフォルダを挿入させ、<br /><br />
+
+	<span class="ascii">LightBrowser</span> を起動すれば、自動的にフォルダとファイルが生成されます。<br /><br />
+
+	そのときできた Favorite.lbf に書き込めば、見事に完了です。<br /><br />
+
+	もちろん、フォルダの中にフォルダを入れることも出来ます。<br /><br />
+
+	お気に入りを更新するには、「再構成する」を使ってください。<br /><br />
+
 </p>
 
-�@�������͂��Ō�܂ł��肪�Ƃ��������܂����B<br /><br />
+　長い文章を最後までありがとうございました。<br /><br />
 
-�@�@by ���<br /><br />
+　　by 上大<br /><br />
 
 </body>
 
