@@ -1,0 +1,46 @@
+/* メインのスタイルシート */
+
+body {
+	background      : #80FF80 fixed ;
+	background-image: url(Prograpark_Back.gif);
+	font-family : ＭＳ ゴシック;
+}
+
+p {
+	margin : 4em 2em;
+}
+
+#top {
+	font-size : 3em;
+}
+
+a:active {
+	color      : blue ;
+	text-decoration : underline ;
+}
+a:visited {
+	color      : #8A2BE2;
+}
+
+.content {
+	font-weight : bold;
+	font-size   : 2em;
+	color       : orange;
+}
+
+.emphasis {
+	color       : red;
+	font-weight : bold;
+}
+
+.bold {
+	font-weight : bolder;
+}
+
+.min {
+	font-size   : smaller;
+	font-family : "ＭＳ ゴシック";
+}
+.ascii {
+	font-family : "ＭＳ ゴシック";
+}
