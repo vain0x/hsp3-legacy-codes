@@ -8,6 +8,7 @@
 #define __USE_TABINT__				// Tabmod ‚ÌŠÖ˜Aint‚ðŽg—p‚·‚é
 
 #include "hsp_green/src/all.hsp"
+#include "util/userdef.hsp"
 #include "util/MenuBarAPI.as"
 #include "util/ini.as"
 #include "util/Priority.as"
