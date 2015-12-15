@@ -32,7 +32,7 @@
 		if iparam = 76 : dialog "Ctrl+L", 0, "KeyGet" ; L
 		if iparam = 77 : dialog "Ctrl+M", 0, "KeyGet" ; M
 		if iparam = 78 : gosub *NewEditor : goto *sleep;: dialog "Ctrl+N", 0, "KeyGet" ; N 
-		if iparam = 79 : gosub *open ;: dialog "Ctrl+O", 0, "KeyGet" ; O
+		if iparam = 79 : gosub *l_window_open_file ;: dialog "Ctrl+O", 0, "KeyGet" ; O
 		if iparam = 80 : dialog "Ctrl+P", 0, "KeyGet" ; P
 		if iparam = 81 : dialog "Ctrl+Q", 0, "KeyGet" ; Q
 		if iparam = 82 : gosub *MiGiHaShi_Select ;: dialog "Ctrl+R", 0, "KeyGet" ; R
@@ -90,7 +90,7 @@
 		if iparam = 76 : dialog "Ctrl+L", 0, "KeyGet" ; L
 		if iparam = 77 : dialog "Ctrl+M", 0, "KeyGet" ; M
 		if iparam = 78 : gosub *NewEditor : goto *sleep;: dialog "Ctrl+N", 0, "KeyGet" ; N 
-		if iparam = 79 : gosub *open ;: dialog "Ctrl+O", 0, "KeyGet" ; O
+		if iparam = 79 : gosub *l_window_open_file ;: dialog "Ctrl+O", 0, "KeyGet" ; O
 		if iparam = 80 : dialog "Ctrl+P", 0, "KeyGet" ; P
 		if iparam = 81 : dialog "Ctrl+Q", 0, "KeyGet" ; Q
 		if iparam = 82 : gosub *MiGiHaShi_Select ;: dialog "Ctrl+R", 0, "KeyGet" ; R

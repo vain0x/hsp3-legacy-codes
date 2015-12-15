@@ -403,34 +403,6 @@
 		return
 	
 ; ロード#####################################
-*open
-; 表裏一体のサブルーチン
-	gsel 1,1
-	redraw 2
-	esr
-	title "オープン・ブロック選択"
-	objmode 1,1
-	
-	pos 20,30
-	objsize 60,20,20
-	font "",16,1
-	mes "どの部分に開きますか？"
-	; ボタン押した時、stst にそのオブジェクトID が代入される
-	routine = *load
-	SetButton
-	
-	pos 20,130
-	objsize 70,25
-	button gosub "完全データ",*Vlv ; Vload
-	button "やめる",*sleep
-	
-	; 不要なボタンを削除
-	if mode = 0 : DelButton
-	
-	objmode 2,1
-	redraw 1
-		return
-		
 *load
 	n = stat	; stat のオブジェクトIDは0から、実際(分割画面の箱ID)は1からなので、各+1処理をする。
 	dialogEx 0, "ﾃｷｽﾄﾌｧｲﾙ (*.txt)|*.txt|HTMLﾌｧｲﾙ (*.html)|*.html;*.htm|", "*.txt", ""+box_symbol(n)+"の内容", dir_mydoc

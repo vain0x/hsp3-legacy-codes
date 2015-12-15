@@ -123,7 +123,7 @@
 				gosub *NewEditor
 			swbreak
 		case CMD_OPEN   ; ŠJ‚­
-				gosub *open
+				gosub *l_window_open_file
 			swbreak
 		case CMD_SAVE   ; •Û‘¶
 				gosub *l_window_close
