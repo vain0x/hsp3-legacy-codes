@@ -1,4 +1,4 @@
-;*Set_Start_Val
+*Set_Start_Val
 	exist "初期設定ファイル名.dat"
 	if strsize != -1 {
 		bload "初期設定ファイル名.dat", nomal, 512	; ファイル名を取得
@@ -18,4 +18,4 @@
 	
 	; 無かったらそのまま、基本設定で始める。
 	dialog "存在しないファイルを指定しているようです。\n　基本設定で始めます。", 0, "報告："+nomal+" はありません"
-		return		; -1は失敗
+	return		; -1は失敗
