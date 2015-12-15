@@ -20,6 +20,10 @@
 #defcfunc getkey int p1, local nRet
 	getkey@hsp nRet, p1
 	return nRet
+
+#deffunc StrDel var self, int n
+	self = strmid(self, n, strlen(self) - n)
+	return
 	
 // Favorite Menu ‚ğì¬
 #deffunc PerthFavorite int hMenu, str p2, local hSubMenu, local buf, local tmp, local path, local i, local len
