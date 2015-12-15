@@ -73,7 +73,7 @@
 	; ｢2｣でタブの項目が5個とすると、2～6が使われます。
 	; 別で使用するウィンドウID値と被らないよう注意。
 	
-	CreateTab 800, 660, 100 ; 100以降はタブに使用 (ID 値は飛ばしても中が抜けるだけっぽい)
+	CreateTab 800, 660, wid_tab_first ; 100以降はタブに使用 (ID 値は飛ばしても中が抜けるだけっぽい)
 	hTabControl = stat		; タブつまみ切り替え時に利用するタブコントロールのハンドルを取得
 	
 	;########################################
@@ -93,8 +93,8 @@
 	; タブ内に貼り付けたbgscr命令が非表示状態になっているので、
 	; 表示されるようgsel命令を指定。
 	; CreateTab命令で指定したウィンドウID の初期値と同じ値を指定します。
-	gsel wid_tool00, 1		; タブは100から
-	; 元々のscreen命令のタブ用ウィンドウID 3に描画先を戻します。
+	gsel wid_tab_first, 1
+	; 元々のscreen命令のタブ用ウィンドウに描画先を戻します。
 	gsel wid_tab_edit, 0
 	; タブ項目切り替え処理時のメッセージ (WM_NOTIFY)
 	oncmd gosub *notify, $4E
@@ -162,7 +162,7 @@
 	TBC = 0
 	redraw 2
 	repeat 6
-		gsel wid_tool00 +cnt, 0
+		gsel wid_tab_first +cnt, 0
 		esr
 		gosub *MakeTabBox
 	loop
@@ -174,7 +174,7 @@
 *ReFileName
 	redraw 2
 	repeat 6
-		gsel wid_tool00 +cnt,0
+		gsel wid_tab_first + cnt,0
 		if file(cnt) = "" : file(cnt) = "無題"
 		objprm 1, file(cnt)
 	loop
@@ -431,10 +431,10 @@
 		objprm n, edit(n)
 			gosub *ToolTipsMake		; ツールチップスにファイル名を表示
 	} else {
-		gsel wid_tool00 + n, 0				; タブは100から
+		gsel wid_tab_first + n, 0
 		objprm 0 , edit(n)			; 内容をタブに反映
 		objprm 1 , file(n)			; ファイル名編集ボックスを変更
-		gsel wid_tool00, 1					; タブを表示
+		gsel wid_tab_first + n, 1
 	}
 	Back
 		return
@@ -960,7 +960,7 @@
 	; アルティメットさん、ありがとうございました。
 	repeat 6
 		tabstops = (fontsize(cnt) + 1) / 4 * tabsize
-		if mode = 1 : gsel wid_tool00 + cnt, 0
+		if mode = 1 : gsel wid_tab_first + cnt, 0
 		sendmsg hMain(cnt), 0x00CB, 1, varptr(tabstops) // EM_SETTABSTOPS
 	loop
 	return
@@ -1034,7 +1034,7 @@
 	if mode = 1 {
 		number = 6
 		gosub *ReMakeTabBox
-		gsel wid_tool00, 1
+		gsel wid_tab_first, 1
 		objsel 0
 		gsel wid_tab_edit, 1
 		gsel wid_split_edit, -1
@@ -1524,10 +1524,12 @@
 	
 *exit
 	if iparam = 1 : dialog "終わりますか？", 2,"強制終了対策": if stat = 7 : stop ; Windows の強制終了を食い止める。
-	if wparam = 4 : gsel wid_secret_key, -1 : return
-	if wparam = 2 or wparam = 5 : return
-	if mode = 0 and wparam != 0 : gsel wparam, 0 : esr ,1 : gsel wparam, -1 : return
-	if mode = 1 and wparam != 3 : gsel wparam, 0 : esr ,1 : gsel wparam, -1 : return
+	if wparam = wid_secret_key {
+		gsel wid_secret_key, -1 : return
+	}
+	if wparam = wid_exit || wparam = wid_exit_save : return
+	if mode = 0 && wparam != wid_split_edit : gsel wparam : esr ,1 : gsel wparam, -1 : return
+	if mode = 1 && wparam != wid_tab_edit   : gsel wparam : esr ,1 : gsel wparam, -1 : return
 	;/* (外すとき)
 	;/*
 	gsel wid_exit,1

@@ -37,10 +37,10 @@
 #enum CMD_VER			; [バージョン情報]アイテムのID
 
 *l_menu_init
-	gsel 0, 0
+	gsel wid_split_edit
 	repeat 2			; 本格作成
 	
-	if cnt = 1 : gsel 3, 0	; タブ画面(3)のメニューバー作成用
+	if cnt = 1 : gsel wid_tab_edit
 
 ; ポップアップメニューの作成
         ; [ファイル]メニュー
@@ -215,9 +215,9 @@
 	
 	if refstr = "reset" {
 		if mode {
-			gsel 3,0
+			gsel wid_tab_edit
 			gosub *ReMakeTabBox	; 初期化してから戻す
-			gsel 3,-1
+			gsel wid_tab_edit, -1
 			mode = 0	; 初期状態に変更
 			}
 		goto *makebox	; 初期化
