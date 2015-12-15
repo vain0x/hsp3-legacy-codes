@@ -1161,12 +1161,11 @@
 	button "やめる",*sleep
 	pos 30, 60
 ; button 命令で行った先の stat 初期値は、その button のオブジェクトIDと同じ
-	button gosub "一つだけ",*boxsc	; 1
-	button gosub "二分割",*boxsc	; 2
-	button gosub "三段腹",*boxsc	; 3
-	button gosub "四分割",*boxsc	; 4
-	button gosub "五分割",*boxsc	; 5
-	button gosub "六分割",*boxsc	; 6
+
+	split_type_names = "一つだけ", "二分割", "三段腹", "四分割", "五分割", "六分割"
+	repeat count_boxes
+		button gosub split_type_names(cnt), *l_change_split_number
+	loop
 	
 	pos 30, 230
 	objsize 100, 28
@@ -1179,8 +1178,8 @@
 	Back
 	return
 	
-*boxsc
-	boxs = stat 					; 箱数決定
+*l_change_split_number
+	boxs = stat
 	number = boxs
 	if boxs = 2 and box_special = 1 : btw = 1 	; 横に分割 (真ん中に線があり、左右が別になる)
 	if boxs = 4 and box_special = 1 : bju = 1 	; 十字型に分割
