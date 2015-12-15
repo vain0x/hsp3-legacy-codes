@@ -1443,62 +1443,15 @@
 	
 ;##################～背景色変更 (引用) ～###########################################################
 *ctlcoloredit
-	;if mode = 1 : return
-	;/*
-	if hMain(0) = lparam {
-	SetTextColor wparam, RGB (wr.0, wg.0, wb.0) ; 文字色
-
-;		テキスト背景色 (hBrush.0と同色を指定)
-	SetBkColor wparam, RGB (br.0, bg.0, bb.0)
-
-	return hBrush(0)
+	i_box = -1
+	repeat count_boxes
+		if (hMain(cnt) == lparam) { i_box = cnt }
+	loop
+	if ( i_box >= 0 ) {
+		SetTextColor wparam, RGB(wr(i_box), wg(i_box), wb(i_box))
+		SetBkColor   wparam, RGB(br(i_box), bg(i_box), bb(i_box))
+		return hBrush(i_box)
 	}
-	
-	if hMain(1) = lparam {
-	SetTextColor wparam, RGB (wr.1, wg.1, wb.1) ; 文字色
-
-;		テキスト背景色 (hBrush.0と同色を指定)
-	SetBkColor wparam, RGB (br.1, bg.1, bb.1)
-
-	return hBrush(1)
-	}
-
-	if hMain(2) = lparam {
-	SetTextColor wparam, RGB (wr.2, wg.2, wb.2) ; 文字色
-
-;		テキスト背景色 (hBrush.2と同色を指定)
-	SetBkColor wparam, RGB (br.2, bg.2, bb.2)
-
-	return hBrush(2)
-	}
-
-	if hMain(3) = lparam {
-	SetTextColor wparam, RGB (wr.3, wg.3, wb.3) ; 文字色
-
-;		テキスト背景色 (hBrush.3と同色を指定)
-	SetBkColor wparam, RGB (br.3, bg.3, bb.3)
-
-	return hBrush(3)
-	}
-	
-	if hMain(4) = lparam {
-	SetTextColor wparam, RGB (wr.4, wg.4, wb.4) ; 文字色
-
-;		テキスト背景色 (hBrush.4と同色を指定)
-	SetBkColor wparam, RGB (br.4, bg.4, bb.4)
-
-	return hBrush(4)
-	}
-	
-	if hMain(5) = lparam {
-	SetTextColor wparam, RGB (wr.5, wg.5, wb.5) ; 文字色
-
-;		テキスト背景色 (hBrush.5と同色を指定)
-	SetBkColor wparam, RGB (br.5, bg.5, bb.5)
-
-	return hBrush(5)
-	};*/
-	
 	return
 	
 ; 待機 #############################################################################################
