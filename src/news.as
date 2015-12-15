@@ -88,9 +88,7 @@
 ; end 命令でも適用される。
 #deffunc CleanUpper onexit
 	; 邪魔ファイルを消去
-	exdel "obj"
-	exdel "hsptmp"
-	exdel "初期設定ファイル名.dat"
+	delfile_if_exists "初期設定ファイル名.dat"
 	gosub *Delete_Brush	; ブラシ削除
 	return
 	
