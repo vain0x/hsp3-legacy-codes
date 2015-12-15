@@ -10,6 +10,7 @@
 #include "mod_menu.as"
 #include "hspda.as"         // for vsave/vload
 
+#include "hsp_green/src/all.hsp"
 #include "util/userdef.hsp"
 #include "util/l_tooltips.as"
 #include "util/l_dialogex.as"
