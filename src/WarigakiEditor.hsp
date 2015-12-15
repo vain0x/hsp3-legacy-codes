@@ -17,6 +17,7 @@
 
 	goto *top	; ”ò‚Î‚·
 
+#include "header.hsp"
 #include "menu.hsp"
 #include "ShortCutKey.hsp"
 #include "default_vals.hsp"

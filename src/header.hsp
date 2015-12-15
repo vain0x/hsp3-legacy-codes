@@ -1,0 +1,8 @@
+
+#enum wid_main = 0
+#enum wid_tool            // ツールウィンドウ (開くたびに変更される)
+#enum wid_exit            // 終了時用の画面
+#enum wid_tab_edit        // タブ版エディット用画面
+#enum wid_secret_key      // 秘密コマンド取得用画面
+#enum wid_exit_save       // 終了時の∞セーブ用画面
+#enum wid_split_edit      // 分割版エディット用画面
