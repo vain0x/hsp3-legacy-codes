@@ -44,11 +44,11 @@
 	
 	; オブジェクトの背景用にブラシを作成し、ハンドルを取得。
 	; 作成したブラシは最後に削除しておく必要があるようです。
-	dim hBrush,6						; 背景ブラシ
+	dim hBrush,count_boxes						; 背景ブラシ
 	
 *brushmake
 	gosub *Delete_Brush
-	repeat 6
+	repeat count_boxes
 	hBrush(cnt) = CreateSolidBrush (RGB (br(cnt), bg(cnt), bb(cnt)))
 	loop
 	if bmonly = 1 : bmonly = 0 : return
@@ -79,7 +79,7 @@
 	;########################################
 	TBC = 0		; repeat カウンタ
 	redraw 2
-	repeat 6
+	repeat count_boxes
 	; タブ作成、InstrtTab "タブに表示させる文字列" で、タブがつけられる。
 		InsertTab ""+box_symbol(cnt)	; box_symbol(int) は " ← ↑ "など
 		esr
@@ -161,7 +161,7 @@
 	makeonly = 0	; ミスも修整
 	TBC = 0
 	redraw 2
-	repeat 6
+	repeat count_boxes
 		gsel wid_tab_first +cnt, 0
 		esr
 		gosub *MakeTabBox
@@ -173,7 +173,7 @@
 	
 *ReFileName
 	redraw 2
-	repeat 6
+	repeat count_boxes
 		gsel wid_tab_first + cnt,0
 		if file(cnt) = "" : file(cnt) = "無題"
 		objprm 1, file(cnt)
@@ -190,7 +190,7 @@
 	redraw 2
 	esr 1
 	
-	;repeat 6
+	;repeat count_boxes
 	;font fontmode(cnt), fontsize(cnt), fontstile(cnt)					; フォントを決定
 	;mesbox edit(cnt), sizex(cnt), sizey(cnt), MiGiHaShi(cnt), 500000	; 箱を作成
 	;hMain(cnt) = objinfo(stat, 2)			; ハンドル取得
@@ -243,7 +243,7 @@
 	
 	; → ↓
 	pos sizex(4), sizey(0) + sizey(1)
-	if boxs = 6 {
+	if boxs = count_boxes {
 		font fontmode(5), fontsize(5), fontstile(5)
 		mesbox edit(5), sizex(5), sizey(2), MiGiHaShi(5), 500000
 		hMain(5) = objinfo(stat, 2)						; ハンドル取得
@@ -559,7 +559,7 @@
 			return
 	}
 	objsel -1	; アクティブなオブジェクトのIDをstatに代入
-	if stat < 0 and stat < 6 : return	; アクティブなオブジェクトが違うなら、戻る
+	unless (0 <= stat && stat < count_boxes) { return }
 	n = stat
 	sendmsg hMain(n), $C6		; EM_CANUNDO = $C6 (Undo できるか確認)
 	if stat {					; ↑できるなら、statに1を、出来ないなら0を返す。
@@ -759,7 +759,7 @@
 			return
 	}
 	objsel -1	; アクティブなオブジェクトのIDをstatに代入
-	if stat < 0 and stat < 6 : return	; アクティブなオブジェクトが違うなら、戻る
+	unless (0 <= stat && stat < count_boxes) { return }
 	n = stat
 	sendmsg hMain(n), $301		; コピー
 	sendmsg hMain(n), $303		; 削除
@@ -773,7 +773,7 @@
 			return
 	}
 	objsel -1	; アクティブなオブジェクトのIDをstatに代入
-	if stat < 0 and stat < 6 : return	; アクティブなオブジェクトが違うなら、戻る
+	unless (0 <= stat && stat < count_boxes) { return }
 	sendmsg hMain(stat), $301	; コピー
 		return
 	
@@ -784,7 +784,7 @@
 			return
 	}
 	objsel -1	; アクティブなオブジェクトのIDをstatに代入
-	if stat < 0 and stat < 6 : return	; アクティブなオブジェクトが違うなら、戻る
+	unless (0 <= stat && stat < count_boxes) { return }
 	sendmsg hMain(stat), $302	; ペースト
 		return
 	
@@ -795,7 +795,7 @@
 			return
 	}
 	objsel -1	; アクティブなオブジェクトのIDをstatに代入
-	if stat < 0 and stat < 6 : return	; アクティブなオブジェクトが違うなら、戻る
+	unless (0 <= stat && stat < count_boxes) { return }
 	sendmsg hMain(stat), $303	; 削除
 		return
 	
@@ -806,7 +806,7 @@
 			return
 	}
 	objsel -1	; アクティブなオブジェクトのIDをstatに代入
-	if stat < 0 and stat < 6 : return	; アクティブなオブジェクトが違うなら、戻る
+	unless (0 <= stat && stat < count_boxes) { return }
 	sendmsg hMain(stat), $B1, 0, strlen(edit(stat))+10	; wprm →開始, lprm →長さ
 		return
 	
@@ -827,7 +827,7 @@
 	title "フォント設定"
 	objmode objmode_guifont, true
 	
-	repeat 6
+	repeat count_boxes
 	fontname_set(cnt) = fontname(cnt)
 	fontselect_set(cnt, 0) = fontselect(cnt, 0)
 	fontselect_set(cnt, 1) = fontselect(cnt, 1)
@@ -879,7 +879,7 @@
 		return
 	
 *font_edit_end
-	repeat 6
+	repeat count_boxes
 	fontname(cnt) = fontname_set(cnt)
 	fontselect(cnt,0) = fontselect_set(cnt,0)
 	fontselect(cnt,1) = fontselect_set(cnt,1)
@@ -958,7 +958,7 @@
 	
 *Tabkey
 	; アルティメットさん、ありがとうございました。
-	repeat 6
+	repeat count_boxes
 		tabstops = (fontsize(cnt) + 1) / 4 * tabsize
 		if mode = 1 : gsel wid_tab_first + cnt, 0
 		sendmsg hMain(cnt), 0x00CB, 1, varptr(tabstops) // EM_SETTABSTOPS
@@ -974,7 +974,7 @@
 	objmode objmode_guifont, true
 	
 	; 適合
-	repeat 6
+	repeat count_boxes
 		MiGi_set(cnt) = MiGiHaShi(cnt)
 		if MiGi_set(cnt) = 5 : MiGi_set(cnt) = 0
 	loop
@@ -986,7 +986,7 @@
 	font_gui 12
 	objsize 70,30,25
 	pos 20,50
-	repeat 6
+	repeat count_boxes
 	if cnt = 3 : pos 120, 50
 	chkbox box_symbol(cnt), MiGi_set(cnt)	; 1がON
 	loop
@@ -1005,7 +1005,7 @@
 	return
 	
 *MiGiHaShi_Change
-	repeat 6
+	repeat count_boxes
 	; 1なら1のまま、0なら5に変更
 	if MiGi_set(cnt) = 1 : MiGiHaShi(cnt) = 1 ; 1は折り返しありなのでON。
 	if MiGi_set(cnt) = 0 : MiGiHaShi(cnt) = 5 ; 5は折り返し無しなのでOFF。スクロールバーあり。
@@ -1032,7 +1032,7 @@
 		makeonly = 1 : gosub *makebox
 	}
 	if mode = 1 {
-		number = 6
+		number = 4
 		gosub *ReMakeTabBox
 		gsel wid_tab_first, 1
 		objsel 0
@@ -1047,7 +1047,7 @@
 	
 ; 色変更#####################################
 *Changer
-	repeat 6
+	repeat count_boxes
 		wr_set(cnt) = wr(cnt)
 		wg_set(cnt) = wg(cnt)
 		wb_set(cnt) = wb(cnt)
@@ -1114,7 +1114,7 @@
 	
 *Changing
 	; 背景色変更
-	repeat 6
+	repeat count_boxes
 		wr(cnt) = wr_set(cnt)
 		wg(cnt) = wg_set(cnt)
 		wb(cnt) = wb_set(cnt)
@@ -1195,7 +1195,7 @@
 		return
 	}
 	; 適合
-	repeat 6
+	repeat count_boxes
 	sizex_set(cnt) = sizex(cnt)
 	if cnt <= 2 : sizey_set(cnt) = sizey(cnt)
 	loop
@@ -1272,7 +1272,7 @@
 	
 	; 縦
 	repeat 3
-	AddToolTips cnt + 6, ""+ms(cnt)+"段目の縦幅", $2	; ms = "一", "二", "三"
+	AddToolTips cnt + count_boxes, ""+ms(cnt)+"段目の縦幅", $2	; ms = "一", "二", "三"
 	loop
 	sdim ms, 1024, 50, 20, 5, 5	; リセット
 	
@@ -1349,7 +1349,7 @@
 	loop
 	sdim ms, 1024, 50, 20, 5, 5	; リセット
 	; 統合
-	repeat 6
+	repeat count_boxes
 	sizex(cnt) = sizex_set(cnt)
 	if cnt <= 2 : sizey(cnt) = sizey_set(cnt)
 	loop
@@ -1517,7 +1517,7 @@
 ; 終了 #####################################################
 *Delete_Brush
 ;	作成した背景用ブラシを削除 (しないと駄目らしい)
-	repeat 6
+	repeat count_boxes
 	DeleteObject hBrush(cnt)
 	loop
 	return
@@ -1613,7 +1613,7 @@
 	faceup 1, 1
 	redraw 2
 	
-	repeat 6
+	repeat count_boxes
 		if file(cnt) = "" : file(cnt) = "無題"
 	loop
 	
