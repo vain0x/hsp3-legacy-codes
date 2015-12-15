@@ -7,11 +7,11 @@
 
 #define __USE_TABINT__				// Tabmod の関連intを使用する
 
-#include "Mo/MenuBarAPI.as"				// メニュー作成用
-#include "Mo/ini.as"					// INI 操作用
-#include "Mo/Priority.as"				// 優先度調整用
-#include "Mo/Tabmod.as"					// タブコントロール操作モジュール
-#include "Mo/TrayIcon.as"				// タスクトレイに常駐するため
+#include "util/MenuBarAPI.as"
+#include "util/ini.as"
+#include "util/Priority.as"
+#include "util/Tabmod.as"
+#include "util/TrayIcon.hsp"
 
 goto *StartOfScript
 #include "Sub_Header.hsp"				// ヘッダ
