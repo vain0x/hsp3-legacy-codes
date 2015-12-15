@@ -18,3 +18,31 @@
 	screen 0, 800, 680, 2+16, 30, 0			; 分割版エディット用画面
 	title " - ワリガキ・エディタ -  ver 1.0"
 	return
+
+*l_window_close
+; 表裏一体のサブルーチン
+	gsel 1,1
+	redraw 2
+	esr
+	title "セーブ・ブロック選択"		; タイトル使い回し
+	objmode 1,1
+	
+	pos 20,30
+	objsize 60,20,20
+	font "",16,1
+	mes "どの部分を保存しますか？"
+	; ボタン押した時、stst にそのオブジェクトID が代入される
+	routine = *save
+	SetButton
+	
+	pos 20,130
+	objsize 70,25
+	button gosub "完全保存",*Vsv ; Vsave
+	button "やめる",*sleep
+	
+		; 不要なボタンを削除
+	if mode = 0 : DelButton
+	
+	objmode 2,1
+	redraw 1
+	return

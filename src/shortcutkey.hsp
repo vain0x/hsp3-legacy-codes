@@ -36,7 +36,7 @@
 		if iparam = 80 : dialog "Ctrl+P", 0, "KeyGet" ; P
 		if iparam = 81 : dialog "Ctrl+Q", 0, "KeyGet" ; Q
 		if iparam = 82 : gosub *MiGiHaShi_Select ;: dialog "Ctrl+R", 0, "KeyGet" ; R
-		if iparam = 83 : gosub *close ;: dialog "Ctrl+S", 0, "KeyGet" ; S
+		if iparam = 83 : gosub *l_window_close ;: dialog "Ctrl+S", 0, "KeyGet" ; S
 		if iparam = 84 : gosub *Tabkey_Long ;: dialog "Ctrl+T", 0, "KeyGet" ; T
 		if iparam = 85 : dialog "Ctrl+U", 0, "KeyGet" ; U
 		if iparam = 86 : dialog "Ctrl+V", 0, "KeyGet" ; V
@@ -94,7 +94,7 @@
 		if iparam = 80 : dialog "Ctrl+P", 0, "KeyGet" ; P
 		if iparam = 81 : dialog "Ctrl+Q", 0, "KeyGet" ; Q
 		if iparam = 82 : gosub *MiGiHaShi_Select ;: dialog "Ctrl+R", 0, "KeyGet" ; R
-		if iparam = 83 : gosub *close ;: dialog "Ctrl+S", 0, "KeyGet" ; S
+		if iparam = 83 : gosub *l_window_close ;: dialog "Ctrl+S", 0, "KeyGet" ; S
 		if iparam = 84 : gosub *Tabkey_Long ;: dialog "Ctrl+T", 0, "KeyGet" ; T
 		if iparam = 85 : dialog "Ctrl+U", 0, "KeyGet" ; U
 		if iparam = 86 : dialog "Ctrl+V", 0, "KeyGet" ; V

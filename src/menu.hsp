@@ -126,7 +126,7 @@
 				gosub *open
 			swbreak
 		case CMD_SAVE   ; •Û‘¶
-				gosub *close
+				gosub *l_window_close
 			swbreak
 		case CMD_CRC	; w’è•¨•ÏX
 				gosub *Current_Change
