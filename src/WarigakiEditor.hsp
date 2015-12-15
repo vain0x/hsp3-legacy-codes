@@ -57,15 +57,15 @@
 
 	gosub *l_menu_init
 	gosub *Tabmake ; タブ画面を準備
-	gsel 3, -1
-	gsel 0, 0
+	gsel wid_tab_edit, -1
+	gsel wid_split_edit, 0
 	objmode objmode_usefont, true
 	goto *makebox
 	
 ;###################################################################################################
 ; タブ作成 -----------------------------------------------------------------------------------------
 *Tabmake
-	gsel 3, 0
+	gsel wid_tab_edit, 0
 	oncmd gosub *l_on_command, WM_COMMAND	; これしないとタブ画面のメニューが使用不可。
 	
 	; タブコントロールの設置。第3パラはbgscr命令で作成するウィンドウIDの初期値です。
@@ -93,9 +93,9 @@
 	; タブ内に貼り付けたbgscr命令が非表示状態になっているので、
 	; 表示されるようgsel命令を指定。
 	; CreateTab命令で指定したウィンドウID の初期値と同じ値を指定します。
-	gsel 100, 1		; タブは100から
+	gsel wid_tool00, 1		; タブは100から
 	; 元々のscreen命令のタブ用ウィンドウID 3に描画先を戻します。
-	gsel 3, 0
+	gsel wid_tab_edit, 0
 	; タブ項目切り替え処理時のメッセージ (WM_NOTIFY)
 	oncmd gosub *notify, $4E
 		return
@@ -109,7 +109,7 @@
 		actobj = stat
 		; 元々のscreen命令のウィンドウID 3 に描画先を戻します。
 		objsel 0	; カーソル移動
-		gsel 3, 0
+		gsel wid_tab_edit, 0
 	}
 		return
 
@@ -162,7 +162,7 @@
 	TBC = 0
 	redraw 2
 	repeat 6
-		gsel 100 +cnt, 0
+		gsel wid_tool00 +cnt, 0
 		esr
 		gosub *MakeTabBox
 	loop
@@ -174,7 +174,7 @@
 *ReFileName
 	redraw 2
 	repeat 6
-		gsel 100 +cnt,0
+		gsel wid_tool00 +cnt,0
 		if file(cnt) = "" : file(cnt) = "無題"
 		objprm 1, file(cnt)
 	loop
@@ -184,9 +184,9 @@
 ;###################################################################################################
 		
 *makebox
-	gsel 0, 1	; 画面呼び戻し
-	gsel 3, -1	; 新規の時に、modeが1ならWindow(3)を削除するため
-	gsel 0, 0	; 画面呼び戻し
+	gsel wid_split_edit, 1	; 画面呼び戻し
+	gsel wid_tab_edit, -1	; 新規の時に、modeが1ならWindow(3)を削除するため
+	gsel wid_split_edit, 0	; 画面呼び戻し
 	redraw 2
 	esr 1
 	
@@ -277,7 +277,7 @@
 ; p2 は表示する内容
 ; p3 が $2 だと、常にオブジェクトの真下に表示。
 	if mode = 1 : return	; ミスの無いように
-	gsel 0, 1
+	gsel wid_split_edit, 1
 	repeat boxs 	; ツールチップス(カーソル合わせると出てくるあれ)
 		if boxs = 2 and btw = 1 {
 			AddToolTips 0, box_symbol(0)+ "： " +file(0)
@@ -427,14 +427,14 @@
 	sdim file_Ext, 24				; 初期化
 	
 	if mode = 0 {
-		gsel 0,1
+		gsel wid_split_edit,1
 		objprm n, edit(n)
 			gosub *ToolTipsMake		; ツールチップスにファイル名を表示
 	} else {
-		gsel 100 + n, 0				; タブは100から
+		gsel wid_tool00 + n, 0				; タブは100から
 		objprm 0 , edit(n)			; 内容をタブに反映
 		objprm 1 , file(n)			; ファイル名編集ボックスを変更
-		gsel 100, 1					; タブを表示
+		gsel wid_tool00, 1					; タブを表示
 	}
 	Back
 		return
@@ -474,7 +474,7 @@
 	dialogEx 0, "指定ファイル (*.pf;*.txt)|(*.pf;*.txt)|", Current_File, "指定ファイル選択", ""
 	if stat = 1 : Current_File = refstr			; 指定ファイル変更
 	
-	gsel 1,1
+	gsel wid_tool,1
 	redraw 2
 	esr
 	title "箱を指定"
@@ -571,7 +571,7 @@
 ; 移植#######################################
 *Graft
 ; 表裏一体のサブルーチン
-	gsel 1,1
+	gsel wid_tool,1
 	redraw 2
 	esr
 	title "情報移植"
@@ -667,7 +667,7 @@
 		gosub *Search_T
 			return
 	}
-	gsel 1,0
+	gsel wid_tool,0
 	redraw 2
 	esr
 	title " - Word Searcher - "
@@ -697,7 +697,7 @@
 	objsize 70, 25
 	button "やめる", *sleep
 	
-	gsel 1, 1
+	gsel wid_tool, 1
 	objmode objmode_usefont, true
 	redraw 1
 	gosub *waitstay
@@ -821,7 +821,7 @@
 ; フォント###################################
 *font_edit
 ; 表裏一体のサブルーチン
-	gsel 1, 0	; 一瞬のちらつきが何故か発生するため、描画後に表示。
+	gsel wid_tool, 0	; 一瞬のちらつきが何故か発生するため、描画後に表示。
 	redraw 2
 	esr
 	title "フォント設定"
@@ -873,7 +873,7 @@
 	objmode objmode_usefont, true
 	redraw 1
 	
-	gsel 1,1	; 表示
+	gsel wid_tool,1	; 表示
 	gosub *waitstay ; 決定が押されるまで待つ
 	
 		return
@@ -913,7 +913,7 @@
 *TabKey_Long
 	; ずれる。なぜだろう？
 	; 直ったぜーーーーー！ ( fontsize(cnt) を+1した！！)
-	gsel 1,1
+	gsel wid_tool,1
 	redraw 2
 	esr
 	title "タブ長さ調整"
@@ -960,14 +960,14 @@
 	; アルティメットさん、ありがとうございました。
 	repeat 6
 		tabstops = (fontsize(cnt) + 1) / 4 * tabsize
-		if mode = 1 : gsel 100 + cnt, 0
+		if mode = 1 : gsel wid_tool00 + cnt, 0
 		sendmsg hMain(cnt), 0x00CB, 1, varptr(tabstops) // EM_SETTABSTOPS
 	loop
 	return
 	
 ; 右端で折り返す#############################
 *MiGiHaShi_Select
-	gsel 1,1
+	gsel wid_tool,1
 	redraw 2
 	esr
 	title "右端で折り返す"
@@ -1026,19 +1026,19 @@
 *Mode_Change
 	if mode = 0 {
 		number = boxs
-		gsel 0 ,1
-		gsel 3, -1
-		gsel 0, 1
+		gsel wid_split_edit ,1
+		gsel wid_tab_edit, -1
+		gsel wid_split_edit, 1
 		makeonly = 1 : gosub *makebox
 	}
 	if mode = 1 {
 		number = 6
 		gosub *ReMakeTabBox
-		gsel 100, 1
+		gsel wid_tool00, 1
 		objsel 0
-		gsel 3, 1
-		gsel 0, -1
-		gsel 3, 0
+		gsel wid_tab_edit, 1
+		gsel wid_split_edit, -1
+		gsel wid_tab_edit, 0
 	}
 	return
 	
@@ -1057,7 +1057,7 @@
 		bb_set(cnt) = bb(cnt)
 	loop
 	
-	gsel 1, 1
+	gsel wid_tool, 1
 	redraw 2
 	esr
 	title "Color Changer"
@@ -1146,7 +1146,7 @@
 	
 ; 分割数#####################################
 *bunkatsu
-	gsel 1,1
+	gsel wid_tool,1
 	redraw 2
 	esr
 	objmode objmode_guifont, true
@@ -1184,7 +1184,7 @@
 	number = boxs
 	if boxs = 2 and box_special = 1 : btw = 1 	; 横に分割 (真ん中に線があり、左右が別になる)
 	if boxs = 4 and box_special = 1 : bju = 1 	; 十字型に分割
-	gsel 0, 1
+	gsel wid_split_edit, 1
 	gosub *Schange 				; 箱サイズ適正チェック &再描画
 	return "ON"
 	
@@ -1200,7 +1200,7 @@
 	if cnt <= 2 : sizey_set(cnt) = sizey(cnt)
 	loop
 	
-	gsel 1,0	; 一瞬のちらつきを抑えるため、描画後に画面表示。
+	gsel wid_tool,0	; 一瞬のちらつきを抑えるため、描画後に画面表示。
 	redraw 2
 	esr
 	title "バランス調整"
@@ -1331,7 +1331,7 @@
 	
 	objmode objmode_usefont, true
 	redraw 1
-	gsel 1,1
+	gsel wid_tool,1
 	gosub *waitstay
 	return
 	
@@ -1524,13 +1524,13 @@
 	
 *exit
 	if iparam = 1 : dialog "終わりますか？", 2,"強制終了対策": if stat = 7 : stop ; Windows の強制終了を食い止める。
-	if wparam = 4 : gsel 4, -1 : return
+	if wparam = 4 : gsel wid_secret_key, -1 : return
 	if wparam = 2 or wparam = 5 : return
 	if mode = 0 and wparam != 0 : gsel wparam, 0 : esr ,1 : gsel wparam, -1 : return
 	if mode = 1 and wparam != 3 : gsel wparam, 0 : esr ,1 : gsel wparam, -1 : return
 	;/* (外すとき)
 	;/*
-	gsel 2,1
+	gsel wid_exit,1
 	redraw 2
 	esr
 	pos 20,30
@@ -1550,7 +1550,7 @@
 	return
 	
 *exit_save
-	gsel 5,1
+	gsel wid_exit_save,1
 	redraw 2
 	esr
 	
@@ -1615,9 +1615,9 @@
 		if file(cnt) = "" : file(cnt) = "無題"
 	loop
 	
-	gsel 2, 0 : esr : gsel 2, -1
-	gsel 4, 0 : esr : gsel 4, -1
-	gsel 5, 0 : esr : gsel 5, -1
+	gsel wid_exit, 0 : esr : gsel wid_exit, -1
+	gsel wid_secret_key, 0 : esr : gsel wid_secret_key, -1
+	gsel wid_exit_save, 0 : esr : gsel wid_exit_save, -1
 	
 	; 一時保持用変数をリセット
 	; スイッチをリセット
