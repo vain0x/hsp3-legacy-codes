@@ -1,4 +1,4 @@
-*LOnKey
+*l_onkey
 ; タブンカツ・テキスト・エディタ.hsp のショートカットキー
 	if ginfo_act = 1 or ginfo_act = 4 or ginfo_act = 5 : return
 	if iparam = 27 : end	; Esc

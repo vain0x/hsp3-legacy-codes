@@ -36,7 +36,7 @@
 #enum CMD_HELP			; [ヘルプ]アイテムのID
 #enum CMD_VER			; [バージョン情報]アイテムのID
 
-*LCreateMenu
+*l_menu_init
 	gsel 0, 0
 	repeat 2			; 本格作成
 	
@@ -114,7 +114,7 @@
 	loop
 	return
 
-*LMenuDispatch
+*l_menu_dispatch
 	switch (LOWORD(wparam))
 		case CMD_FIF	; 初期ファイル設定
 				gosub *First_File

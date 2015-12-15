@@ -15,7 +15,7 @@
 #include "util/TabMaker.as"
 #include "util/erasureEx.hsp"
 
-	goto *top	; 飛ばす
+	goto *l_init
 
 #include "header.hsp"
 #include "menu.hsp"
@@ -25,15 +25,15 @@
 #include "Vsave_Vals.hsp"
 #include "NewS.as"			; 新規命令・関数。New Statements and Functions の略。
 
-*top
+*l_init
 ; 変数の定義 #######################################################################################
-	gosub *LVarReset
-	gosub *Set_Start_Val	; 初期変数値を外部から入手
+	gosub *l_var_reset
+	gosub *l_set_start_val	; 初期変数値を外部から入手
 	
 ; メッセージ割り込み################################################################################
-	oncmd gosub *OnCommand, WM_COMMAND	; メニューバーをクリックしたときに送信される
+	oncmd gosub *l_on_command, WM_COMMAND	; メニューバーをクリックしたときに送信される
 	oncmd gosub *ctlcoloredit, $133		; 色変更
-	onkey gosub *LOnKey				; ショートカットキーかどうかを調べる
+	onkey gosub *l_onkey				; ショートカットキーかどうかを調べる
 	;onerror goto *error					; エラー発生時に(デバッグ用に外している)
 	onexit gosub *exit					; 終了割り込み
 	
@@ -94,7 +94,7 @@
 	
 ;###################################################################################################
 
-	gosub *LCreateMenu
+	gosub *l_menu_init
 	gosub *Tabmake ; タブ画面を準備
 	gsel 3, -1
 	gsel 0, 0
@@ -105,7 +105,7 @@
 ; タブ作成 -----------------------------------------------------------------------------------------
 *Tabmake
 	gsel 3, 0
-	oncmd gosub *OnCommand, WM_COMMAND	; これしないとタブ画面のメニューが使用不可。
+	oncmd gosub *l_on_command, WM_COMMAND	; これしないとタブ画面のメニューが使用不可。
 	
 	; タブコントロールの設置。第3パラはbgscr命令で作成するウィンドウIDの初期値です。
 	; たとえば、下のように｢1｣でタブの項目が4個あるとすると、1～4のウィンドウが使われます。
@@ -302,9 +302,9 @@
 	
 	goto *sleep
 ; メッセージの処理----------------------------------------------------------------------------------
-*OnCommand
+*l_on_command
 	if ( HIWORD(wparam) == 0 ) {
-		gosub *LMenuDispatch
+		gosub *l_menu_dispatch
 	}
 	return
 	
@@ -376,7 +376,7 @@
 ; 表裏一体のサブルーチン
 	new_end = 1
 	gosub *exit			; 終了セーブ
-	gosub *LVarReset
+	gosub *l_var_reset
 	dialog "初期化しました", 0, "報告"	; 報告
 		return "reset"
 	

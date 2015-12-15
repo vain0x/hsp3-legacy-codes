@@ -1,7 +1,7 @@
 ; 擬似変数リスト
 ; 定義 ( ～_set は、入力(orコンボ)ボックスの状態を表す。)
 
-*LVarReset
+*l_var_reset
 	; global
 	sdim ms, 1024, 50, 20, 5, 5		; メモ変数
 	dim mi, 100, 50, 20, 5			; メモ変数
