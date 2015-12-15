@@ -1,0 +1,7 @@
+
+#module
+#deffunc exdel str file_path
+	exist file_path
+	if ( strsize < 0 ) { delete file_path }
+	return
+#global
