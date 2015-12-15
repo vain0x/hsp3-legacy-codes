@@ -41,15 +41,6 @@
 ;###################################################################################################
 	gosub *l_window_init
 	
-; エディトコントロール内文字色&背景色変更サンプル (by Kpan)　… から引用させていただきました m(_ _)m
-#uselib "gdi32"
-#func SetTextColor "SetTextColor" int, int
-#func SetBkColor "SetBkColor" int, int
-#cfunc CreateSolidBrush "CreateSolidBrush" int
-#func DeleteObject "DeleteObject" int
-	
-;#define ctype RGB(%1,%2,%3) (%1 | %2 << 8 | %3 << 16)
-	
 	; オブジェクトの背景用にブラシを作成し、ハンドルを取得。
 	; 作成したブラシは最後に削除しておく必要があるようです。
 	dim hBrush,6						; 背景ブラシ
@@ -60,19 +51,6 @@
 	hBrush(cnt) = CreateSolidBrush (RGB (br(cnt), bg(cnt), bb(cnt)))
 	loop
 	if bmonly = 1 : bmonly = 0 : return
-	
-; Up & Down コントロール用 (by Kpan 様のサンプル) ##################################################
-
-;	追加のウィンドウスタイル
-#define UDS_WRAP $01		; 最大値・最小値に達したらループ
-#define UDS_ALIGNRIGHT $04	; アップダウンボタンを直前のオブジェクト(右部分)に組み込む
-#define UDS_ALIGNLEFT $08	; アップダウンボタンを直前のオブジェクト(左部分)に組み込む
-#define UDS_ARROWKEYS $20	; カーソルキーで数値変更
-#define UDS_HORZ $40		; アップダウンボタンを左右方向に
-#define UDS_NOTHOUSANDS $80	; ３桁コンマ区切り無効
-
-;	上位・下位ワード マクロ
-;#define ctype MAKELONG(%1,%2) (%1) & $FFFF | (%2) << 16
 	
 ;###################################################################################################
 
