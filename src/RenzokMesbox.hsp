@@ -4,7 +4,7 @@
 
 *main
 	gsel 0, -1
-	gosub *SetVariables
+	gosub *l_var_init
 	gosub *CreateWindow
 	gosub *OnRenewal
 	
@@ -253,30 +253,6 @@
 	return
 	
 //######## サブルーチン群 ######################################################
-*SetVariables
-	dim hWindow, 2				// ウィンドウ・ハンドル
-	dim rect, 4
-	
-	dim ListInfo, 2				// ListBox の情報 (hwnd, objID)
-	dim  BtnInfo, 2				// Button  〃
-	
-	dim _LbWidth, 2				// ListBox の横幅
-		_LbWidth = 120
-	
-	dim bDragging
-	dim ptDragStart, 2
-	dim ptDragEnd  , 2
-	
-	sdim buf, MAX_TEXTLEN + 1	// 編集バッファ
-	
-	sdim stmp, 256
-	sdim filepath, MAX_PATH		// 見ているファイルのパス
-	sdim path    , MAX_PATH		// 開いているフォルダのパス
-	path = dir_cur
-	
-	gosub *l_var_init_custom
-	return
-	
 *l_var_init_custom
 	dim  BoxInfo, 2				// EditBox 〃
 	return

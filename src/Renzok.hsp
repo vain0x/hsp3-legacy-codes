@@ -8,3 +8,30 @@
 #include "Mo/IsBinFile.as"
 #include "Mo/SysCursor.as"
 #include "Mo/MCNoteRepeat.as"
+
+	goto *l_eof_renzok
+
+*l_var_init
+	dim hWindow, 2
+	dim rect, 4
+	
+	dim  BtnInfo, 2				// Button  〃
+	
+	dim _LbWidth				// ListBox の横幅
+		_LbWidth = 120
+	
+	dim bDragging
+	dim ptDragStart, 2
+	dim ptDragEnd  , 2
+	
+	sdim stmp, 256
+	sdim buf,  MAX_TEXTLEN + 1
+	sdim filepath, MAX_PATH		// 見ているファイルのパス
+	sdim path    , MAX_PATH		// 開いているフォルダのパス
+	path = dir_cur
+	
+	gosub *l_var_init_custom
+	return
+
+// ファイル末尾
+*l_eof_renzok
