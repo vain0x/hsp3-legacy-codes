@@ -95,15 +95,7 @@
 	}
 	
 	editbox_set_enable true
-	filepath = stmp				// ファイルを変更した
-	
-;	memexpand buf, strsize + 5
-	notesel   buf
-	noteload  filepath
-	noteunsel
-	
-	objprm BoxInfo(1), buf
-	editbox_set_modify_flag false
+	editbox_load_text_file stmp
 	return
 	
 *OnChangePath
@@ -190,6 +182,19 @@
 	notesave filepath
 	noteunsel
 	
+	editbox_set_modify_flag false
+	return
+	
+#deffunc editbox_load_text_file str prm_new_file_path
+
+	filepath = prm_new_file_path
+	// assert filepath: テキストファイル
+	
+	notesel   buf
+	noteload  filepath
+	noteunsel
+	
+	objprm BoxInfo(1), buf
 	editbox_set_modify_flag false
 	return
 	

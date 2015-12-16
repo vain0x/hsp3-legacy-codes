@@ -111,28 +111,7 @@
 	}
 	
 	editbox_set_enable true
-	filepath = stmp				// ファイルを変更した
-	
-	// ファイルを開く
-#if __LOAD_MODE == 0
-	Footy2TextFromFile footyID, filepath, 0
-	gosub *SetFooty
-#else
- #if __LOAD_MODE == 1
-	gosub *SetFooty
-	sdim     buf
-	notesel  buf
-	noteload filepath
-	noteunsel
-	Footy2SelectAll  footyID, false
-	Footy2SetSelText footyID, buf
- #else
-	"__LOAD_MODEマクロの値が異常です。"			// コンパイルエラーを起こさせる
- #endif
-#endif
-	
-	editbox_set_modify_flag false
-	gosub *ResetByEdited						// 編集記憶変数の再初期化
+	editbox_load_text_file stmp
 	return
 	
 *OnChangePath
@@ -495,6 +474,33 @@
 	Footy2SaveToFile footyID, filepath, 0, 0
 	
 	editbox_set_modify_flag false
+	return
+	
+#deffunc editbox_load_text_file str prm_new_file_path
+	
+	filepath = prm_new_file_path
+	// assert filepath: テキストファイル
+	
+	// ファイルを開く
+#if __LOAD_MODE == 0
+	Footy2TextFromFile footyID, filepath, 0
+	gosub *SetFooty
+#else
+ #if __LOAD_MODE == 1
+	gosub *SetFooty
+	sdim     buf
+	notesel  buf
+	noteload filepath
+	noteunsel
+	Footy2SelectAll  footyID, false
+	Footy2SetSelText footyID, buf
+ #else
+	"__LOAD_MODEマクロの値が異常です。"			// コンパイルエラーを起こさせる
+ #endif
+#endif
+	
+	editbox_set_modify_flag false
+	gosub *ResetByEdited						// 編集記憶変数の再初期化
 	return
 	
 #deffunc editbox_set_modify_flag int prm_flag
