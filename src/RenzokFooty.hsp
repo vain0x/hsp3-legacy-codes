@@ -4,7 +4,6 @@
 #include "Renzok.hsp"
 
 	#define __ODLB_LISTBOX
-	#define __LOAD_MODE 1		// 0 => TextFromFile, 1 => SelectAll
 
 #include "dll/ODListbox/ODListbox.as"
 #include "dll/Footy2/Footy2.as"
@@ -401,23 +400,8 @@
 	filepath = prm_new_file_path
 	// assert filepath: テキストファイル
 	
-	// ファイルを開く
-#if __LOAD_MODE == 0
 	Footy2TextFromFile footyID, filepath, 0
 	gosub *SetFooty
-#else
- #if __LOAD_MODE == 1
-	gosub *SetFooty
-	sdim     buf
-	notesel  buf
-	noteload filepath
-	noteunsel
-	Footy2SelectAll  footyID, false
-	Footy2SetSelText footyID, buf
- #else
-	"__LOAD_MODEマクロの値が異常です。"			// コンパイルエラーを起こさせる
- #endif
-#endif
 	
 	editbox_set_modify_flag false
 	gosub *ResetByEdited						// 編集記憶変数の再初期化
