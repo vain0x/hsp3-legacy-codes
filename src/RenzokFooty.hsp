@@ -285,23 +285,6 @@
 	gosub *CreateShortCutMenu
 	return
 	
-*Save
-	if ( filepath == STR_DIALOG ) { return }
-	
-	if ( peek(filepath) == 0 ) {
-		// ‘I‚×‚é
-		dialog "*", 17, "•Û‘¶æ"
-		if ( stat == false ) {
-			gosub *l_focus_editbox
-			return
-		}
-		filepath = refstr
-	}
-	
-	gosub *l_editbox_save
-	gosub *l_focus_editbox
-	return
-	
 *ResetByEdited
 	bModified   = false
 	bCanUndo    = false
