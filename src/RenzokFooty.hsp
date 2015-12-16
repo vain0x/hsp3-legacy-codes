@@ -56,10 +56,10 @@
 				// アクティブなら
 				switch iparam
 				case 'A' : gosub *Menu_SelAll	: return
-				case 'B' : GobtmOnFooty footyID	: return
+				case 'B' : gosub *l_editbox_go_eof : return
 				case 'C' : gosub *Menu_Copy		: return
 				case 'S' : gosub *Save			: return
-				case 'T' : GotopOnFooty footyID	: return
+				case 'T' : gosub *l_editbox_go_top : return
 				case 'V' : gosub *Menu_Paste	: return
 				case 'X' : gosub *Menu_Cut		: return
 				case 'Y' : gosub *Menu_Redo		: return
@@ -394,6 +394,14 @@
 
 *l_focus_editbox
 	Footy2SetFocus footyID, 0
+	return
+	
+*l_editbox_go_eof
+	GobtmOnFooty footyID
+	return
+	
+*l_editbox_go_top
+	GotopOnFooty footyID
 	return
 	
 *l_editbox_save
