@@ -382,9 +382,7 @@
 	dim hWindow, 2
 	dim rect, 4
 	
-	dim  LbInfo, 2				// ListBox の情報 (hwnd, ID)
 	dim  BtnInfo, 2				// Button  〃
-	dim  iList					// Listbox の選択されているIndex
 	
 	dim _LbWidth				// ListBox の横幅
 		_LbWidth = 120
@@ -394,10 +392,18 @@
 	dim ptDragEnd  , 2
 	
 	sdim stmp, 256
-	sdim buf,  65535			// 一時的にファイルを開くときのバッファ
+	sdim buf,  MAX_TEXTLEN + 1	// 一時的にファイルを開くときのバッファ
 	sdim filepath, MAX_PATH		// 見ているファイルのパス
 	sdim path    , MAX_PATH		// 開いているフォルダのパス
 	path = dir_cur
+	
+	gosub *l_var_init_custom
+	return
+	
+*l_var_init_custom
+	dim  LbInfo, 2				// ListBox の情報 (hwnd, ID)
+	dim  iList					// Listbox の選択されているIndex
+	
 	dir_exe_root = dir_cur
 	
 	sdim ClrtxtLib, MAX_PATH	// ClrtxtLib パス
@@ -412,7 +418,6 @@
 	dim bWriteMode				// Insert(真) or Overwrite(偽)
 	dim bHasFocus
 ;	dim bSelected
-	
 	return
 	
 *CreateWindow
