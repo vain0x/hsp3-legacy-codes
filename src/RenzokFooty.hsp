@@ -298,10 +298,7 @@
 		filepath = refstr
 	}
 	
-	// •Û‘¶
-	Footy2SaveToFile footyID, filepath, 0, 0
-	
-	editbox_set_modify_flag false
+	gosub *l_editbox_save
 	gosub *l_focus_editbox
 	return
 	
@@ -509,6 +506,12 @@
 
 *l_focus_editbox
 	Footy2SetFocus footyID, 0
+	return
+	
+*l_editbox_save
+	Footy2SaveToFile footyID, filepath, 0, 0
+	
+	editbox_set_modify_flag false
 	return
 	
 #deffunc editbox_set_modify_flag int prm_flag

@@ -191,11 +191,7 @@
 		filepath = refstr
 	}
 	
-	notesel buf
-	notesave filepath
-	noteunsel
-	
-	editbox_set_modify_flag false
+	gosub *l_editbox_save
 	gosub *l_focus_editbox
 	return
 	
@@ -206,6 +202,14 @@
 	objsel BoxInfo(1)	// カーソルを与える
 	return
 	
+*l_editbox_save
+	notesel buf
+	notesave filepath
+	noteunsel
+	
+	editbox_set_modify_flag false
+	return
+
 // 編集済みフラグを変更する
 #deffunc editbox_set_modify_flag int prm_flag
 	bModified = prm_flag
