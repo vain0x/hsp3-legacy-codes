@@ -429,7 +429,7 @@
 	
 	SetStyle hwnd, -16, 0x00040000 | 0x00010000		// 可変枠＆最大化ボタン
 	
-	objmode 1, 0
+	objmode objmode_guifont, false
 	
 	// リストボックス
 #ifdef __ODLB_LISTBOX

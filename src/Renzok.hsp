@@ -290,20 +290,20 @@
 	
 	// リストボックス
 	font LISTBOX_FONT_FAMILY, LISTBOX_FONT_SIZE
-	objmode 2, 0
+	objmode objmode_usefont, false
 	objsize LBWIDTH, LBHEIGHT
 	pos 5, 5 : listbox iList, 0, ""
 	ListInfo = objinfo(stat, 2), stat
 	
 	// 保存ボタン
-	objmode 1, 0
+	objmode objmode_guifont, false
 	objsize LBWIDTH, 20
 	pos 5, LBHEIGHT + 5 : button gosub "save", *Save
 	BtnInfo = objinfo(stat, 2), stat
 	
 	// 箱
 	font EDITOR_FONT_FAMILY, EDITOR_FONT_SIZE
-	objmode 2, 0
+	objmode objmode_usefont, false
 	pos LBWIDTH + 10, 5 : mesbox buf, BOXWIDTH, BOXHEIGHT, 5, MAX_TEXTLEN
 	BoxInfo = objinfo(stat, 2), stat
 	
