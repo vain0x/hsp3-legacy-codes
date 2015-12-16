@@ -50,11 +50,6 @@
 				swend
 			}
 		}
-		// test
-		if ( wparam == 122 ) {	// F11
-			_ = CanStartDragOnFooty( footyID, 0, 13, ginfo_mx, ginfo_my )
-			logmes ""+ _
-		}
 		
 	}
 	return
@@ -75,7 +70,6 @@
 	if ( lparam == LbInfo ) {
 		// リストボックスの割り込み
 		wNotifyCode = HIWORD(wparam)
-;		logmes "listbox : "+ logv(wNotifyCode)
 		switch wNotifyCode
 		case 1									// LBN_SELCHANGE
 			sendmsg hMain, UWM_LOAD, 0, 0
