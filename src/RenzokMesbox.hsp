@@ -18,7 +18,9 @@
 //######## メッセージハンドラ ##################################################
 *OnKeyLabel
 	if ( ginfo_act == wID_Main ) {
-		gosub_if_able key_map_(iparam, key_map_flags_get())
+		if ( editbox_has_focus() ) {
+			gosub_if_able key_map_(iparam, key_map_flags_get())
+		}
 	}
 	return
 	
@@ -120,3 +122,7 @@
 	filepath = ""	
 	objprm BoxInfo(1), prm_message
 	return
+
+#defcfunc editbox_has_focus
+	objsel -1
+	return stat == BoxInfo(1)
