@@ -24,7 +24,7 @@
 	oncmd gosub *OnSplitterMove,UWM_SPLITTERMOVE
 	
 	gsel wID_Main , 1
-	objsel BoxInfo(1)	// カーソルを与える
+	gosub *l_focus_editbox
 	
 	gsel wID_Main
 	stop
@@ -228,7 +228,11 @@
 	
 *l_init_callback
 	return
-	
+
+*l_focus_editbox
+	objsel BoxInfo(1)	// カーソルを与える
+	return
+
 #deffunc EnableBox str prm_message
 	objprm BoxInfo(1), prm_message	// クリア (理由を表示)
 	Settitle "編集不可(Enable)"

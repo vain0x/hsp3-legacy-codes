@@ -42,7 +42,7 @@
 	oncmd gosub *OnSplitterMove,UWM_SPLITTERMOVE
 	
 	gsel wID_Main, 1
-	Footy2SetFocus footyID, 0
+	gosub *l_focus_editbox
 	stop
 	
 *exit
@@ -543,6 +543,10 @@
 	
 	// TextColor
 	Footy2Refresh footyID
+	return
+
+*l_focus_editbox
+	Footy2SetFocus footyID, 0
 	return
 
 #deffunc EnableBox str prm_message
