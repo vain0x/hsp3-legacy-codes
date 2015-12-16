@@ -439,11 +439,17 @@
 	gosub *ResetByEdited						// 編集記憶変数の再初期化
 	return
 	
+// 編集済みフラグを変更する
 #deffunc editbox_set_modify_flag int prm_flag
 	bModified = prm_flag
 	Settitle getpath(filepath, 8) + cond_s(bModified, " *", "")
+	editbox_set_modify_flag_impl
 	return
 
+#deffunc editbox_set_modify_flag_impl
+	// pass
+	return
+	
 #deffunc editbox_set_enable_impl int prm_enable
 	EnableWindow Footy2GetWnd(footyID, 0), prm_enable
 	return
