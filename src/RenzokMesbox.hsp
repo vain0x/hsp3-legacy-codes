@@ -135,15 +135,19 @@
 
 	if ( prm_enable ) {
 		if ( is_disabled ) {
-			EnableWindow BoxInfo, true
+			editbox_set_enable_impl true
 			is_disabled = false
 		}
 		
 	} else {
 		Settitle "•ÒW•s‰Â(Enable)"
-		EnableWindow BoxInfo, false
+		editbox_set_enable_impl false
 		is_disabled  = true
 	}
+	return
+	
+#deffunc editbox_set_enable_impl int prm_enable
+	EnableWindow BoxInfo(0), prm_enable
 	return
 	
 #deffunc editbox_load_error str prm_message
