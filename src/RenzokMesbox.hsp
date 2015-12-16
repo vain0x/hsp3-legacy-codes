@@ -7,6 +7,10 @@
 	gosub *l_initialize
 	stop
 	
+*l_var_init_custom
+	dim  BoxInfo, 2
+	return
+	
 *exit
 	if ( bDragging ) { ClipCursor NULL : bDragging = false }
 	end : end
@@ -74,10 +78,6 @@
 	return
 	
 //######## サブルーチン群 ######################################################
-*l_var_init_custom
-	dim  BoxInfo, 2				// EditBox 〃
-	return
-	
 *l_create_listbox
 	font LISTBOX_FONT_FAMILY, LISTBOX_FONT_SIZE
 	objmode objmode_usefont, false

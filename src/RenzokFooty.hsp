@@ -18,6 +18,25 @@
 	gosub *l_initialize
 	stop
 	
+*l_var_init_custom
+	dim  iList					// Listbox の選択されているIndex
+	
+	dir_exe_root = dir_cur
+	
+	sdim ClrtxtLib, MAX_PATH	// ClrtxtLib パス
+	sdim Clrtxt, 1024
+	
+	dim bModified
+	dim bCanUndo
+	dim bCanRedo
+	dim cntUndoed				// Undo処理を行った回数
+	dim cntModified				// 編集した回数 (Undo 以外)
+	
+	dim bWriteMode				// Insert(真) or Overwrite(偽)
+	dim bHasFocus
+;	dim bSelected
+	return
+	
 *exit
 	if ( bDragging ) { ClipCursor NULL : bDragging = false }
 	if ( hShortMenu ) { DestroyMenu hShortMenu }
@@ -152,25 +171,6 @@
 	return
 	
 //######## サブルーチン群 ######################################################
-*l_var_init_custom
-	dim  iList					// Listbox の選択されているIndex
-	
-	dir_exe_root = dir_cur
-	
-	sdim ClrtxtLib, MAX_PATH	// ClrtxtLib パス
-	sdim Clrtxt, 1024
-	
-	dim bModified
-	dim bCanUndo
-	dim bCanRedo
-	dim cntUndoed				// Undo処理を行った回数
-	dim cntModified				// 編集した回数 (Undo 以外)
-	
-	dim bWriteMode				// Insert(真) or Overwrite(偽)
-	dim bHasFocus
-;	dim bSelected
-	return
-	
 *l_create_listbox
 	oncmd gosub *OnDrawItem   , 0x002B
 	oncmd gosub *OnMeasureItem, 0x002C
