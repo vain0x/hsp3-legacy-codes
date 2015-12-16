@@ -191,16 +191,16 @@
 	return
 	
 //#### ドラッグ
-#define CAN_DRAGPOS boxin( LBWIDTH + 5, 6, LBWIDTH + 10, ginfo_winy - 6 )
+#define can_dragpos boxin( LBWIDTH + 5, 6, LBWIDTH + 10, ginfo_winy - 6 )
 *OnMouseMove
-	if ( CAN_DRAGPOS ) {
+	if ( can_dragpos ) {
 		// (仮想) スプリッターの上なら
 		SetCursor LoadCursor(IDC_SIZEWE)
 	}
 	return
 	
 *OnLBtnDown
-	if ( CAN_DRAGPOS ) {
+	if ( can_dragpos ) {
 		bDragging   = true
 		ptDragStart = ginfo_mx, ginfo_my
 		
