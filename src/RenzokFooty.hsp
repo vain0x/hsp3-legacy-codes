@@ -31,7 +31,6 @@
 	onkey gosub *OnKeyLabel
 	onexit goto *exit
 	
-	oncmd gosub *OnContextMenu, 0x007B			// WM_CONTEXTMENU 逆クリック
 	oncmd gosub *OnCommand,   0x0111			// WM_COMMAND     ListBox と EditControl の割り込み
 	oncmd gosub *OnResize,    0x0005			// WM_SIZE        サイズ可変用
 	oncmd gosub *OnSizing,    0x0214			// WM_SIZING      サイズ固定用
@@ -307,6 +306,8 @@
 	return
 	
 *l_create_editbox
+	oncmd gosub *OnContextMenu, 0x007B  // WM_CONTEXTMENU
+	
 	Footy2Create hMain, LBWIDTH + 10, 5, BOXWIDTH, BOXHEIGHT, 0
 	footyID = stat
 	gosub *SetFootyEditor
