@@ -17,6 +17,7 @@
 	
 	dim  BtnInfo, 2				// Button  V
 	
+	dim  LbInfo, 2				// ListBox ‚Ìî•ñ (hwnd, ID)
 	dim _LbWidth				// ListBox ‚Ì‰¡•
 		_LbWidth = 120
 	

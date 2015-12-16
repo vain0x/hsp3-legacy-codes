@@ -305,7 +305,6 @@
 	
 //######## サブルーチン群 ######################################################
 *l_var_init_custom
-	dim  LbInfo, 2				// ListBox の情報 (hwnd, ID)
 	dim  iList					// Listbox の選択されているIndex
 	
 	dir_exe_root = dir_cur

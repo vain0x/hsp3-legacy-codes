@@ -49,7 +49,7 @@
 	
 *OnResize
 	// ウィンドウ・サイズ可変
-	MoveWindow ListInfo,            5,            5,  LBWIDTH,  LBHEIGHT, true
+	MoveWindow LbInfo,            5,            5,  LBWIDTH,  LBHEIGHT, true
 	MoveWindow  BtnInfo,            5, LBHEIGHT + 5,  LBWIDTH,        20, true
 	MoveWindow  BoxInfo, LBWIDTH + 10,            5, BOXWIDTH, BOXHEIGHT, true
 	return
@@ -60,7 +60,7 @@
 	return
 	
 *OnCommand
-	if ( lparam == ListInfo ) {
+	if ( lparam == LbInfo ) {
 		// リストボックスの割り込み
 		wNotifyCode = HIWORD(wparam)
 		
@@ -92,8 +92,8 @@
 	
 *OnLoad
 	// 読み込むファイル名を取得
-	sendmsg ListInfo, 0x0188, 0, 0 : iList = stat
-	sendmsg ListInfo, 0x0189, iList, varptr(stmp)
+	sendmsg LbInfo, 0x0188, 0, 0 : iList = stat
+	sendmsg LbInfo, 0x0189, iList, varptr(stmp)
 	
 	if ( iList < 0 ) { return }					// 選択アイテムがない場合も無視する
 	
@@ -139,8 +139,8 @@
 	
 *OnChangePath
 	// 読み込むファイル名を取得
-	sendmsg ListInfo, 0x0188, 0, 0 : iList = stat
-	sendmsg ListInfo, 0x0189, iList, varptr(stmp)
+	sendmsg LbInfo, 0x0188, 0, 0 : iList = stat
+	sendmsg LbInfo, 0x0189, iList, varptr(stmp)
 	
 	if ( iList < 0 ) { return }					// 選択アイテムがない場合も無視する
 	
@@ -177,15 +177,15 @@
 	
 *OnRenewal
 	// ListBox を再構築する
-	sendmsg ListInfo, 0x0184, 0, 0						// LB_RESETCONTENT
-;	sendmsg ListInfo, 0x018D, 0x0010, path +"\\*.*"		// LB_DIR (wparam == DDL_DIRECTORY)
-	sendmsg ListInfo, 0x000B, false, 0					// WM_SETREDRAW ( 再描画禁止 )
+	sendmsg LbInfo, 0x0184, 0, 0						// LB_RESETCONTENT
+;	sendmsg LbInfo, 0x018D, 0x0010, path +"\\*.*"		// LB_DIR (wparam == DDL_DIRECTORY)
+	sendmsg LbInfo, 0x000B, false, 0					// WM_SETREDRAW ( 再描画禁止 )
 	DirlistEx  filelist, path
 	NoteRepeat filelist
-		sendmsg ListInfo, 0x0180, 0, nrNote
+		sendmsg LbInfo, 0x0180, 0, nrNote
 	NoteLoop
-	sendmsg ListInfo, 0x0180, 0, STR_DIALOG				// LB_ADD
-	sendmsg ListInfo, 0x000B, true, 0					// WM_SETREDRAW ( 再描画許可 )
+	sendmsg LbInfo, 0x0180, 0, STR_DIALOG				// LB_ADD
+	sendmsg LbInfo, 0x000B, true, 0					// WM_SETREDRAW ( 再描画許可 )
 	
 	return
 	
@@ -220,7 +220,7 @@
 	objmode objmode_usefont, false
 	objsize LBWIDTH, LBHEIGHT
 	pos 5, 5 : listbox iList, 0, ""
-	ListInfo = objinfo(stat, 2), stat
+	LbInfo = objinfo(stat, 2), stat
 	return
 	
 *l_create_editbox
