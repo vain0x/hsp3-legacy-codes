@@ -61,6 +61,9 @@
 	is_disabled = false
 	
 	gosub *l_var_init_custom
+	
+	ldim key_map_, 0xFF, 0b100  // (VK, ctrl | shift)
+	gosub *l_key_map_init
 	return
 
 *CreateWindow

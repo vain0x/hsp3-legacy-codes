@@ -49,29 +49,23 @@
 //######## メッセージハンドラ ##################################################
 *OnKeyLabel
 	if ( ginfo_act == wID_Main ) {
-		
-		// [Ctrl]
-		if ( getkey(17) ) {
-			if ( Footy2GetActiveView(footyID) != FOOTY2ERR_NOACTIVE ) {
-				// アクティブなら
-				switch iparam
-				case 'A' : gosub *Menu_SelAll	: return
-				case 'B' : gosub *l_editbox_go_eof : return
-				case 'C' : gosub *Menu_Copy		: return
-				case 'S' : gosub *Save			: return
-				case 'T' : gosub *l_editbox_go_top : return
-				case 'V' : gosub *Menu_Paste	: return
-				case 'X' : gosub *Menu_Cut		: return
-				case 'Y' : gosub *Menu_Redo		: return
-				case 'Z'
-					// [Shift] なら Redo
-					if ( getkey(16) ) { gosub *Menu_Redo } else { gosub *Menu_Undo }
-					return
-				swend
-			}
+		if ( Footy2GetActiveView(footyID) != FOOTY2ERR_NOACTIVE ) {
+			gosub_if_able key_map_(iparam, key_map_flags_get())
 		}
-		
 	}
+	return
+	
+*l_key_map_init
+	key_map_('A', key_map_ctrl) = *Menu_SelAll
+	key_map_('B', key_map_ctrl) = *l_editbox_go_eof
+	key_map_('C', key_map_ctrl) = *Menu_Copy
+	key_map_('S', key_map_ctrl) = *Save
+	key_map_('T', key_map_ctrl) = *l_editbox_go_top
+	key_map_('V', key_map_ctrl) = *Menu_Paste
+	key_map_('X', key_map_ctrl) = *Menu_Cut
+	key_map_('Y', key_map_ctrl) = *Menu_Redo
+	key_map_('Z', key_map_ctrl                ) = *Menu_Undo
+	key_map_('Z', key_map_ctrl | key_map_shift) = *Menu_Redo
 	return
 	
 *l_resize_editbox

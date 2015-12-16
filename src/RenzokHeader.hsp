@@ -55,6 +55,10 @@
 #const DDL_ARCHIVE   0x0020  // アーカイブ
 #const DDL_EXCLUSIVE 0x8000  // 排他的にする ( HIDDEN なら、「隠しファイルだけ」 になる )
 
+// key_map_ のフラグ
+#define key_map_ctrl  (1 << 0)
+#define key_map_shift (1 << 1)
+
 // MenuCMD
 #enum global CMD_NULL = 0
 #enum global CMD_UNDO
@@ -83,6 +87,19 @@
 #defcfunc getkey int p2
 	getkey@hsp _kc, p2
 	return@hsp _kc
+	
+#defcfunc key_map_flags_get  \
+	local ctrl, local shift
+	
+	getkey@hsp shift, 16
+	getkey@hsp ctrl, 17
+	return (ctrl * key_map_ctrl@) | (shift * key_map_shift@)
+	
+#deffunc gosub_if_able var lb
+	if ( lpeek(lb) != 0 ) {
+		gosub lb
+	}
+	return
 	
 #deffunc DirlistEx var vfilelist, str path, local lsList, local lIndex
 	lIndex = 0

@@ -18,16 +18,12 @@
 //######## メッセージハンドラ ##################################################
 *OnKeyLabel
 	if ( ginfo_act == wID_Main ) {
-		
-		// [Ctrl]
-		if ( getkey(17) ) {	
-			if ( iparam == 'S' ) {
-				gosub *Save
-				return
-			}
-		}
-		
+		gosub_if_able key_map_(iparam, key_map_flags_get())
 	}
+	return
+	
+*l_key_map_init
+	key_map_('S', key_map_ctrl) = *Save
 	return
 	
 *l_resize_editbox
