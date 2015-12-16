@@ -16,16 +16,10 @@
 *main
 	gsel 0, -1
 	
-	oncmd gosub *OnDrawItem   , 0x002B
-	oncmd gosub *OnMeasureItem, 0x002C
-	
 	gosub *l_var_init
 	gosub *l_init_callback
 	gosub *CreateWindow
 	gosub *OnRenewal
-	
-	gosub *SetClrtxtLibPath
-	gosub *CreateShortCutMenu
 	
 	gsel wID_Main
 	onkey gosub *OnKeyLabel
@@ -292,6 +286,9 @@
 	return
 	
 *l_create_listbox
+	oncmd gosub *OnDrawItem   , 0x002B
+	oncmd gosub *OnMeasureItem, 0x002C
+	
 	ODLbCreate hwnd, 5, 5, LBWIDTH, LBHEIGHT
 	LbInfo(1) = stat
 	LbInfo(0) = ODLbGetHandle( LbInfo(1) )
@@ -306,12 +303,14 @@
 	return
 	
 *l_create_editbox
-	oncmd gosub *OnContextMenu, 0x007B  // WM_CONTEXTMENU
-	
 	Footy2Create hMain, LBWIDTH + 10, 5, BOXWIDTH, BOXHEIGHT, 0
 	footyID = stat
 	gosub *SetFootyEditor
 ;	gosub *SetFooty
+
+	oncmd gosub *OnContextMenu, 0x007B  // WM_CONTEXTMENU
+	gosub *SetClrtxtLibPath
+	gosub *CreateShortCutMenu
 	return
 	
 *Save
