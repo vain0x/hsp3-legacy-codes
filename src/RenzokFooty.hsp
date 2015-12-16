@@ -98,10 +98,21 @@
 			sendmsg hMain, UWM_CHANGEPATH, 0, 0
 			swbreak
 		default
-			ODLbProc LbInfo(1), iparam, wparam, lparam
-			return stat
+			gosub *l_on_command_listbox_default
 		swend
 	}
+	if ( lparam == BoxInfo ) {
+		gosub *l_on_command_editbox
+	}
+	return
+	
+*l_on_command_editbox
+	// pass
+	return
+	
+*l_on_command_listbox_default
+	ODLbProc LbInfo(1), iparam, wparam, lparam
+	return stat
 	return
 	
 *OnRenewal
