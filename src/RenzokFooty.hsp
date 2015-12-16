@@ -86,26 +86,6 @@
 	ODLbProc LbInfo(1), iparam, wparam, lparam
 	return stat
 	
-*OnCommand
-	if ( lparam == LbInfo ) {
-		// リストボックスの割り込み
-		wNotifyCode = HIWORD(wparam)
-		switch wNotifyCode
-		case 1									// LBN_SELCHANGE
-			sendmsg hMain, UWM_LOAD, 0, 0
-			swbreak
-		case 2									// LBN_DBLCLICK
-			sendmsg hMain, UWM_CHANGEPATH, 0, 0
-			swbreak
-		default
-			gosub *l_on_command_listbox_default
-		swend
-	}
-	if ( lparam == BoxInfo ) {
-		gosub *l_on_command_editbox
-	}
-	return
-	
 *l_on_command_editbox
 	// pass
 	return

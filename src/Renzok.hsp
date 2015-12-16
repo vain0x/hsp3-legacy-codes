@@ -164,6 +164,26 @@
 	gosub *OnResize
 	return
 	
+*OnCommand
+	if ( lparam == LbInfo ) {
+		// リストボックスの割り込み
+		wNotifyCode = HIWORD(wparam)
+		switch wNotifyCode
+		case 1										// LBN_SELCHANGE
+			sendmsg hMain, UWM_LOAD, 0, 0
+			swbreak
+		case 2										// LBN_WCLICK
+			sendmsg hMain, UWM_CHANGEPATH, 0, 0
+			swbreak
+		default:
+			gosub *l_on_command_listbox_default
+		swend
+	}
+	if ( lparam == BoxInfo ) {
+		gosub *l_on_command_editbox
+	}
+	return
+	
 *OnLoad
 	// 読み込むファイル名を取得
 	sendmsg LbInfo, 0x0188, 0, 0 : iList = stat
