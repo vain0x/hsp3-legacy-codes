@@ -290,11 +290,7 @@
 	pos 5, LBHEIGHT + 5 : button gosub "save", *Save
 	BtnInfo = objinfo(stat, 2), stat
 	
-	// ” 
-	font EDITOR_FONT_FAMILY, EDITOR_FONT_SIZE
-	objmode objmode_usefont, false
-	pos LBWIDTH + 10, 5 : mesbox buf, BOXWIDTH, BOXHEIGHT, 5, MAX_TEXTLEN
-	BoxInfo = objinfo(stat, 2), stat
+	gosub *l_create_editbox
 	
 	gsel wID_Main
 	return
@@ -305,6 +301,13 @@
 	objsize LBWIDTH, LBHEIGHT
 	pos 5, 5 : listbox iList, 0, ""
 	ListInfo = objinfo(stat, 2), stat
+	return
+	
+*l_create_editbox
+	font EDITOR_FONT_FAMILY, EDITOR_FONT_SIZE
+	objmode objmode_usefont, false
+	pos LBWIDTH + 10, 5 : mesbox buf, BOXWIDTH, BOXHEIGHT, 5, MAX_TEXTLEN
+	BoxInfo = objinfo(stat, 2), stat
 	return
 	
 *Save

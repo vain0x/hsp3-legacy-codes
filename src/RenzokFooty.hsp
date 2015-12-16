@@ -431,11 +431,7 @@
 	pos 5,  LBHEIGHT + 5 : button gosub "save", *Save
 	BtnInfo = objinfo(stat, 2), stat
 	
-	// FootyControl
-	Footy2Create hMain, LBWIDTH + 10, 5, BOXWIDTH, BOXHEIGHT, 0
-	footyID = stat
-	gosub *SetFootyEditor
-;	gosub *SetFooty
+	gosub *l_create_editbox
 	
 	gsel wID_Main
 	return
@@ -452,6 +448,13 @@
 	
 	hFont = CreateFontByHSP(LISTBOX_FONT_FAMILY, LISTBOX_FONT_SIZE, 0)
 	ODLbSetFont LbInfo(1), hFont
+	return
+	
+*l_create_editbox
+	Footy2Create hMain, LBWIDTH + 10, 5, BOXWIDTH, BOXHEIGHT, 0
+	footyID = stat
+	gosub *SetFootyEditor
+;	gosub *SetFooty
 	return
 	
 *Save
