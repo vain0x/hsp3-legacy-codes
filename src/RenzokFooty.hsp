@@ -20,7 +20,7 @@
 	oncmd gosub *OnMeasureItem, 0x002C
 	
 	gosub *l_var_init
-	gosub *SetCallback
+	gosub *l_init_callback
 	gosub *CreateWindow
 	gosub *OnRenewal
 	
@@ -369,7 +369,7 @@
 *Menu_SelAll : Footy2SelectAll footyID : return
 
 //######## コールバック関数系のルーチン ################################################################
-*SetCallback
+*l_init_callback
 	setcallbk proc_Focus,             Focus,             *onFocus
 	setcallbk proc_MoveCaret,         MoveCaret,         *onMoveCaret
 	setcallbk proc_TextModified,      TextModified,      *onTextModified

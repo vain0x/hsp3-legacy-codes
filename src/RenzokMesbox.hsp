@@ -5,6 +5,7 @@
 *main
 	gsel 0, -1
 	gosub *l_var_init
+	gosub *l_init_callback
 	gosub *CreateWindow
 	gosub *OnRenewal
 	
@@ -223,6 +224,9 @@
 	sendmsg BoxInfo, 0x00B9, false, 0
 	Settitle getpath(filepath, 8)
 	
+	return
+	
+*l_init_callback
 	return
 	
 #deffunc EnableBox str prm_message
