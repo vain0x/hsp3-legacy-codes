@@ -16,14 +16,6 @@
 	end : end
 	
 //######## メッセージハンドラ ##################################################
-*OnKeyLabel
-	if ( ginfo_act == wID_Main ) {
-		if ( editbox_has_focus() ) {
-			gosub_if_able key_map_(iparam, key_map_flags_get())
-		}
-	}
-	return
-	
 *l_key_map_init
 	key_map_('S', key_map_ctrl) = *Save
 	return

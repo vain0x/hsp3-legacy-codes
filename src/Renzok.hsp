@@ -21,7 +21,7 @@
 	gosub *OnRenewal
 	
 	gsel wID_Main
-	onkey gosub *OnKeyLabel
+	onkey gosub *l_on_key
 	onexit goto *exit
 	
 	oncmd gosub *OnCommand,   0x0111			// WM_COMMAND     ListBox Ç∆ EditControl ÇÃäÑÇËçûÇ›
@@ -165,6 +165,14 @@
 	
 	// çƒï`âÊÇ∑ÇÈ
 	gosub *OnResize
+	return
+	
+*l_on_key
+	if ( ginfo_act == wID_Main ) {
+		if ( editbox_has_focus() ) {
+			gosub_if_able key_map_(iparam, key_map_flags_get())
+		}
+	}
 	return
 	
 *OnCommand
