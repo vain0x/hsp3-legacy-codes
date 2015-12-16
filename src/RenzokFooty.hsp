@@ -314,7 +314,6 @@
 	} else {
 		// その他の場所なら
 		SetSystemCursor hMain, IDC_ARROW
-		
 	}
 	return
 	
@@ -339,6 +338,7 @@
 			}
 			
 			await 0
+			
 			if ( boxin(ginfo_wx1, ginfo_wy1, ginfo_wx2, ginfo_wy2, ginfo_mx, ginfo_my) ) {
 				// ウィンドウの中なら変更し続ける
 				SetCursor LoadCursor(IDC_SIZEWE)

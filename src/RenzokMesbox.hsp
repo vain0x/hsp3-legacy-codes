@@ -196,6 +196,10 @@
 	if ( can_dragpos ) {
 		// (仮想) スプリッターの上なら
 		SetCursor LoadCursor(IDC_SIZEWE)
+		
+	} else {
+		// その他の場所なら
+		SetSystemCursor hMain, IDC_ARROW
 	}
 	return
 	
@@ -225,9 +229,9 @@
 				// ウィンドウの中なら変更し続ける
 				SetCursor LoadCursor(IDC_SIZEWE)
 				
-			;	ptDragEnd   = ginfo(0), ginfo(1)
-			;	sendmsg hMain, UWM_SPLITTERMOVE, 0, 0
-			;	ptDragStart = ptDragEnd(0), ptDragEnd(1)
+				ptDragEnd   = ginfo_mx, ginfo_my
+				sendmsg hMain, UWM_SPLITTERMOVE, 0, 0
+				ptDragStart = ptDragEnd(0), ptDragEnd(1)
 			}
 		loop
 		
