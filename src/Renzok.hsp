@@ -55,6 +55,13 @@
 	gsel wID_Main
 	return
 	
+*OnResize
+	// ウィンドウ・サイズ可変
+	MoveWindow  LbInfo,            5,            5,  LBWIDTH,  LBHEIGHT, true
+	MoveWindow BtnInfo,            5, LBHEIGHT + 5,  LBWIDTH,        20, true
+	gosub *l_resize_editbox
+	return
+	
 #define can_dragpos boxin( LBWIDTH + 5, 6, LBWIDTH + 10, ginfo_winy - 6 )
 *OnMouseMove
 	if ( can_dragpos ) {

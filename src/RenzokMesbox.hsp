@@ -47,13 +47,6 @@
 	}
 	return
 	
-*OnResize
-	// ウィンドウ・サイズ可変
-	MoveWindow  LbInfo,            5,            5,  LBWIDTH,  LBHEIGHT, true
-	MoveWindow BtnInfo,            5, LBHEIGHT + 5,  LBWIDTH,        20, true
-	gosub *l_resize_editbox
-	return
-
 *l_resize_editbox
 	MoveWindow  BoxInfo, LBWIDTH + 10,            5, BOXWIDTH, BOXHEIGHT, true
 	return
