@@ -131,7 +131,7 @@
  #endif
 #endif
 	
-	Settitle getpath(filepath, 8)				// 変更フラグをおろす
+	editbox_set_modify_flag false
 	gosub *ResetByEdited						// 編集記憶変数の再初期化
 	return
 	
@@ -301,11 +301,7 @@
 	// 保存
 	Footy2SaveToFile footyID, filepath, 0, 0
 	
-	// 編集によって行ったことをリセットする
-;	gosub *ResetByEdited			// Undo Redo 情報は残しておく
-	bModified   = false
-	Settitle getpath(filepath, 8)
-	
+	editbox_set_modify_flag false
 	gosub *l_focus_editbox
 	return
 	
@@ -372,12 +368,10 @@
 		bCanUndo    = ( cntModified != 0 )	// 編集状態なら Undo 可能
 		
 		if ( cntModified == 0 && bModified ) {
-			bModified = false
-			Settitle getpath(filepath, 8)
+			editbox_set_modify_flag false
 			
 		} else : if ( bModified == false ) {
-			bModified = true
-			Settitle getpath(filepath, 8) +" *"
+			editbox_set_modify_flag true
 		}
 		swbreak
 		
@@ -389,8 +383,7 @@
 		bCanRedo  = ( cntUndoed != 0 )		// 限界まで取り消したら偽になる
 		
 		if ( cntModified != 0 && bModified == false ) {
-			bModified  = true
-			Settitle getpath(filepath, 8) +" *"
+			editbox_set_modify_flag true
 		}
 		swbreak
 		
@@ -404,8 +397,7 @@
 		bCanRedo = false
 		
 		if ( bModified == false ) {
-			bModified  = true
-			Settitle getpath(filepath, 8) +" *"
+			editbox_set_modify_flag true
 		}
 	swend
 	return
@@ -517,6 +509,11 @@
 
 *l_focus_editbox
 	Footy2SetFocus footyID, 0
+	return
+	
+#deffunc editbox_set_modify_flag int prm_flag
+	bModified = prm_flag
+	Settitle getpath(filepath, 8) + cond_s(bModified, " *", "")
 	return
 
 #deffunc EnableBox str prm_message

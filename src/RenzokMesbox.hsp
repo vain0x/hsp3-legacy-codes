@@ -2,6 +2,8 @@
 
 #include "Renzok.hsp"
 
+#include "Mo/cond.as"
+
 *main
 	gosub *l_initialize
 	stop
@@ -50,11 +52,9 @@
 			
 			if ( bModified == false ) {				// まだ編集されていなかったときだけ
 				sendmsg BoxInfo, 0x00B8, 0, 0		// EM_GETMODIFY (編集フラグを取得)
-				if ( stat == false ) { return }
-				
-				// 編集済み状態にする
-				Settitle getpath(filepath, 8) +" *"
-				bModified = true
+				if ( stat ) {
+					editbox_set_modify_flag true
+				}
 			}
 		}
 	}
@@ -103,8 +103,7 @@
 	noteunsel
 	
 	objprm BoxInfo(1), buf
-	Settitle getpath(filepath, 8)	// 変更フラグをおろす
-	bModified = false
+	editbox_set_modify_flag false
 	return
 	
 *OnChangePath
@@ -196,11 +195,7 @@
 	notesave filepath
 	noteunsel
 	
-	// 編集済みフラグを消す
-	bModified = false
-	sendmsg BoxInfo, 0x00B9, false, 0
-	Settitle getpath(filepath, 8)
-	
+	editbox_set_modify_flag false
 	gosub *l_focus_editbox
 	return
 	
@@ -209,6 +204,13 @@
 
 *l_focus_editbox
 	objsel BoxInfo(1)	// カーソルを与える
+	return
+	
+// 編集済みフラグを変更する
+#deffunc editbox_set_modify_flag int prm_flag
+	bModified = prm_flag
+	sendmsg BoxInfo, 0x00B9, bModified, 0
+	Settitle getpath(filepath, 8) + cond_s(bModified, " *", "")
 	return
 
 #deffunc EnableBox str prm_message
