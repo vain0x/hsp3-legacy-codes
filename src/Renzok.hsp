@@ -34,6 +34,27 @@
 	gosub *l_var_init_custom
 	return
 
+*CreateWindow
+	screen wID_Main, ginfo_dispx, ginfo_dispy, 2 + 16,,, WIN_DEFAULT_X, WIN_DEFAULT_Y
+	hWindow( wID_Main ) = hwnd
+	title "Renzok"
+	syscolor 15 : boxf : color
+	
+	SetStyle hwnd, -16, 0x00040000 | 0x00010000		// 可変枠＆最大化ボタン
+	
+	gosub *l_create_listbox
+	
+	// 保存ボタン
+	objmode objmode_guifont, false
+	objsize LBWIDTH, 20
+	pos 5,  LBHEIGHT + 5 : button gosub "save", *Save
+	BtnInfo = objinfo(stat, 2), stat
+	
+	gosub *l_create_editbox
+	
+	gsel wID_Main
+	return
+	
 #define can_dragpos boxin( LBWIDTH + 5, 6, LBWIDTH + 10, ginfo_winy - 6 )
 *OnMouseMove
 	if ( can_dragpos ) {
