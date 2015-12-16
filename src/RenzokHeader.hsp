@@ -1,5 +1,5 @@
-#ifndef IG_RENZOK_AS
-#define IG_RENZOK_AS
+#ifndef ig_renzok_header_hsp
+#define ig_renzok_header_hsp
 
 #uselib "user32.dll"
 #func   global SetWindowLong "SetWindowLongA" int,int,int

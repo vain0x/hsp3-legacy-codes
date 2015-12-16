@@ -1,4 +1,4 @@
-#include "Renzok.as"
+#include "RenzokHeader.hsp"
 #packopt name STR_APPNAME
 #packopt hide 1
 
