@@ -11,6 +11,32 @@
 
 	goto *l_eof_renzok
 
+*l_initialize
+	gsel 0, -1
+	
+	gosub *l_var_init
+	gosub *l_init_callback
+	gosub *CreateWindow
+	gosub *OnRenewal
+	
+	gsel wID_Main
+	onkey gosub *OnKeyLabel
+	onexit goto *exit
+	
+	oncmd gosub *OnCommand,   0x0111			// WM_COMMAND     ListBox と EditControl の割り込み
+	oncmd gosub *OnResize,    0x0005			// WM_SIZE        サイズ可変用
+	oncmd gosub *OnSizing,    0x0214			// WM_SIZING      サイズ固定用
+	oncmd gosub *OnMouseMove, 0x0200			// WM_MOUSEMOVE   マウス監視用
+	oncmd gosub *OnLBtnDown,  0x0201			// WM_LBUTTONDOWN ドラッグ開始検知用
+	oncmd gosub *OnLoad,      UWM_LOAD
+	oncmd gosub *OnChangePath,UWM_CHANGEPATH
+	oncmd gosub *OnRenewal,   UWM_RENEWAL_LIST
+	oncmd gosub *OnSplitterMove,UWM_SPLITTERMOVE
+	
+	gsel wID_Main, 1
+	gosub *l_focus_editbox
+	return
+
 *l_var_init
 	dim hWindow, 2
 	dim rect, 4
