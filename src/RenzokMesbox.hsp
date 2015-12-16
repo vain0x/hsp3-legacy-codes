@@ -90,9 +90,9 @@
 		EnableBox "(bin file)"
 		return
 		
-	} if ( bEnable ) {
+	} if ( is_disabled ) {
 		EnableWindow BoxInfo, true
-		bEnable = false
+		is_disabled = false
 	}
 	
 	filepath = stmp				// ファイルを変更した
@@ -204,6 +204,6 @@
 	objprm BoxInfo(1), prm_message	// クリア (理由を表示)
 	Settitle "編集不可(Enable)"
 	EnableWindow BoxInfo, false	// 無効化
-	bEnable  = true
+	is_disabled  = true
 	filepath = ""
 	return

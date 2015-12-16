@@ -57,6 +57,8 @@
 	sdim path    , MAX_PATH		// 開いているフォルダのパス
 	path = dir_cur
 	
+	is_disabled = false
+	
 	gosub *l_var_init_custom
 	return
 

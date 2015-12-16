@@ -106,9 +106,9 @@
 		EnableBox "(bin file)"
 		return
 		
-	} else : if ( bEnable ) {
+	} else : if ( is_disabled ) {
 		EnableWindow Footy2GetWnd(footyID, 0), true
-		bEnable = false
+		is_disabled = false
 	}
 	
 	filepath = stmp				// ファイルを変更した
@@ -507,7 +507,7 @@
 	Settitle "編集不可(Enable)"
 	
 	EnableWindow Footy2GetWnd(footyID, 0), false
-	bEnable  = true
+	is_disabled = true
 	filepath = ""
 	return
 	
