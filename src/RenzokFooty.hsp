@@ -92,6 +92,10 @@
 	// ウィンドウ・サイズ可変
 	MoveWindow  LbInfo,            5,            5,  LBWIDTH,  LBHEIGHT, true
 	MoveWindow BtnInfo,            5, LBHEIGHT + 5,  LBWIDTH,        20, true
+	gosub *l_resize_editbox
+	return
+	
+*l_resize_editbox
 	Footy2Move footyID, LBWIDTH + 10,            5, BOXWIDTH, BOXHEIGHT
 	return
 	
