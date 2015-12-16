@@ -1,4 +1,6 @@
 
+#define global MAX_TEXTLEN 0x7FFFFFFF  // 無制限
+
 #include "Renzok.hsp"
 
 	#define __ODLB_LISTBOX
@@ -102,6 +104,14 @@
 	
 	exist stmp
 	if ( strsize < 0 ) { return }		// ない ( IsBinFile が調べてくれる )
+	if ( strsize >= MAX_TEXTLEN ) {
+		editbox_load_error {"
+			ファイルサイズが大きすぎる。
+			(File too large)
+			"}+ ( strsize / 1024 ) +{"KB
+		"}
+		return
+	}
 	if ( IsBinFile( stmp ) <= 0 ) {		// 0 = Binary : 1 = Text : -1 = Unknown
 		editbox_load_error {"
 			テキストではないファイルは編集できない。

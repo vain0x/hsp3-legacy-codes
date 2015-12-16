@@ -1,4 +1,5 @@
 
+#define global MAX_TEXTLEN 0x1FFFF  // 127KB までサポート
 
 #include "Renzok.hsp"
 

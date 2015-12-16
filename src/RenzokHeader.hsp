@@ -34,8 +34,6 @@
 #define global WIN_DEFAULT_X 640
 #define global WIN_DEFAULT_Y 480
 
-#define global MAX_TEXTLEN 0x1FFFF  // 127KB までサポート
-
 #define global LBWIDTH   _LbWidth@
 #define global LBHEIGHT  (ginfo_winy - (10 + 20) + 5)
 #define global BOXWIDTH  (ginfo_winx - (LBWIDTH + 15))
