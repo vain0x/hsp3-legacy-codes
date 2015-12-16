@@ -10,7 +10,9 @@
 #include "Mo/MCNoteRepeat.as"
 #include "Mo/cond.as"
 
-	goto *l_eof_renzok
+*l_main
+	gosub *l_initialize
+	stop
 
 *l_initialize
 	gsel 0, -1
@@ -311,6 +313,3 @@
 		is_disabled  = true
 	}
 	return
-	
-// ƒtƒ@ƒCƒ‹––”ö
-*l_eof_renzok

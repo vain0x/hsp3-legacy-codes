@@ -13,10 +13,6 @@
 #include "Mo/GetFontOfHSP.as"
 #include "Mo/MenuBarAPI.as"
 
-*main
-	gosub *l_initialize
-	stop
-	
 *l_var_init_custom
 	dim  iList					// Listbox ‚Ì‘I‘ð‚³‚ê‚Ä‚¢‚éIndex
 	
