@@ -8,6 +8,7 @@
 #include "Mo/IsBinFile.as"
 #include "Mo/SysCursor.as"
 #include "Mo/MCNoteRepeat.as"
+#include "Mo/cond.as"
 
 	goto *l_eof_renzok
 
@@ -257,6 +258,13 @@
 	gosub *l_focus_editbox
 	return
 	
+// 編集済みフラグを変更する
+#deffunc editbox_set_modify_flag int prm_flag
+	bModified = prm_flag
+	Settitle getpath(filepath, 8) + cond_s(bModified, " *", "")
+	editbox_set_modify_flag_impl
+	return
+
 // 編集ボックスの有効化・無効化
 #deffunc editbox_set_enable int prm_enable
 

@@ -3,8 +3,6 @@
 
 #include "Renzok.hsp"
 
-#include "Mo/cond.as"
-
 *main
 	gosub *l_initialize
 	stop
@@ -121,13 +119,6 @@
 	
 	objprm BoxInfo(1), buf
 	editbox_set_modify_flag false
-	return
-	
-// 編集済みフラグを変更する
-#deffunc editbox_set_modify_flag int prm_flag
-	bModified = prm_flag
-	Settitle getpath(filepath, 8) + cond_s(bModified, " *", "")
-	editbox_set_modify_flag_impl
 	return
 	
 #deffunc editbox_set_modify_flag_impl

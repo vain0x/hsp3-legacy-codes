@@ -13,7 +13,6 @@
 #include "hpi/hscallbk/hscallbk.as"
 #include "Mo/GetFontOfHSP.as"
 #include "Mo/MenuBarAPI.as"
-#include "Mo/cond.as"
 
 *main
 	gosub *l_initialize
@@ -439,13 +438,6 @@
 	gosub *ResetByEdited						// 編集記憶変数の再初期化
 	return
 	
-// 編集済みフラグを変更する
-#deffunc editbox_set_modify_flag int prm_flag
-	bModified = prm_flag
-	Settitle getpath(filepath, 8) + cond_s(bModified, " *", "")
-	editbox_set_modify_flag_impl
-	return
-
 #deffunc editbox_set_modify_flag_impl
 	// pass
 	return
