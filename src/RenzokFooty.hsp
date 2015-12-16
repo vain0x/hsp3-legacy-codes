@@ -1,6 +1,5 @@
-#include "RenzokHeader.hsp"
-#packopt name STR_APPNAME
-#packopt hide 1
+
+#include "Renzok.hsp"
 
 	#define __ODLB_LISTBOX
 	#define __LOAD_MODE 1		// 0 => TextFromFile, 1 => SelectAll
@@ -10,13 +9,8 @@
 #include "Mo/Footy2mod.as"
 #include "Mo/ClrtxtOptimize.as"
 #include "hpi/hscallbk/hscallbk.as"
-#include "Mo/flexFrame.as"
-#include "Mo/FolderSelectDialog.as"
 #include "Mo/GetFontOfHSP.as"
-#include "Mo/IsBinFile.as"
-#include "Mo/SysCursor.as"
 #include "Mo/MenuBarAPI.as"
-#include "Mo/MCNoteRepeat.as"
 #include "Mo/cond.as"
 
 *main

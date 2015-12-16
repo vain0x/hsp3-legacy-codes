@@ -1,0 +1,10 @@
+
+#include "RenzokHeader.hsp"
+#packopt name STR_APPNAME
+#packopt hide 1
+
+#include "Mo/flexFrame.as"
+#include "Mo/FolderSelectDialog.as"
+#include "Mo/IsBinFile.as"
+#include "Mo/SysCursor.as"
+#include "Mo/MCNoteRepeat.as"
