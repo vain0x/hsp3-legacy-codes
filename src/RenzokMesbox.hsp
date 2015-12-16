@@ -282,12 +282,7 @@
 	
 	SetStyle hwnd, -16, 0x00040000 | 0x00010000		// 可変枠＆最大化ボタン
 	
-	// リストボックス
-	font LISTBOX_FONT_FAMILY, LISTBOX_FONT_SIZE
-	objmode objmode_usefont, false
-	objsize LBWIDTH, LBHEIGHT
-	pos 5, 5 : listbox iList, 0, ""
-	ListInfo = objinfo(stat, 2), stat
+	gosub *l_create_listbox
 	
 	// 保存ボタン
 	objmode objmode_guifont, false
@@ -302,6 +297,14 @@
 	BoxInfo = objinfo(stat, 2), stat
 	
 	gsel wID_Main
+	return
+	
+*l_create_listbox
+	font LISTBOX_FONT_FAMILY, LISTBOX_FONT_SIZE
+	objmode objmode_usefont, false
+	objsize LBWIDTH, LBHEIGHT
+	pos 5, 5 : listbox iList, 0, ""
+	ListInfo = objinfo(stat, 2), stat
 	return
 	
 *Save

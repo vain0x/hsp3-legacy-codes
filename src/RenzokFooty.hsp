@@ -423,28 +423,10 @@
 	
 	SetStyle hwnd, -16, 0x00040000 | 0x00010000		// 可変枠＆最大化ボタン
 	
-	objmode objmode_guifont, false
-	
-	// リストボックス
-#ifdef __ODLB_LISTBOX
-	ODLbCreate hwnd, 5, 5, LBWIDTH, LBHEIGHT
-	LbInfo(1) = stat
-	LbInfo(0) = ODLbGetHandle( LbInfo(1) )
-	
-	// リストボックスの設定
-	ODLbSetItemHeight  LbInfo(1), 14				// 小さめにしておく
-	ODLbSetItemMargin  LbInfo(1), 1
-	ODLbSetMarginColor LbInfo(1), , 0xFFCCCC
-	
-	hFont = CreateFontByHSP(LISTBOX_FONT_FAMILY, LISTBOX_FONT_SIZE, 0)
-	ODLbSetFont LbInfo(1), hFont
-#else
-	objsize LBWIDTH, LBHEIGHT
-	pos 5, 5 : listbox iList, 0, ""
-	LbInfo = objinfo(stat, 2), stat
-#endif
+	gosub *l_create_listbox
 	
 	// 保存ボタン
+	objmode objmode_guifont, false
 	objsize LBWIDTH, 20
 	pos 5,  LBHEIGHT + 5 : button gosub "save", *Save
 	BtnInfo = objinfo(stat, 2), stat
@@ -456,6 +438,20 @@
 ;	gosub *SetFooty
 	
 	gsel wID_Main
+	return
+	
+*l_create_listbox
+	ODLbCreate hwnd, 5, 5, LBWIDTH, LBHEIGHT
+	LbInfo(1) = stat
+	LbInfo(0) = ODLbGetHandle( LbInfo(1) )
+	
+	// リストボックスの設定
+	ODLbSetItemHeight  LbInfo(1), 14				// 小さめにしておく
+	ODLbSetItemMargin  LbInfo(1), 1
+	ODLbSetMarginColor LbInfo(1), , 0xFFCCCC
+	
+	hFont = CreateFontByHSP(LISTBOX_FONT_FAMILY, LISTBOX_FONT_SIZE, 0)
+	ODLbSetFont LbInfo(1), hFont
 	return
 	
 *Save
