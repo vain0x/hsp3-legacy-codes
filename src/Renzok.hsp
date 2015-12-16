@@ -163,6 +163,44 @@
 	gosub *OnResize
 	return
 	
+*OnLoad
+	// 読み込むファイル名を取得
+	sendmsg LbInfo, 0x0188, 0, 0 : iList = stat
+	sendmsg LbInfo, 0x0189, iList, varptr(stmp)
+	
+	if ( iList < 0 ) { return }					// 選択アイテムがない場合も無視する
+	
+	// Ｗクリックが必要なものは無視
+	if ( stmp == STR_SEPARATOR ) { return }
+	if ( stmp == STR_DIALOG    ) { return }		// フォルダ移動か？
+	if ( peek(stmp) == '['     ) { return }		// フォルダか？
+	
+	// ファイルなら
+	stmp = path +"\\"+ stmp
+	if ( filepath == stmp ) { return }	// すでに開いている
+	
+	exist stmp
+	if ( strsize < 0 ) { return }		// ない ( IsBinFile が調べてくれる )
+	if ( strsize >= MAX_TEXTLEN ) {
+		editbox_load_error {"
+			ファイルサイズが大きすぎる。
+			(File too large)
+			"}+ ( strsize / 1024 ) +{"KB
+		"}
+		return
+	}
+	if ( IsBinFile( stmp ) <= 0 ) {		// 0 = Binary : 1 = Text : -1 = Unknown
+		editbox_load_error {"
+			テキストではないファイルは編集できない。
+			(Non-text file isn't supported.)
+		"}
+		return
+	}
+	
+	editbox_set_enable true
+	editbox_load_text_file stmp
+	return
+	
 *Save
 	if ( filepath == STR_DIALOG ) { return }
 	
