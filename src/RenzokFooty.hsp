@@ -86,45 +86,6 @@
 	}
 	return
 	
-*OnChangePath
-	// 読み込むファイル名を取得
-	sendmsg LbInfo, 0x0188, 0, 0
-	iList = stat
-	if ( iList < 0 ) { return }	// 選択アイテムがない場合は無視
-	
-	sendmsg LbInfo, 0x0189, iList, varptr(stmp)
-	
-	// セパレータか？
-	if ( stmp == STR_SEPARATOR ) { return }
-	
-	// フォルダ移動か？
-	if ( stmp == STR_DIALOG ) {
-		foldlg "", path, 0
-		if ( stat == false ) {			// 成功したとき
-			path = refstr
-			sendmsg hMain, UWM_RENEWAL_LIST, 0, 0
-		}
-		return
-	}
-	
-	// フォルダか？
-	if ( peek(stmp) == '[' ) {
-		
-		if ( stmp == STR_BACK ) {
-			// 最後のフォルダ名と \ を取り除く
-			     path = getpath(path, 32)
-			poke path,   strlen(path) - 1, 0
-			
-		} else {
-			getstr stmp, stmp, 1, ']'
-			path += "/" + stmp
-		}
-		
-		sendmsg hMain, UWM_RENEWAL_LIST, 0, 0
-		return
-	}
-	return
-	
 *OnRenewal
 	// ListBox を再構築する
 	ODLbClearItem LbInfo(1)
