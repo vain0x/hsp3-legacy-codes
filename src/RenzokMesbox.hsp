@@ -79,22 +79,22 @@
 	exist stmp
 	if ( strsize < 0 ) { return }		// ない ( IsBinFile が調べてくれる )
 	if ( strsize >= MAX_TEXTLEN ) {
-		EnableBox {"
-			ファイルサイズが大きすぎます
-			(This file's size is too big to load it.)
+		editbox_load_error {"
+			ファイルサイズが大きすぎる。
+			(File too large)
 			"}+ ( strsize / 1024 ) +{"KB
 		"}
 		return
 		
 	} if ( IsBinFile( stmp ) <= 0 ) {	// 0 = Binary : 1 = Text : -1 = Unknown
-		EnableBox "(bin file)"
+		editbox_load_error {"
+			テキストではないファイルは編集できない。
+			(Non-text file isn't supported.)
+		"}
 		return
-		
-	} if ( is_disabled ) {
-		EnableWindow BoxInfo, true
-		is_disabled = false
 	}
 	
+	editbox_set_enable true
 	filepath = stmp				// ファイルを変更した
 	
 ;	memexpand buf, strsize + 5
@@ -192,7 +192,7 @@
 	
 	editbox_set_modify_flag false
 	return
-
+	
 // 編集済みフラグを変更する
 #deffunc editbox_set_modify_flag int prm_flag
 	bModified = prm_flag
@@ -200,10 +200,25 @@
 	Settitle getpath(filepath, 8) + cond_s(bModified, " *", "")
 	return
 
-#deffunc EnableBox str prm_message
-	objprm BoxInfo(1), prm_message	// クリア (理由を表示)
-	Settitle "編集不可(Enable)"
-	EnableWindow BoxInfo, false	// 無効化
-	is_disabled  = true
-	filepath = ""
+// 編集ボックスの有効化・無効化
+#deffunc editbox_set_enable int prm_enable
+
+	if ( prm_enable ) {
+		if ( is_disabled ) {
+			EnableWindow BoxInfo, true
+			is_disabled = false
+		}
+		
+	} else {
+		Settitle "編集不可(Enable)"
+		EnableWindow BoxInfo, false
+		is_disabled  = true
+	}
+	return
+	
+#deffunc editbox_load_error str prm_message
+
+	editbox_set_enable false
+	filepath = ""	
+	objprm BoxInfo(1), prm_message
 	return
