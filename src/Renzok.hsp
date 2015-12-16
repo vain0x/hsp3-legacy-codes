@@ -33,5 +33,73 @@
 	gosub *l_var_init_custom
 	return
 
+#define can_dragpos boxin( LBWIDTH + 5, 6, LBWIDTH + 10, ginfo_winy - 6 )
+*OnMouseMove
+	if ( can_dragpos ) {
+		// (仮想) スプリッターの上なら
+		SetCursor LoadCursor(IDC_SIZEWE)
+		
+	} else {
+		// その他の場所なら
+		SetSystemCursor hMain, IDC_ARROW
+	}
+	return
+	
+*OnLBtnDown
+	if ( can_dragpos ) {
+		bDragging   = true
+		ptDragStart = ginfo_mx, ginfo_my
+		
+		// マウスの移動範囲を制限する
+		dim rc, 4
+		rc(0) = ginfo_wx1 + ( 10 + 60 )
+		rc(1) = ginfo_wy1 + 40
+		rc(2) = ginfo_wx2 - ( 10 + 60 )
+		rc(3) = ginfo_wy2 - 10
+		ClipCursor varptr(rc)
+		
+		// 無限ループ
+		repeat
+			
+			if ( getkey(1) == false && getkey(2) == false ) {
+				break
+			}
+			
+			await 0
+			
+			if ( boxin(ginfo_wx1, ginfo_wy1, ginfo_wx2, ginfo_wy2, ginfo_mx, ginfo_my) ) {
+				// ウィンドウの中なら変更し続ける
+				SetCursor LoadCursor(IDC_SIZEWE)
+				
+				ptDragEnd   = ginfo_mx, ginfo_my
+				sendmsg hMain, UWM_SPLITTERMOVE, 0, 0
+				ptDragStart = ptDragEnd(0), ptDragEnd(1)
+			}
+		loop
+		
+		// ドロップされた
+		if ( bDragging ) {
+			ClipCursor NULL							// 移動制限を解放
+			bDragging = false
+			ptDragEnd = ginfo_mx, ginfo_my
+			
+			sendmsg hMain, UWM_SPLITTERMOVE, 0, 0
+		}
+	}
+	return
+	
+*OnSplitterMove
+	_LbWidth += ptDragEnd(0) - ptDragStart(0)
+	if ( _LbWidth <= 30 ) {
+		 _LbWidth  = 30
+		
+	} else : if ( _LbWidth >= (ginfo_winx - 60) ) {
+		_LbWidth = ginfo_winx - 60
+	}
+	
+	// 再描画する
+	gosub *OnResize
+	return
+	
 // ファイル末尾
 *l_eof_renzok
