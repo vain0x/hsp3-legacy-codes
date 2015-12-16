@@ -16,10 +16,8 @@
 *main
 	gsel 0, -1
 	
-#ifdef __ODLB_LISTBOX
 	oncmd gosub *OnDrawItem   , 0x002B
 	oncmd gosub *OnMeasureItem, 0x002C
-#endif
 	
 	gosub *l_var_init
 	gosub *SetCallback
@@ -53,10 +51,8 @@
 	if ( hShortMenu ) { DestroyMenu hShortMenu }
 	gosub *DeleteClrtxtCache
 	
-#ifdef __ODLB_LISTBOX
 	DeleteFont  hFont : hFont = NULL
 ;	ODLbDestroy LbInfo(1)
-#endif
 	end : end
 	
 //######## ƒƒbƒZ[ƒWƒnƒ“ƒhƒ‰ ##################################################
@@ -104,7 +100,6 @@
 	OnSizingToFlexFrame 160, 120
 	return
 	
-#ifdef __ODLB_LISTBOX
 *OnDrawItem
 	ODLbProc LbInfo(1), iparam, wparam, lparam
 	return stat
@@ -112,7 +107,6 @@
 *OnMeasureItem
 	ODLbProc LbInfo(1), iparam, wparam, lparam
 	return stat
-#endif
 	
 *OnCommand
 	if ( lparam == LbInfo ) {
@@ -127,10 +121,8 @@
 			sendmsg hMain, UWM_CHANGEPATH, 0, 0
 			swbreak
 		default
-#ifdef __ODLB_LISTBOX
 			ODLbProc LbInfo(1), iparam, wparam, lparam
 			return stat
-#endif
 		swend
 	}
 	return
@@ -224,7 +216,6 @@
 	
 *OnRenewal
 	// ListBox ‚ğÄ\’z‚·‚é
-#ifdef __ODLB_LISTBOX
 	ODLbClearItem LbInfo(1)
 	sendmsg LbInfo, 0x000B, false, 0			// WM_SETREDRAW ( Ä•`‰æ‹Ö~ )
 	
@@ -255,20 +246,6 @@
 	
 	sendmsg LbInfo, 0x000B, true, 0					// WM_SETREDRAW ( Ä•`‰æ‹–‰Â )
 	return
-	
-#else
-	// ListBox ‚ğÄ\’z‚·‚é
-	sendmsg LbInfo, 0x0184, 0, 0						// LB_RESETCONTENT
-;	sendmsg LbInfo, 0x018D, 0x0010, path +"\\*.*"		// LB_DIR (wparam == DDL_DIRECTORY)
-	sendmsg LbInfo, 0x000B, false, 0					// WM_SETREDRAW ( Ä•`‰æ‹Ö~ )
-	DirlistEx  filelist, path
-	NoteRepeat filelist
-		sendmsg LbInfo, 0x0180, 0, nrNote
-	NoteLoop
-	sendmsg LbInfo, 0x0180, 0, STR_DIALOG				// LB_ADD
-	sendmsg LbInfo, 0x000B, true, 0						// WM_SETREDRAW ( Ä•`‰æ‹–‰Â )
-	return
-#endif
 	
 *OnContextMenu
 	repeat 4
