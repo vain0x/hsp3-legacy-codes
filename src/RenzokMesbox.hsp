@@ -51,11 +51,6 @@
 	MoveWindow  BoxInfo, LBWIDTH + 10,            5, BOXWIDTH, BOXHEIGHT, true
 	return
 	
-*OnSizing
-	// ウィンドウ可変の最低サイズを決める
-	OnSizingToFlexFrame 160, 120
-	return
-	
 *OnCommand
 	if ( lparam == LbInfo ) {
 		// リストボックスの割り込み

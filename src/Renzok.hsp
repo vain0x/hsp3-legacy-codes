@@ -62,6 +62,11 @@
 	gosub *l_resize_editbox
 	return
 	
+*OnSizing
+	// ウィンドウ可変の最低サイズを決める
+	OnSizingToFlexFrame 160, 120
+	return
+	
 #define can_dragpos boxin( LBWIDTH + 5, 6, LBWIDTH + 10, ginfo_winy - 6 )
 *OnMouseMove
 	if ( can_dragpos ) {

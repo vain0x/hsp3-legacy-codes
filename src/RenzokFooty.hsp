@@ -92,11 +92,6 @@
 	Footy2Move footyID, LBWIDTH + 10,            5, BOXWIDTH, BOXHEIGHT
 	return
 	
-*OnSizing
-	// ウィンドウ可変の最低サイズを決める
-	OnSizingToFlexFrame 160, 120
-	return
-	
 *OnDrawItem
 	ODLbProc LbInfo(1), iparam, wparam, lparam
 	return stat
