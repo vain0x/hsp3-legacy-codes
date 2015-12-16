@@ -257,5 +257,21 @@
 	gosub *l_focus_editbox
 	return
 	
+// 編集ボックスの有効化・無効化
+#deffunc editbox_set_enable int prm_enable
+
+	if ( prm_enable ) {
+		if ( is_disabled ) {
+			editbox_set_enable_impl true
+			is_disabled = false
+		}
+		
+	} else {
+		Settitle "編集不可(Enable)"
+		editbox_set_enable_impl false
+		is_disabled  = true
+	}
+	return
+	
 // ファイル末尾
 *l_eof_renzok
