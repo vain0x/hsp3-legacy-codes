@@ -63,10 +63,11 @@
 	
 *OnChangePath
 	// 読み込むファイル名を取得
-	sendmsg LbInfo, 0x0188, 0, 0 : iList = stat
-	sendmsg LbInfo, 0x0189, iList, varptr(stmp)
+	sendmsg LbInfo, 0x0188, 0, 0
+	iList = stat
+	if ( iList < 0 ) { return }	// 選択アイテムがない場合は無視
 	
-	if ( iList < 0 ) { return }					// 選択アイテムがない場合も無視する
+	sendmsg LbInfo, 0x0189, iList, varptr(stmp)
 	
 	// セパレータか？
 	if ( stmp == STR_SEPARATOR ) { return }
@@ -91,7 +92,7 @@
 			
 		} else {
 			getstr stmp, stmp, 1, ']'			// フォルダ名を取得
-			path += "\\"+ stmp
+			path += "/" + stmp
 		}
 		
 		sendmsg hMain, UWM_RENEWAL_LIST, 0, 0

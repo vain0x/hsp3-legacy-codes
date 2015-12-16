@@ -87,8 +87,11 @@
 	return
 	
 *OnChangePath
-	// 読み込む項目を取得
-	sendmsg LbInfo, 0x0188, 0, 0 : iList = stat : if ( iList < 0 ) { return }	// 選択アイテムがない場合は無視
+	// 読み込むファイル名を取得
+	sendmsg LbInfo, 0x0188, 0, 0
+	iList = stat
+	if ( iList < 0 ) { return }	// 選択アイテムがない場合は無視
+	
 	sendmsg LbInfo, 0x0189, iList, varptr(stmp)
 	
 	// セパレータか？
