@@ -37,9 +37,9 @@
 #define global MAX_TEXTLEN 0x1FFFF  // 127KB までサポート
 
 #define global LBWIDTH   _LbWidth@
-#define global LBHEIGHT  (ginfo(13) - (10 + 20) + 5)
-#define global BOXWIDTH  (ginfo(12) - (LBWIDTH + 15))
-#define global BOXHEIGHT (ginfo(13) - 10)
+#define global LBHEIGHT  (ginfo_winy - (10 + 20) + 5)
+#define global BOXWIDTH  (ginfo_winx - (LBWIDTH + 15))
+#define global BOXHEIGHT (ginfo_winy - 10)
 
 // メッセージ
 #const global WM_USER			 0x0400 + 0x0100
