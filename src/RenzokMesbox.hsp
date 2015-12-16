@@ -251,6 +251,12 @@
 	
 *OnSplitterMove
 	_LbWidth += ptDragEnd(0) - ptDragStart(0)
+	if ( _LbWidth <= 30 ) {
+		 _LbWidth  = 30
+		
+	} else : if ( _LbWidth >= (ginfo_winx - 60) ) {
+		_LbWidth = ginfo_winx - 60
+	}
 	
 	// çƒï`âÊÇ∑ÇÈ
 	gosub *OnResize
