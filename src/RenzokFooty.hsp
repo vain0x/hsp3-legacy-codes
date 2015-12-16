@@ -103,14 +103,14 @@
 	exist stmp
 	if ( strsize < 0 ) { return }		// ない ( IsBinFile が調べてくれる )
 	if ( IsBinFile( stmp ) <= 0 ) {		// 0 = Binary : 1 = Text : -1 = Unknown
-		EnableBox "(bin file)"
+		editbox_load_error {"
+			テキストではないファイルは編集できない。
+			(Non-text file isn't supported.)
+		"}
 		return
-		
-	} else : if ( is_disabled ) {
-		EnableWindow Footy2GetWnd(footyID, 0), true
-		is_disabled = false
 	}
 	
+	editbox_set_enable true
 	filepath = stmp				// ファイルを変更した
 	
 	// ファイルを開く
@@ -502,12 +502,25 @@
 	Settitle getpath(filepath, 8) + cond_s(bModified, " *", "")
 	return
 
-#deffunc EnableBox str prm_message
-	Footy2SetText footyID, prm_message
-	Settitle "編集不可(Enable)"
-	
-	EnableWindow Footy2GetWnd(footyID, 0), false
-	is_disabled = true
-	filepath = ""
+// 編集ボックスの有効化・無効化
+#deffunc editbox_set_enable int prm_enable
+
+	if ( prm_enable ) {
+		if ( is_disabled ) {
+			EnableWindow Footy2GetWnd(footyID, 0), true
+			is_disabled = false
+		}
+		
+	} else {
+		Settitle "編集不可(Enable)"
+		EnableWindow Footy2GetWnd(footyID, 0), false
+		is_disabled  = true
+	}
 	return
 	
+#deffunc editbox_load_error str prm_message
+
+	editbox_set_enable false
+	filepath = ""	
+	Footy2SetText footyID, prm_message
+	return
