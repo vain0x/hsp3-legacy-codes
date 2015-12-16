@@ -186,7 +186,7 @@
 		// ‘I‚×‚é
 		dialog "*", 17, "•Û‘¶æ"
 		if ( stat == false ) {
-			objsel BoxInfo(1)
+			gosub *l_focus_editbox
 			return
 		}
 		filepath = refstr
@@ -201,6 +201,7 @@
 	sendmsg BoxInfo, 0x00B9, false, 0
 	Settitle getpath(filepath, 8)
 	
+	gosub *l_focus_editbox
 	return
 	
 *l_init_callback

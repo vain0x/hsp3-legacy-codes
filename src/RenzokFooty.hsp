@@ -292,7 +292,7 @@
 		// ëIÇ◊ÇÈ
 		dialog "*", 17, "ï€ë∂êÊ"
 		if ( stat == false ) {
-			Footy2SetFocus footyID, 0
+			gosub *l_focus_editbox
 			return
 		}
 		filepath = refstr
@@ -306,8 +306,7 @@
 	bModified   = false
 	Settitle getpath(filepath, 8)
 	
-	Footy2SetFocus footyID, 0
-	
+	gosub *l_focus_editbox
 	return
 	
 *ResetByEdited
