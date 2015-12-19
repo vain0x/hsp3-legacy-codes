@@ -121,7 +121,6 @@
 #define true  1
 #define false 0
 #define nBitOfInt 32	// int型のビット数
-#define mv modvar Tabmod@
 
 //------------------------------------------------
 //        マクロ
@@ -201,7 +200,7 @@
 	return (stat)
 	
 #define global ctype GetTabStrItem(%1,%2=0,%3=511) _GetTabStrItem(%1,%2,%3)
-#defcfunc _GetTabStrItem mv, int p2, int p3
+#modcfunc _GetTabStrItem int p2, int p3
 	
 	memexpand pszText, p3 + 1					// 必要なだけ拡張する
 	tcitem = 1, 0, 0, varptr(pszText), p3		// ポインタ, バッファ数
@@ -359,7 +358,7 @@
 //----------------------------------------------------------
 // イメージリストの取得
 //----------------------------------------------------------
-#defcfunc GetTabImageList mv
+#modcfunc GetTabImageList
 	sendmsg hTab, 0x1302, 0, 0		// TCM_GETIMAGELIST (hImageList を取得)
 	return (stat)
 	
@@ -379,7 +378,7 @@
 // 
 // @ 座標は絶対座標
 //----------------------------------------------------------
-#defcfunc NumberOfTabInPoint mv, int p2, int p3, local tabrect, local cntTabs, local ptMouse, local nRet
+#modcfunc NumberOfTabInPoint int p2, int p3, local tabrect, local cntTabs, local ptMouse, local nRet
 	sendmsg hTab, 0x1304, 0, 0	// TCM_GETITEMCOUNT (タブ数を取得)
 	cntTabs = stat
 	
@@ -434,7 +433,7 @@
 //----------------------------------------------------------
 // 取得関数
 //----------------------------------------------------------
-#defcfunc TabInt mv, int p2		// tabindex
+#modcfunc TabInt int p2		// tabindex
  #ifdef __USE_TABINT_ON__
 	return LPRM( p2 )
  #else
@@ -444,27 +443,27 @@
 //##########################################################
 //        内部参照用関数
 //##########################################################
-#defcfunc GetTabHandle mv
+#modcfunc GetTabHandle
 	return hTab
 	
-#defcfunc GetTabNum mv
+#modcfunc GetTabNum
 	sendmsg hTab, 0x1304, 0, 0		// TCM_GETITEMCOUNT (数を取得する)
 	TabNum = stat					// 調整
 	return TabNum
 	
-#defcfunc ActTabIndex mv
+#modcfunc ActTabIndex
 	return Index
 	
-#defcfunc ActTabWinID mv
+#modcfunc ActTabWinID
 	return wID
 	
-#defcfunc  ItoW mv, int p2		// iTabItem -> WindowID
+#modcfunc  ItoW int p2		// iTabItem -> WindowID
 	return TtoW( limit( p2, 0, TabNum ) )
 	
-#defcfunc  WtoI mv, int p2		// WindowID -> iTabItem
+#modcfunc  WtoI int p2		// WindowID -> iTabItem
 	return WtoT( limit( p2, 0, TabNum ) )
 	
-#defcfunc IsReverse mv
+#modcfunc IsReverse
 	return bReverse != 0
 	
 #global
