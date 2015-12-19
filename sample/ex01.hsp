@@ -1,11 +1,5 @@
 #include "../tab_ctrl.hsp"
 
-	;#define __USE_BITMAP__
-
-#ifdef __USE_BITMAP__
- #include "BitmapMaker.as"
-#endif
-
 #const global IDW_TABTOP 10
 
 // 取得用マクロ
@@ -15,13 +9,6 @@
 #uselib "user32.dll"
 #func   GetWindowRect "GetWindowRect" int,int
 
- #ifdef __USE_BITMAP__	
-	// イメージリスト作成(しなくても良い) (16×16×4, 24bit, マスクあり)
-	CreateImageList 16, 16, 25, 4 : hIml = stat		// イメージリストのハンドル
-	buffer 2, , , 0 : picload "treeicon.bmp"		// ビットマップの読み込み
-	AddImageList hIml, 0, 0, 16 * 4, 16, 0xF0CAA6	// イメージリストにイメージを追加
- #endif
-	
 	screen 0, 400, 300			// メインのウィンドウ
 	syscolor 15 : boxf : color
 	title "Tabmod SAMPLE"
@@ -38,10 +25,6 @@
 	// フォントが変更出来ます。必須ではありません。
 	// font 命令と同じ感覚で使用できます。
 	ChangeTabStrFont mTab, "ＭＳ 明朝", 15, 4	// 下線はアクティブなタブにのみ付くようです
-	
- #ifdef __USE_BITMAP__
-	SetTabImageList mTab, hIml					// イメージリストを関連づける
- #endif
 	
 	// アイテムの挿入 ( モジュール変数, つまみの文字列, 挿入位置 )
 	// 挿入位置を省略すると、一番後ろ( 通常は右 )に追加します。
@@ -65,13 +48,6 @@
 	InsertTab mTab, "EEE", 0	// 0 …… 左端
 		pos 50, 50 : mes "E"
 		
- #ifdef __USE_BITMAP__
-	// イメージを付ける。ここでやらなくてもいいのに……
-	repeat 4
-		SetTabImage mTab, cnt, cnt
-	loop
- #endif
-	
 //	タブの項目追加が終わったら、タブ内に貼り付けた bgscr 命令が非表示状態になっているので、
 //	表示されるよう gsel 命令を指定してください。
 //	CreateTab 命令で指定した ウィンドウID の初期値と同じ値を指定します。
