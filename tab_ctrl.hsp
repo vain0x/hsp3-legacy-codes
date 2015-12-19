@@ -3,17 +3,6 @@
 #ifndef IG_TABCONTROL_MODULE_AS
 #define IG_TABCONTROL_MODULE_AS
 
-#module
-// 内部処理用命令 ( int 型一次元配列を拡張 )
-#deffunc ____ArrayExpand array p1, int p2, local temp
-	if ( length(p1) >= p2 ) { return }	// 増えない場合は無視
-	dim    temp, length(p1)
-	memcpy temp, p1, length(p1) * 4		// コピー
-	dim    p1, p2
-	memcpy p1, temp, length(temp) * 4	// 戻す
-	return
-#global
-
 // TabInt ( 関連数値 ) 機能を使う場合は、定義してください。
 ;	#define __USE_TABINT__
 
@@ -133,8 +122,6 @@
 #define false 0
 #define nBitOfInt 32	// int型のビット数
 #define mv modvar Tabmod@
-
-#define redim ____ArrayExpand
 
 //------------------------------------------------
 //        マクロ
@@ -262,13 +249,13 @@
 		InsPos = rvI( limit(p3, 0, TabNum + 1) )
 	}
 	
-	// テーブルの修正
-	redim    WtoT, TabNum + 1	// 配列を、タブの数ぶんにまで拡張 ( + 1 は保険 )
-	redim	 TtoW, TabNum + 1	// 同上
+	// 配列を、タブの数ぶんにまで拡張
+	WtoT(TabNum) = 0
+	TtoW(TabNum) = 0
 	ArrayIns TtoW, InsPos		// 要素を配列の途中に挿入する
 	
  #ifdef __USE_TABINT_ON__
-	redim    LPRM, TabNum + 1
+	LPRM(TabNum) = 0
 	ArrayIns LPRM, InsPos
  #endif
 	
@@ -482,7 +469,5 @@
 	
 #global
 _Tabmod_init
-
-#undef ____ArrayExpand
 
 #endif	// モジュール全体
