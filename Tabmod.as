@@ -1,26 +1,36 @@
 // タブコントロール操作モジュール
 
-#ifndef __TABCONTROL_MODULE__
-#define __TABCONTROL_MODULE__
+#ifndef IG_TABCONTROL_MODULE_AS
+#define IG_TABCONTROL_MODULE_AS
+
+#addition "Mo/GetFontOfHSP.as"	// フォント取得モジュール
+#ifndef CreateFontByHSP			// ↓圧縮版
+ #module gfoh_mod
+	#uselib "gdi32.dll"
+	#func   CreateFontIndirect@gfoh_mod "CreateFontIndirectA" int
+	#func   GetObject@gfoh_mod          "GetObjectA" int,int,int
+	
+	#deffunc GetStructLogfont array _logfont, local bmscr
+		dim _logfont,15:mref bmscr,67:GetObject bmscr(38),60,varptr(_logfont):return
+	#defcfunc GetFontName local sRet
+		sdim sRet:GetStructLogfont logfont:getstr sRet,logfont(7):return sRet
+	#defcfunc GetFontSize int bStillGotLogfont
+		if (bStillGotLogfont==0) {GetStructLogfont logfont}return abs(logfont(0))
+	#defcfunc GetFontStyle int bStillGotLogfont
+		if (bStillGotLogfont==0) {GetStructLogfont logfont}return ((logfont(4)>=700))|(((logfont(5)&0xFF)!=0)<<1)|(((logfont(5)&0xFF00)!=0)<<2)|(((logfont(5)&0xFF0000)!=0)<<3)|(((logfont(6)&0x40000)!=0)<<4)
+	#defcfunc CreateFontByHSP str p1, int p2, int p3, local sFontName, local nFontData
+		sdim sFontName:dim nFontData,2:sFontName=GetFontName():nFontData=GetFontSize(1),GetFontStyle(1):font p1,p2,p3:GetStructLogfont logfont:CreateFontIndirect varptr(logfont):hFont=stat:font sFontName,nFontData(0),nFontData(1):return hFont
+ #global
+#endif
 
 #module
 // 内部処理用命令 ( int 型一次元配列を拡張 )
-#deffunc ArrayExpand array p1, int p2, local temp
-	// 配列のコピー (一次元限定)
+#deffunc ____ArrayExpand array p1, int p2, local temp
 	if ( length(p1) >= p2 ) { return }	// 増えない場合は無視
-/*
-	// 型無視バージョン
-	dimtype temp, vartype(p1), length(p1)
-		repeat length(p1)   : temp(cnt) = p1(cnt) : loop
-	dimtype p1, vartype(temp), p2
-		repeat length(temp) : p1(cnt) = temp(cnt) : loop
-/*/
-	// int 固定バージョン
 	dim    temp, length(p1)
 	memcpy temp, p1, length(p1) * 4		// コピー
 	dim    p1, p2
 	memcpy p1, temp, length(temp) * 4	// 戻す
-;*/
 	return
 #global
 
@@ -31,45 +41,11 @@
 #define global __USE_TABINT_ON__
 #endif
 
-// フォント取得モジュール
-#module
-#uselib "gdi32.dll"
-#func GetObject "GetObjectA" int,int,int
-#deffunc GetStructLogfont array _logfont, local bmscr
-	dim    _logfont, 15
-	mref      bmscr, 67
-	GetObject bmscr(38), 60, varptr(_logfont)	// LOGFONT 構造体を取得する
-	return
-	
-#defcfunc GetFontName local sRet
-	sdim   sRet, 64
-	GetStructLogfont logfont 
-	getstr sRet,     logfont(7)
-	return sRet
-	
-#defcfunc GetFontSize
-	GetStructLogfont logfont 
-	return ( logfont(0) ^ 0xFFFFFFFF ) + 1
-#defcfunc GetFontStyle
-	GetStructLogfont logfont
- #if 0
-	style |= (  logfont(4) >= 700             ) << 0	// Bold
-	style |= ( (logfont(5) & 0x000000FF) != 0 ) << 1	// Italic
-	style |= ( (logfont(5) & 0x0000FF00) != 0 ) << 2	// UnderLine
-	style |= ( (logfont(5) & 0x00FF0000) != 0 ) << 3	// StrikeLine
-	style |= ( (logfont(6) & 0x00040000) != 0 ) << 4	// AntiAlias
-	return style
- #else
-	return ((logfont(4) >= 700)) | (((logfont(5) & 0x000000FF) != 0) << 1) | (((logfont(5) & 0x0000FF00) != 0) << 2) | (((logfont(5) & 0x00FF0000) != 0) << 3) | (((logfont(6) & 0x00040000) != 0) << 4)
- #endif
-#global
-
 #define global RepeatUntilTrue(%1,%2,%3=0,%4=0,%5) %1=%2:repeat %3,%4:if(%5){%1=cnt:break}loop
 
 //##################################################################################################
-#define global WC_TABCONTROL	"SysTabControl32"	// クラス名
+#define global WC_TABCONTROL "SysTabControl32"	// クラス名
 
-// 以降、モジュール内では使いません
 #if 1
 #define global TCM_FIRST				0x1300		// タブコントロールへ送るメッセージの開始
 #define global TCM_GETIMAGELIST			0x1302		// イメージリストを取得
@@ -114,7 +90,7 @@
 #define global TCM_INSERTITEMW			0x133E
 
 // TabControlStyles
-#define global TCS_TABS					0x0000		// デフォルト設定であることを明示的に示す
+#define global TCS_TABS					0x0000		// デフォルト設定
 #define global TCS_SCROLLOPPOSITE		0x0001		// 選択されていないタブ項目を反対側に移動する
 #define global TCS_BOTTOM				0x0002		// 下につまみを置く
 #define global TCS_RIGHT				0x0002		// 右に付ける ( TCS_VERTICAL とともに指定したとき )
@@ -171,68 +147,87 @@
 
 // TtoW …… TabIndex を入力したら、WindowID を返す(相対値)
 // WtoT …… WindowID を入力したら、TabIndex を返す
-#module Tabmod hTab, TabID, TabNum, fUsing, TtoW, WtoT, Index, wID, fReverse, hFont
+#module Tabmod hTab, TabID, TabNum, fUsing, TtoW, WtoT, Index, wID, bReverse, hFont
 
 #define true  1
 #define false 0
 #define nBitOfInt 32	// int型のビット数
 #define mv modvar Tabmod@
 
-// マクロ
-#define ctype BitOff(%1,%2=0) ( ((%1) & (%2) ^ (%1)) )
-#define FlagSw(%1=flags,%2=0,%3=true) if(%3){ %1((%2) /nBitOfInt) |= 1 << ((%2) \ nBitOfInt) } else { %1((%2)/nBitOfInt) = BitOff(%1((%2) / nBitOfInt), 1 << ((%2) \ nBitOfInt)) }// On / Off 切り替えマクロ
+#define redim ____ArrayExpand
+
+//------------------------------------------------
+//        マクロ
+//------------------------------------------------
+#define ctype bturn(%1) ( (%1) ^ 0xFFFFFFFF )
+#define ctype BITOFF(%1,%2=0) ( (%1) & bturn(%2) )
+#define FlagSw(%1=flags,%2=0,%3=true) if(%3){ %1((%2)/nBitOfInt) |= 1 << ((%2) \ nBitOfInt) } else { %1((%2)/nBitOfInt) = BitOff(%1((%2) / nBitOfInt), 1 << ((%2) \ nBitOfInt)) }// On / Off 切り替えマクロ
 #define ctype ff(%1=flags,%2=0) ((%1((%2) / nBitOfInt) && (1 << ((%2) \ nBitOfInt))) != 0)// フラグを見る
 #define SetStyle(%1,%2=-16,%3=0,%4=0) SetWindowLong %1,%2,BitOff(GetWindowLong(%1,%2) | (%3), %4)
-#define ctype MakeLong(%1,%2) ((((%1) & 0xFFFF) << 16) | ((%2) & 0xFFFF))
+#define ctype MAKELONG(%1,%2) ((((%1) & 0xFFFF) << 16) | ((%2) & 0xFFFF))
 
 #define ctype UseTab(%1=0) ff(fUsing,%1)
 #define fUseSw(%1,%2=1) FlagSw fUsing,%1,%2
 #define ArrayDel(%1,%2,%3=0,%4=4) memcpy %1,%1,(length(%2) - (%3) -1)*(%4),(%3)*(%4),((%3)+1)*(%4):memset %1,0,%4,((%3)*(%4))+((length(%2)-(%3)-1)*(%4))
 #define ArrayIns(%1,%2=0,%3=4)    memcpy %1,%1,(length(%1) - (%2) -1)*(%3),((%2)+1)*(%3),(%2)*(%3)
 
-#define Reverse_TabIndex(%1) if(fReverse){%1=TabNum-(%1)}
-#define ctype rvI(%1) %1;(abs( (TabNum*(fReverse!=0)) - (%1) ))// リバースモードなら反転する
+#define Reverse_TabIndex(%1) if(bReverse){%1=TabNum-(%1)}
+#define ctype rvI(%1) %1;(abs( (TabNum*(bReverse!=0)) - (%1) ))// リバースモードなら反転する
 
 #define ResetTCITEM memset tcitem, 0, length(tcitem) * nBitOfInt
 
+//------------------------------------------------
 // API 関数をローカルで呼び出す
+//------------------------------------------------
 #uselib "user32.dll"
-#func   GetWindowRect "GetWindowRect"  int,int
-#func   GetClientRect "GetClientRect"  int,int
-#func   SetWindowLong "SetWindowLongA" int,int,int
-#cfunc  GetWindowLong "GetWindowLongA" int,int
-#func   SetParent     "SetParent"      int,int
-#func   MoveWindow    "MoveWindow"     int,int,int,int,int,int
+#func   GetWindowRect@Tabmod "GetWindowRect"  int,int
+#func   GetClientRect@Tabmod "GetClientRect"  int,int
+#func   SetWindowLong@Tabmod "SetWindowLongA" int,int,int
+#cfunc  GetWindowLong@Tabmod "GetWindowLongA" int,int
+#func   SetParent@Tabmod     "SetParent"      int,int
+#func   MoveWindow@Tabmod    "MoveWindow"     int,int,int,int,int,int
 
 #uselib "gdi32.dll"
-#cfunc  GetStockObject		"GetStockObject"		int
-#func   GetObject			"GetObjectA"			int,int,int
-#func   DeleteObject		"DeleteObject"			int
-#func   CreateFontIndirect	"CreateFontIndirectA"	int
-
-#uselib "comctl32.dll"
-#func   InitCommonControls "InitCommonControls"
+#cfunc  GetStockObject@Tabmod		"GetStockObject"		int
+#func   GetObject@Tabmod			"GetObjectA"			int,int,int
+#func   DeleteObject@Tabmod			"DeleteObject"			int
+#func   CreateFontIndirect@Tabmod	"CreateFontIndirectA"	int
 
 #deffunc _Tabmod_init
 	dim  rect, 4		// RECT 構造体
 	dim  tcitem, 7		// TCITEM 構造体
 	sdim pszText, 520	// 文字列バッファ
-	
-	InitCommonControls	// comctl を初期化
 	return
 	
-//######## タブ内ウィンドウのサイズを調整する ######################################################
+//###############################################################################
+//                メンバ命令・関数群
+//###############################################################################
+//----------------------------------------------------------
+// タブ内ウィンドウの適切な大きさを取得する
+// 
+// @ prm : 配列変数( RECT )
+//----------------------------------------------------------
+#modfunc GetTabPageRect array rc
+	if ( length(rc) < 4 ) { dim rc, 4 }
+	GetClientRect hTab,          varptr(rc)	// TabControl の rect を求める
+	sendmsg       hTab, 0x1328,, varptr(rc)	// TCM_ADJUSTRECT ( TabRect と bgscrRect の相互変換 )
+	return
+	
+//----------------------------------------------------------
+// タブ内ウィンドウ・サイズを調整する
+//----------------------------------------------------------
 #modfunc AdjustWindowRect int p2, local _id_actwin	// TabIndex を渡す
 	_id_actwin = ginfo(3)
 	gsel TtoW( p2 ) + TabID, 0		// hwnd にハンドルを格納させるため
 	
-	GetClientRect hTab,          varptr(rect)	// TabControl の rect を求める
-	sendmsg       hTab, 0x1328,, varptr(rect)	// TCM_ADJUSTRECT ( TabRect と bgscrRect の相互変換 )
-	MoveWindow    hwnd, rect(0), rect(1), rect(2) - rect(0), rect(3) - rect(1), true
+	GetTabPageRect thismod, rect
+	MoveWindow        hwnd, rect(0), rect(1), rect(2) - rect(0), rect(3) - rect(1), true
 	gsel _id_actwin, 0
 	return varptr(rect)
 	
-//######## タブつまみの文字列を操作する関数 ########################################################
+//##########################################################
+//        タブつまみの文字列を操作する
+//##########################################################
 #modfunc SetTabStrItem int p2, str p3
 	
 	pszText = p3
@@ -250,14 +245,18 @@
 	
 	return pszText
 	
-//######## タブコントロールの新規作成 ##############################################################
+//##########################################################
+//        タブコントロールの新規作成
+//##########################################################
+
 #define global CreateTab(%1,%2,%3,%4=1,%5=0,%6=0) newmod %1,Tabmod@,%2,%3,%4,%5,%6
-#modinit int p2, int p3, int p4, int p5, int p6, local nRet
+#modinit int p2, int p3, int p4, int p5, int p6, local nRet, local curpos
 	// コントロール生成
-	winobj WC_TABCONTROL, "", , 0x52000000 | p5, p2, p3
-	
+	curpos = ginfo_cx, ginfo_cy
+	winobj WC_TABCONTROL, "", , 0x52000000 | p5, ginfo(20) * 2, ginfo(21) * 2
 			hTab = objinfo(stat, 2)				// ハンドルを取得
 	sendmsg hTab, 0x0030, GetStockObject(17)	// WM_SETFONT (デフォルトのフォント)
+	MoveWindow hTab, curpos(0), curpos(1), p2, p3
 	
 	TabID = p4				// 使用するウィンドウ ID の先頭
 	dim  fUsing, 3			// Window の使用状況を表すフラグ
@@ -268,36 +267,40 @@
 	dim  LPRM, 5			// 関連 int ( LPARAM 値 )
  #endif
 	
-;	fReverse = (p6 != 0)	// リバース・フラグ
+;	bReverse = (p6 != 0)	// リバース・フラグ
 	
 	return hTab
 	
-//#### アイテムの追加処理 ######################################################
+//----------------------------------------------------------
+// アイテムの追加処理
+// 
+// @ 挿入された位置を返す
+//----------------------------------------------------------
 #define global InsertTab(%1,%2,%3=-1) _InsertTab %1,%2,%3
 #modfunc _InsertTab str p2, int p3, local InsPos, local useID
 	
 	// 自動修正
 	if ( p3 < 0 ) {
-		InsPos = TabNum ;* ( fReverse == 0 )
+		InsPos = TabNum ;* ( bReverse == 0 )
 	} else {
 		InsPos = rvI( limit(p3, 0, TabNum + 1) )
 	}
 	
 	// テーブルの修正
-	ArrayExpand WtoT, TabNum + 1		// 配列を、タブの数ぶんにまで拡張 ( + 1 は保険 )
-	ArrayExpand	TtoW, TabNum + 1		// 同上
-	ArrayIns    TtoW, InsPos			// 要素を配列の途中に挿入する
+	redim    WtoT, TabNum + 1	// 配列を、タブの数ぶんにまで拡張 ( + 1 は保険 )
+	redim	 TtoW, TabNum + 1	// 同上
+	ArrayIns TtoW, InsPos		// 要素を配列の途中に挿入する
 	
  #ifdef __USE_TABINT_ON__
-	ArrayExpand LPRM, TabNum + 1
-	ArrayIns    LPRM, InsPos
+	redim    LPRM, TabNum + 1
+	ArrayIns LPRM, InsPos
  #endif
 	
 	// アイテムを追加する
 	pszText  = p2									// タブ文字列を格納
 	tcitem   = 1, 0, 0, varptr( pszText )			// TCIF_TEXT  ( pszText のみ有効 )
 	sendmsg hTab, 0x1307, InsPos, varptr(tcitem)	// TCM_INSERTITEM ( 新規アイテムを挿入 )
-	InsPos = stat									// 挿入位置 or -1
+	InsPos = stat									// 挿入位置 or -n
 	if ( InsPos < 0 ) { return -1 }					// エラー
 	
 	// 使用する winID を選び出す
@@ -319,7 +322,7 @@
 	sendmsg       hTab, 0x1328,, varptr(rect)	// TCM_ADJUSTRECT ( TabRect と bgscrRect の相互変換 )
 	
 	// ウィンドウ作成 ( 一応最大サイズで作る )
-	bgscr useID + TabID, ginfo(20), ginfo(21), 2, rect(0), rect(1), rect(2) - rect(0), rect(3) - rect(1)
+	bgscr useID + TabID, ginfo(20) + 200, ginfo(21) + 200, 2, rect(0), rect(1), rect(2) - rect(0), rect(3) - rect(1)
 	SetStyle  hwnd, -16, 0x40000000, 0x80000000	// WS_CHILD を付加し、WS_POPUP を除去する
 	SetParent hwnd, hTab						// 子にする
 	
@@ -327,7 +330,14 @@
 	
 	return ( InsPos )
 	
-//#### 選択状態に画面をあわせる処理 ############################################
+//##########################################################
+//        タブ項目の選択
+//##########################################################
+//----------------------------------------------------------
+// 選択状態を画面にあわせる
+// 
+// @return: active index
+//----------------------------------------------------------
 #modfunc ChangeTab
 	
 	gsel wID + TabID, -1			// 元のウィンドウを隠す
@@ -340,9 +350,11 @@
 	
 	return Index
 	
+//----------------------------------------------------------
 // タブを選択する
+//----------------------------------------------------------
 #modfunc ShowTab int p2		// TabIndex
-	if (Index == p2) { return }			// 変更する必要はない
+	if ( Index == p2 ) { return }		// 変更する必要はない
 	
 	Index = limit(p2, 0, TabNum)		// 変更
 	
@@ -354,8 +366,11 @@
 	wID = TtoW( Index )					// 最新にする
 	return wID
 	
-//#### アイテムの削除処理 ######################################################
+//##########################################################
+//        アイテムの削除処理
+//##########################################################
 #modfunc DeleteTab int p2			// TabIndex
+	if ( 0 > p2 && p2 > (TabNum - 1) || TabNum <= 0 ) { return }
 	sendmsg hTab, 0x1308, p2		// TCM_DELETETAB (削除)
 	fUseSw TtoW( p2 ), false		// 未使用状態にする
 	TabNum --						// デクリメント
@@ -368,55 +383,55 @@
  #endif
 	return
 	
-//######## イメージリスト関係の処理 ############################################
-// 関連づけ
+//##########################################################
+//        イメージリスト関係の処理
+//##########################################################
+//----------------------------------------------------------
+// イメージリストをタブに関連づける
+//----------------------------------------------------------
 #modfunc SetTabImageList int p2
 	sendmsg hTab, 0x1303, 0, p2		// TCM_SETIMAGELIST (イメージリストを割り付ける)
 	return (stat)
 	
-// 取得
+//----------------------------------------------------------
+// イメージリストの取得
+//----------------------------------------------------------
 #defcfunc GetTabImageList mv
 	sendmsg hTab, 0x1302, 0, 0		// TCM_GETIMAGELIST (hImageList を取得)
 	return (stat)
 	
+//----------------------------------------------------------
 // タブにイメージを付ける ( -1 で取り除く )
+//----------------------------------------------------------
 #modfunc SetTabImage int p2, int p3
 	tcitem(0) = 2, 0, 0, 0, 0, p3				// TCIF_IMAGE
 	sendmsg hTab, 0x1306, p2, varptr(tcitem)	// TCM_SETITEM
 	return (stat != 0)
 	
-//######## つまみのフォントを設定する ##########################################
-#modfunc ChangeTabStrFont str p2, int p3, int p4, local logfont, local sFontName, local nFontData
+//##########################################################
+//        つまみのフォントを設定する
+//##########################################################
+#modfunc ChangeTabStrFont str p2, int p3, int p4
 	
-	if ( hFont ) { DeleteObject hFont }	// 解放しておく
+	if ( hFont ) { DeleteObject hFont }		// 解放しておく
 	
-	sdim sFontName, 64		// name
-	dim  nFontData, 2		// size, style
-	
-	// 元のフォントデータを記憶
-	sFontName    = GetFontName()
-	nFontData(0) = GetFontSize(), GetFontStyle()
-	
-	// logfont 構造体を作成
-	font p2, p3, p4							// 希望のモノに変更して、HSP側にオブジェクトを作らせる
-	GetStructLogfont          logfont		// フォント情報 (LOGFONT) を取得
-	CreateFontIndirect varptr(logfont)		// 新しいフォントオブジェクトを作成 ( 内容は変化させていない )
-	hFont = stat							// HSPウィンドウのフォントハンドル
-	
-	// フォントを変更する
-	sendmsg hTab, 0x0030, hFont, 1			// WM_SETFONT ( hFont, bRefresh )
-	
-	// 元に戻す
-	font sFontName, nFontData(0), nFontData(1)
+	hFont = CreateFontByHSP(p2, p3, p4)		// フォントオブジェクトを作成
+	sendmsg hTab, 0x0030, hFont, true		// 変更する
 	
 	// サイズを適正にする
 	repeat TabNum
-		AdjustWindowrect thismod, cnt	// すべてを矯正
+		AdjustWindowRect thismod, cnt		// すべてを矯正
 	loop
 	return
 	
-//######## その他の動作 ########################################################
-// 指定座標に何番目のつまみがあるか ( 座標は絶対座標 )
+//##########################################################
+//        その他の動作
+//##########################################################
+//----------------------------------------------------------
+// 指定座標に何番目のつまみがあるか
+// 
+// @ 座標は絶対座標
+//----------------------------------------------------------
 #defcfunc NumberOfTabInPoint mv, int p2, int p3, local tabrect, local cntTabs, local ptMouse, local nRet
 	sendmsg hTab, 0x1304, 0, 0	// TCM_GETITEMCOUNT (タブ数を取得)
 	cntTabs = stat
@@ -442,35 +457,46 @@
 	loop
 	
 	return nRet
-
-// タブつまみの中の空白を設定する
+	
+//----------------------------------------------------------
+// タブつまみの中のパディングを設定する
+//----------------------------------------------------------
 #deffunc SetTabPadding int p2, int p3
 	sendmsg hTab, 0x132B, 0, MakeLong(p2, p3)	// TCM_SETPADDING
 	return
 	
+//----------------------------------------------------------
 // タブつまみの最低幅を設定する
+//----------------------------------------------------------
 #deffunc SetMinTabWidth int p2
 	sendmsg hTab, 0x1331, 0, p2		// TCM_SETMINTABWIDTH
 	return
 	
-//######## 関連int操作命令 #####################################################
+//##########################################################
+//        関連int操作命令
+//##########################################################
+//----------------------------------------------------------
 // 設定関数
+//----------------------------------------------------------
 #modfunc TabIntSet int p2, int p3
  #ifdef __USE_TABINT_ON__
 	LPRM( p2 ) = p3
  #endif
 	return
 	
+//----------------------------------------------------------
 // 取得関数
-#defcfunc TabInt mv, int p2
+//----------------------------------------------------------
+#defcfunc TabInt mv, int p2		// tabindex
  #ifdef __USE_TABINT_ON__
 	return LPRM( p2 )
  #else
 	return 0	// 一応 0 を返す
  #endif
 
-//######## 内部参照用関数 ######################################################
-
+//##########################################################
+//        内部参照用関数
+//##########################################################
 #defcfunc GetTabHandle mv
 	return hTab
 	
@@ -485,25 +511,31 @@
 #defcfunc ActTabWinID mv
 	return wID
 	
-#defcfunc  ItoW mv, int p2
+#defcfunc  ItoW mv, int p2		// iTabItem -> WindowID
 	return TtoW( limit( p2, 0, TabNum ) )
 	
-#defcfunc  WtoI mv, int p2
+#defcfunc  WtoI mv, int p2		// WindowID -> iTabItem
 	return WtoT( limit( p2, 0, TabNum ) )
 	
 #defcfunc IsReverse mv
-	return fReverse != 0
+	return bReverse != 0
 	
+//----------------------------------------------------------
 // デストラクタ
+//----------------------------------------------------------
 #modterm
 	if ( hFont ) { DeleteObject hFont : hFont = 0 }	// フォントハンドルを解放する
 	return
 	
 #global
 _Tabmod_init
-//##################################################################################################
 
-// [SAMPLE]
+#undef ____ArrayExpand
+
+
+//##############################################################################
+//                サンプル・スクリプト
+//##############################################################################
 #if 0
 	;#define __USE_BITMAP__
 
@@ -511,14 +543,14 @@ _Tabmod_init
  #include "BitmapMaker.as"
 #endif
 
-#const global StartTabID 10
+#const global IDW_TABTOP 10
 
 // 取得用マクロ
 #define tIndex ActTabIndex(mTab)
 #define actwin ActTabWinID(mTab)
 
 #uselib "user32.dll"
-#func GetWindowRect "GetWindowRect" int,int
+#func   GetWindowRect "GetWindowRect" int,int
 
  #ifdef __USE_BITMAP__	
 	// イメージリスト作成(しなくても良い) (16×16×4, 24bit, マスクあり)
@@ -533,11 +565,11 @@ _Tabmod_init
 	
 //	タブコントロールを設置する。
 //	p4 は bgscr 命令で作成するウィンドウID の先頭になります。
-//	例えば、下のように [10(StartTabID)] でタブ項目が4個あると、
+//	例えば、下のように [10(IDW_TABTOP)] でタブ項目が4個あると、
 //	{10, 11, 12, 13} のウィンドウを使用します。
 //	また、[3] でタブの項目が 8個あると、{3, 4, 5, 6, 7, 8, 9, 10} が使われます。
 //	別で使用するウィンドウID値と被らないよう注意してください。
-	pos 50, 50 : CreateTab mTab, 300, 200, StartTabID, 0x4000	// TCS_TOOLTIPS
+	pos 50, 50 : CreateTab mTab, 300, 200, IDW_TABTOP, 0x4000	// TCS_TOOLTIPS
 	hTab = stat		// タブコントロールのハンドルを取得
 	
 	// フォントが変更出来ます。必須ではありません。
@@ -580,7 +612,7 @@ _Tabmod_init
 //	タブの項目追加が終わったら、タブ内に貼り付けた bgscr 命令が非表示状態になっているので、
 //	表示されるよう gsel 命令を指定してください。
 //	CreateTab 命令で指定した ウィンドウID の初期値と同じ値を指定します。
-	gsel StartTabID, 1
+	gsel IDW_TABTOP, 1
 	
 //	ウィンドウID 0 に描画先を戻します。
 	gsel
@@ -626,7 +658,7 @@ _Tabmod_init
 	
 	if ( nmhdr(0) == hTab ) {	// タブコントロールからの通知 
 		
-		/* 選択アイテムの変更 */
+		// 選択アイテムの変更
 		if ( nmhdr(2) == -551 ) {
 			ChangeTab mTab		// 選択されているアイテムに切り替える。ActiveTabIndex を返す
 			
@@ -635,7 +667,7 @@ _Tabmod_init
 			
 			gsel 0, 0	// 元々の screen命令 のウィンドウID 0に描画先を戻します。
 			
-		/* ショートカットメニュー */
+		// ショートカットメニュー
 		} else : if ( nmhdr(2) == -5 ) {
 			// ポップアップさせる
 			n = NumberOfTabInPoint(mTab, ginfo(0), ginfo(1))
@@ -674,14 +706,14 @@ _Tabmod_init
 	
 *TabDelete			// タブの削除
 	DeleteTab mTab, tIndex		// アクティブなタブを削除する
-	ShowTab   mTab, tIndex -1	// 前のタブをアクティブにする
+	ShowTab   mTab, tIndex - 1	// 前のタブをアクティブにする
 	gsel 0
-	return (stat)
+	return stat
 	
 // 終了時の処理 ( 不要 )
 *exit
-	if ( wParam != 0 ) {
-		gsel wParam, -1
+	if ( wparam != 0 ) {
+		gsel wparam, -1
 		stop
 	}
 	end
