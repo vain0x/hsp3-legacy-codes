@@ -1,0 +1,31 @@
+#ifndef ig_file_try_erase_hsp
+#define ig_file_try_erase_hsp
+
+#include "mem_fill.hsp"
+
+#module
+
+#define block_size 0x100
+
+#deffunc file_try_erase str path,  \
+	local size, local buf
+
+	exist path
+	if (strsize < 0) { return -1 }
+	size = strsize
+
+	repeat 7
+		if ((cnt & 1) == 0) {
+			sdim buf, size
+		} else {
+			mem_fill_random buf, block_size
+			mem_cycle       buf, block_size, size
+		}
+		bsave path, buf, size
+	loop
+	delete path
+	return size
+
+#global
+
+#endif
