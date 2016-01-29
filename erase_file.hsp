@@ -32,6 +32,7 @@
 	repeat _files_len
 		prog = strf("[%d/%d]", cnt, _files_len)
 
+		if (_files(cnt) == ".gitkeep") { continue }
 		file_try_erase _files(cnt)
 		if (stat) {
 			logmes prog + "Success: " + _files(cnt)
