@@ -1,4 +1,5 @@
 
+#include "util/dirlist_rec/dirlist_rec.hsp"
 #include "util/file_try_erase.hsp"
 
 #define global app_name "erase_file"
@@ -17,13 +18,19 @@
 	chdir _target_dir
 	return
 
-#deffunc _find_files
-	sdim _files_note
-	dirlist _files_note, "*", 1
+#deffunc _find_files  \
+	local i
+
+	dirlist_rec _files, "*"
 	_files_len = stat
 
-	sdim _files, , _files_len
-	split _files_note, "\n", _files
+	sdim _files_note, _files_len * 260
+	repeat _files_len
+		if (strlen(_files(cnt)) >= 260) { end 1 } // TODO: StrBuilder ‚ðŽg‚¤
+
+		poke _files_note, i, _files(cnt) + "\n"
+		i += strsize
+	loop
 	return
 
 #deffunc _erase_files  \
