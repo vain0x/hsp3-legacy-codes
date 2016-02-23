@@ -3,7 +3,7 @@
 // @ autohs の流用
 // @ hs は色分けデータのこと (嘘)
 
-#packopt name "autoEmphasis.exe"
+#packopt name "auto_emph.exe"
 
 #include "app.hsp"
 #include "autogen_emph.hsp"
