@@ -13,7 +13,6 @@
 #include "autohs.as"
 #include "mod_autohs.as"
 
-#include "Mo/GetOwnpath.as"
 #include "Mo/ini.as"
 #include "Mo/hsedutil.as"
 #include "Mo/LexCmdline.as"
@@ -41,7 +40,7 @@
 //------------------------------------------------
 *LInitialize
 	sdim curpath, MAX_PATH : curpath = dir_cur
-	sdim ownpath, MAX_PATH : ownpath = GetOwnpath("H:/MyDocs/prg/hsp/ProjSmall/autohs")
+	sdim ownpath, MAX_PATH : ownpath = dir_cur
 	
 	chdir ownpath
 	
@@ -66,7 +65,6 @@
 		if ( stat == 0 ) { end }
 		inFile  = refstr
 		outFile = getpath(inFile, 1) + ".hs"
-		logmes dbgstr(outFile)
 #else
 		PutErrorMessage Error_NeedCmdline
 		end
