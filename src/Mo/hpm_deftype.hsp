@@ -15,6 +15,7 @@
 #const DEFTYPE_IFACE    0x0080
 #const DEFTYPE_NSPACE   0x0100  // モジュール(名前空間)
 #const DEFTYPE_CLASS    0x0200  // モジュール(クラス)
+#const DEFTYPE_LIB      0x0400  // #uselib
 
 #const DEFTYPE_CTYPE    0x1000
 #const DEFTYPE_MODULE   0x2000  // メンバ命令

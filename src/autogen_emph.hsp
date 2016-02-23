@@ -62,6 +62,12 @@
 		return
 	}
 	
+	// 使用ライブラリをコメントに書く
+	if ( deftype == DEFTYPE_LIB && bExplicitUselib@ ) {
+		LongStr_add emph_, "; #uselib " + sDefIdent + "\n"
+		return
+	}
+	
 	// 定義タイプの文字列を得る
 	deftypeString = MakeDefTypeString( deftype )
 	

@@ -92,6 +92,7 @@
 				case "cmd"      : deftype  = DEFTYPE_CMD   :                 : goto *LAddDefinition
 				case "comfunc"  : deftype  = DEFTYPE_COM   : bGlobal = false : goto *LAddDefinition
 				case "usecom"   : deftype  = DEFTYPE_IFACE : bGlobal = false : goto *LAddDefinition
+				case "uselib"   : deftype  = DEFTYPE_LIB   : bGlobal = false : goto *LAddDefinition
 				
 				case "module":
 					bInModule = true

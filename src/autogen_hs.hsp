@@ -109,8 +109,8 @@
 	if ( peek(sDefIdent) == '_' || peek(sDefIdent, strlen(sDefIdent) - 1) == '_' ) {
 		return
 	}
-	// モジュール名は無視する
-	if ( deftype == DEFTYPE_NSPACE || deftype == DEFTYPE_CLASS ) {
+	// 定数、モジュール名、ライブラリは無視する
+	if ( deftype == DEFTYPE_CONST || deftype == DEFTYPE_NSPACE || deftype == DEFTYPE_CLASS || deftype == DEFTYPE_LIB ) {
 		return
 	}
 	

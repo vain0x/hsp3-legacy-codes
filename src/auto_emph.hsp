@@ -32,7 +32,7 @@
 	loop
 	
 	// –¢ŽÀ‘•
-	;bExplicitUselib@        = ini_geti(cfg, "Option", "bExplicitUselib",        true)
+	bExplicitUselib@ = ini_geti(cfg, "Option", "bExplicitUselib", true)
 	return
 	
 #deffunc app_proc_impl var result, var script, \
