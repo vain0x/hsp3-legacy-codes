@@ -21,7 +21,7 @@
 #deffunc app_read_config  \
 	local cfg, local stmp
 	
-	ini_new cfg, "./autoEmphasis.ini"
+	ini_new cfg, "./auto_emph.ini"
 	
 	stmp = ini_gets(cfg, "Color", "Id.$idtypelist") : split@hsp stmp, ",", idtypelist@	// 識別子タイプ
 	stmp = ini_gets(cfg, "Color", "Id.$keylist")    : split@hsp stmp, ",", keylist@		// ini キーのリスト
