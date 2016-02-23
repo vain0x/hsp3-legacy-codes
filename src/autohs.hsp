@@ -4,131 +4,32 @@
 // ・「埋め込みヘッダ情報」への対応
 
 #packopt name "autohs.exe"
-#packopt hide    1
-#packopt orgpath 1
 
-#runtime "hsp3cl"
-
-#include "autohs.as"
-#include "mod_autohs.as"
-
-#include "Mo/GetOwnpath.as"
-#include "Mo/ini.as"
-#include "Mo/hsedutil.as"
-#include "Mo/LexCmdline.as"
+#include "app.hsp"
+#include "autogen_hs.hsp"
 
 *main
-	gosub *LInitialize			// 初期化
-	gosub *LProcCmdline			// コマンドラインを処理する
-	gosub *LLoadTargetScript	// 変数の初期化
-	gosub *LCreateHs
-	gosub *LSaveHs
+	app_init
+	app_read_config
+	app_proc_cmdline ".hs"
+	app_input
+	app_proc
+	app_output
+	end
 	
-#ifdef _DEBUG
-	print hs
-	stop
-#endif
+#module
+#deffunc app_read_config  \
+	local cfg
 	
-	chdir curpath
-	end : end
-	
-//##############################################################################
-//                能動サブルーチン
-//##############################################################################
-//------------------------------------------------
-// 初期化ルーチン
-//------------------------------------------------
-*LInitialize
-	sdim curpath, MAX_PATH : curpath = dir_cur
-	sdim ownpath, MAX_PATH : ownpath = GetOwnpath("H:/MyDocs/prg/hsp/ProjSmall/autohs")
-	
-	chdir ownpath
-	
-	SetIniName ownpath + "/autohs.ini"
-	SetHsHeader GetStrIni("Resource", "hsHeader")
-	
+	ini_new cfg, "./autohs.ini"
+	autogen_set_header ini_gets(cfg, "Resource", "hsHeader")
 	return
+
+#deffunc app_proc_impl \
+	var result, var script,  \
+	local autogen
 	
-//------------------------------------------------
-// コマンドラインを処理する
-//------------------------------------------------
-*LProcCmdline
-	LexCmdline cmdopt, 2	;, "hsed"
-	cntCmdopt = stat
-	
-;	cmdopt = "hsptmp", "" : cntCmdopt = length(cmdopt)
-	
-	// コマンドラインなし
-	if ( cntCmdopt == 0 ) {
-#ifdef _DEBUG
-		dialog "hsp;*.as;", 16, "HSP Script File"
-		if ( stat == 0 ) { end }
-		inFile  = refstr
-		outFile = getpath(inFile, 1) + ".hs"
-		logmes dbgstr(outFile)
-#else
-		PutErrorMessage Error_NeedCmdline
-		end
-#endif
-	
-	// hsed を参照する呼び出し
-	} else : if ( cmdopt(0) == "hsed" ) {
-		bHsed = true
-		
-		// hsed があるかチェック
-		hsed_exist
-		if ( stat == false ) { PutErrorMessage Error_NoHsed : end }
-		
-	// 通常の呼び出し
-	} else {
-		inFile  = cmdopt(0)
-		outFile = cmdopt(1)
-		
-		// エラーチェック・補完
-		if ( inFile == "" && outFile == "" ) {
-			PutErrorMessage Error_NeedCmdline
-			end
-		} else : if ( inFile != "" && outFile == "" ) {
-			outFile = getpath( inFile, 1 ) +".hs"
-		} else : if ( inFile == "" && outFile != "" ) {
-			inFile  = outFile
-		}
-		
-		// 出力ファイルは必ず .hs
-		outFile = getpath( outFile, 1 ) +".hs"
-	}
-	
+	newmod autogen, autogen_hs
+	autogen_generate autogen, result, script
 	return
-	
-//------------------------------------------------
-// 対象のスクリプトを読み込む
-//------------------------------------------------
-*LLoadTargetScript
-	if ( bHsed ) {
-		inFile  = HSED_TEMPFILE_HSP
-		outFile = HSED_TEMPFILE_HS
-		hsed_GetActText script		// アクティブな Footy のテキストを取得
-		
-	} else {
-		notesel script
-		noteload inFile
-		noteunsel
-	}
-	return
-	
-//------------------------------------------------
-// hs を生成する
-//------------------------------------------------
-*LCreateHs
-	CreateHs hs, script
-	return
-	
-//------------------------------------------------
-// 自動生成した hs を保存する
-//------------------------------------------------
-*LSaveHs
-	notesel hs
-	notesave outFile
-	noteunsel
-	return
-	
+#global

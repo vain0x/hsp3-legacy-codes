@@ -1,16 +1,13 @@
 // hsed utility module
 
-#ifndef __HSED_UTILITY_MODULE_AS__
-#define __HSED_UTILITY_MODULE_AS__
+#ifndef IG_HSED_UTILITY_MODULE_AS
+#define IG_HSED_UTILITY_MODULE_AS
 
 #include "hsedsdk.as"
 #include "MCProcMemory.as"
 
 #module hsedutil
 
-//##################################################################################################
-//        定数・マクロ
-//##################################################################################################
 #define true  1
 #define false 0
 #define NULL  0
@@ -18,29 +15,23 @@
 
 #define hIF hIF@hsedsdk
 
-//------------------------------------------------
-// Win32 API 関数群
-//------------------------------------------------
 #uselib "psapi.dll"
 #func   EnumProcessModules@hsedutil  "EnumProcessModules"   int,sptr,int,sptr
 #func   GetModuleFileNameEx@hsedutil "GetModuleFileNameExA" int,int,sptr,int
 
-//##################################################################################################
-//        [define] 命令群
-//##################################################################################################
 //------------------------------------------------
 // スクリプトエディタのフルパスを得る
 //------------------------------------------------
-#defcfunc hsed_GetHsedPath local hHsed, local mHsedPcm, local path, local hModule, local retSize
+#defcfunc hsed_GetHsedPath  local hHsed, local mHsedPcm, local path, local hModule, local retSize
 	sdim path, MAX_PATH
 	
 	hsed_getwnd       hHsed, HGW_MAIN
-	PCM_new mHsedPcm, hHsed
+	PcMem_new mHsedPcm, hHsed
 	
-	EnumProcessModules  PCM_hProc(mHsedPcm), varptr(hModule), 4, varptr(retSize)
-	GetModuleFileNameEx PCM_hProc(mHsedPcm), hModule, varptr(path), MAX_PATH
+	EnumProcessModules  PcMem_hProc(mHsedPcm), varptr(hModule), 4, varptr(retSize)
+	GetModuleFileNameEx PcMem_hProc(mHsedPcm), hModule, varptr(path), MAX_PATH
 	
-	PCM_delete mHsedPcm
+	PcMem_delete mHsedPcm
 	return path
 	
 //------------------------------------------------
@@ -55,30 +46,31 @@
 	tci(0) = 0x08			// TCIF_PARAM ( lparam )
 	
 	hsed_getwnd        hTab, HGW_TAB
-	PCM_new   mTabPcm, hTab
-	PCM_alloc mTabPcm, 7 * 4
-	PCM_write mTabPcm, varptr(tci), 7 * 4
+	PcMem_new   mTabPcm, hTab
+	PcMem_alloc mTabPcm, 7 * 4
+	PcMem_write mTabPcm, varptr(tci), 7 * 4
 	
 	// TCM_GETITEM : tcitem.lparam = ptr to filepath
-	sendmsg hTab, 0x1305, nTabID, PCM_getPtr( mTabPcm )
+	sendmsg hTab, 0x1305, nTabID, PcMem_getPtr( mTabPcm )
 	if ( stat == false ) { return "" }					// 失敗
 	
-	PCM_read mTabPcm, varptr(tci), 7 * 4
+	PcMem_read mTabPcm, varptr(tci), 7 * 4
 	if ( tci(6) != NULL ) {
-		PCM_readVM mTabPcm, tci(6), varptr(path), MAX_PATH
+		PcMem_readVM mTabPcm, tci(6), varptr(path), MAX_PATH
 	}
 	
-	PCM_delete mTabPcm
+	PcMem_delete mTabPcm
 	return path
 //*/
 
+//*
 //------------------------------------------------
 // アクティブな FootyID を返す
 //------------------------------------------------
 #defcfunc hsed_activeFootyID  local fID
 	hsed_getactfootyid fID
 	return fID
-	
+
 //------------------------------------------------
 // アクティブなFootyのテキストを取得
 //------------------------------------------------
@@ -190,12 +182,10 @@
 	if stat : return 1
 	sendmsg hIF, _HSED_SETCARETLINE@hsedsdk, nFootyID, nLine
 	return
+//*/
 	
 #global
 
-//##################################################################################################
-//        サンプル・スクリプト
-//##################################################################################################
 #if 0
 
 	mes hsed_GetHsedPath()

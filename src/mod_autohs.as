@@ -5,9 +5,6 @@
 
 #include "Mo/HPM_split.as"
 
-#include "Mo/mod_replace.as"
-#include "Mo/MCLongString.as"
-
 //##############################################################################
 //                モジュール
 //##############################################################################
@@ -30,81 +27,38 @@
 #module autohs_mod
 
 #include "Mo/HPM_header.as"
+#include "Mo/hpm_deftype.hsp"
 
-#define STR_HS_HEADER stt_hsHeader
-
-//------------------------------------------------
-// DEFTYPE
-//------------------------------------------------
-#const DEFTYPE_NONE		0x0000
-#const DEFTYPE_LABEL	0x0001		// ラベル
-#const DEFTYPE_MACRO	0x0002		// マクロ
-#const DEFTYPE_CONST	0x0004		// 定数
-#const DEFTYPE_FUNC		0x0008		// 命令・関数
-#const DEFTYPE_DLL		0x0010		// DLL命令
-#const DEFTYPE_CMD		0x0020		// HPIコマンド
-#const DEFTYPE_COM		0x0040		// COM命令
-#const DEFTYPE_IFACE	0x0080		// インターフェース
-
-#const DEFTYPE_CTYPE	0x0100		// CTYPE
-#const DEFTYPE_MODULE	0x0200		// モジュールメンバ
-
-//------------------------------------------------
-// DocData
-//------------------------------------------------
-#enum DocData_Name = 0		// hs 名称
-#enum DocData_Author		// author	: 作者名
-#enum DocData_Date			// date		: 日付
-#enum DocData_Version		// version	: バージョン情報
-#enum DocData_Type			// type		: %type 省略値
-#enum DocData_Group			// group	: %group 省略値
-#enum DocData_Note			// note		: 備考
-#enum DocData_Url			// url		: URL
-#enum DocData_Port			// port		: 対応環境
-#enum DocData_MAX
-
-//------------------------------------------------
-// モジュール初期化
-//------------------------------------------------
-#deffunc AutohsInitialize
-	stt_docdata_identlist = "name", "author", "date", "version", "type", "group", "note", "url", "port"
-	return
-	
-//------------------------------------------------
-// ヘッダ文字列を設定する
-//------------------------------------------------
-#deffunc SetHsHeader str hsHeader
-	stt_hsHeader = hsHeader
-	replace stt_hsHeader, "\\n", "\n"
-	return
-	
 //------------------------------------------------
 // hs 自動生成
 //------------------------------------------------
 #define nowTkType tktypelist(idx)
 #define nowTkStr  tkstrlist (idx)
-#define NextToken GetNextToken idx, tktypelist, tkstrlist, docdata, cntToken
 
-#deffunc CreateHs var result, var script,  \
-	local hs, local fSplit, local tktypelist, local tkstrlist, local docdata, local cntToken, local idx, local deftype, local sDefIdent, local prmlist, local cntPrm, local bGlobal, local bInModule
+#define NextToken \
+	autogen_get_next_token autogen, idx
+
+#deffunc CreateHs \
+	var result, var script, int fSplit, \
+	var autogen, array tktypelist, array tkstrlist, \
+	local cntToken, local idx, \
+	local deftype, local sDefIdent, \
+	local bGlobal, local bInModule
 	
 	// 字句解析
-	fSplit  = HPM_SPLIT_FLAG_NO_RESERVED
-;	fSplit |= HPM_SPLIT_FLAG_NO_BLANK
-;	fSplit |= HPM_SPLIT_FLAG_NO_COMMENT
-;	fSplit |= HPM_SPLIT_FLAG_NO_SCOPE
-	
 	hpm_split tktypelist, tkstrlist, script, fSplit
 	cntToken = stat
+	
+	autogen_set_cnt_tokens autogen, cntToken
+	
+	// 番兵
+	tkstrlist(cntToken)  = ""
+	tktypelist(cntToken) = TKTYPE_ERROR
 	
 	// hs 生成
 	dim deftype
 	dim idx
 	dim bInModule
-	sdim docdata, , DOCDATA_MAX
-	
-	LongStr_new hs
-	LongStr_add hs, STR_HS_HEADER	// ヘッダ文字列を設定する
 	
 	repeat
 		gosub *LProcToken
@@ -113,17 +67,6 @@
 			break
 		}
 	loop
-	
-	LongStr_tobuf  hs, result
-	LongStr_delete hs
-	
-	// 埋め込みドキュメント情報の展開
-	if ( docdata(DocData_Name) != "" ) {
-		repeat DocData_MAX
-			replace result, ";$("+ stt_docdata_identlist(cnt) +")", docdata(cnt)
-		loop
-	}
-	
 	return
 	
 *LProcToken
@@ -142,13 +85,23 @@
 				case "modcfunc" : deftype  = DEFTYPE_MODULE
 				case "defcfunc" : deftype |= DEFTYPE_FUNC  | DEFTYPE_CTYPE   : goto *LAddDefinition
 				case "define"   : deftype  = DEFTYPE_MACRO : bGlobal = false : goto *LAddDefinition
-			;	case "const"
-			;	case "enum"     : deftype  = DEFTYPE_CONST : bGlobal = false : goto *LAddDefinition
+				case "const"
+				case "enum"     : deftype  = DEFTYPE_CONST : bGlobal = false : goto *LAddDefinition
 				case "cfunc"    : deftype  = DEFTYPE_CTYPE
 				case "func"     : deftype |= DEFTYPE_DLL   : bGlobal = false : goto *LAddDefinition
 				case "cmd"      : deftype  = DEFTYPE_CMD   :                 : goto *LAddDefinition
 				case "comfunc"  : deftype  = DEFTYPE_COM   : bGlobal = false : goto *LAddDefinition
 				case "usecom"   : deftype  = DEFTYPE_IFACE : bGlobal = false : goto *LAddDefinition
+				case "uselib"   : deftype  = DEFTYPE_LIB   : bGlobal = false : goto *LAddDefinition
+				
+				case "module":
+					bInModule = true
+					deftype = DEFTYPE_NSPACE
+					goto *LAddDefinition
+				case "global":
+					bInModule = false
+					swbreak
+				
 			:*LAddDefinition
 					NextToken
 					
@@ -172,6 +125,16 @@
 							}
 							idx --
 							
+							// #module
+							if ( deftype == DEFTYPE_NSPACE ) {
+								sDefIdent = strtrim(sDefIdent, 0, '"')
+								
+								// メンバ変数があればクラス
+								if ( nowTkType == TKTYPE_IDENT ) {
+									deftype = DEFTYPE_CLASS
+								}
+							}
+							
 							// 次のトークン
 							NextToken
 							swbreak
@@ -185,235 +148,15 @@
 					// リストに追加
 					gosub *LAddDeflist
 					swbreak
-					
-				// モジュール
-				case "module" : bInModule = true  : swbreak
-				case "global" : bInModule = false : swbreak
 			swend
 			swbreak
 	swend
 	return
 	
 *LAddDeflist
-	// 先頭 or 末尾 が _ なら、無視する
-	if ( peek(sDefIdent) == '_' || peek(sDefIdent, strlen(sDefIdent) - 1) == '_' ) {
-		return
-	}
-	
-	// 仮引数リストを作成する
-	CreatePrmlist prmlist, deftype, tktypelist, tkstrlist, docdata, idx, cntToken
-	cntPrm = stat
-	
-	// 出力
-	LongStr_add hs, ";--------------------\n%index\n"+ sDefIdent +"\n\n\n%prm\n"
-	
-	// 仮引数リスト
-	if ( deftype & DEFTYPE_CTYPE ) {
-		LongStr_add hs, "("
-	}
-	
-	repeat cntPrm
-		if ( cnt ) { LongStr_add hs, ", " }
-		
-		LongStr_add hs, prmlist(cnt, 0)
-		
-		// 省略値
-		if ( prmlist(cnt, 2) != "" ) {
-			LongStr_add hs, " = "+ prmlist(cnt, 2)
-		}
-	loop
-	
-	if ( deftype & DEFTYPE_CTYPE ) {
-		LongStr_add hs, ")"
-	}
-	LongStr_add hs, "\n"
-	
-	// 仮引数詳細
-	repeat cntPrm
-		LongStr_add hs, prmlist(cnt, 1) +" "+ prmlist(cnt, 0) +" : \n"
-	loop
-	
-	// 残り
-	LongStr_add hs, "\n%inst\n\n\n%href\n\n%group\n\n"
-	return
-	
-//------------------------------------------------
-// 仮引数リストの作成
-//------------------------------------------------
-#define AddPrmlist(%1,%2="",%3="",%4="") %1(cntPrm, 0) = %2 : %1(cntPrm, 1) = %3 : %1(cntPrm, 2) = %4 :\
-/**/	logmes strf("AddPrmlist[%1] %%s, %%s, %%s", %2, %3, %4) /**/	:\
-	cntPrm ++
-	
-#deffunc CreatePrmlist@autohs_mod array prmlist, int deftype, array tktypelist, array tkstrlist, array docdata, var idx, int cntToken,  local cntPrm, local sType, local sIdent, local sDefault
-	sdim prmlist, , 20, 3
-	dim  cntPrm
-	sdim sIdent
-	sdim sType
-	sdim sDefault
-	
-	if ( deftype & DEFTYPE_MACRO ) {
-		if ( nowTkType != TKTYPE_CIRCLE_L ) { return 0 }
-		NextToken
-	}
-	if ( deftype & DEFTYPE_MODULE ) { AddPrmlist prmlist, "self", "modvar" }
-	if ( deftype & DEFTYPE_DLL    ) { NextToken }
-	if ( deftype & DEFTYPE_COM    ) { NextToken }
-	if ( deftype & DEFTYPE_CMD    ) { return 0 }
-	if ( deftype & DEFTYPE_IFACE  ) { return 0 }
-	
-	repeat
-		if ( nowTkType == TKTYPE_END ) { break }
-		
-		// ユーザ定義命令・関数
-		if ( deftype & DEFTYPE_FUNC ) {
-			
-			sType = nowTkStr : NextToken
-			
-			if ( nowTkType == TKTYPE_IDENT ) {
-				sIdent = nowTkStr
-				NextToken
-				
-			} else {
-				poke sIdent
-			}
-			
-			// ローカル引数は追加しない
-			if ( sType != "local" ) {
-				AddPrmlist prmlist, sIdent, sType
-			}
-			
-		// Dll 命令・関数
-		} else : if ( deftype & DEFTYPE_DLL ) {
-			
-			if ( nowTkType != TKTYPE_IDENT ) { break }
-			
-			AddPrmlist prmlist, "p"+ (cntPrm + 1), nowTkStr
-			NextToken
-			
-		// マクロ
-		} else : if ( deftype & DEFTYPE_MACRO ) {
-			if ( nowTkType != TKTYPE_MACRO_PRM ) { break }
-			
-			NextToken
-			if ( nowTkStr == "=" ) {
-				NextToken
-				sDefault = nowTkStr
-				NextToken
-			} else {
-				poke sDefault
-			}
-			
-			AddPrmlist prmlist, "p"+ (cntPrm + 1), "any", sDefault
-		}
-		
-		// , を飛ばす
-		if ( nowTkType == TKTYPE_COMMA ) {
-			NextToken
-		} else {
-			break
-		}
-	loop
-	
-	return cntPrm
-	
-//------------------------------------------------
-// idx の増加
-//------------------------------------------------
-#deffunc GetNextToken var idx, array tktypelist, array tkstrlist, array docdata, int cntToken,  local index
-*LNextToken_core
-	idx ++
-	
-	if ( idx >= cntToken ) {
-		nowTkType = TKTYPE_ERROR
-		nowTkStr  = ""
-		return
-	}
-	
-	switch ( nowTkType )
-		case TKTYPE_COMMENT
-			// 埋め込みドキュメント情報の場合
-			if ( lpeek(nowTkStr) == 0x2B2A2A2F ) {	// long("/**+")
-				index       = 4
-				len_max     = strlen(nowTkStr)
-				typeDocdata = -1
-				
-				repeat
-					index += CntSpaces(nowTkStr, index, true)	// 改行を文字列と認める
-					
-					if ( (len_max - 2) <= index ) { break }
-					
-					if ( peek(nowTkStr, index) != '*' ) { break }
-					index ++
-					index += CntSpaces(nowTkStr, index)
-					
-					// 識別子の取得 ( 情報タイプ )
-					if ( peek(nowTkStr, index) != '@' ) { continue }
-					index ++
-					index += CutIdent( stt_sIdent, nowTkStr, index )
-					index += CntSpaces(nowTkStr, index)
-					
-					stt_sIdent = getpath(stt_sIdent, 16)
-					
-					// ':' を許可
-					if ( peek(nowTkStr, index) == ':' ) {
-						index ++
-						index += CntSpaces(nowTkStr, index)
-						stt_bPermitEmptyLine = true			// 空行でも無視されない
-					} else {
-						stt_bPermitEmptyLine = false
-					}
-					
-					// doc data の取得 ( 行末まで )
-					getstr stt_sData, nowTkStr, index : index += strsize
-					
-					if ( stt_sIdent != "" ) {		// 維持
-						typeDocdata = -1
-						repeat DocData_MAX
-							if ( stt_sIdent == stt_docdata_identlist(cnt) ) {
-								typeDocdata = cnt
-								break
-							}
-						loop
-					}
-					
-					// ドキュメント情報の配列に追加
-					if ( typeDocdata < 0 ) {
-						break
-						
-					} else {
-						// コロン(:)がない＆空の行 ⇒ 無視する
-						if ( stt_bPermitEmptyLine == false && stt_sData == "" ) {
-							continue
-						}
-						
-						if ( docdata( typeDocdata ) != "" ) {
-							docdata( typeDocdata ) += "\n"
-						}
-						docdata( typeDocdata ) += stt_sData
-					}
-				loop
-			}
-			
-			goto *LNextToken_core
-			swbreak
-			
-		case TKTYPE_BLANK
-		case TKTYPE_SCOPE
-			goto *LNextToken_core
-			
-		case TKTYPE_ESC_LINEFEED
-			idx ++
-			gosub *LNextToken_core	// 改行の次に進む
-			swbreak
-			
-		default
-			swbreak
-	swend
-	
+	autogen_add_def autogen, sDefIdent, deftype, idx
 	return
 	
 #global
-
-	AutohsInitialize
 
 #endif
