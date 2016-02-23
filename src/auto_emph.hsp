@@ -32,7 +32,6 @@
 	loop
 	
 	// –¢ŽÀ‘•
-	;bIgnoreInnerDefinition@ = ini_geti(cfg, "Option", "bIgnoreInnerDefinition", true)
 	;bExplicitUselib@        = ini_geti(cfg, "Option", "bExplicitUselib",        true)
 	return
 	
