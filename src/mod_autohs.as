@@ -80,6 +80,10 @@
 	hpm_split tktypelist, tkstrlist, script, fSplit
 	cntToken = stat
 	
+	// ”Ô•º
+	tkstrlist(cntToken)  = ""
+	tktypelist(cntToken) = TKTYPE_ERROR
+	
 	// hs ¶¬
 	dim deftype
 	dim idx
@@ -326,8 +330,7 @@
 	idx ++
 	
 	if ( idx >= cntToken ) {
-		nowTkType = TKTYPE_ERROR
-		nowTkStr  = ""
+		idx = cntToken
 		return
 	}
 	
