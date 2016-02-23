@@ -5,8 +5,8 @@
 
 #runtime "hsp3cl"
 
+#include "ini/ini.hsp"
 #include "Mo/userdef.as"
-#include "Mo/ini.as"
 #include "Mo/hsedutil.as"
 #include "Mo/LexCmdline.as"
 

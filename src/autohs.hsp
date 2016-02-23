@@ -18,9 +18,11 @@
 	end
 	
 #module
-#deffunc app_read_config
-	SetIniName "./autohs.ini"
-	autogen_set_header GetStrIni("Resource", "hsHeader")
+#deffunc app_read_config  \
+	local cfg
+	
+	ini_new cfg, "./autohs.ini"
+	autogen_set_header ini_gets(cfg, "Resource", "hsHeader")
 	return
 
 #deffunc app_proc_impl \
