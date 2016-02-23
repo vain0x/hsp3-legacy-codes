@@ -13,8 +13,7 @@
  * @group •¶š—ñ‘€ìŠÖ”
  */
 
-#include "mod_replace.as"
-#define global StrReplace replace
+#define global StrReplace strrep
 
 #module strutil
 

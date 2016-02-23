@@ -4,8 +4,6 @@
 #define IG_MODULE_AUTO_HS_AS
 
 #include "Mo/HPM_split.as"
-
-#include "Mo/mod_replace.as"
 #include "Mo/MCLongString.as"
 
 //##############################################################################
@@ -75,7 +73,7 @@
 //------------------------------------------------
 #deffunc SetHsHeader str hsHeader
 	stt_hsHeader = hsHeader
-	replace stt_hsHeader, "\\n", "\n"
+	strrep stt_hsHeader, "\\n", "\n"
 	return
 	
 //------------------------------------------------
@@ -120,7 +118,7 @@
 	// 埋め込みドキュメント情報の展開
 	if ( docdata(DocData_Name) != "" ) {
 		repeat DocData_MAX
-			replace result, ";$("+ stt_docdata_identlist(cnt) +")", docdata(cnt)
+			strrep result, ";$("+ stt_docdata_identlist(cnt) +")", docdata(cnt)
 		loop
 	}
 	
