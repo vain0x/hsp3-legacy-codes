@@ -125,8 +125,8 @@
 				case "modcfunc" : deftype  = DEFTYPE_MODULE
 				case "defcfunc" : deftype |= DEFTYPE_FUNC  | DEFTYPE_CTYPE   : goto *LAddDefinition
 				case "define"   : deftype  = DEFTYPE_MACRO : bGlobal = false : goto *LAddDefinition
-			;	case "const"
-			;	case "enum"     : deftype  = DEFTYPE_CONST : bGlobal = false : goto *LAddDefinition
+				case "const"
+				case "enum"     : deftype  = DEFTYPE_CONST : bGlobal = false : goto *LAddDefinition
 				case "cfunc"    : deftype  = DEFTYPE_CTYPE
 				case "func"     : deftype |= DEFTYPE_DLL   : bGlobal = false : goto *LAddDefinition
 				case "cmd"      : deftype  = DEFTYPE_CMD   :                 : goto *LAddDefinition
@@ -197,8 +197,8 @@
 	if ( peek(sDefIdent) == '_' || peek(sDefIdent, strlen(sDefIdent) - 1) == '_' ) {
 		return
 	}
-	// モジュール名は無視する
-	if ( deftype == DEFTYPE_NSPACE || deftype == DEFTYPE_CLASS ) {
+	// 定数とモジュール名は無視する
+	if ( deftype == DEFTYPE_CONST || deftype == DEFTYPE_NSPACE || deftype == DEFTYPE_CLASS ) {
 		return
 	}
 	
