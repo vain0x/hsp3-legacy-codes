@@ -12,6 +12,7 @@
 #include "Mo/userdef.as"
 #include "autohs.as"
 #include "mod_autohs.as"
+#include "autogen_hs.hsp"
 
 #include "Mo/ini.as"
 #include "Mo/hsedutil.as"
@@ -45,8 +46,7 @@
 	chdir ownpath
 	
 	SetIniName ownpath + "/autohs.ini"
-	SetHsHeader GetStrIni("Resource", "hsHeader")
-	
+	autogen_set_header GetStrIni("Resource", "hsHeader")
 	return
 	
 //------------------------------------------------
@@ -119,7 +119,8 @@
 // hs Çê∂ê¨Ç∑ÇÈ
 //------------------------------------------------
 *LCreateHs
-	CreateHs hs, script
+	newmod autogen, autogen_hs
+	autogen_generate autogen, hs, script
 	return
 	
 //------------------------------------------------
