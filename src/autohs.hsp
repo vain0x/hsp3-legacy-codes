@@ -9,6 +9,7 @@
 
 #runtime "hsp3cl"
 
+#include "Mo/userdef.as"
 #include "autohs.as"
 #include "mod_autohs.as"
 
