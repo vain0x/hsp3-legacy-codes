@@ -34,18 +34,20 @@
 //------------------------------------------------
 // DEFTYPE
 //------------------------------------------------
-#const DEFTYPE_NONE		0x0000
-#const DEFTYPE_LABEL	0x0001		// ラベル
-#const DEFTYPE_MACRO	0x0002		// マクロ
-#const DEFTYPE_CONST	0x0004		// 定数
-#const DEFTYPE_FUNC		0x0008		// 命令・関数
-#const DEFTYPE_DLL		0x0010		// DLL命令
-#const DEFTYPE_CMD		0x0020		// HPIコマンド
-#const DEFTYPE_COM		0x0040		// COM命令
-#const DEFTYPE_IFACE	0x0080		// インターフェース
+#const DEFTYPE_NONE     0x0000
+#const DEFTYPE_LABEL    0x0001
+#const DEFTYPE_MACRO    0x0002
+#const DEFTYPE_CONST    0x0004
+#const DEFTYPE_FUNC     0x0008  // #deffunc
+#const DEFTYPE_DLL      0x0010  // #func
+#const DEFTYPE_CMD      0x0020  // #cmd
+#const DEFTYPE_COM      0x0040  // #comfunc
+#const DEFTYPE_IFACE    0x0080
+#const DEFTYPE_NSPACE   0x0100  // モジュール(名前空間)
+#const DEFTYPE_CLASS    0x0200  // モジュール(クラス)
 
-#const DEFTYPE_CTYPE	0x0100		// CTYPE
-#const DEFTYPE_MODULE	0x0200		// モジュールメンバ
+#const DEFTYPE_CTYPE    0x1000
+#const DEFTYPE_MODULE   0x2000  // メンバ命令
 
 //------------------------------------------------
 // DocData
@@ -147,6 +149,15 @@
 				case "cmd"      : deftype  = DEFTYPE_CMD   :                 : goto *LAddDefinition
 				case "comfunc"  : deftype  = DEFTYPE_COM   : bGlobal = false : goto *LAddDefinition
 				case "usecom"   : deftype  = DEFTYPE_IFACE : bGlobal = false : goto *LAddDefinition
+				
+				case "module":
+					bInModule = true
+					deftype = DEFTYPE_NSPACE
+					goto *LAddDefinition
+				case "global":
+					bInModule = false
+					swbreak
+				
 			:*LAddDefinition
 					NextToken
 					
@@ -170,6 +181,16 @@
 							}
 							idx --
 							
+							// #module
+							if ( deftype == DEFTYPE_NSPACE ) {
+								sDefIdent = strtrim(sDefIdent, 0, '"')
+								
+								// メンバ変数があればクラス
+								if ( nowTkType == TKTYPE_IDENT ) {
+									deftype = DEFTYPE_CLASS
+								}
+							}
+							
 							// 次のトークン
 							NextToken
 							swbreak
@@ -183,10 +204,6 @@
 					// リストに追加
 					gosub *LAddDeflist
 					swbreak
-					
-				// モジュール
-				case "module" : bInModule = true  : swbreak
-				case "global" : bInModule = false : swbreak
 			swend
 			swbreak
 	swend
@@ -195,6 +212,10 @@
 *LAddDeflist
 	// 先頭 or 末尾 が _ なら、無視する
 	if ( peek(sDefIdent) == '_' || peek(sDefIdent, strlen(sDefIdent) - 1) == '_' ) {
+		return
+	}
+	// モジュール名は無視する
+	if ( deftype == DEFTYPE_NSPACE || deftype == DEFTYPE_CLASS ) {
 		return
 	}
 	
