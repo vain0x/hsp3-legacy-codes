@@ -1,0 +1,144 @@
+// 定義から拡張 hsed の色分けデータを自動生成
+
+// @ autohs の流用
+// @ hs は色分けデータのこと (嘘)
+
+#packopt name "autoEmphasis.exe"
+#packopt hide    1
+#packopt orgpath 1
+
+#runtime "hsp3cl"
+
+#include "autoEmphasis.as"
+#include "mod_autoEmphasis.as"
+
+#include "Mo/GetOwnpath.as"
+#include "Mo/MCIni.as"
+#include "Mo/hsedutil.as"
+#include "Mo/LexCmdline.as"
+
+*main
+	gosub *LInitialize			// 初期化
+	gosub *LProcCmdline			// コマンドラインを処理する
+	gosub *LLoadTargetScript	// 変数の初期化
+	gosub *LCreateHs
+	gosub *LSaveHs
+	
+#ifdef _DEBUG
+	print hs
+	stop
+#endif
+	
+	chdir curpath
+	end : end
+	
+//##############################################################################
+//                能動サブルーチン
+//##############################################################################
+//------------------------------------------------
+// 初期化ルーチン
+//------------------------------------------------
+*LInitialize
+	sdim curpath, MAX_PATH : curpath = dir_cur
+	sdim ownpath, MAX_PATH : ownpath = GetOwnpath("H:/Docs/prg/hsp/ProjSmall/autohs/autoEmphasis")
+	
+	chdir ownpath
+	
+	ini_new cfg, ownpath + "/autoEmphasis.ini"
+	
+	stmp = ini_gets(cfg, "Color", "Id.$idtypelist") : split@hsp stmp, ",", idtypelist@	// 識別子タイプ
+	stmp = ini_gets(cfg, "Color", "Id.$keylist")    : split@hsp stmp, ",", keylist@		// ini キーのリスト
+	foreach keylist@
+		depenId@(cnt) = ini_gets(cfg, "Color", "Type.Id." + keylist@(cnt), "")
+		clrTxId@(cnt) = ini_gets(cfg, "Color", "Text.Id." + keylist@(cnt), "")
+	;	clrBgId@(cnt) = ini_gets(cfg, "Color", "Back.Id." + keylist@(cnt), "")
+	loop
+	
+	bIgnoreInnerDefinition@ = ini_geti(cfg, "Option", "bIgnoreInnerDefinition", true)
+	bExplicitUselib@        = ini_geti(cfg, "Option", "bExplicitUselib",        true)
+	
+	return
+	
+//------------------------------------------------
+// コマンドラインを処理する
+//------------------------------------------------
+*LProcCmdline
+	LexCmdline cmdopt, 2	;, "hsed"
+	cntCmdopt = stat
+	
+;	cmdopt = "hsptmp", "" : cntCmdopt = length(cmdopt)
+	
+	// コマンドラインなし
+	if ( cntCmdopt == 0 ) {
+#ifdef _DEBUG
+		dialog "hsp;*.as;", 16, "HSP Script File"
+		if ( stat == 0 ) { end }
+		inFile  = refstr
+		outFile = getpath(inFile, 1) + ".txt"
+		logmes dbgstr(outFile)
+#else
+		PutErrorMessage Error_NeedCmdline
+		end
+#endif
+	
+	// hsed を参照する呼び出し
+	} else : if ( cmdopt(0) == "hsed" ) {
+		bHsed = true
+		
+		// hsed があるかチェック
+		hsed_exist
+		if ( stat == false ) { PutErrorMessage Error_NoHsed : end }
+		
+	// 通常の呼び出し
+	} else {
+		inFile  = cmdopt(0)
+		outFile = cmdopt(1)
+		
+		// エラーチェック・補完
+		if ( inFile == "" && outFile == "" ) {
+			PutErrorMessage Error_NeedCmdline
+			end
+		} else : if ( inFile != "" && outFile == "" ) {
+			outFile = getpath( inFile, 1 ) +".txt"
+		} else : if ( inFile == "" && outFile != "" ) {
+			inFile  = outFile
+		}
+		
+		// 出力ファイルは必ず .txt
+		outFile = getpath( outFile, 1 ) +".txt"
+	}
+	
+	return
+	
+//------------------------------------------------
+// 対象のスクリプトを読み込む
+//------------------------------------------------
+*LLoadTargetScript
+	if ( bHsed ) {
+		inFile  = HSED_TEMPFILE_HSP
+		outFile = HSED_TEMPFILE_HS
+		hsed_GetActText script		// アクティブな Footy のテキストを取得
+		
+	} else {
+		notesel script
+		noteload inFile
+		noteunsel
+	}
+	return
+	
+//------------------------------------------------
+// hs を生成する
+//------------------------------------------------
+*LCreateHs
+	CreateHs hs, script
+	return
+	
+//------------------------------------------------
+// 自動生成した hs を保存する
+//------------------------------------------------
+*LSaveHs
+	notesel hs
+	notesave outFile
+	noteunsel
+	return
+	
