@@ -9,7 +9,7 @@
 
 #runtime "hsp3cl"
 
-#include "autoEmphasis.as"
+#include "autohs.as"
 #include "mod_autoEmphasis.as"
 
 #include "Mo/GetOwnpath.as"
