@@ -339,7 +339,9 @@
 	gosub *SetCallbackToFooty
 	
 	// Font
-	Footy2SetFontFace footyID, FFM_ANSI_CHARSET, EDITOR_FONT_FAMILY, false
+	repeat FFM_NUM_FONTS
+		Footy2SetFontFace footyID, cnt, EDITOR_FONT_FAMILY, false
+	loop
 	Footy2SetFontSize footyID, EDITOR_FONT_SIZE, false
 	
 	// êîílê›íË
