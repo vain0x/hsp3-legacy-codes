@@ -41,7 +41,7 @@
 	
 //######## メッセージハンドラ ##################################################
 *OnKeyLabel
-	if ( ginfo(2) == wID_Main ) {
+	if ( ginfo_act == wID_Main ) {
 		
 		// [Ctrl]
 		if ( getkey(17) ) {	
@@ -197,7 +197,7 @@
 	return
 	
 //#### ドラッグ
-#define CAN_DRAGPOS boxin( LBWIDTH + 5, 6, LBWIDTH + 10, ginfo(13) - 6 )
+#define CAN_DRAGPOS boxin( LBWIDTH + 5, 6, LBWIDTH + 10, ginfo_winy - 6 )
 *OnMouseMove
 	if ( CAN_DRAGPOS ) {
 		// (仮想) スプリッターの上なら
@@ -208,14 +208,14 @@
 *OnLBtnDown
 	if ( CAN_DRAGPOS ) {
 		bDragging   = true
-		ptDragStart = ginfo(0), ginfo(1)
+		ptDragStart = ginfo_mx, ginfo_my
 		
 		// マウスの移動範囲を制限する
 		dim rc, 4
-		rc(0) = ginfo(4) + ( 10 + 60 )
-		rc(1) = ginfo(5) + 40
-		rc(2) = ginfo(6) - ( 10 + 60 )
-		rc(3) = ginfo(7) - 10
+		rc(0) = ginfo_wx1 + ( 10 + 60 )
+		rc(1) = ginfo_wy1 + 40
+		rc(2) = ginfo_wx2 - ( 10 + 60 )
+		rc(3) = ginfo_wy2 - 10
 		ClipCursor varptr(rc)
 		
 		// 無限ループ
@@ -227,7 +227,7 @@
 			
 			await 0
 			
-			if ( boxin(ginfo(4), ginfo(5), ginfo(6), ginfo(7), ginfo(0), ginfo(1)) ) {
+			if ( boxin(ginfo_wx1, ginfo_wy1, ginfo_wx2, ginfo_wy2, ginfo_mx, ginfo_my) ) {
 				// ウィンドウの中なら変更し続ける
 				SetCursor LoadCursor(IDC_SIZEWE)
 				
@@ -241,7 +241,7 @@
 		if ( bDragging ) {
 			ClipCursor NULL							// 移動制限を解放
 			bDragging = false
-			ptDragEnd = ginfo(0), ginfo(1)
+			ptDragEnd = ginfo_mx, ginfo_my
 			
 			sendmsg hMain, UWM_SPLITTERMOVE, 0, 0
 		}
@@ -281,7 +281,7 @@
 	return
 	
 *CreateWindow
-	screen wID_Main, ginfo(20), ginfo(21), 2 + 16,,, WIN_DEFAULT_X, WIN_DEFAULT_Y
+	screen wID_Main, ginfo_dispx, ginfo_dispy, 2 + 16,,, WIN_DEFAULT_X, WIN_DEFAULT_Y
 	hWindow( wID_Main ) = hwnd
 	title "Renzok"
 	syscolor 15 : boxf : color
@@ -289,18 +289,21 @@
 	SetStyle hwnd, -16, 0x00040000 | 0x00010000		// 可変枠＆最大化ボタン
 	
 	// リストボックス
-	objmode 1, 0
+	font LISTBOX_FONT_FAMILY, LISTBOX_FONT_SIZE
+	objmode objmode_usefont, false
 	objsize LBWIDTH, LBHEIGHT
 	pos 5, 5 : listbox iList, 0, ""
 	ListInfo = objinfo(stat, 2), stat
 	
 	// 保存ボタン
+	objmode objmode_guifont, false
 	objsize LBWIDTH, 20
 	pos 5, LBHEIGHT + 5 : button gosub "save", *Save
 	BtnInfo = objinfo(stat, 2), stat
 	
 	// 箱
-	objmode 2, 0
+	font EDITOR_FONT_FAMILY, EDITOR_FONT_SIZE
+	objmode objmode_usefont, false
 	pos LBWIDTH + 10, 5 : mesbox buf, BOXWIDTH, BOXHEIGHT, 5, MAX_TEXTLEN
 	BoxInfo = objinfo(stat, 2), stat
 	
