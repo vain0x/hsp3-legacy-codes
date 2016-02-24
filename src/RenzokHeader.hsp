@@ -1,5 +1,5 @@
-#ifndef IG_RENZOK_AS
-#define IG_RENZOK_AS
+#ifndef ig_renzok_header_hsp
+#define ig_renzok_header_hsp
 
 #uselib "user32.dll"
 #func   global SetWindowLong "SetWindowLongA" int,int,int
@@ -34,8 +34,6 @@
 #define global WIN_DEFAULT_X 640
 #define global WIN_DEFAULT_Y 480
 
-#define global MAX_TEXTLEN 0x1FFFF  // 127KB までサポート
-
 #define global LBWIDTH   _LbWidth@
 #define global LBHEIGHT  (ginfo_winy - (10 + 20) + 5)
 #define global BOXWIDTH  (ginfo_winx - (LBWIDTH + 15))
@@ -56,6 +54,10 @@
 #const DDL_DIRECTORY 0x0010  // ディレクトリ
 #const DDL_ARCHIVE   0x0020  // アーカイブ
 #const DDL_EXCLUSIVE 0x8000  // 排他的にする ( HIDDEN なら、「隠しファイルだけ」 になる )
+
+// key_map_ のフラグ
+#define key_map_ctrl  (1 << 0)
+#define key_map_shift (1 << 1)
 
 // MenuCMD
 #enum global CMD_NULL = 0
@@ -85,6 +87,19 @@
 #defcfunc getkey int p2
 	getkey@hsp _kc, p2
 	return@hsp _kc
+	
+#defcfunc key_map_flags_get  \
+	local ctrl, local shift
+	
+	getkey@hsp shift, 16
+	getkey@hsp ctrl, 17
+	return (ctrl * key_map_ctrl@) | (shift * key_map_shift@)
+	
+#deffunc gosub_if_able var lb
+	if ( lpeek(lb) != 0 ) {
+		gosub lb
+	}
+	return
 	
 #deffunc DirlistEx var vfilelist, str path, local lsList, local lIndex
 	lIndex = 0
