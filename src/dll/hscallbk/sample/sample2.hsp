@@ -1,0 +1,33 @@
+;
+;   EnumFontFamiliesEx() によるフォントファミリ取得サンプル
+;
+
+#include "gdi32.as"
+#include "hscallbk.as"
+
+; コールバック関数の関数形式を定義
+; ( DLL名および関数名はダミー (空文字列) )
+; ( int, double, str, comobj 型引数のみ指定可能 )
+#uselib ""
+#func EnumFontFamExProc "" int,int,int,int
+
+#define SHIFTJIS_CHARSET 128
+
+	setcallbk Proc, EnumFontFamExProc, *OnEnumFontFamExProc
+
+	dim logfont, 15
+	poke logfont, 23, SHIFTJIS_CHARSET
+
+	notesel fontname
+	EnumFontFamiliesEx hdc, varptr(logfont), varptr(Proc), 0, 0
+	mesbox fontname, ginfo_winx, ginfo_winy
+	stop
+
+*OnEnumFontFamExProc
+	dupptr elfex, callbkarg(0), 60
+	getstr name, elfex, 28
+	if peek(name,0) != '@' {
+		; 横書き用フォントのみ取り出す
+		noteadd name, -1
+	}
+	return 1

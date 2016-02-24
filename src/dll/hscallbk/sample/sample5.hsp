@@ -1,0 +1,49 @@
+// MessageBox 関数＋フック
+// by Kpan さん
+
+#include "user32.as"
+#include "kernel32.as"
+
+#include "dll/hscallbk/hscallbk.as"
+
+#uselib ""		// dummy
+#func MsgBoxHookProc "" int, int, int
+
+#define WH_CBT 5
+#define MB_YESOKCANCEL 0x0003
+#define HCBT_ACTIVATE 5
+
+#define IDYES    6
+#define IDNO     7
+#define IDCANCEL 2
+
+*main
+	setcallbk Proc, MsgBoxHookProc, *OnMsgBoxHookProc
+	
+	screen 0, 240, 180
+	pos 30, 30 : button "Show", *Show
+	stop
+	
+*Show
+	GetCurrentThreadId
+	SetWindowsHookEx WH_CBT, varptr(Proc), 0, stat
+	MyHookHandle = stat
+	
+	MessageBox hwnd, "フックメッセージボックス", "HookedMsgBox", MB_YESOKCANCEL | 0x0020
+	mes "stat = "+ stat
+	
+	stop
+	
+*OnMsgBoxHookProc
+	if ( callbkarg(0) == HCBT_ACTIVATE ) {
+		SetDlgItemText callbkarg(1), IDYES,    "いやだー"
+		SetDlgItemText callbkarg(1), IDNO,     "は～い！"
+		SetDlgItemText callbkarg(1), IDCANCEL, "黙殺する"	;"…………"
+		
+		UnhookWindowsHookEx MyHookHandle
+	}
+	
+	CallNextHookEx MyHookHandle, callbkarg(0), callbkarg(1), callbkarg(2)
+	return stat
+	
+	

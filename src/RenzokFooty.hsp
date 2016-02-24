@@ -7,9 +7,9 @@
 
 #include "dll/ODListbox/ODListbox.as"
 #include "dll/Footy2/Footy2.as"
+#include "dll/hscallbk/hscallbk.as"
 #include "Mo/Footy2mod.as"
 #include "Mo/ClrtxtOptimize.as"
-#include "hpi/hscallbk/hscallbk.as"
 #include "Mo/GetFontOfHSP.as"
 #include "Mo/MenuBarAPI.as"
 

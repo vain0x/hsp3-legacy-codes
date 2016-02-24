@@ -1,0 +1,50 @@
+// コールバック関数でサブクラス化
+
+#include "user32.as"
+#include "hpi/hscallbk/hscallbk.as"
+
+#uselib ""	// ダミー
+#func MyButtonProc "" int,int,int,int
+
+#define WM_MOUSEMOVE 0x0200
+
+	
+	setcallbk lpfnMyButton, MyButtonProc, *MyProc_Button
+	
+	button gosub "click", *click : hBtn = objinfo( stat, 2 )
+	
+	// プロシージャを変更する
+	GetWindowLong hBtn, -4 : lpfnDefButton = stat	// デフォルトのプロシージャ
+	SetWindowLong hBtn, -4, varptr( lpfnMyButton )	// 変更する
+	
+	oncmd gosub *On_Destroy, 0x0002		// 破棄時の処理
+	
+	stop
+	
+// プロシージャ
+*MyProc_Button
+	hCtl = callbkarg(0)
+	uMsg = callbkarg(1)
+	wp   = callbkarg(2)
+	lp   = callbkarg(3)
+	
+	switch( uMsg )
+		case WM_MOUSEMOVE
+			title "" + ( lp & 0xFFFF ) + "," + ( lp >> 16 & 0xFFFF )
+			swbreak
+			
+		default
+			// 元のプロシージャを呼び出す
+			CallWindowProc lpfnDefButton, hCtl, uMsg, wp, lp
+			return stat
+	swend
+	return 1
+	
+*click
+	dialog "Click!"
+	return
+	
+*On_Destroy
+	SetWindowLong hBtn, -4, lpfnDefButton
+	return
+	
