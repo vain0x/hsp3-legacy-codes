@@ -1,0 +1,67 @@
+@(CLRTS)
+@// JavaScript Basic
+
+@(LEVEL)1
+@(CFLAG)NONE
+@(CTYPE)WORD
+@(KYOKA)01
+
+@//---- 命令文 -------------------------------------
+@(CIDPD)BRACKETS,ANSI_SIGNS,SPACE,TAB,
+@//(LEVEL)1
+@(COLOR)JS_Statement
+@(ENTRY)if,else,
+@(ENTRY)for,in,while,do,break,continue,switch,case,default,
+@(ENTRY)function,var,label,with,
+
+@//---- 基本予約語 -----------------------------------
+@//(LEVEL)1
+@(COLOR)JS_BuiltinFunc
+@(ENTRY)Number,parseFloat,parseInt,
+@(ENTRY)String,escape,unescape,
+@(ENTRY)isNaN,isFinite,
+@(ENTRY)eval,taint,untaint,
+
+@//---- キーワード -----------------------------------
+@//(LEVEL)1
+@(COLOR)JS_Keyword
+@(ENTRY)true,false,null,undefined,NaN,Infinity,
+@(ENTRY)new Number,new String,new Boolean,new Date,new Array,
+@(ENTRY)new,delete,
+@(ENTRY)this,
+
+@//---- その他記号など ---------------------------------
+@(CIDPD)ALLOW_ALL,
+@(KYOKA)01
+
+@(COLOR)JS_EscSeq
+@(KYOKA)1000
+@(ENTRY)\b,\f,\n,\r,\t,\",\',\\,
+
+@(CTYPE)LINE_BETWEEN
+@(COLOR)JS_String
+@(LEVEL)3
+@(KYOKA)01
+" "
+' '
+
+@(CTYPE)LINE_AFTER
+@(COLOR)Comment
+@(LEVEL)4
+@(KYOKA)0111
+//
+@(CTYPE)MULTI_BETWEEN
+/* */
+
+@(CTYPE)WORD
+@(COLOR)Operator
+@(ENTRY)+,-,*,/,%,
+@(ENTRY)<,>,<=,>=,==,!=,===,!==,
+@(ENTRY)&&,||,!,
+@(ENTRY)&,|,^,~,<<,>>,>>>,
+@(ENTRY)=,+=,-=,*=,/=,%=,&=,|=,^=,<<=,>>=,>>>=,++,--,
+,
+@(COLOR)Symbol
+@(ENTRY)[,],(,),{,},.,:,
+@(CCREF)00008454143
+;

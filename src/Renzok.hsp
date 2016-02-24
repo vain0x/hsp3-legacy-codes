@@ -1,0 +1,340 @@
+#include "Renzok.as"
+#packopt name STR_APPNAME
+#packopt hide 1
+
+#include "Mo/flexFrame.as"
+#include "Mo/FolderSelectDialog.as"
+#include "Mo/IsBinFile.as"
+#include "Mo/SysCursor.as"
+#include "Mo/MCNoteRepeat.as"
+
+*main
+	gsel 0, -1
+	gosub *SetVariables
+	gosub *CreateWindow
+	gosub *OnRenewal
+	
+	gsel wID_Main
+	onkey gosub *OnKeyLabel
+	onexit goto *exit
+	
+	oncmd gosub *OnCommand,   0x0111			// WM_COMMAND ListBox と EditControl の割り込み
+	oncmd gosub *OnResize,    0x0005			// WM_SIZE      サイズ可変用
+	oncmd gosub *OnSizing,    0x0214			// WM_SIZING    サイズ固定用
+	oncmd gosub *OnMouseMove, 0x0200			// WM_MOUSEMOVE マウス監視用
+	oncmd gosub *OnLBtnDown,  0x0201			// WM_LBUTTONDOWN ドラッグ開始検知用
+;	oncmd gosub *OnLBtnUp,    0x0202			// WM_LBUTTONUP   ドラッグ終了検知用
+	oncmd gosub *OnLoad,      UWM_LOAD
+	oncmd gosub *OnChangePath,UWM_CHANGEPATH
+	oncmd gosub *OnRenewal,   UWM_RENEWAL_LIST
+	oncmd gosub *OnSplitterMove,UWM_SPLITTERMOVE
+	
+	gsel wID_Main , 1
+	objsel BoxInfo(1)	// カーソルを与える
+	
+	gsel wID_Main
+	stop
+	
+*exit
+	if ( bDragging ) { ClipCursor NULL : bDragging = false }
+	end : end
+	
+//######## メッセージハンドラ ##################################################
+*OnKeyLabel
+	if ( ginfo(2) == wID_Main ) {
+		
+		// [Ctrl]
+		if ( getkey(17) ) {	
+			if ( iparam == 'S' ) {
+				gosub *Save
+				return
+			}
+		}
+		
+	}
+	return
+	
+*OnResize
+	// ウィンドウ・サイズ可変
+	MoveWindow ListInfo,            5,            5,  LBWIDTH,  LBHEIGHT, true
+	MoveWindow  BtnInfo,            5, LBHEIGHT + 5,  LBWIDTH,        20, true
+	MoveWindow  BoxInfo, LBWIDTH + 10,            5, BOXWIDTH, BOXHEIGHT, true
+	return
+	
+*OnSizing
+	// ウィンドウ可変の最低サイズを決める
+	OnSizingToFlexFrame 160, 120
+	return
+	
+*OnCommand
+	if ( lparam == ListInfo ) {
+		// リストボックスの割り込み
+		wNotifyCode = HIWORD(wparam)
+		
+		switch wNotifyCode
+		case 1										// LBN_SELCHANGE
+			sendmsg hMain, UWM_LOAD, 0, 0
+			swbreak
+		case 2										// LBN_WCLICK
+			sendmsg hMain, UWM_CHANGEPATH, 0, 0
+			swbreak
+		swend
+		
+	} else : if ( lparam == BoxInfo ) {
+		// 編集ボックスの割り込み
+		wNotifyCode = HIWORD(wparam)
+		if ( wNotifyCode == 0x300 ) {		// EN_CHANGE (編集された)
+			
+			if ( bModified == false ) {				// まだ編集されていなかったときだけ
+				sendmsg BoxInfo, 0x00B8, 0, 0		// EM_GETMODIFY (編集フラグを取得)
+				if ( stat == false ) { return }
+				
+				// 編集済み状態にする
+				Settitle getpath(filepath, 8) +" *"
+				bModified = true
+			}
+		}
+	}
+	return
+	
+*OnLoad
+	// 読み込むファイル名を取得
+	sendmsg ListInfo, 0x0188, 0, 0 : iList = stat
+	sendmsg ListInfo, 0x0189, iList, varptr(stmp)
+	
+	if ( iList < 0 ) { return }					// 選択アイテムがない場合も無視する
+	
+	// Ｗクリックが必要なものは無視
+	if ( stmp == STR_SEPARATOR ) { return }
+	if ( stmp == STR_DIALOG )    { return }		// フォルダ移動か？
+	if ( peek(stmp) == '[' )     { return }		// フォルダか？
+	
+	// ファイルなら
+	stmp = path +"\\"+ stmp
+	if ( filepath == stmp ) { return }	// すでに開いている
+	
+	exist stmp
+	if ( strsize < 0 ) { return }		// ない ( IsBinFile が調べてくれる )
+	if ( strsize >= MAX_TEXTLEN ) {
+		EnableBox {"
+			ファイルサイズが大きすぎます
+			(This file's size is too big to load it.)
+			"}+ ( strsize / 1024 ) +{"KB
+		"}
+		return
+		
+	} if ( IsBinFile( stmp ) <= 0 ) {	// 0 = Binary : 1 = Text : -1 = Unknown
+		EnableBox "(bin file)"
+		return
+		
+	} if ( bEnable ) {
+		EnableWindow BoxInfo, true
+		bEnable = false
+	}
+	
+	filepath = stmp				// ファイルを変更した
+	
+;	memexpand buf, strsize + 5
+	notesel   buf
+	noteload  filepath
+	noteunsel
+	
+	objprm BoxInfo(1), buf
+	Settitle getpath(filepath, 8)	// 変更フラグをおろす
+	bModified = false
+	return
+	
+*OnChangePath
+	// 読み込むファイル名を取得
+	sendmsg ListInfo, 0x0188, 0, 0 : iList = stat
+	sendmsg ListInfo, 0x0189, iList, varptr(stmp)
+	
+	if ( iList < 0 ) { return }					// 選択アイテムがない場合も無視する
+	
+	// セパレータか？
+	if ( stmp == STR_SEPARATOR ) { return }
+	
+	// フォルダ移動か？
+	if ( stmp == STR_DIALOG ) {
+		foldlg "", path, 0
+		if ( stat == false ) {			// 成功したとき
+			path = refstr
+			sendmsg hMain, UWM_RENEWAL_LIST, 0, 0
+		}
+		return
+	}
+	
+	// フォルダか？
+	if ( peek(stmp) == '[' ) {
+		
+		if ( stmp == STR_BACK ) {
+			// 最後のフォルダ名と \ を取り除く
+			     path = getpath(path, 32)
+			poke path,   strlen(path) - 1, 0
+			
+		} else {
+			getstr stmp, stmp, 1, ']'			// フォルダ名を取得
+			path += "\\"+ stmp
+		}
+		
+		sendmsg hMain, UWM_RENEWAL_LIST, 0, 0
+		return
+	}
+	return
+	
+*OnRenewal
+	// ListBox を再構築する
+	sendmsg ListInfo, 0x0184, 0, 0						// LB_RESETCONTENT
+;	sendmsg ListInfo, 0x018D, 0x0010, path +"\\*.*"		// LB_DIR (wparam == DDL_DIRECTORY)
+	sendmsg ListInfo, 0x000B, false, 0					// WM_SETREDRAW ( 再描画禁止 )
+	DirlistEx  filelist, path
+	NoteRepeat filelist
+		sendmsg ListInfo, 0x0180, 0, nrNote
+	NoteLoop
+	sendmsg ListInfo, 0x0180, 0, STR_DIALOG				// LB_ADD
+	sendmsg ListInfo, 0x000B, true, 0					// WM_SETREDRAW ( 再描画許可 )
+	
+	return
+	
+//#### ドラッグ
+#define CAN_DRAGPOS boxin( LBWIDTH + 5, 6, LBWIDTH + 10, ginfo(13) - 6 )
+*OnMouseMove
+	if ( CAN_DRAGPOS ) {
+		// (仮想) スプリッターの上なら
+		SetCursor LoadCursor(IDC_SIZEWE)
+	}
+	return
+	
+*OnLBtnDown
+	if ( CAN_DRAGPOS ) {
+		bDragging   = true
+		ptDragStart = ginfo(0), ginfo(1)
+		
+		// マウスの移動範囲を制限する
+		dim rc, 4
+		rc(0) = ginfo(4) + ( 10 + 60 )
+		rc(1) = ginfo(5) + 40
+		rc(2) = ginfo(6) - ( 10 + 60 )
+		rc(3) = ginfo(7) - 10
+		ClipCursor varptr(rc)
+		
+		// 無限ループ
+		repeat
+			
+			if ( getkey(1) == false && getkey(2) == false ) {
+				break
+			}
+			
+			await 0
+			
+			if ( boxin(ginfo(4), ginfo(5), ginfo(6), ginfo(7), ginfo(0), ginfo(1)) ) {
+				// ウィンドウの中なら変更し続ける
+				SetCursor LoadCursor(IDC_SIZEWE)
+				
+			;	ptDragEnd   = ginfo(0), ginfo(1)
+			;	sendmsg hMain, UWM_SPLITTERMOVE, 0, 0
+			;	ptDragStart = ptDragEnd(0), ptDragEnd(1)
+			}
+		loop
+		
+		// ドロップされた
+		if ( bDragging ) {
+			ClipCursor NULL							// 移動制限を解放
+			bDragging = false
+			ptDragEnd = ginfo(0), ginfo(1)
+			
+			sendmsg hMain, UWM_SPLITTERMOVE, 0, 0
+		}
+	}
+	return
+	
+*OnLBtnUp
+	return
+	
+*OnSplitterMove
+	_LbWidth += ptDragEnd(0) - ptDragStart(0)
+	
+	// 再描画する
+	gosub *OnResize
+	return
+	
+//######## サブルーチン群 ######################################################
+*SetVariables
+	dim hWindow, 2				// ウィンドウ・ハンドル
+	
+	dim ListInfo, 2				// ListBox の情報 (hwnd, objID)
+	dim  BoxInfo, 2				// EditBox 〃
+	dim  BtnInfo, 2				// Button  〃
+	
+	dim _LbWidth, 2				// ListBox の横幅
+		_LbWidth = 120
+	
+	dim ptDragStart, 2
+	dim ptDragEnd  , 2
+	
+	sdim buf, MAX_TEXTLEN + 1	// 編集バッファ
+	
+	sdim stmp, 256
+	sdim filepath, MAX_PATH		// 見ているファイルのパス
+	sdim path    , MAX_PATH		// 開いているフォルダのパス
+	path = dir_cur
+	return
+	
+*CreateWindow
+	screen wID_Main, ginfo(20), ginfo(21), 2 + 16,,, WIN_DEFAULT_X, WIN_DEFAULT_Y
+	hWindow( wID_Main ) = hwnd
+	title "Renzok"
+	syscolor 15 : boxf : color
+	
+	SetStyle hwnd, -16, 0x00040000 | 0x00010000		// 可変枠＆最大化ボタン
+	
+	// リストボックス
+	objmode 1, 0
+	objsize LBWIDTH, LBHEIGHT
+	pos 5, 5 : listbox iList, 0, ""
+	ListInfo = objinfo(stat, 2), stat
+	
+	// 保存ボタン
+	objsize LBWIDTH, 20
+	pos 5, LBHEIGHT + 5 : button gosub "save", *Save
+	BtnInfo = objinfo(stat, 2), stat
+	
+	// 箱
+	objmode 2, 0
+	pos LBWIDTH + 10, 5 : mesbox buf, BOXWIDTH, BOXHEIGHT, 5, MAX_TEXTLEN
+	BoxInfo = objinfo(stat, 2), stat
+	
+	gsel wID_Main
+	return
+	
+*Save
+	if ( filepath == STR_DIALOG ) { return }
+	
+	if ( peek(filepath) == 0 ) {
+		// 選べる
+		dialog "*", 17, "保存先"
+		if ( stat == false ) {
+			objsel BoxInfo(1)
+			return
+		}
+		filepath = refstr
+	}
+	
+	notesel buf
+	notesave filepath
+	noteunsel
+	
+	// 編集済みフラグを消す
+	bModified = false
+	sendmsg BoxInfo, 0x00B9, false, 0
+	Settitle getpath(filepath, 8)
+	
+	return
+	
+#deffunc EnableBox str prm_message
+	objprm BoxInfo(1), prm_message	// クリア (理由を表示)
+	Settitle "編集不可(Enable)"
+	EnableWindow BoxInfo, false	// 無効化
+	bEnable  = true
+	filepath = ""
+	return
