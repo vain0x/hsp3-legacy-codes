@@ -1,0 +1,99 @@
+@(CLRTS)
+@(CIDPD)BRACKETS,ANSI_SIGNS,SPACE,TAB,
+@(CTYPE)WORD
+@(CFLAG)NONE
+@(LEVEL)3
+@(KYOKA)1
+
+@//-------- 基本型 -------------------------------
+@(COLOR)Cpp_BasicType
+@(ENTRY)void,char,short,int,long,float,double,
+@(ENTRY)signed,unsigned,
+
+@(ENTRY)bool,wchar_t,Complex,_Imaginary,
+
+@//-------- 記憶クラス指定子 ---------------------
+@(COLOR)Cpp_StorageCls
+@(ENTRY)auto,static,extern,register,
+@(ENTRY)mutable,explicit,friend,virtual,
+
+@//-------- 予約語 -------------------------------
+@(COLOR)Cpp_Statement
+@//NULL
+@(ENTRY)defined,sizeof,
+@(ENTRY)const,volatile,restrict,inline,
+@(ENTRY)typedef,enum,struct,union,
+
+@(ENTRY)new,delete,typeid,
+@(ENTRY)and,and_eq,bitand,bitor,compl,not,not_eq,or,or_eq,xor,xor_eq,
+@(ENTRY)true,false,operator,this,
+@(ENTRY)public,protected,private,
+@(ENTRY)class,template,typename,using,
+
+@//-------- 定義済みマクロ -----------------------
+@(COLOR)silver
+@(ENTRY)__LINE__,__FILE__,__DATE__,__TIME__,_cplusplus,__STDC__,
+
+@//-------- キーワード -----------------------
+@(COLOR)Cpp_Construct
+@(ENTRY)if,else,for,while,do,switch,case,default,return,goto,break,continue,
+
+@(ENTRY)try,throw,catch,namespace,export,asm,dynamic_cast,static_cast,const_cast,reinterpret_cast,
+@(ENTRY)__declspec,dllexport,dllimport,naked,noreturn,nothrow,novtable,property,selectany,thread,uui,__export,__import,__thread
+
+@//-------- プリプロセッサ -------------------
+@(CIDPD)BRACKETS,ALPHABETS,ANSI_SIGNS,SPACE,TAB,
+@// ##
+@(COLOR)Operator
+##
+@(LEVEL)6
+@(CTYPE)LINE_AFTER
+@(COLOR)Preprocessor
+@/*
+@(ENTRY)# define,# undef,# if,# ifdef,# ifndef,# else,# elif,# endif,
+@(ENTRY)# include,
+@(ENTRY)# using,# error,# pragma,# line,
+@*/
+#
+
+@//-------- 文字列 -------------------------------
+@(CIDPD)ALLOW_ALL
+@(LEVEL)5
+@(COLOR)Cpp_String
+@(CTYPE)LINE_BETWEEN
+@(KYOKA)1000000
+< >
+@(KYOKA)1010001
+" "
+' '
+@(CTYPE)WORD
+@(KYOKA)110000
+@(COLOR)Cpp_EscSeq
+@(ENTRY)\\,\n,\r,\t,\",\',\b,\v,
+
+@//-------- コメント -----------------------------
+@(LEVEL)3
+@(KYOKA)100000000000001011111
+@(COLOR)Cpp_Comment
+@(CTYPE)MULTI_BETWEEN
+/* */
+@(CTYPE)LINE_AFTER
+//
+
+@//-------- その他の記号 -------------------------
+@(LEVEL)3
+@(KYOKA)1
+@(CTYPE)WORD
+@(COLOR)Operator
+@(ENTRY)+,-,*,/,%,
+@(ENTRY)<,>,<=,>=,==,!=,
+@(ENTRY)&&,||,!,
+@(ENTRY)&,|,^,~,<<,>>,
+@(ENTRY)=,+=,-=,*=,/=,%=,&=,|=,^=,<<=,>>=,++,--,
+,
+
+@(CCREF)00008454143
+@(ENTRY)::,
+
+@(COLOR)Symbol
+@(ENTRY)[,],(,),{,},.,:,;,

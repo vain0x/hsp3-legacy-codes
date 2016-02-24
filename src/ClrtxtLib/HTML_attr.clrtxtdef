@@ -1,0 +1,37 @@
+@// HTMLタグの属性を網羅
+
+@// IE限定
+@(ENTRY)scroll,topmargin,rightmargin,leftmargin,bottommargin,bgproperties,
+
+@// 基本HTML系
+@(ENTRY)bgcolor,background,text,link,vlink,alink,
+@(ENTRY)type,rel,rev,hreflang,charset,media,http-equiv,content,
+
+@// 画面制御系
+@(ENTRY)align,noshade,clear,
+@(ENTRY)type,start,value,
+@(ENTRY)src,alt,border,usemap,shape,coords,nonhref,tabindex,
+@(ENTRY)cols,rows,frameborder,FrameSpacing,scrolling,marginwidth,marginheight,noresize,
+@(ENTRY)action,method,accept,accept-charset,enctype,disabled,checked,maxlength,ismap,readonly,wrap,multiple,label,selected,for,
+
+@// 文字装飾系
+@(ENTRY)size,color,face,dateTime,
+@(ENTRY)behavior,direction,scrollamount,scrolldelay,truespeed,loop,
+@(ENTRY)href,target,name,accesskey,
+@(ENTRY)bordercolor,bordercolorlight,bordercolordark,cellpadding,cellspacing,width,height,summary,frame,rules,valign,colspan,rowspan,nowrap,span,
+
+@// その他
+@(ENTRY)language,charset,defer,data,classid,codebase,standby,
+
+@// 共通属性
+@(ENTRY)class,id,style,lang,dir,title,
+
+@//---- イベント属性 ----
+@(COLOR)HTMLelement_event
+@//(LEVEL)3	// element と同じレベル
+
+@// すべてに適用可能
+@(ENTRY)onclick,ondblclick,onmousedown,onmouseup,onmouseover,onmousemove,onmouseout,onkeypress,onkeydown,onkeyup,
+
+@// 一部に適用可能
+@(ENTRY)onload,onunload,onfocus,onblur,onsubmit,onreset,onselect,onchange,

@@ -1,0 +1,147 @@
+@(CLRTS)
+
+@//-------- HSP標準命令 ------------------------------------
+@(CIDPD)BRACKETS,ANSI_SIGNS,SPACE,TAB,
+@(LEVEL)3
+@(CFLAG)NON_CS
+@(KYOKA)01
+@(COLOR)HSP_Statement
+@// インターフェース関連
+@(ENTRY)screen,buffer,bgscr,dialog,gsel,gradf,gcopy,gzoom,gmode,groll,grect,grotate,gsquare,width,picload,bmpsave,
+@(ENTRY)color,syscolor,pget,pos,cls,font,sysfont,redraw,palcolor,hsvcolor,palette,
+@(ENTRY)celput,celload,celdiv,
+@(ENTRY)mes,print,boxf,line,circle,pset,title,
+@(ENTRY)objsize,objsel,clrobj,objprm,objmode,objenable,objimage,objskip,
+@(ENTRY)button,listbox,chkbox,combox,input,mesbox,axobj,winobj,
+@// 内部処理関連
+@(ENTRY)if,else,on,goto,exgoto,gosub,return,wait,await,end,stop,
+@(ENTRY)onexit,onerror,onkey,onclick,oncmd,
+@(ENTRY)repeat,foreach,loop,break,continue,
+@// メモリ関連
+@(ENTRY)dim,sdim,dimtype,dup,dupptr,mref,newmod,delmod,newlab,
+@(ENTRY)newcom,delcom,querycom,mcall,comres,comevent,comevarg,comevdisp,sarrayconv,
+@(ENTRY)poke,wpoke,lpoke,getstr,cnvstow,memcpy,memset,memexpand,split,
+@(ENTRY)notesel,noteunsel,noteadd,notedel,noteload,notesave,noteget,
+@// その他
+@(ENTRY)exist,dirlist,chdir,delete,mkdir,bsave,bload,bcopy,memfile,
+@(ENTRY)mouse,getkey,stick,
+@(ENTRY)mmload,mmplay,mmstop,
+@(ENTRY)sendmsg,exec,randomize,run,chgdisp,mci,chdpm,
+@(ENTRY)assert,logmes,
+
+@//-------- HSP標準関数 ------------------------------------
+@(COLOR)HSP_Function
+@// 特殊な関数
+@(ENTRY)varptr,vartype,varuse,libptr,callfunc,
+@// 取得系関数
+@(ENTRY)ginfo,objinfo,dirinfo,sysinfo,noteinfo,gettime,
+@// メモリ操作関数
+@(ENTRY)int,str,double,
+@(ENTRY)instr,strmid,strlen,getpath,strf,cnvwtos,strtrim,
+@(ENTRY)peek,wpeek,lpeek,length,length2,length3,length4,
+@// 数学的関数
+@(ENTRY)rnd,limit,limitf,
+@(ENTRY)sin,cos,tan,atan,
+@(ENTRY)abs,absf,sqrt,expf,logf,
+
+@//-------- HSP標準システム変数 ----------------------------
+@(COLOR)HSP_Sysvar
+@(ENTRY)err,mousex,mousey,mousew,hwnd,hinstance,hdc,looplev,sublev,system,hspstat,hspver,
+@(ENTRY)stat,refstr,refdval,cnt,strsize,thismod,iparam,wparam,lparam,
+
+@//-------- HSP標準マクロ ----------------------------------
+@(COLOR)HSP_Macro
+@(ENTRY)and,or,xor,not,
+@(ENTRY)alloc,ddim,ldim,for,next,while,wend,do,until,_break,_continue,switch,swend,case,default,swbreak,
+@(ENTRY)ginfo_act,ginfo_b,ginfo_cx,ginfo_cy,ginfo_dispx,ginfo_dispy,ginfo_g,ginfo_intid,ginfo_mesx,ginfo_mesy,ginfo_mx,ginfo_my,ginfo_paluse,ginfo_r,ginfo_sel,ginfo_sizex,ginfo_sizey,ginfo_sx,ginfo_sy,ginfo_vx,ginfo_vy,ginfo_winx,ginfo_winy,ginfo_wx1,ginfo_wx2,ginfo_wy1,ginfo_wy2,ginfo_newid,
+@(ENTRY)dir_cmdline,dir_cur,dir_desktop,dir_exe,dir_mydoc,dir_sys,dir_win,
+@(ENTRY)font_normal,font_bold,font_italic,font_underline,font_strikeout,font_antialias,
+@(ENTRY)gmode_add,gmode_alpha,gmode_gdi,gmode_mem,gmode_pixela,gmode_rgb0,gmode_rgb0alpha,gmode_sub,
+@(ENTRY)gsquare_grad,
+@(ENTRY)objmode_normal,objmode_bmscr,objmode_hwnd,objmode_mode,objmode_guifont,objmode_usefont,
+@(ENTRY)screen_normal,screen_palette,screen_hide,screen_fixedsize,screen_tool,screen_frame,
+@(ENTRY)msgothic,msmincho,notemax,notesize,
+
+@//-------- HSP定義済みマクロ ------------------------------
+@(COLOR)HSP_SysMacro
+@(ENTRY)__hspver__,__hsp30__,__date__,__time__,__file__,_debug,
+
+@//-------- HSPキーワード ----------------------------------
+@(COLOR)HSP_Keyword
+@(ENTRY)local,global,ctype,
+@(ENTRY)var,array,modvar,sptr,wptr,float,comobj,pval,prefstr,pexinfo,nullptr,
+
+@// 未定義予約語
+@(ENTRY)resume,yield.
+
+@//-------- HSPプリプロセッサ命令 --------------------------
+
+@//(CTYPE)WORD
+@(CFLAG)NONE
+@(COLOR)Preprocessor
+@(CIDPD)SPACE,TAB,ANSI_SIGNS,
+@(ENTRY)#uselib,#func,#cfunc,
+@(ENTRY)#define,#const,#enum,#deffunc,#defcfunc,#regcmd,#cmd,#undef,
+@(ENTRY)#module,#global,#modinit,#modfunc,#modterm,
+@(ENTRY)#include,#addition,#pack,#epack,
+@(ENTRY)#if,#ifdef,#ifndef,#else,#endif,
+@(ENTRY)#usecom,#comfunc,
+@(ENTRY)#packopt,#cmpopt,#runtime,
+@(ENTRY)#aht,#ahtmes,
+
+@//-------- HSPその他記号 ----------------------------------
+@(CIDPD)ALLOW_ALL
+@(CFLAG)NONE
+
+@(LEVEL)5
+@(CTYPE)LINE_BETWEEN
+@(KYOKA)10001
+@(COLOR)HSP_String
+" "
+@(CTYPE)MULTI_BETWEEN
+{" "}
+@(CTYPE)WORD
+@(KYOKA)100000
+@(COLOR)HSP_EscSequence
+@(ENTRY)\\,\n,\r,\t,\",\',
+
+@(LEVEL)7
+@(CTYPE)LINE_BETWEEN
+@(KYOKA)10001
+@(COLOR)HSP_Char
+' '
+@(KYOKA)10000000
+@(CTYPE)WORD
+@(ENTRY)\\,\n,\r,\t,\",\',
+
+@(COLOR)HSP_Label
+@(LEVEL)2
+@(KYOKA)01
+@(CTYPE)LINE_BETWEEN
+@(CFLAG)HEAD
+*  
+* 	
+
+@(CTYPE)LINE_AFTER
+@(COLOR)white
+@(LEVEL)6
+#
+
+@(CFLAG)NONE
+@(LEVEL)3
+@//(KYOKA)01111111111111111111111111111111
+@(KYOKA)1000000000000001010111
+@(COLOR)Comment
+@(CTYPE)LINE_AFTER
+;
+//
+@(CTYPE)MULTI_BETWEEN
+/* */
+
+@// 記号の色分け
+@(KYOKA)10001
+@(CTYPE)WORD
+@(CCREF)$CCFFEE
+@(ENTRY)@,!,$,%,(,),+,-,*,/,\,=,&,|,^,{,},:,<,>,.
+@//(ENTRY)?,~,[,],`
+,
