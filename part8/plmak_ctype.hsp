@@ -1,0 +1,32 @@
+// plmak - ctype
+
+#ifndef IG_PLMAK_CTYPE_HSP
+#define IG_PLMAK_CTYPE_HSP
+
+// @ •¶ší”»’èƒ‚ƒWƒ…[ƒ‹
+
+#ifndef isRange
+#define ctype isRange(%1, %2, %3) ( (%2) <= (%1) && (%1) <= (%3) )
+#endif
+
+#define ctype isAlphaUp(%1) isRange((%1), 'A', 'Z')
+#define ctype isAlphaLw(%1) isRange((%1), 'a', 'z')
+#define ctype isAlpha(%1) ( isAlphaUp(%1) || isAlphaLw(%1) )
+#define ctype isDigit(%1)   isRange((%1), '0', '9')
+#define ctype isHex(%1)   ( isRange((%1), 'a', 'f') || isRange((%1), 'A', 'F') )
+#define ctype isBin(%1)   ( (%1) == '0' || (%1) == '1' )
+#define ctype isIdent(%1)    ( isDigit(%1) || isIdentTop(%1) )
+#define ctype isIdentTop(%1) ( isAlpha(%1) || (%1) == '_' )
+
+#define ctype isOperator(%1)( (%1) == '+' || (%1) == '-' || (%1) == '*' || (%1) == '/' || (%1) == '%%' )
+//|| (%1) == '&' || (%1) == '|' || (%1) == '^' || (%1) == '!' || (%1)== '=' || (%1) == '<' || (%1) == '>' )
+#define ctype isNewLine(%1) ( (%1) == 0xD || (%1) == 0xA )
+#define ctype isQuote(%1)   ( (%1) == '\''|| (%1) == '"' )
+#define ctype isBlank(%1)   ( (%1) == ' ' || (%1) == '\t')
+#define ctype isSpace(%1)   ( isBlank(%1) || isNewLine(%1) )
+#define ctype isNull(%1)    ( (%1) == 0 )
+
+#define ctype isSJIS1st(%1) ( isRange((%1), 0x81, 0x9F) || isRange((%1), 0xE0, 0xFC) )
+#define ctype isSJIS2nd(%1) ( isRange((%1), 0x40, 0x7E) || isRange((%1), 0x80, 0xFC) )
+
+#endif
