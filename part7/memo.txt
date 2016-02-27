@@ -1,0 +1,27 @@
+
+	前置演算子
+	
+前置演算子 +, - は、字面では二項演算子と全く同じなので、文法を考えない lex, enc で行うことはありません。
+
+lex:
+enc:
+	(none)
+	
+prs:
+	演算子が文頭に来る可能性もあるようになった。
+	
+	mul -> val の間に uni を追加する。
+	
+	構文木上、単項演算式は、PrsNodeType_OpUni のノードになる。
+		[ PrsNodeType_OpUni, UniOp_*, (operand) ]
+	
+cmp:
+	コマンド PlmacCmd_Plus, PlmacCmd_Minus を追加する。
+	
+run:
+	新規コマンドの処理を追加する。
+
+
+----
+ついでに、複数個の文を受け取れるようにした。
+

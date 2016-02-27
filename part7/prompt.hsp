@@ -1,0 +1,127 @@
+// plmak prompt
+
+#define global Str_AppName    "plmak prompt"
+#define global Str_AppVersion "ver 1α"
+
+#packopt name "PlmakPrompt"
+;#packopt hide    1
+;#packopt orgpath 1
+
+#runtime "hsp3cl"
+
+#include "Mo/LexCmdline.hsp"
+#include "Mo/mod_debug.hsp"
+
+#include "plmak_lex.hsp"
+#include "plmak_enc.hsp"
+#include "plmak_prs.hsp"
+#include "plmak_cmp.hsp"
+#include "plmak_run.hsp"
+
+#uselib "msvcrt.dll"
+#func   printf "printf" sptr
+
+//------------------------------------------------
+// メインルーチン
+//------------------------------------------------
+*main
+	gosub *LSetVariable		// 変数を初期化
+	gosub *LProcCmdline		// コマンドラインを処理
+	
+	print Str_AppName + " " + Str_AppVersion
+	
+	repeat
+		// 入力受付
+		printf "sttm> "
+		input  script, 1023, 1
+		getstr script, script
+		if ( script == "" ) {
+			print "exit..."
+			break
+		}
+		
+		// 計算
+		gosub *LExecute
+		
+		// 表示
+		gosub *LOutput
+		
+		wait 10
+	loop
+	
+	end
+	
+//------------------------------------------------
+// 変数初期化
+//------------------------------------------------
+*LSetVariable
+	sdim script, 1024
+;	var  result
+	return
+	
+//------------------------------------------------
+// コマンドライン処理
+//------------------------------------------------
+*LProcCmdline
+	LexCmdline cmdlist, 1
+	
+	if ( stat ) {
+		script = cmdlist(0)
+		gosub *LExecute
+		gosub *LOutput
+		end : end
+	}
+	
+	return
+	
+//------------------------------------------------
+// スクリプト実行
+//------------------------------------------------
+*LExecute
+	print "run({ " + script + " })"
+	plmak_exec result, script
+	errcode = stat
+	return
+	
+#module
+
+#deffunc plmak_exec var result, str script,  local errcode, local tklist_lex, local tklist_enc, local stxtree, local plmac
+	result  = nullList
+	errcode = 0
+	
+	// ビルド
+	plmak_lex tklist_lex, script     : if ( stat ) { mes GetLxErrStr(stat)  : return 0 }
+	plmak_enc tklist_enc, tklist_lex : if ( stat ) { mes GetEncErrStr(stat) : return 0 }
+	plmak_prs stxtree,    tklist_enc : if ( stat ) { mes GetPrsErrStr(stat) : return 0 }
+	plmak_cmp plmac,      stxtree    : if ( stat ) { mes GetCmpErrStr(stat) : return 0 }
+	
+	// 実行
+	plmak_run result, plmac
+	errcode = stat
+	
+	return errcode
+	
+#global
+	
+//------------------------------------------------
+// 結果の出力
+//------------------------------------------------
+*LOutput
+	if ( errcode ) {
+		print "Error: " + GetRunErrStr(errcode)
+		
+	} else {
+		if ( result == nullList ) {
+			print "(no results)"
+			
+		} else : if ( list_size(result) > 1 ) {
+			repeat list_size(result)
+				print "[" + cnt + "]: " + list_get(result, cnt)
+			loop
+			
+		} else {
+			print "" + list_get(result, 0)
+		}
+	}
+	return
+	
