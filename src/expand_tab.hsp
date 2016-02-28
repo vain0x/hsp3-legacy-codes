@@ -1,5 +1,5 @@
-#ifndef IG_EXTEND_TAB_HSP
-#define IG_EXTEND_TAB_HSP
+#ifndef ig_expand_tab_hsp
+#define ig_expand_tab_hsp
 
 #module
 
@@ -10,7 +10,9 @@
 // @prm tabsize : É^Éuïù
 // @prm offset  : src ÇÃëOÇ…Ç†ÇÈÇ∆âºíËÇ∑ÇÈ byte êî
 //------------------------------------------------
-#defcfunc extendTab str src_, int tabsize, int offset,  local idx, local iFound, local dst, local dstlen, local size
+#defcfunc expand_tab str src_, int tabsize, int offset,  \
+	local idx, local iFound, local dst, local dstlen, local size
+	
 	idx    = 0
 	src    = src_
 	iFound = 0

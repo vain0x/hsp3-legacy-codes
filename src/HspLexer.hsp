@@ -4,7 +4,7 @@
 // 字句解析器
 
 #include "strutil.hsp"
-#include "extendTab.hsp"
+#include "expand_tab.hsp"
 
 #module MCHspLexer mSrc, mfOpt, mTabSize
 
@@ -15,7 +15,7 @@
 #define global HspLexer_Flag_NoComment	0x0002		// TkType_Comment を無視する
 #define global HspLexer_Flag_NoScope	0x0004		// TkType_Scope   を無視する
 #define global HspLexer_Flag_NoReserved	0x0008		// TkType_Ident が予約語かどうかの判定をしない
-#define global HspLexer_Flag_ExtendTab	0x0010		// タブ文字を半角スペースに展開する
+#define global HspLexer_Flag_ExpandTab	0x0010		// タブ文字を半角スペースに展開する
 
 #uselib "user32.dll"
 #func   CharLower@MCHspLexer "CharLowerA" int
@@ -47,7 +47,12 @@
 // @prm tkstrlist  = str[] : トークン文字列の配列
 // @prm script     = str   : スクリプト
 //------------------------------------------------
-#modfunc hspLexer_lex array tktypelist, array tkstrlist, str prm_script,  local lenScript, local cntToken, local tkstr, local tklen, local tktype, local bPreprocLine, local index, local befTkType, local posALine, local bNoBlank, local bNoComment, local bNoScope, local bNoReserved, local bExtendTab
+#modfunc hspLexer_lex \
+	array tktypelist, array tkstrlist, str prm_script,  \
+	local lenScript, local cntToken, local tkstr, local tklen, local tktype, \
+	local bPreprocLine, local index, local befTkType, local posALine, \
+	local bNoBlank, local bNoComment, local bNoScope, local bNoReserved, local bExpandTab
+	
 	sdim tkstr
 	dim  tktype
 	
@@ -69,7 +74,7 @@
 	bNoComment  = ( mfOpt & HspLexer_Flag_NoComment  ) != false
 	bNoScope    = ( mfOpt & HspLexer_Flag_NoScope    ) != false
 	bNoReserved = ( mfOpt & HspLexer_Flag_NoReserved ) != false
-	bExtendTab  = ( mfOpt & HspLexer_Flag_ExtendTab  ) != false		// related: mTabSize, posALine
+	bExpandTab  = ( mfOpt & HspLexer_Flag_ExpandTab  ) != false		// related: mTabSize, posALine
 	
 	repeat
 		// 最後まで取得したら終了する
@@ -81,7 +86,10 @@
 		tklen  = strlen(tkstr)
 		index += tklen
 		
-		if ( bExtendTab ) { tkstr = extendTab(tkstr, mTabSize, posALine) : posALine += strlen(tkstr) }
+		if ( bExpandTab ) {
+			tkstr = expand_tab(tkstr, mTabSize, posALine)
+			posALine += strlen(tkstr)
+		}
 		
 		// 無視されるトークン ⇒ 飛ばす
 		if ( ( bNoBlank && tktype == TkType_Blank ) || ( bNoComment && tktype == TkType_Comment ) || ( bNoScope && tktype == TkType_Scope ) ) {
@@ -112,7 +120,7 @@
 		case TkType_End
 			if ( IsNewLine( peek(tkstr) ) ) {			// 改行
 				if ( bPreprocLine ) { bPreprocLine = false }
-				if ( bExtendTab   ) { posALine = 0 }
+				if ( bExpandTab   ) { posALine = 0 }
 			}
 			swbreak
 			
@@ -575,7 +583,7 @@
 	noteload "HspLexer.hsp"
 	noteunsel
 	
-	fSplit = HspLexer_Flag_ExtendTab
+	fSplit = HspLexer_Flag_ExpandTab
 	
 	dim lexer
 	hspLexer_new lexer
