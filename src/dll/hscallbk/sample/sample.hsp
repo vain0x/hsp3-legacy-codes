@@ -1,0 +1,37 @@
+;   hscallbk 拡張プラグイン サンプルスクリプト
+;
+;   EnumWindows() によるウィンドウの列挙
+;
+
+	#include "user32.as"
+	#include "hscallbk.as"
+
+	; コールバック関数の関数形式を定義
+	; ( DLL名および関数名はダミー (空文字列) )
+	; ( int, double, str, comobj 型引数のみ指定可能 )
+	#uselib ""
+	#func EnumWindowProc "" int,int
+
+	; コールバック関数の登録
+	setcallbk Proc, EnumWindowProc, *OnEnumWindowProc
+
+	; トップレベルウィンドウのハンドルを取得
+	count = 0
+	notesel text
+	EnumWindows varptr(Proc), 0
+	mesbox text, ginfo_winx, ginfo_winy, 0
+	dialog "表示中トップレベルウィンドウの数は "+count+" 個です"
+	stop
+
+*OnEnumWindowProc
+	handle = callbkarg(0)
+	; 表示されているウィンドウのみを取得
+	IsWindowVisible handle
+	if stat {
+		sdim titlename, 256
+		GetWindowText handle, varptr(titlename), 256
+		temp = strf("%10d  ",handle) + titlename
+		noteadd temp, -1
+		count++
+	}
+	return 1
