@@ -1,7 +1,7 @@
 // deflister - header
 
-#ifndef __DEFINED_LISTER_HEADER_AS__
-#define __DEFINED_LISTER_HEADER_AS__
+#ifndef IG_DEFINITION_LISTER_HEADER_AS
+#define IG_DEFINITION_LISTER_HEADER_AS
 
 #include "Mo/MCLongString.as"
 #include "Mo/strutil.as"
@@ -41,10 +41,10 @@
 #const UWM_SPLITTERMOVE 0x0400
 
 // ÇªÇÃëº
-#define global HSED_TEMPFILE (ownpath +"\\"+ HSED_TEMPFILENAME)
+#define global HSED_TEMPFILE (ownpath + "\\" + HSED_TEMPFILENAME)
 #define global HSED_TEMPFILENAME "hsedtmp.hsp"
 
-#define STR_INIPATH (dir_exe2 +"\\deflister.ini")
+#define STR_INIPATH (dir_exe2 + "\\deflister.ini")
 
 #undef SetStyle
 #undef ChangeVisible
@@ -78,7 +78,7 @@
 		if ( strsize == 0 ) { break }
 		
 		// èëÇ´çûÇﬁ
-		LongStr_cat tmpbuf, strf(sform, cnt) + stmp +"\n"
+		LongStr_cat tmpbuf, strf(sform, cnt) + stmp + "\n"
 	loop
 	
 	LongStr_tobuf  tmpbuf, retbuf
