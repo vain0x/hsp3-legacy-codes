@@ -24,9 +24,6 @@
 #include "deflister.as"
 #include "MCDeflist.as"
 
-//##################################################################################################
-//        メイン・ルーチン
-//##################################################################################################
 *main
 	gosub *LInitialize		// 初期化
 	gosub *LProcCmdline		// コマンドラインを処理する
@@ -99,9 +96,6 @@
 	
 	return
 	
-//##################################################################################################
-//        サブルーチン
-//##################################################################################################
 //------------------------------------------------
 // 初期化ルーチン
 //------------------------------------------------
@@ -275,8 +269,6 @@
 	LvSetExStyle mLv, 0x0001 | 0x0020
 	
 	// カラムを追加
-;	LvInsertColumn mLv, "識別子",   0, 0, 0
-;	LvInsertColumn mLv, "行",       1, 0, 1
 	LvInsertColumn mLv, "行",       0, 0, 0
 	LvInsertColumn mLv, "識別子",   1, 0, 1
 	LvInsertColumn mLv, "種類",     2, 0, 2
@@ -451,9 +443,7 @@
 		stype = MakeDefTypeString( deflistType )
 		
 		LvInsertItem  mLv, strf("%d", deflistLn) : iLvItem = stat
-		LvSetSub      mLv, deflistIdent, iLvItem, 1
-;		LvInsertItem  mLv, deflistIdent  : iLvItem = stat
-;		LvSetSub      mLv, str(deflistLn), iLvItem, 1
+		LvSetSub      mLv,   deflistIdent, iLvItem, 1
 		LvSetSub      mLv,          stype, iLvItem, 2
 		LvSetSub      mLv,   deflistScope, iLvItem, 3
 		LvSetSub      mLv,       filename, iLvItem, 4
@@ -519,9 +509,6 @@
 	gosub *LUpdateListview
 	return
 	
-//##################################################################################################
-//        Message Handler
-//##################################################################################################
 //------------------------------------------------
 // 二重起動が発生した
 //-----------------------------------------------ginfo_winx-
@@ -649,8 +636,6 @@
 // @global: iLv, strFind
 //------------------------------------------------
 *LFindNext
-;	logmes dbgstr(iLv)
-;	if ( iLv < 0 ) { iLv = 0 }
 	if ( strFind == "" ) { return }
 	
 	if ( bInclude ) {
