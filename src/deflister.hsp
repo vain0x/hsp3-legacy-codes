@@ -6,6 +6,7 @@
 
 #runtime "hsp3mt"
 
+#include "hsp_green/src/all.hsp"
 #include "hsedsdk.as"
 #include "Mo/DialogEx.as"
 #include "Mo/flexFrame.as"
