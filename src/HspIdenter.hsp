@@ -147,19 +147,19 @@
 	
 //------------------------------------------------
 // 定義を収集する
-// 
-// @prm tktypelist = int[] : TkType の配列
-// @prm tkstrlist  = str[] : トークン文字列の配列
-// @prm script     = str   : スクリプト
 //------------------------------------------------
-#modfunc hspIdenter_collectDefs array mdeflist, array listIncludeToLoad, int bFirstCall,  local listInclude, local filename, local idx, local bListed, local ident, local tktype
+#modfunc hspIdenter_collectDefs array deflister, str path,  \
+	local listIncludeToLoad, local hashList, local hashListLen
 	
-	// 初回の場合、ハッシュ値の配列を削除
-	if ( bFirstCall ) {
-		dim deflister			// 初期化
-		dim hashListed, 32
-		cntList = 0
-	}
+	dim deflister
+	dim hashList, 32
+	listIncludeToLoad = path
+	hspIdenter_collectDefsRec thismod, deflister, listIncludeToLoad, hashList, hashListLen
+	return
+	
+#modfunc hspIdenter_collectDefsRec \
+	array deflister, array listIncludeToLoad, array hashList, var hashListLen,  \
+	local listInclude, local filename, local idx, local bListed, local ident, local tktype
 	
 	foreach listIncludeToLoad
 		
@@ -177,23 +177,22 @@
 		// 既に開かれているファイルは無視
 		bListed = false
 		hash    = EasyHash( listIncludeToLoad(cnt) )		// フルパス
-		if ( bFirstCall == false ) {
-			repeat cntList
-				if ( hashListed(cnt) == hash ) {
-					// 念のためファイルパスでも比較する
-					if ( hspDeflister_GetFileName( deflister(cnt) ) == filename ) {
-						bListed = true
-						break
-					}
+		
+		repeat hashListLen
+			if ( hashList(cnt) == hash ) {
+				// 念のためファイルパスでも比較する
+				if ( hspDeflister_GetFileName( deflister(cnt) ) == filename ) {
+					bListed = true
+					break
 				}
-			loop
-			if ( bListed ) { continue }			// 定義済みなので無視する
-		}
+			}
+		loop
+		if ( bListed ) { continue }			// 定義済みなので無視する
 		
 		// 開いたリストに追加
 		if ( bListed == false ) {
-			hashListed(cntList) = hash
-			cntList ++
+			hashList(hashListLen) = hash
+			hashListLen ++
 		}
 		
 		// 定義リストを作成する
@@ -208,9 +207,12 @@
 		loop
 		
 		// 再帰的に結合されたファイルから定義を取り出す
-		if ( hspDeflister_getCntInclude( deflister(idx) ) ) {
-			hspDeflister_getIncludeArray    deflister(idx), listInclude		// #include 指示されたファイルのリストを得る
-			hspIdenter_collectDefs thismod, deflister(idx), listInclude, false
+		if ( hspDeflister_getCntInclude( deflister(idx) ) > 0 ) {
+			// #include されたファイルのリストを得る
+			hspDeflister_getIncludeArray deflister(idx), listInclude
+			
+			// 再帰
+			hspIdenter_collectDefsRec thismod, deflister(idx), listInclude, hashList, hashListLen
 		}
 	loop
 	return
