@@ -1,16 +1,17 @@
 // 定義をリストアップ
 
-#packopt name "deflister.exe"
+#packopt name "deflister"
 #packopt hide    1
 #packopt orgpath 1
 
 #runtime "hsp3mt"
 
+#include "hsp_green/src/all.hsp"
+#include "hspmath.as"
 #include "hsedsdk.as"
 #include "Mo/DialogEx.as"
 #include "Mo/flexFrame.as"
 #include "Mo/GetFontOfHSP.as"
-#include "Mo/GetOwnpath.as"
 #include "Mo/hsedutil.as"
 #include "Mo/ini.as"
 #include "Mo/IsMouseButtonSwapped.as"
@@ -76,7 +77,7 @@
 	CloseMutex
 	if ( peek(curdir) ) { chdir curdir }						// カレントポジションを起動時のモノに戻す
 	if ( bDragging )    { ClipCursor NULL : bDragging = false }	// マウスの移動範囲を解放する
-	if ( bHsed )        { exdel HSED_TEMPFILE }					// 一時ファイルの削除
+	if ( bHsed )        { delfile_if_exists HSED_TEMPFILE } // 一時ファイルの削除
 	return
 	
 //------------------------------------------------
@@ -152,9 +153,6 @@
 // 変数の初期化
 //------------------------------------------------
 *LClearVariable
-	sdim ownpath, MAX_PATH
-		 ownpath = GetOwnpath("D:\\D_MyDocuments\\Programming\\HSP\\ProjSmall\\deflister")
-	
 	SetIniName STR_INIPATH
 	
 	dim  rc, 4
@@ -266,7 +264,7 @@
 		// どのファイルにある宣言か調べる
 		bSelected = false
 		foreach deflistItemTop
-			if ( numrg( iLv, deflistItemTop(cnt), deflistItemTop(cnt) + deflist_getCount( mdeflist(cnt) ) - 1 ) ) {
+			if ( in_interval( iLv, deflistItemTop(cnt), deflistItemTop(cnt) + deflist_getCount( mdeflist(cnt) ) ) ) {
 				iDL       = cnt
 				bSelected = true
 				gosub *LResetScriptBox
@@ -277,14 +275,13 @@
 		
 	} else {
 		// 指定したファイルにある宣言かどうか調べる
-		if ( numrg( iLv, 0, deflist_getCount( mdeflist(iDL) ) - 1 ) == false ) { return }
+		if ( in_interval( iLv, 0, deflist_getCount( mdeflist(iDL) ) ) == false ) { return }
 	}
-	
 	// 位置を保存
 	posLn = deflist_getLn( mdeflist(iDL), iLv - deflistItemTop(iDL) )
 	
-	// 宣言の位置までスクロールする ( p2 := 1 == SB_VERT )
-	ScrollWindow infScript, 1, limit(posLn - cntShowLineBefore, 0, MAX_INT)
+	// 宣言の位置までスクロールする ( p2: SB_VERT )
+	ScrollWindow infScript, 1, major_i(0, posLn - cntShowLineBefore)
 	
 	return
 	
@@ -421,7 +418,7 @@
 		
 		if ( bCustomDraw ) {
 			LvCtTextColor mLv, iLvItem, 0x000000
-			LvCtBackColor mLv, iLvItem, cwhich_int(iLvItem & 1, 0xFFF2F2, 0xF2F2FF)
+			LvCtBackColor mLv, iLvItem, cond_i(iLvItem & 1, 0xFFF2F2, 0xF2F2FF)
 		}
 	loop
 	return
@@ -437,7 +434,7 @@
 	
 	if ( bInclude ) {
 		// 他のファイルならだめ
-		if ( numrg(iLv, 0, deflist_getCount( mDeflist(0) ) - 1) == false ) {
+		if ( in_interval(iLv, 0, deflist_getCount( mDeflist(0) )) == false ) {
 			dialog "#include 先のファイルにはジャンプできません。", 1, "deflister"
 			return
 		}
@@ -557,7 +554,7 @@
 // マウスが仮想スプリッター上を動いた
 //------------------------------------------------
 *OnMouseMove
-	if ( boxin( 5, 5 + EditHeight, ginfo(12) - 10, 10 + EditHeight, mousex2, mousey2 ) ) {
+	if ( in_rect( mousex2, mousey2, 5, 5 + EditHeight, ginfo(12) - 10, 10 + EditHeight ) ) {
 		SetCursor LoadCursor(IDC_SIZENS)	// 上下
 	}
 	return
@@ -566,7 +563,7 @@
 // ドラッグ開始
 //------------------------------------------------
 *OnLBtnDown
-	if ( boxin( 5, 5 + EditHeight, ginfo(12) - 10, 10 + EditHeight, mousex2, mousey2 ) ) {
+	if ( in_rect( mousex2, mousey2, 5, 5 + EditHeight, ginfo(12) - 10, 10 + EditHeight ) ) {
 		// 開始時の位置を記憶する
 		bDragging   = true					// ドラッグ開始フラッグ
 		ptDragStart = ginfo(0), ginfo(1)	// 位置を記憶する

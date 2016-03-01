@@ -122,7 +122,7 @@
 		if ( c == '\\' && bPreLine ) {	// ‰üs‰ñ”ğ‚Ì‰Â”\«
 			if ( IsNewLine(c2) ) {
 				if ( c2 == 0x0D && peek(sSrc, index + 2) == 0x0A ) {
-					lpoke result,, MAKELONG2('\\', 0x0D, 0x0A, 0)	// "\\\n"
+					lpoke result,, MAKELONG4('\\', 0x0D, 0x0A, 0)	// "\\\n"
 				} else {
 					lpoke result,, MAKEWORD('\\', c2)
 				}

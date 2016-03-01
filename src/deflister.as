@@ -46,6 +46,11 @@
 
 #define STR_INIPATH (ownpath +"\\deflister.ini")
 
+#undef SetStyle
+#undef ChangeVisible
+#define global SetStyle(%1,%2=-16,%3=0,%4=0) SetWindowLong (%1),(%2),bit_sub(GetWindowLong((%1),(%2)) | (%3), (%4))
+#define global ChangeVisible(%1=hwnd,%2=1) SetStyle (%1), -16, 0x10000000 * (%2), 0x10000000 * ((%2) == 0)// Visible êÿÇËë÷Ç¶
+
 //##################################################################################################
 //        ÉÇÉWÉÖÅ[Éã
 //##################################################################################################
