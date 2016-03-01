@@ -10,7 +10,7 @@
 #include "HspDeflister.hsp"
 
 #module MCHspIdenter \
-	mlistTkType, mlistTkStr, mfOpt, mpathCommon, mSearchPath, \
+	mfOpt, mpathCommon, mSearchPath, \
 	keylist_all, keylist_sttm, keylist_func, keylist_sysvar, \
 	keylist_preproc, keylist_macro, keylist_modname, keylist_ppword, keylist_const, \
 	keylist_defsttm, keylist_deffunc, keylist_dllfunc, keylist_iface, keylist_var
@@ -43,7 +43,7 @@
 //------------------------------------------------
 // ç\íz
 //------------------------------------------------
-#modinit array listTkType, array listTkStr
+#modinit
 	sdim mSearchPath, 260
 	mSearchPath = ""
 	mfOpt       = 0
@@ -62,9 +62,6 @@
 	keylist_dllfunc   = ","
 	keylist_iface     = ","
 	keylist_var       = ","
-	
-	array_assign mlistTkType, listTkType
-	array_assign mlistTkStr,  listTkStr
 	return
 	
 //------------------------------------------------
