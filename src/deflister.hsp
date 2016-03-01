@@ -224,7 +224,7 @@
 // 
 // @ オブジェクトの位置と大きさは、*OnSize で整えるので、気にせず配置する。
 //------------------------------------------------
-*LSetWindow
+*LSetWindowginfo_dispx
 	winsize(0) = ini_geti(cfg, "Window", "cx", 380)
 	winsize(1) = ini_geti(cfg, "Window", "cy", 360)
 	
