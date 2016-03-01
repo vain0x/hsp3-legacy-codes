@@ -86,6 +86,8 @@
 	sdim path, MAX_PATH
 	path = path_
 	len  = strlen(path)
+	if ( len == 0 ) { return }
+	
 	c    = peek(path, len - 1)
 	if ( c == '/' ) { len -- }
 	if ( c != '\\') { wpoke path, len, '\\' : len ++ }
@@ -159,7 +161,8 @@
 	
 #modfunc hspIdenter_collectDefsRec \
 	array deflister, array listIncludeToLoad, array hashList, var hashListLen,  \
-	local listInclude, local filename, local idx, local bListed, local ident, local tktype
+	local listInclude, local filename, local script, \
+	local idx, local bListed, local ident, local tktype
 	
 	foreach listIncludeToLoad
 		
@@ -195,8 +198,12 @@
 			hashListLen ++
 		}
 		
+		notesel script
+		noteload listIncludeToLoad(cnt)
+		noteunsel
+		
 		// 定義リストを作成する
-		hspDeflister_new deflister, listIncludeToLoad(cnt)
+		hspDeflister_new deflister, listIncludeToLoad(cnt), script
 		idx = stat
 		
 		// 定義リストを identer に反映する
