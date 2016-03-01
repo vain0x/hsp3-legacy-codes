@@ -50,7 +50,7 @@
 	cnt_tokens_ = k
 	return
 	
-#modfunc autogen_generate var result, var script, \
+#modfunc autogen_generate var result, str path, \
 	local fSplit
 	
 	sdim docdata_, , DOCDATA_MAX
@@ -63,7 +63,7 @@
 ;	fSplit |= HPM_SPLIT_FLAG_NO_COMMENT
 ;	fSplit |= HPM_SPLIT_FLAG_NO_SCOPE
 	
-	CreateHs result, script, fSplit, thismod, tktypelist_, tkstrlist_
+	CreateHs result, path, fSplit, thismod, tktypelist_, tkstrlist_
 	
 	LongStr_tobuf  hs_, result
 	LongStr_delete hs_
