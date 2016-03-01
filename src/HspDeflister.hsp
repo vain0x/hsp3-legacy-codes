@@ -395,34 +395,6 @@
 	return
 	
 //------------------------------------------------
-// 定義タイプから文字列を生成する
-// @static
-//------------------------------------------------
-#defcfunc MakeDefTypeString int deftype,  local stype, local bCType
-	sdim stype, 320
-	bCType = ( deftype & DEFTYPE_CTYPE ) != false
-	
-	if ( deftype & DEFTYPE_LABEL ) { stype = "ラベル"   }
-	if ( deftype & DEFTYPE_MACRO ) { stype = "マクロ"   }
-	if ( deftype & DEFTYPE_CONST ) { stype = "定数"     }
-	if ( deftype & DEFTYPE_CMD   ) { stype = "コマンド" }
-	if ( deftype & DEFTYPE_COM   ) { stype = "命令(COM)" }
-	if ( deftype & DEFTYPE_IFACE ) { stype = "interface" }
-	
-	if ( deftype & DEFTYPE_DLL ) {
-		if ( bCType ) { stype = "関数(Dll)" } else { stype = "命令(Dll)" }
-		
-	} else : if ( deftype & DEFTYPE_FUNC  ) {
-		if ( bCType ) { stype = "関数" } else { stype = "命令" }
-		
-	} else {
-		if ( bCType ) { stype += " Ｃ" }
-	}
-	
-	if ( deftype & DEFTYPE_MODULE ) { stype += " Ｍ" }
-	return stype
-	
-//------------------------------------------------
 // 定義タイプから TkTypeEx を得る
 // @static
 //------------------------------------------------
