@@ -41,7 +41,8 @@
 // コンストラクタ
 //------------------------------------------------
 #define global hspDeflister_new(%1,%2) newmod %1, MCDeflister@, %2
-#modinit str path
+#modinit str path, var script
+
 	// メンバ変数を初期化
 	sdim mIdent,, 5
 	dim  mLn,     5
@@ -54,11 +55,7 @@
 	
 	mFilePath = path
 	mFileName = getpath(mFilePath, 8)
-	
-	// スクリプトを読み込む
-	notesel  mScript
-	noteload mFilePath
-	noteunsel
+	mScript   = script
 	
 	// 定義をリストアップ
 	hspDeflister_list thismod
