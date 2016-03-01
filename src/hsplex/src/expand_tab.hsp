@@ -1,0 +1,39 @@
+#ifndef ig_expand_tab_hsp
+#define ig_expand_tab_hsp
+
+#module
+
+//------------------------------------------------
+// タブ文字を展開する
+// 
+// @prm src     : 展開元の文字列
+// @prm tabsize : タブ幅
+// @prm offset  : src の前にあると仮定する byte 数
+//------------------------------------------------
+#defcfunc expand_tab str src_, int tabsize, int offset,  \
+	local idx, local iFound, local dst, local dstlen, local size
+	
+	idx    = 0
+	src    = src_
+	iFound = 0
+	dstlen = 0
+	sdim dst
+	
+	repeat
+		iFound = instr( src, idx, "\t" )
+		if ( iFound < 0 ) {
+			dst += strmid( src, idx, strlen(src) - idx )
+			break
+		}
+		
+		size    = ( tabsize - ((offset + dstlen + iFound) \ tabsize) )
+		dst    += strmid( src, idx, iFound ) + strf("%" + size + "s", "")
+		dstlen += iFound + size
+		idx    += iFound + 1
+	loop
+	
+	return dst
+
+#global
+
+#endif
