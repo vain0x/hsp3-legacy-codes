@@ -40,7 +40,7 @@
 //------------------------------------------------
 // コンストラクタ
 //------------------------------------------------
-#define global hspDeflister_new(%1,%2) newmod %1, MCDeflister@, %2
+#define global hspDeflister_new(%1, %2, %3) newmod %1, MCDeflister@, %2, %3
 #modinit str path, var script
 
 	// メンバ変数を初期化
