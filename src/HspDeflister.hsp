@@ -157,7 +157,6 @@
 #modfunc hspDeflister_list  local tktypelist, local tkstrlist, local befTkType, local idx, local cntToken, local sIdent, local areaScope, local scope, local nowline, local bGlobal, local bLocal, local deftype, local uniqueCount, local fSplit
 	// éöãÂâêÕ
 	fSplit  = HspLexer_Flag_NoBlank
-	fSplit |= HspLexer_Flag_NoReserved
 	
 	dim lexer
 	hspLexer_new lexer

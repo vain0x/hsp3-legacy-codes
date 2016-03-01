@@ -14,7 +14,6 @@
 #define global HspLexer_Flag_NoBlank	0x0001		// TkType_Blank   を無視する
 #define global HspLexer_Flag_NoComment	0x0002		// TkType_Comment を無視する
 #define global HspLexer_Flag_NoScope	0x0004		// TkType_Scope   を無視する
-#define global HspLexer_Flag_NoReserved	0x0008		// TkType_Ident が予約語かどうかの判定をしない
 #define global HspLexer_Flag_ExpandTab	0x0010		// タブ文字を半角スペースに展開する
 
 #uselib "user32.dll"
@@ -51,7 +50,7 @@
 	array tktypelist, array tkstrlist, str prm_script,  \
 	local lenScript, local cntToken, local tkstr, local tklen, local tktype, \
 	local bPreprocLine, local index, local befTkType, local posALine, \
-	local bNoBlank, local bNoComment, local bNoScope, local bNoReserved, local bExpandTab
+	local bNoBlank, local bNoComment, local bNoScope, local bExpandTab
 	
 	sdim tkstr
 	dim  tktype
@@ -67,13 +66,9 @@
 	befTkType = TkType_End
 	cntToken  = 0
 	
-	keylist_preproc = "," + KeyWords_PreProc
-	keylist_ppword  = "," + KeyWords_PPWord
-	
 	bNoBlank    = ( mfOpt & HspLexer_Flag_NoBlank    ) != false
 	bNoComment  = ( mfOpt & HspLexer_Flag_NoComment  ) != false
 	bNoScope    = ( mfOpt & HspLexer_Flag_NoScope    ) != false
-	bNoReserved = ( mfOpt & HspLexer_Flag_NoReserved ) != false
 	bExpandTab  = ( mfOpt & HspLexer_Flag_ExpandTab  ) != false		// related: mTabSize, posALine
 	
 	repeat
@@ -126,29 +121,11 @@
 			
 		// プリプロセッサ命令
 		case TkType_PreProc
-			if ( isPreProc(thismod, tkstr) ) {
-				bPreprocLine = true
-			} else {
-				tktype               = TkType_PreProcDisable
-				tktypelist(cntToken) = tktype
-			}
+			bPreprocLine = true
 			swbreak
 			
 		// 識別子
 		case TkType_Ident
-			if ( bNoReserved ) { swbreak }
-			
-			// プリプロセッサ行キーワードか
-			if ( bPreprocLine ) {
-				if ( isPPWord(thismod, tkstr) ) {
-					tktype = TkTypeEx_PPWord
-					goto *LChangeTkTypeList
-				}
-			}
-			
-			// 配列に指定した値を変更する
-		:*LChangeTkTypeList
-			tktypelist(cntToken) = tktype
 			swbreak
 	swend
 	return
@@ -549,20 +526,6 @@
 		i ++
 	loop
 	return true
-	
-#define ctype isIdentInList(%1,%2=src) ( instr( %1, 0, ","+ getpath(%2, 16) +"," ) >= 0 )
-	
-//------------------------------------------------
-// プリプロセッサ命令か？
-//------------------------------------------------
-#modcfunc isPreProc@MCHspLexer str src
-	return isIdentInList( keylist_preproc, CutPreprocIdent(src) )
-	
-//------------------------------------------------
-// プリプロセッサ行キーワードか？
-//------------------------------------------------
-#modcfunc isPPWord@MCHspLexer str src
-	return isIdentInList( keylist_ppword )
 	
 //------------------------------------------------
 // プリプロセッサ命令の識別子の部分を取り出す
