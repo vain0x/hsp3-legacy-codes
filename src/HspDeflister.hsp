@@ -6,9 +6,13 @@
 // @ 行番号情報は削除すべき？
 
 #include "pvalptr.hsp"
+#include "array_assign.hsp"
 #include "hsplexer.hsp"
 
-#module MCDeflister mScript, mCount, mFileName, mFilePath, mIdent, mLn, mType, mScope, mInclude, mCntInclude
+#module MCDeflister \
+	mScript, mTkStrList, mTkTypeList, mCntTokens, \
+	mCount, mFileName, mFilePath, mInclude, mCntInclude, \
+	mIdent, mLn, mType, mScope
 
 #include "common.hsp"
 
@@ -125,6 +129,11 @@
 #modcfunc hspDeflister_getInclude int p2
 	return mInclude(p2)
 	
+#modfunc hspDeflister_getTokenList array tkstrlist, array tktypelist
+	array_assign tkstrlist , mTkStrList
+	array_assign tktypeList, mTkTypeList
+	return mCntTokens
+	
 //------------------------------------------------
 // include ファイルを配列にして返す
 //------------------------------------------------
@@ -151,20 +160,23 @@
 //------------------------------------------------
 // 定義をリストアップする
 //------------------------------------------------
-#define nowTkType tktypelist(idx)
-#define nowTkStr  tkstrlist (idx)
+#define nowTkType mTkTypeList(idx)
+#define nowTkStr  mTkStrList (idx)
 
-#modfunc hspDeflister_list  local tktypelist, local tkstrlist, local befTkType, local idx, local cntToken, local sIdent, local areaScope, local scope, local nowline, local bGlobal, local bLocal, local deftype, local uniqueCount, local fSplit
+#modfunc hspDeflister_list  \
+	local lexer, local befTkType, local idx, local sIdent, local areaScope, local scope, \
+	local nowline, local bGlobal, local bLocal, local deftype, local uniqueCount, local fSplit
+	
 	// 字句解析
 	fSplit  = HspLexer_Flag_NoBlank
 	
 	dim lexer
 	hspLexer_new lexer
 	hspLexer_set lexer, fSplit
-	hspLexer_lex lexer, tktypelist, tkstrlist, mScript
+	hspLexer_lex lexer, mTkTypeList, mTkStrList, mScript
 	
-	cntToken = stat
-	if ( cntToken <= 0 ) {
+	mCntTokens = stat
+	if ( mCntTokens <= 0 ) {
 		return 0
 	}
 	
@@ -182,9 +194,9 @@
 	areaScope   = AREA_GLOBAL
 	befTkType   = TKTYPE_END
 	
-	repeat cntToken
+	repeat mCntTokens
 		gosub *LNextToken
-		if ( idx >= cntToken ) {
+		if ( idx >= mCntTokens ) {
 			break
 		}
 	loop
@@ -353,14 +365,13 @@
 	befTkType = nowTkType
 	
 	idx ++
-	if ( idx >= cntToken ) {
-		nowTkType = TkType_Error
+	if ( idx >= mCntTokens ) {
 		nowTkStr  = ""
+		nowTkType = TkType_Error
 		
+	} else {
+		gosub *LProcToken
 	}
-	
-	gosub *LProcToken
-	
 	return
 	
 *LCountLines
@@ -373,11 +384,11 @@
 // モジュール空間名を決定する
 //----------------------------
 *LDecideModuleName
-	if ( idx == cntToken ) {
+	if ( idx == mCntTokens ) {
 		goto *LDecideModuleName_areaScope
 	}
 	
-	if ( tktypelist(idx + 1) == TkType_Scope ) {
+	if ( mTkTypeList(idx + 1) == TkType_Scope ) {
 		
 		gosub *LNextToken
 		
