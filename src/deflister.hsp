@@ -21,8 +21,8 @@
 #include "Mo/mutex.as"
 #include "Mo/ini.hsp"
 
+#include "hsplex/src/HspIdenter.hsp"
 #include "deflister.as"
-#include "MCDeflist.as"
 
 *main
 	gosub *LInitialize		// 初期化
@@ -177,6 +177,9 @@
 	sdim filepath, MAX_PATH
 	sdim filename, MAX_PATH
 	
+	declvar identer
+	newmod identer, MCHspIdenter
+	
 	// ini からデータロード
 	sFormatLineNumber = ini_gets(cfg, "String", "FormatLineNumber", "%3d|")
 	
@@ -211,10 +214,10 @@
 			if ( pathToCommon == "" ) { ini_puts cfg, "Env", "CommonPath", pathToCommon }
 		}
 		
-		AppendSearchPath pathToCommon
+		hspIdenter_appendSearchPath identer, pathToCommon
 		
 		// others
-		AppendSearchPath ini_gets( cfg, "Env", "IncludePath", "" )
+		hspIdenter_appendSearchPath identer, ini_gets( cfg, "Env", "IncludePath", "" )
 	}
 	
 	return
@@ -301,7 +304,7 @@
 		// どのファイルにある宣言か調べる
 		bSelected = false
 		foreach deflistItemTop
-			if ( in_interval( iLv, deflistItemTop(cnt), deflistItemTop(cnt) + deflist_getCount( mdeflist(cnt) ) ) ) {
+			if ( in_interval( iLv, deflistItemTop(cnt), deflistItemTop(cnt) + hspDeflister_getCount( mdeflist(cnt) ) ) ) {
 				iDL       = cnt
 				bSelected = true
 				gosub *LResetScriptBox
@@ -312,10 +315,10 @@
 		
 	} else {
 		// 指定したファイルにある宣言かどうか調べる
-		if ( in_interval( iLv, 0, deflist_getCount( mdeflist(iDL) ) ) == false ) { return }
+		if ( in_interval( iLv, 0, hspDeflister_getCount( mdeflist(iDL) ) ) == false ) { return }
 	}
 	// 位置を保存
-	posLn = deflist_getLn( mdeflist(iDL), iLv - deflistItemTop(iDL) )
+	posLn = hspDeflister_getLn( mdeflist(iDL), iLv - deflistItemTop(iDL) )
 	
 	// 宣言の位置までスクロールする ( p2: SB_VERT )
 	ScrollWindow infScript, 1, major_i(0, posLn - cntShowLineBefore)
@@ -354,15 +357,18 @@
 	if ( bInclude ) {
 		
 		// 検索パスに追加
-		AppendSearchPath getpath(filepath, 32)
+		hspIdenter_appendSearchPath identer, getpath(filepath, 32)
 		
 		// 再帰的に定義リストを作成
-		CreateDefinitionList mdeflist, filepath, true
+		hspIdenter_collectDefs identer, mdeflist, filepath
 		
 	} else {
+		notesel script
+		noteload filepath
+		noteunsel
 		
 		// 定義リストを作成する
-		deflist_new mdeflist, filepath
+		hspDeflister_new mdeflist, filepath, script
 		
 	}
 	
@@ -377,7 +383,7 @@
 // スクリプト・ボックスを更新する
 //------------------------------------------------
 *LResetScriptBox
-	deflist_getScript mdeflist(iDL), script
+	hspDeflister_getScript mdeflist(iDL), script
 	
 	// 行番号を埋め込む
 	SetLinenum script, script, sFormatLineNumber
@@ -433,13 +439,13 @@
 //------------------------------------------------
 *LAddItemsToListview
 	// 項目をすべて追加
-	filename     = deflist_getFileName( mdeflist(iDL) )
-	deflistCount = deflist_getCount   ( mdeflist(iDL) )
+	filename     = hspDeflister_getFileName( mdeflist(iDL) )
+	deflistCount = hspDeflister_getCount   ( mdeflist(iDL) )
 	
 	if ( deflistCount <= 0 ) { return }
 	
 	repeat deflistCount
-		deflist_get mdeflist(iDL), cnt, deflistIdent, deflistLn, deflistType, deflistScope
+		hspDeflister_get mdeflist(iDL), cnt, deflistIdent, deflistLn, deflistType, deflistScope
 		stype = MakeDefTypeString( deflistType )
 		
 		LvInsertItem  mLv, strf("%d", deflistLn) : iLvItem = stat
@@ -480,7 +486,7 @@
 	
 	if ( bInclude ) {
 		// 他のファイルならだめ
-		if ( in_interval(iLv, 0, deflist_getCount( mDeflist(0) )) == false ) {
+		if ( in_interval(iLv, 0, hspDeflister_getCount( mDeflist(0) )) == false ) {
 			dialog "#include 先のファイルにはジャンプできません。", 1, "deflister"
 			return
 		}
@@ -489,7 +495,7 @@
 	gsel IDW_MAIN, -1		// 動きが軽快なように見せる
 	
 	// 指定行に移動( hsed の行番号は 1 ベース )
-	hsed_setCaretLine hsed_activeFootyID(), deflist_getLn( mdeflist(iDL), iLv - deflistItemTop(iDL) ) + 1
+	hsed_setCaretLine hsed_activeFootyID(), hspDeflister_getLn( mdeflist(iDL), iLv - deflistItemTop(iDL) ) + 1
 	
 	// 終了する
 	PostMessage hwnd, 0x0010, 0, 0
@@ -500,7 +506,7 @@
 //------------------------------------------------
 *LBtnRenew
 	foreach mdeflist
-		deflist_delete mdeflist(cnt)
+		hspDeflister_delete mdeflist(cnt)
 	loop
 	
 	gosub *LGetTargetFilePath
@@ -642,7 +648,7 @@
 		// iLv → last まで検索
 		repeat length(mdeflist), iDL
 			
-			for i, 0, deflist_getCount(mdeflist(cnt))
+			for i, 0, hspDeflister_getCount(mdeflist(cnt))
 				if ( cnt == iDL ) : if ( i + deflistItemTop(cnt) <= iLv ) { _continue }
 				
 				gosub *LFindNextImpl
@@ -655,7 +661,7 @@
 		
 		// first → iLv まで検索
 		repeat iDL
-			for i, 0, deflist_getCount(mdeflist(cnt))
+			for i, 0, hspDeflister_getCount(mdeflist(cnt))
 				if ( i + deflistItemTop(cnt) >= iLv ) { break }
 				
 				gosub *LFindNextImpl
@@ -684,7 +690,7 @@
 	// @ deflist(cnt) の [i] の識別子と検索文字列が一致するか調べ、
 	// @	一致すればそれを選択
 	
-	ident  = deflist_getIdent( mdeflist(cnt), i )
+	ident  = hspDeflister_getIdent( mdeflist(cnt), i )
 	iFound = instr( ident, , strFind )
 	if ( iFound >= 0 ) {
 		iLv = i
