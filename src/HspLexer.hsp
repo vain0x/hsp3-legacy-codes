@@ -1,26 +1,23 @@
-// HSP Lexer
+#ifndef IG_MODULECLASS_HSP_LEXER_HSP
+#define IG_MODULECLASS_HSP_LEXER_HSP
 
-#ifndef IG_MODULECLASS_HSP_LEXER_AS
-#define IG_MODULECLASS_HSP_LEXER_AS
+// 字句解析器
 
-#include "strutil.as"
-#include "extendTab.as"
+#include "strutil.hsp"
+#include "expand_tab.hsp"
 
 #module MCHspLexer mSrc, mfOpt, mTabSize
 
-#include "HspLexer_header.as"
-
-#define true  1
-#define false 0
+#include "common.hsp"
 
 #define global HspLexer_Flag_None		0x0000		// 指定なし
 #define global HspLexer_Flag_NoBlank	0x0001		// TkType_Blank   を無視する
 #define global HspLexer_Flag_NoComment	0x0002		// TkType_Comment を無視する
 #define global HspLexer_Flag_NoScope	0x0004		// TkType_Scope   を無視する
-#define global HspLexer_Flag_NoReserved	0x0008		// TkType_Ident が予約語かどうかの判定をしない
-#define global HspLexer_Flag_ExtendTab	0x0010		// タブ文字を半角スペースに展開する
-;#define global HspLexer_Flag_
-;#define global HspLexer_Flag_
+#define global HspLexer_Flag_ExpandTab	0x0010		// タブ文字を半角スペースに展開する
+
+#uselib "user32.dll"
+#func   CharLower@MCHspLexer "CharLowerA" int
 
 //------------------------------------------------
 // 構築
@@ -49,7 +46,12 @@
 // @prm tkstrlist  = str[] : トークン文字列の配列
 // @prm script     = str   : スクリプト
 //------------------------------------------------
-#modfunc hspLexer_lex array tktypelist, array tkstrlist, str prm_script,  local lenScript, local cntToken, local tkstr, local tklen, local tktype, local bPreprocLine, local index, local befTkType, local posALine, local bNoBlank, local bNoComment, local bNoScope, local bNoReserved, local bExtendTab
+#modfunc hspLexer_lex \
+	array tktypelist, array tkstrlist, str prm_script,  \
+	local lenScript, local cntToken, local tkstr, local tklen, local tktype, \
+	local bPreprocLine, local index, local befTkType, local posALine, \
+	local bNoBlank, local bNoComment, local bNoScope, local bExpandTab
+	
 	sdim tkstr
 	dim  tktype
 	
@@ -64,14 +66,10 @@
 	befTkType = TkType_End
 	cntToken  = 0
 	
-	keylist_preproc = "," + KeyWords_PreProc
-	keylist_ppword  = "," + KeyWords_PPWord
-	
 	bNoBlank    = ( mfOpt & HspLexer_Flag_NoBlank    ) != false
 	bNoComment  = ( mfOpt & HspLexer_Flag_NoComment  ) != false
 	bNoScope    = ( mfOpt & HspLexer_Flag_NoScope    ) != false
-	bNoReserved = ( mfOpt & HspLexer_Flag_NoReserved ) != false
-	bExtendTab  = ( mfOpt & HspLexer_Flag_ExtendTab  ) != false		// related: mTabSize, posALine
+	bExpandTab  = ( mfOpt & HspLexer_Flag_ExpandTab  ) != false		// related: mTabSize, posALine
 	
 	repeat
 		// 最後まで取得したら終了する
@@ -83,23 +81,15 @@
 		tklen  = strlen(tkstr)
 		index += tklen
 		
-		if ( bExtendTab ) { tkstr = extendTab(tkstr, mTabSize, posALine) : posALine += strlen(tkstr) }
+		if ( bExpandTab ) {
+			tkstr = expand_tab(tkstr, mTabSize, posALine)
+			posALine += strlen(tkstr)
+		}
 		
 		// 無視されるトークン ⇒ 飛ばす
 		if ( ( bNoBlank && tktype == TkType_Blank ) || ( bNoComment && tktype == TkType_Comment ) || ( bNoScope && tktype == TkType_Scope ) ) {
 			continue
 		}
-		
-;		if ( tktype == TkType_Error ) {
-;			cntToken = -1
-;			break
-;		}
-		
-;		logmes "type\t= "+ tktype
-;		logmes "str\t= "+  tkstr
-;		logmes "beftype\t= "+ befTkType
-;		logmes "index\t= "+ index
-;		logmes ""
 		
 		tktypelist(cntToken) = tktype
 		tkstrlist (cntToken) = tkstr
@@ -111,12 +101,10 @@
 		befTkType = tktype
 		cntToken ++
 	loop
-	
 	return cntToken
 	
 *LProcToken
 	switch ( tktype )
-		
 		// 空白 or コメント
 		case TkType_Blank
 		case TkType_Comment
@@ -127,55 +115,19 @@
 		case TkType_End
 			if ( IsNewLine( peek(tkstr) ) ) {			// 改行
 				if ( bPreprocLine ) { bPreprocLine = false }
-				if ( bExtendTab   ) { posALine = 0 }
+				if ( bExpandTab   ) { posALine = 0 }
 			}
 			swbreak
 			
 		// プリプロセッサ命令
 		case TkType_PreProc
-			if ( isPreProc(thismod, tkstr) ) {
-				bPreprocLine = true
-			} else {
-				tktype               = TkType_PreProcDisable
-				tktypelist(cntToken) = tktype
-			}
+			bPreprocLine = true
 			swbreak
 			
 		// 識別子
 		case TkType_Ident
-			if ( bNoReserved ) { swbreak }
-			
-			// プリプロセッサ行キーワードか
-			if ( bPreprocLine ) {
-				if ( isPPWord(thismod, tkstr) ) {
-					tktype = TkTypeEx_PPWord
-					goto *LChangeTkTypeList
-				}
-			}
-			
-		/*
-			         if ( isSttm(thismod, tkstr) )    { tkType = TkTypeEx_Sttm		// 標準命令
-			} else : if ( isFunc(thismod, tkstr) )    { tkType = TkTypeEx_Func		// 標準関数
-			} else : if ( isSysvar(thismod, tkstr) )  { tktype = TkTypeEx_Sysvar	// システム変数
-			} else : if ( isMacro(thismod, tkstr) )   { tktype = TkTypeEx_Macro		// マクロ
-			} else : if ( isConst(thismod, tkstr) )   { tktype = TkTypeEx_Const		// 定数
-			} else : if ( isDefSttm(thismod, tkstr) ) { tktype = TkTypeEx_DefSttm	// ユーザ定義命令
-			} else : if ( isDefFunc(thismod, tkstr) ) { tktype = TkTypeEx_DefFunc	// ユーザ定義関数
-			} else : if ( isDllFunc(thismod, tkstr) ) { tktype = TkTypeEx_DllFunc	// DllFunc
-			} else : if ( isIFace(thismod, tkstr) )   { tktype = TkTypeEx_IFace		// IFace
-			} else : if ( isModname(thismod, tkstr) ) { tktype = TkTypeEx_ModName	// モジュール名
-			} else {
-				tktype = TkTypeEx_Var
-			}
-		//*/
-			
-			// 配列に指定した値を変更する
-		:*LChangeTkTypeList
-			tktypelist(cntToken) = tktype
 			swbreak
-			
 	swend
-	
 	return
 	
 //##########################################################
@@ -228,8 +180,8 @@
 // 　文字列の中身を切り出して返す
 // ＆文字定数の中身を切り出して返す
 //------------------------------------------------
-#define ctype CutStrInner(%1,%2=0) CutStr_or_Char_inner(%1,%2,'"')
-#define ctype CutCharactorInner(%1,%2=0) CutStr_or_Char_inner(%1,%2,'\'')
+#define ctype CutStrInner(%1,%2=0) CutStr_or_Char_inner@MCHspLexer(%1,%2,'"')
+#define ctype CutCharactorInner(%1,%2=0) CutStr_or_Char_inner@MCHspLexer(%1,%2,'\'')
 
 //------------------------------------------------
 // 範囲の違う「トークン」を切り出して返す
@@ -274,18 +226,8 @@
 #defcfunc CutNum_Dgt@MCHspLexer var sSrc, int iOffset
 	FTM_CutToken ( IsDigit(c) || c == '.' || c == '_' )
 	
-//##########################################################
-//        字句取り出し
-//##########################################################
-#uselib "user32.dll"
-#func   CharLower@MCHspLexer "CharLowerA" int
-
-//------------------------------------------------
-// マクロ
-//------------------------------------------------
+// 2つ重ねて演算子になる文字
 #define ctype IsWOp(%1) ((%1) == '<' || (%1) == '=' || (%1) == '>' || (%1) == '&' || (%1) == '|' || (%1) == '+' || (%1) == '-')
-
-#define NULL 0
 
 //------------------------------------------------
 // 次のトークンを取得する
@@ -388,7 +330,7 @@
 		if ( c == '\\' && bPreLine ) {
 			if ( IsNewLine(c2) ) {
 				if ( c2 == 0x0D && peek(sSrc, index + 2) == 0x0A ) {
-					lpoke result,, MAKELONG2('\\', 0x0D, 0x0A, 0)	// "\\\n"
+					lpoke result,, MAKELONG4('\\', 0x0D, 0x0A, 0)	// "\\\n"
 				} else {
 					lpoke result,, MAKEWORD('\\', c2)
 				}
@@ -469,7 +411,7 @@
 	if ( IsSJIS1st(c) ) {
 		logmes "ERROR! SJIS code!"
 		wpoke result, 0, wpeek(sSrc, index)	// 書き込む
-		poke  result, 3, NULL
+		poke  result, 3, 0
 		return TkType_Error
 	}
 	
@@ -505,9 +447,6 @@
 	
 	return TkType_Numeric
 	
-//##############################################################################
-//                識別子判定
-//##############################################################################
 //------------------------------------------------
 // 次はラベルか？
 // 
@@ -515,7 +454,7 @@
 //   　 * から始まり、
 //   　その次が「文の終端 or ',' or ')'」のどれか
 //------------------------------------------------
-#modcfunc isLabel@MCHspLexer var src, int offset, int p_befTT, int bPreLine,  local stmp
+#defcfunc isLabel@MCHspLexer var src, int offset, int p_befTT, int bPreLine,  local stmp
 
 	// 最低限のチェック
 	if ( peek(src, offset    ) != '*' ) { return false }		// もはやラベルではない
@@ -552,15 +491,9 @@
 			// ラベルの前の識別子が、文頭にある or goto / gosub ならＯＫ
 			i  = offset
 			i -= CntSpacesBack( src, i )
-			m  = BackToIdentTop(src, offset)
+			m  = str_find_ident_top(src, offset)
 			if ( m < 0 ) { return false }	// 前が識別子ではない (異常？)
 			i -= m
-			
-;			// ここで、goto gosub なら OK
-;			stmp = getpath( CutName(src, i + 1), 16 )
-;			if ( stmp == "gosub" || stmp == "goto" ) {
-;				swbreak
-;			}
 			
 			i -= CntSpacesBack( src, i )		// 空白 ignore
 			i --							// ラベルの前の前
@@ -592,172 +525,48 @@
 		}
 		i ++
 	loop
-	
-#if 0
-	// ラベルの後を調べる
-	while
-		i += CntSpaces(src, i)	// 空白をスキップ
-		c  = peek(src, i)		// ラベルの次
-		
-		if ( c == '/' ) {
-			c2 = peek(src, i + 1)
-			if ( c2 == '/' ) { return true }		// ダブル・スラッシュのコメント
-			if ( c2 == '*' ) {						// 複数行コメント開始
-				iFound = instr(src, i + 2, "*/")	// 終了地点を探す
-				if ( iFound >= 0 ) {
-					i += 4 + iFound					// /**/ + 距離
-					_continue						// もう一度「ラベルの次」をチェックする
-				}
-			}
-		} else : if ( c == '@' ) {
-			// スコープ名をスキップ
-			do
-				i ++
-				c = peek(src, i)
-			until ( IsIdent(c) == false )
-			_continue
-		}
-		_break
-	wend
-	
-	// ;:{}), 改行文字 NULL でなければ×
-	if ( c != NULL && (c == ';' || c == ':' || c == '{' || c == '}' || c == ')' || c == ',' || c == 0x0D || c == 0x0A) == false ) {
-		return false
-	}
-#endif
 	return true
-	
-#define ctype isIdentInList(%1,%2=src) ( instr( %1, 0, ","+ getpath(%2, 16) +"," ) >= 0 )
-	
-//------------------------------------------------
-// プリプロセッサ命令か？
-//------------------------------------------------
-#modcfunc isPreProc@MCHspLexer str src
-	return isIdentInList( keylist_preproc, CutPreprocIdent(thismod, src) )
-	
-//------------------------------------------------
-// プリプロセッサ行キーワードか？
-//------------------------------------------------
-#modcfunc isPPWord@MCHspLexer str src
-	return isIdentInList( keylist_ppword )
 	
 //------------------------------------------------
 // プリプロセッサ命令の識別子の部分を取り出す
 //------------------------------------------------
-#modcfunc CutPreprocIdent@MCHspLexer str src,  local stmp
+#defcfunc CutPreprocIdent@MCHspLexer str src,  local stmp
 	stmp = src
 	stmp = strmid( stmp, 1 + CntSpaces( stmp, 1 ), strlen(stmp) )
 	return stmp
 	
-	/*
-//------------------------------------------------
-// 命令か？ ( src に無駄な記号や空白があると、偽 )
-//------------------------------------------------
-#modcfunc isSttm@MCHspLexer str src
-	return isIdentInList( keylist_sttm )
-	
-//------------------------------------------------
-// 関数か？
-//------------------------------------------------
-#modcfunc isFunc@MCHspLexer str src
-	return isIdentInList( keylist_func )
-	
-//------------------------------------------------
-// システム変数か？
-//------------------------------------------------
-#modcfunc isSysvar@MCHspLexer str src
-	return isIdentInList( keylist_sysvar )
-	
-//------------------------------------------------
-// マクロか？
-//------------------------------------------------
-#modcfunc isMacro@MCHspLexer str src
-	return isIdentInList( keylist_macro )
-	
-//------------------------------------------------
-// 定数か？
-//------------------------------------------------
-#modcfunc isConst@MCHspLexer str src
-	return isIdentInList( keylist_const )
-	
-//------------------------------------------------
-// ユーザ定義命令か？
-//------------------------------------------------
-#modcfunc isDefSttm@MCHspLexer str src
-	return isIdentInList( keylist_defsttm )
-	
-//------------------------------------------------
-// ユーザ定義関数か？
-//------------------------------------------------
-#modcfunc isDefFunc@MCHspLexer str src
-	return isIdentInList( keylist_deffunc )
-	
-//------------------------------------------------
-// Dll関数か？
-//------------------------------------------------
-#modcfunc isDllFunc@MCHspLexer str src
-	return isIdentInList( keylist_dllfunc )
-	
-//------------------------------------------------
-// InterFace か？
-//------------------------------------------------
-#modcfunc isIFace@MCHspLexer str src
-	return isIdentInList( keylist_iface )
-	
-//------------------------------------------------
-// モジュール名か？
-//------------------------------------------------
-#modcfunc isModname@MCHspLexer str src
-	return isIdentInList( keylist_modname )
-	
-//------------------------------------------------
-// 変数か？
-//------------------------------------------------
-#modcfunc isVar@MCHspLexer str src
-	return isIdentInList( keylist_var )
-	//*/
-	
 #global
 
-//##############################################################################
-//                テスト
-//##############################################################################
-#if 1
+// サンプル
+#if 0
 
-#include "MCLongString.as"
+#include "StrBuilder/StrBuilder.hsp"
 
-	s = {"
-		// 識別子を切り出して返す
-		#defcfunc CutName var sSrc, int iOffset,  \\
-			local n
-		\	
-		\	FTM_CutToken ( IsIdent(c) || IsSJIS1st(c) || c == '`' ), IsSJIS1st(c)
-		\	return \"Hello, world!\"
-	"}
+	notesel s
+	noteload "HspLexer.hsp"
+	noteunsel
 	
-	fSplit = HspLexer_Flag_ExtendTab
+	fSplit = HspLexer_Flag_ExpandTab
 	
+	dim lexer
 	hspLexer_new lexer
 	hspLexer_set lexer, fSplit, 4
 	hspLexer_lex lexer, tktypelist, tkstrlist, s
 	
-	LongStr_new ls
+	StrBuilder_new ls
 	
 	foreach tktypelist
-		
-		LongStr_add ls, "type\t= "+ tktypelist(cnt) +"\n"
-		LongStr_add ls, "str\t= "+  tkstrlist (cnt)  +"\n"
-		LongStr_add ls, "\n"
-		
+		StrBuilder_append ls, "type\t= "+ tktypelist(cnt) +"\n"
+		StrBuilder_append ls, "str\t= "+  tkstrlist (cnt)  +"\n"
+		StrBuilder_append ls, "\n"
 	loop
 	
-	LongStr_toBuf  ls, buf
-	LongStr_delete ls
+	StrBuilder_copy_to ls, buf
+	StrBuilder_delete  ls
 	
 	objmode 2
 	font msgothic, 12
-	mesbox buf, ginfo(12), ginfo(13)
-	
+	mesbox buf, ginfo_winx, ginfo_winy
 	stop
 	
 #endif

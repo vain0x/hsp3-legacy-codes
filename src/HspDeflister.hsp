@@ -1,22 +1,20 @@
-// definition lister
+#ifndef IG_MODULECLASS_HSP_DEFINITION_LISTER_HSP
+#define IG_MODULECLASS_HSP_DEFINITION_LISTER_HSP
 
-#ifndef IG_MODULECLASS_HSP_DEFINITION_LISTER_AS
-#define IG_MODULECLASS_HSP_DEFINITION_LISTER_AS
-
+// HSPスクリプトから定義を収集する。
+// 単一のファイルだけ処理する。(include の先は見に行かない)
 // @ 行番号情報は削除すべき？
 
-#include "strutil.as"
-#include "pvalptr.as"
+#include "pvalptr.hsp"
+#include "array_assign.hsp"
+#include "hsplexer.hsp"
 
-#module MCDeflister mScript, mCount, mFileName, mFilePath, mIdent, mLn, mType, mScope, mInclude, mCntInclude
+#module MCDeflister \
+	mScript, mTkStrList, mTkTypeList, mCntTokens, \
+	mCount, mFileName, mFilePath, mInclude, mCntInclude, \
+	mIdent, mLn, mType, mScope
 
-#include "HspLexer_header.as"
-
-//##############################################################################
-//        定数・マクロ
-//##############################################################################
-#define true  1
-#define false 0
+#include "common.hsp"
 
 //------------------------------------------------
 // DEFTYPE
@@ -39,14 +37,12 @@
 #define global AREA_GLOBAL "global"
 #define global AREA_ALL    "*"
 
-//##############################################################################
-//                コンストラクタ・デストラクタ
-//##############################################################################
 //------------------------------------------------
 // コンストラクタ
 //------------------------------------------------
-#define global hspDeflister_new(%1,%2) newmod %1, MCDeflist@, %2
-#modinit str path
+#define global hspDeflister_new(%1,%2) newmod %1, MCDeflister@, %2
+#modinit str path, var script
+
 	// メンバ変数を初期化
 	sdim mIdent,, 5
 	dim  mLn,     5
@@ -59,11 +55,7 @@
 	
 	mFilePath = path
 	mFileName = getpath(mFilePath, 8)
-	
-	// スクリプトを読み込む
-	notesel  mScript
-	noteload mFilePath
-	noteunsel
+	mScript   = script
 	
 	// 定義をリストアップ
 	hspDeflister_list thismod
@@ -75,9 +67,6 @@
 //------------------------------------------------
 #define global hspDeflister_delete(%1) delmod %1
 
-//##############################################################################
-//                メンバ関数
-//##############################################################################
 //------------------------------------------------
 // 一括して格納する
 // 
@@ -137,6 +126,11 @@
 #modcfunc hspDeflister_getInclude int p2
 	return mInclude(p2)
 	
+#modfunc hspDeflister_getTokenList array tkstrlist, array tktypelist
+	array_assign tkstrlist , mTkStrList
+	array_assign tktypeList, mTkTypeList
+	return mCntTokens
+	
 //------------------------------------------------
 // include ファイルを配列にして返す
 //------------------------------------------------
@@ -147,15 +141,12 @@
 	loop
 	return
 	
-//##############################################################################
-//                定義をリストアップする
-//##############################################################################
 //------------------------------------------------
 // 範囲名を作成する
 // @private
 // @static
 //------------------------------------------------
-#deffunc MakeScope@MCDeflist var scope, str defscope, int deftype, int bGlobal, int bLocal
+#deffunc MakeScope@MCDeflister var scope, str defscope, int deftype, int bGlobal, int bLocal
 	if ( bGlobal ) { scope = AREA_ALL : return }
 	
 	scope = defscope
@@ -166,20 +157,23 @@
 //------------------------------------------------
 // 定義をリストアップする
 //------------------------------------------------
-#define nowTkType tktypelist(idx)
-#define nowTkStr  tkstrlist (idx)
+#define nowTkType mTkTypeList(idx)
+#define nowTkStr  mTkStrList (idx)
 
-#modfunc hspDeflister_list  local tktypelist, local tkstrlist, local befTkType, local idx, local cntToken, local sIdent, local areaScope, local scope, local nowline, local bGlobal, local bLocal, local deftype, local uniqueCount, local fSplit
+#modfunc hspDeflister_list  \
+	local lexer, local befTkType, local idx, local sIdent, local areaScope, local scope, \
+	local nowline, local bGlobal, local bLocal, local deftype, local uniqueCount, local fSplit
+	
 	// 字句解析
 	fSplit  = HspLexer_Flag_NoBlank
-	fSplit |= HspLexer_Flag_NoReserved
 	
+	dim lexer
 	hspLexer_new lexer
 	hspLexer_set lexer, fSplit
-	hspLexer_lex lexer, tktypelist, tkstrlist, mScript
+	hspLexer_lex lexer, mTkTypeList, mTkStrList, mScript
 	
-	cntToken = stat
-	if ( cntToken <= 0 ) {
+	mCntTokens = stat
+	if ( mCntTokens <= 0 ) {
 		return 0
 	}
 	
@@ -197,9 +191,9 @@
 	areaScope   = AREA_GLOBAL
 	befTkType   = TKTYPE_END
 	
-	repeat cntToken
+	repeat mCntTokens
 		gosub *LNextToken
-		if ( idx >= cntToken ) {
+		if ( idx >= mCntTokens ) {
 			break
 		}
 	loop
@@ -270,7 +264,7 @@
 			bGlobal  = true
 			bLocal   = false
 			
-			ppident  = CutPreprocIdent( nowTkStr )		// 識別子部分だけにする
+			ppident  = CutPreprocIdent@MCHspLexer(nowTkStr) // 識別子部分だけにする
 			
 			switch ( ppident )
 				
@@ -280,7 +274,7 @@
 					
 					// #module "modname" の形式
 					if ( nowTkType == TkType_String ) {
-						nowTkStr = CutStrInner(nowTkStr)
+						nowTkStr = CutStrInner@MCHspLexer(nowTkStr)
 						
 					// #module modname の形式
 					} else : if ( nowTkType == TkType_Ident ) {
@@ -305,7 +299,7 @@
 					gosub *LNextToken
 					
 					if ( nowTkType == TkType_String ) {
-						nowTkStr = CutStrInner( nowTkStr )
+						nowTkStr = CutStrInner@MCHspLexer( nowTkStr )
 						
 						mInclude(mCntInclude) = nowTkStr
 						mCntInclude ++
@@ -368,25 +362,14 @@
 	befTkType = nowTkType
 	
 	idx ++
-	if ( idx >= cntToken ) {
-		nowTkType = TkType_Error
+	if ( idx >= mCntTokens ) {
 		nowTkStr  = ""
+		nowTkType = TkType_Error
 		
+	} else {
+		gosub *LProcToken
 	}
-	
-	gosub *LProcToken
-	
 	return
-	
-;*LBackToken
-;	idx --
-;	if ( idx <= 0 ) {
-;		idx       = 0
-;		befTkType = TKTYPE_END
-;	} else {
-;		befTkType = tktypelist(idx - 1)
-;	}
-;	return
 	
 *LCountLines
 	notesel nowTkStr
@@ -398,11 +381,11 @@
 // モジュール空間名を決定する
 //----------------------------
 *LDecideModuleName
-	if ( idx == cntToken ) {
+	if ( idx == mCntTokens ) {
 		goto *LDecideModuleName_areaScope
 	}
 	
-	if ( tktypelist(idx + 1) == TkType_Scope ) {
+	if ( mTkTypeList(idx + 1) == TkType_Scope ) {
 		
 		gosub *LNextToken
 		
@@ -417,34 +400,6 @@
 *LDecideModuleName_areaScope
 	scope = areaScope
 	return
-	
-//------------------------------------------------
-// 定義タイプから文字列を生成する
-// @static
-//------------------------------------------------
-#defcfunc MakeDefTypeString int deftype,  local stype, local bCType
-	sdim stype, 320
-	bCType = ( deftype & DEFTYPE_CTYPE ) != false
-	
-	if ( deftype & DEFTYPE_LABEL ) { stype = "ラベル"   }
-	if ( deftype & DEFTYPE_MACRO ) { stype = "マクロ"   }
-	if ( deftype & DEFTYPE_CONST ) { stype = "定数"     }
-	if ( deftype & DEFTYPE_CMD   ) { stype = "コマンド" }
-	if ( deftype & DEFTYPE_COM   ) { stype = "命令(COM)" }
-	if ( deftype & DEFTYPE_IFACE ) { stype = "interface" }
-	
-	if ( deftype & DEFTYPE_DLL ) {
-		if ( bCType ) { stype = "関数(Dll)" } else { stype = "命令(Dll)" }
-		
-	} else : if ( deftype & DEFTYPE_FUNC  ) {
-		if ( bCType ) { stype = "関数" } else { stype = "命令" }
-		
-	} else {
-		if ( bCType ) { stype += " Ｃ" }
-	}
-	
-	if ( deftype & DEFTYPE_MODULE ) { stype += " Ｍ" }
-	return stype
 	
 //------------------------------------------------
 // 定義タイプから TkTypeEx を得る
