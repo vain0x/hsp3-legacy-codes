@@ -234,7 +234,7 @@
 	winsize(0) = ini_geti(cfg, "Window", "cx", 380)
 	winsize(1) = ini_geti(cfg, "Window", "cy", 360)
 	
-	screen IDW_MAIN, ginfo(20), ginfo(21), 2 + 8, ,, winsize(0), winsize(1)
+	screen IDW_MAIN, ginfo_dispx, ginfo_dispy, 2 + 8, ,, winsize(0), winsize(1)
 		title "deflister"
 		SetStyle hwnd, -16, 0x40000		// 可変枠
 		syscolor 15 : boxf : color
@@ -242,26 +242,26 @@
 		// Script-Viewer
 		font ini_gets(cfg, "Editbox", "FontFamily", msgothic), ini_geti(cfg, "Editbox", "FontSize", 12)
 		objmode 2
-		mesbox script, ginfo(20), ginfo(21), 4 : infScript = objinfo(stat, 2), stat
+		mesbox script, ginfo_dispx, ginfo_dispy, 4 : infScript = objinfo_hwnd(stat), stat
 		
 		tabstops = (12 + 1) / 4 * 4						// (fontpt + 1) / 4 * tabsize
 		sendmsg infScript, 0x00CB, 1, varptr(tabstops)	// EM_SETTABSTOPS
 		
 		// 検索窓
-		input strFind, 240, 20 : infFind = objinfo(stat, 2), stat
+		input strFind, 240, 20 : infFind = objinfo_hwnd(stat), stat
 		
 		objmode 1
 		
 		// Deflist-Viewer
-		CreateListview mLv, ginfo(20), ginfo(21), (0x0001 | 0x0004 | 0x0008 | 0x8000)
-		infLv = objinfo(stat, 2), stat
+		CreateListview mLv, ginfo_dispx, ginfo_dispy, (0x0001 | 0x0004 | 0x0008 | 0x8000)
+		infLv = objinfo_hwnd(stat), stat
 		
 		gosub *LLvInitialize
 		
 		// ボタン
 		objsize 80, 25
-		button gosub "移動", *LBtnJump  : infBtns(0, 0) = objinfo(stat, 2), stat : EnableWindow infBtns(0, 0), bHsed
-		button gosub "更新", *LBtnRenew : infBtns(0, 1) = objinfo(stat, 2), stat
+		button gosub "移動", *LBtnJump  : infBtns(0, 0) = objinfo_hwnd(stat), stat : EnableWindow infBtns(0, 0), bHsed
+		button gosub "更新", *LBtnRenew : infBtns(0, 1) = objinfo_hwnd(stat), stat
 		
 	gosub *OnSize
 	
@@ -524,7 +524,7 @@
 //##################################################################################################
 //------------------------------------------------
 // 二重起動が発生した
-//------------------------------------------------
+//-----------------------------------------------ginfo_winx-
 *OnAlreadyUsed
 	gsel IDW_MAIN, 2
 	gsel IDW_MAIN, 1
@@ -534,12 +534,12 @@
 // ウィンドウのサイズが変わった
 //------------------------------------------------
 *OnSize
-	MoveWindow infScript, 5,  5             , ginfo(12) - 10, heightEdit, true
-	MoveWindow infLv,     5, 10 + heightEdit, ginfo(12) - 10, ginfo(13) - (heightEdit + 30 + 20), true
-	MoveWindow infFind,   5, ginfo(13) - 30 ,            240, 20, true
+	MoveWindow infScript, 5,  5             , ginfo_winx - 10, heightEdit, true
+	MoveWindow infLv,     5, 10 + heightEdit, ginfo_winx - 10, ginfo_winy - (heightEdit + 30 + 20), true
+	MoveWindow infFind,   5, ginfo_winy - 30 ,            240, 20, true
 	
 	repeat length2(infBtns)
-		MoveWindow infBtns(0, cnt), ginfo(12) - (85 * (cnt + 1)), ginfo(13) - 30, 80, 25, true
+		MoveWindow infBtns(0, cnt), ginfo_winx - (85 * (cnt + 1)), ginfo_winy - 30, 80, 25, true
 	loop
 	return
 	
@@ -628,7 +628,7 @@
 // マウスがスプリッター上にある
 //------------------------------------------------
 *LIsMouseOnSplitter
-	return in_rect( mousex2, mousey2, 5, 5 + heightEdit, ginfo(12) - 10, 10 + heightEdit )
+	return in_rect( mousex2, mousey2, 5, 5 + heightEdit, ginfo_winx - 10, 10 + heightEdit )
 	
 //------------------------------------------------
 // 仮想スプリッタが動いた
