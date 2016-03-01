@@ -1,14 +1,9 @@
 // deflister - header
 
-#ifndef __DEFINED_LISTER_HEADER_AS__
-#define __DEFINED_LISTER_HEADER_AS__
+#ifndef IG_DEFINITION_LISTER_HEADER_AS
+#define IG_DEFINITION_LISTER_HEADER_AS
 
 #include "Mo/MCLongString.as"
-#include "Mo/strutil.as"
-#include "Mo/easyhash.as"
-#include "Mo/hsedutil.as"
-#include "Mo/SearchFileEx.as"
-#include "MCDeflist.as"
 
 // Win32 API
 #uselib "user32.dll"
@@ -41,17 +36,20 @@
 #const UWM_SPLITTERMOVE 0x0400
 
 // その他
-#define global HSED_TEMPFILE (ownpath +"\\"+ HSED_TEMPFILENAME)
+#define global HSED_TEMPFILE (dir_exe2 + "\\" + HSED_TEMPFILENAME)
 #define global HSED_TEMPFILENAME "hsedtmp.hsp"
 
-#define STR_INIPATH (ownpath +"\\deflister.ini")
+#define STR_INIPATH (dir_exe2 + "\\deflister.ini")
+
+#undef SetStyle
+#undef ChangeVisible
+#define global SetStyle(%1,%2=-16,%3=0,%4=0) SetWindowLong (%1),(%2),bit_sub(GetWindowLong((%1),(%2)) | (%3), (%4))
+#define global ChangeVisible(%1=hwnd,%2=1) SetStyle (%1), -16, 0x10000000 * (%2), 0x10000000 * ((%2) == 0)// Visible 切り替え
 
 //##################################################################################################
 //        モジュール
 //##################################################################################################
 #module deflister_mod
-
-#include "Mo/ctype.as"
 
 #define true  1
 #define false 0
@@ -73,128 +71,11 @@
 		if ( strsize == 0 ) { break }
 		
 		// 書き込む
-		LongStr_cat tmpbuf, strf(sform, cnt) + stmp +"\n"
+		LongStr_cat tmpbuf, strf(sform, cnt) + stmp + "\n"
 	loop
 	
 	LongStr_tobuf  tmpbuf, retbuf
 	LongStr_delete tmpbuf
-	return
-	
-//------------------------------------------------
-// 定義タイプから文字列を生成する
-//------------------------------------------------
-#defcfunc MakeTypeString int deftype,  local stype, local bCType
-	sdim stype, 320
-	bCType = ( deftype & DEFTYPE_CTYPE ) != false
-	
-	if ( deftype & DEFTYPE_LABEL ) { stype = "ラベル"   }
-	if ( deftype & DEFTYPE_MACRO ) { stype = "マクロ"   }
-	if ( deftype & DEFTYPE_CONST ) { stype = "定数"     }
-	if ( deftype & DEFTYPE_CMD   ) { stype = "コマンド" }
-	
-	if ( deftype & DEFTYPE_DLL ) {
-		if ( bCType ) { stype = "関数(Dll)" } else { stype = "命令(Dll)" }
-		
-	} else : if ( deftype & DEFTYPE_FUNC  ) {
-		if ( bCType ) { stype = "関数" } else { stype = "命令" }
-		
-	} else {
-		if ( bCType ) { stype += " Ｃ" }
-	}
-	
-	if ( deftype & DEFTYPE_MODULE ) { stype += " Ｍ" }
-	return stype
-	
-//------------------------------------------------
-// 検索パスを追加する
-//------------------------------------------------
-#deffunc AppendSearchPath str p1, local path, local c, local len
-	sdim path, MAX_PATH
-	path = p1
-	len  = strlen(path)
-	c    = peek(path, len - 1)
-	if ( c == '/' ) { len -- }
-	if ( c != '\\') { wpoke path, len, '\\' : len ++ }
-	if ( instr(searchpath, 0, path +";") < 0 ) {
-		searchpath += path +";"
-	}
-	return
-	
-//------------------------------------------------
-// 定義リストを再帰的に作成する
-//------------------------------------------------
-#deffunc CreateDefinitionList array mdeflist, array listIncludeToLoad, int bFirstCall, local listInclude, local filename, local index, local bListupped
-	
-	// 初回の場合、ハッシュ値の配列を削除
-	if ( bFirstCall ) {
-		dim mdeflist
-		dim hashListupped, 32
-		cntListup = 0
-	}
-	
-	foreach listIncludeToLoad
-		
-		// 次のファイルのフルパスを取得
-		if ( peek(listIncludeToLoad(cnt), 1) != ':' ) {		// "x:\\..." なら既にフルパス
-			
-			SearchFileEx searchpath, listIncludeToLoad(cnt)
-			if ( refstr == "" ) { continue }
-			listIncludeToLoad(cnt) = refstr
-			AppendSearchPath getpath(refstr, 32)	// 逐一検索パスを拡張していく
-		}
-		
-		// ファイル名のみを取得しておく
-		filename = getpath(listIncludeToLoad(cnt), 8)
-		
-;		// 既に開かれているファイルなら無視
-;		if ( bFirstCall == false ) {
-;			bListupped = false
-;			foreach mdeflist
-;				if ( deflist_GetFileName( mdeflist(cnt) ) == filename ) {
-;					bListupped = true
-;					break
-;				}
-;			loop
-;			if ( bListupped ) { continue }
-;		}
-		
-;		exist listIncludeToLoad(cnt)
-;		if ( strsize < 0 ) { continue }
-		
-		// 既に開かれているファイルは無視
-		bListupped = false
-		hash       = EasyHash( listIncludeToLoad(cnt) )		// フルパス
-		if ( bFirstCall == false ) {
-			repeat cntListup
-				if ( hashListupped(cnt) == hash ) {
-					// 念のためファイルパスでも比較する
-					if ( deflist_GetFileName( mdeflist(cnt) ) == filename ) {
-						bListupped = true
-						break
-					}
-				}
-			loop
-			if ( bListupped ) { continue }	// 定義済みなので無視する
-		}
-		
-		// 開いたリストに追加
-		if ( bListupped == false ) {
-			hashListupped(cntListup) = hash
-			cntListup ++
-		}
-		
-		// 定義リストを作成する
-		deflist_new mdeflist, listIncludeToLoad(cnt)
-		index = stat
-		
-		// 再帰的に結合されたファイルから定義を取り出す
-		if ( deflist_getCntInclude( mdeflist(index) ) ) {
-			deflist_getIncludeArray mdeflist(index), listInclude
-			CreateDefinitionList    mdeflist,        listInclude, false
-		}
-		
-	loop
-	
 	return
 	
 //------------------------------------------------
@@ -209,6 +90,33 @@
 	sendmsg       handle, 0x0114 + direction, MAKELONG(4, nPos), handle
 	return
 	
+//------------------------------------------------
+// 定義タイプから文字列を生成する
+// @static
+//------------------------------------------------
+#defcfunc MakeDefTypeString int deftype,  local stype, local bCType
+	sdim stype, 320
+	bCType = ( deftype & DEFTYPE_CTYPE ) != false
+	
+	if ( deftype & DEFTYPE_LABEL ) { stype = "ラベル"   }
+	if ( deftype & DEFTYPE_MACRO ) { stype = "マクロ"   }
+	if ( deftype & DEFTYPE_CONST ) { stype = "定数"     }
+	if ( deftype & DEFTYPE_CMD   ) { stype = "コマンド" }
+	if ( deftype & DEFTYPE_COM   ) { stype = "命令(COM)" }
+	if ( deftype & DEFTYPE_IFACE ) { stype = "interface" }
+	
+	if ( deftype & DEFTYPE_DLL ) {
+		if ( bCType ) { stype = "関数(Dll)" } else { stype = "命令(Dll)" }
+		
+	} else : if ( deftype & DEFTYPE_FUNC  ) {
+		if ( bCType ) { stype = "関数" } else { stype = "命令" }
+		
+	} else {
+		if ( bCType ) { stype += " Ｃ" }
+	}
+	
+	if ( deftype & DEFTYPE_MODULE ) { stype += " Ｍ" }
+	return stype
 	
 #if 0
 
@@ -254,6 +162,5 @@
 #endif
 
 #global
-sdim searchpath@deflister_mod, MAX_PATH * 3
 
 #endif

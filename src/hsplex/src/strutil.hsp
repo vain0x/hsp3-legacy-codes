@@ -1,0 +1,50 @@
+#ifndef IG_STRING_UTILITY_AS
+#define IG_STRING_UTILITY_AS
+
+#module
+
+#include "ctype.hsp"
+
+#define true 1
+#define false 0
+
+#define MPROC_DoUntil(%1=cntvar,%2=cond,%3=break,%4) \
+	repeat : if (%2) { break } %4 : if ( %1 < 0 ) { %3 } : loop
+
+// •Ï” p1 ‚ðAp2 ‚ª¬‚è—§‚Â‚Ü‚Å ‘‰Á/Œ¸­ ‚³‚¹‚é
+#define MPROC_IncUntil(%1=cntvar,%2=cond,%3=break) MPROC_DoUntil %1,%2,%3,%1 ++
+#define MPROC_DecUntil(%1=cntvar,%2=cond,%3=break) MPROC_DoUntil %1,%2,%3,%1 --
+
+// Ž¯•ÊŽq‚Ìæ“ª‚Ü‚Å–ß‚é
+#defcfunc str_find_ident_top var p1, int offset, int bIsLineSpace
+	if ( offset <= 0 ) { return -1 }
+	i = offset - 1
+	
+	MPROC_DecUntil i, IsSpace2(peek(p1, i), bIsLineSpace) == false
+	if ( i < 0 ) { return -1 }
+	
+	if ( IsSpace2(peek(p1, i), bIsLineSpace) ) { i -- }
+	
+	MPROC_DecUntil i, IsIdent(peek(p1, i)) == false
+	if ( i < 0 ) { i = 0 }
+	i ++
+	
+	MPROC_IncUntil i, IsIdentTop(peek(p1, i)) || peek(p1, i) == 0
+	return offset - i
+	
+#defcfunc CntSpaces var p1, int p2, int bIsLineSpace
+	i = p2
+	while ( IsSpace(peek(p1, i)) || IsNewLine(peek(p1, i)) * (bIsLineSpace != 0) )
+		i ++
+	wend
+	return i - p2
+	
+#defcfunc CntSpacesBack var p1, int p2
+	if ( p2 == 0 ) { return 0 }
+	i = p2 - 1
+	MPROC_DecUntil i, IsSpace(peek(p1, i)) == false
+	return p2 - i - 1
+	
+#global
+
+#endif
