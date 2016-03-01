@@ -15,6 +15,7 @@
 #include "Mo/hsedutil.as"
 #include "Mo/IsMouseButtonSwapped.as"
 #include "Mo/SysCursor.as"
+#include "Mo/SplitterSimple.as"
 #include "Mo/LexCmdline.as"
 #include "Mo/Lvmod.as"
 #include "Mo/mutex.as"
@@ -41,11 +42,13 @@
 		oncmd gosub *OnSizing     , 0x0214		// WM_SIZING      (サイズが変更されている)
 		oncmd gosub *OnNotify     , 0x004E		// WM_NOTIFY
 		oncmd gosub *OnCommand    , 0x0111		// WM_COMMAND
-		oncmd gosub *OnMouseMove  , 0x0200		// WM_MOUSEMOVE   (マウスが動いた)
-		oncmd gosub *OnLBtnDown   , 0x0201		// WM_LBUTTONDOWN
-		oncmd gosub *OnSplitterMove, UWM_SPLITTERMOVE
 		
 		oncmd gosub *OnAlreadyUsed, UWM_ALREADY_USED	// 二重起動された
+		
+		SplitterSimple_Init
+		SplitterSimple_SetWhetherDraggingJudge *LIsMouseOnSplitter
+		SplitterSimple_SetMoveHander           *OnSplitterMove
+		SplitterSimple_SetDefaultWindowCommand
 		
 	onexit  goto *LExit			// 終了時
 	onerror goto *LError		// エラー発生時
@@ -77,7 +80,6 @@
 	DeleteFont hFont
 	CloseMutex
 	if ( peek(curdir) ) { chdir curdir }						// カレントポジションを起動時のモノに戻す
-	if ( bDragging )    { ClipCursor NULL : bDragging = false }	// マウスの移動範囲を解放する
 	if ( bHsed )        { delfile_if_exists HSED_TEMPFILE } // 一時ファイルの削除
 	return
 	
@@ -622,6 +624,22 @@
 	}
 	return
 	
+//------------------------------------------------
+// マウスがスプリッター上にある
+//------------------------------------------------
+*LIsMouseOnSplitter
+	return in_rect( mousex2, mousey2, 5, 5 + heightEdit, ginfo(12) - 10, 10 + heightEdit )
+	
+//------------------------------------------------
+// 仮想スプリッタが動いた
+//------------------------------------------------
+*OnSplitterMove
+	// stat: スプリッタの変位量
+	
+	heightEdit += stat
+	gosub *OnSize
+	return
+	
 //##############################################################################
 //        検索関係
 //##############################################################################
@@ -691,70 +709,4 @@
 	}
 	
 	return 0
-	
-//##############################################################################
-//        マウスＤ＆Ｄ関係
-//##############################################################################
-//------------------------------------------------
-// マウスが仮想スプリッター上を動いた
-//------------------------------------------------
-*OnMouseMove
-	if ( in_rect( mousex2, mousey2, 5, 5 + heightEdit, ginfo(12) - 10, 10 + heightEdit ) ) {
-		SetCursor LoadCursor(IDC_SIZENS)	// 上下
-	}
-	return
-	
-//------------------------------------------------
-// ドラッグ開始
-//------------------------------------------------
-*OnLBtnDown
-	if ( in_rect( mousex2, mousey2, 5, 5 + heightEdit, ginfo(12) - 10, 10 + heightEdit ) ) {
-		// 開始時の位置を記憶する
-		bDragging   = true					// ドラッグ開始フラッグ
-		ptDragStart = ginfo(0), ginfo(1)	// 位置を記憶する
-		
-		// マウスの移動範囲を制限する
-		rc(0) = ginfo(4) + 10
-		rc(1) = ginfo(5) + ( 10 + 80 )
-		rc(2) = ginfo(6) - 10
-		rc(3) = ginfo(7) - ( 40 + 80 )
-		ClipCursor varptr(rc)
-		
-		// 無限ループ
-		repeat
-			getkey bLBtnDown, GETKEY_LBTN
-			if ( bLBtnDown == false ) {
-				break
-			}
-			
-			await 0
-			
-			// 変更し続ける
-			SetCursor LoadCursor(IDC_SIZENS)
-			
-			ptDragEnd   = ginfo(0), ginfo(1)			// 位置を記憶する
-			sendmsg hwnd, UWM_SPLITTERMOVE, 0, 0		// 通知する
-			ptDragStart = ptDragEnd(0), ptDragEnd(1)	// 始点を変更する
-			
-		loop
-		
-		// ドロップされた
-		if ( bDragging ) {			// ドロップ
-			ClipCursor NULL							// 移動制限を解放
-			bDragging = false						// 終了
-			ptDragEnd = ginfo(0), ginfo(1)			// 位置を記憶する
-			
-			sendmsg hwnd, UWM_SPLITTERMOVE, 0, 0	// 終了を通知する
-		}
-	}
-	return
-	
-//------------------------------------------------
-// 仮想スプリッタが動いた
-//------------------------------------------------
-*OnSplitterMove
-	heightEdit += ptDragEnd(1) - ptDragStart(1)		// 変わる
-	
-	gosub *OnSize
-	return
 	
