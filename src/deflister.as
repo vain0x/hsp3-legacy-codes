@@ -41,7 +41,7 @@
 #const UWM_SPLITTERMOVE 0x0400
 
 // ‚»‚Ì‘¼
-#define global HSED_TEMPFILE (ownpath + "\\" + HSED_TEMPFILENAME)
+#define global HSED_TEMPFILE (dir_exe2 + "\\" + HSED_TEMPFILENAME)
 #define global HSED_TEMPFILENAME "hsedtmp.hsp"
 
 #define STR_INIPATH (dir_exe2 + "\\deflister.ini")
