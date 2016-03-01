@@ -1,0 +1,432 @@
+#ifndef IG_MODULECLASS_HSP_DEFINITION_LISTER_HSP
+#define IG_MODULECLASS_HSP_DEFINITION_LISTER_HSP
+
+// HSPスクリプトから定義を収集する。
+// 単一のファイルだけ処理する。(include の先は見に行かない)
+// @ 行番号情報は削除すべき？
+
+#include "pvalptr.hsp"
+#include "array_assign.hsp"
+#include "hsplexer.hsp"
+
+#module MCDeflister \
+	mScript, mTkStrList, mTkTypeList, mCntTokens, \
+	mCount, mFileName, mFilePath, mInclude, mCntInclude, \
+	mIdent, mLn, mType, mScope
+
+#include "common.hsp"
+
+//------------------------------------------------
+// DEFTYPE
+//------------------------------------------------
+#const global DEFTYPE_LABEL		0x0001		// ラベル
+#const global DEFTYPE_MACRO		0x0002		// マクロ
+#const global DEFTYPE_CONST		0x0004		// 定数
+#const global DEFTYPE_FUNC		0x0008		// 命令・関数
+#const global DEFTYPE_DLL		0x0010		// DLL命令
+#const global DEFTYPE_CMD		0x0020		// HPIコマンド
+#const global DEFTYPE_COM		0x0040		// COM命令
+#const global DEFTYPE_IFACE		0x0080		// インターフェース
+
+#const global DEFTYPE_CTYPE		0x0100		// CTYPE
+#const global DEFTYPE_MODULE	0x0200		// モジュールメンバ
+
+//------------------------------------------------
+// 特殊な空間名
+//------------------------------------------------
+#define global AREA_GLOBAL "global"
+#define global AREA_ALL    "*"
+
+//------------------------------------------------
+// コンストラクタ
+//------------------------------------------------
+#define global hspDeflister_new(%1,%2) newmod %1, MCDeflister@, %2
+#modinit str path
+	// メンバ変数を初期化
+	sdim mIdent,, 5
+	dim  mLn,     5
+	dim  mType,   5
+	sdim mScope,, 5
+	sdim mFileName
+	sdim mFilePath, MAX_PATH
+	sdim mInclude,  MAX_PATH
+	dim  mCntInclude
+	
+	mFilePath = path
+	mFileName = getpath(mFilePath, 8)
+	
+	// スクリプトを読み込む
+	notesel  mScript
+	noteload mFilePath
+	noteunsel
+	
+	// 定義をリストアップ
+	hspDeflister_list thismod
+	
+	return getaptr(thismod)
+	
+//------------------------------------------------
+// デストラクタ
+//------------------------------------------------
+#define global hspDeflister_delete(%1) delmod %1
+
+//------------------------------------------------
+// 一括して格納する
+// 
+// @ p2 を負数にすると追加になる -> hspDeflister_add
+//------------------------------------------------
+#define global hspDeflister_set(%1,%2,%3,%4,%5,%6) _hspDeflister_set %1,%2,%3,%4,%5,%6
+#define global hspDeflister_add(%1,%2,%3,%4,%5)    _hspDeflister_set %1,-1,%2,%3,%4,%5
+#modfunc _hspDeflister_set int p2, str ident, int linenum, int deftype, str scope,  local iItem
+	if ( p2 < 0 ) { iItem = mCount : mCount ++ } else { iItem = p2 }
+	mIdent(iItem) = ident
+	mLn   (iItem) = linenum
+	mType (iItem) = deftype
+	mScope(iItem) = scope
+	return iItem
+	
+//------------------------------------------------
+// 一括して取得する
+//------------------------------------------------
+#modfunc hspDeflister_get int p2, var ident, var linenum, var deftype, var scope
+	ident   = mIdent(p2)
+	linenum = mLn   (p2)
+	deftype = mType (p2)
+	scope   = mScope(p2)
+	return
+	
+//------------------------------------------------
+// 各メンバごとの getter
+//------------------------------------------------
+#modfunc hspDeflister_getScript var script
+	script = mScript
+	return
+	
+#modcfunc hspDeflister_getCount
+	return mCount
+	
+#modcfunc hspDeflister_getFilePath
+	return mFilePath
+	
+#modcfunc hspDeflister_getFileName
+	return mFileName
+	
+#modcfunc hspDeflister_getIdent int p2
+	return mIdent(p2)
+	
+#modcfunc hspDeflister_getLn int p2
+	return mLn(p2)
+	
+#modcfunc hspDeflister_getDefType int p2
+	return mType(p2)
+	
+#modcfunc hspDeflister_getScope int p2
+	return mScope(p2)
+	
+#modcfunc hspDeflister_getCntInclude
+	return mCntInclude
+	
+#modcfunc hspDeflister_getInclude int p2
+	return mInclude(p2)
+	
+#modfunc hspDeflister_getTokenList array tkstrlist, array tktypelist
+	array_assign tkstrlist , mTkStrList
+	array_assign tktypeList, mTkTypeList
+	return mCntTokens
+	
+//------------------------------------------------
+// include ファイルを配列にして返す
+//------------------------------------------------
+#modfunc hspDeflister_getIncludeArray array p2
+	sdim p2,, mCntInclude
+	repeat    mCntInclude
+		p2(cnt) = mInclude(cnt)
+	loop
+	return
+	
+//------------------------------------------------
+// 範囲名を作成する
+// @private
+// @static
+//------------------------------------------------
+#deffunc MakeScope@MCDeflister var scope, str defscope, int deftype, int bGlobal, int bLocal
+	if ( bGlobal ) { scope = AREA_ALL : return }
+	
+	scope = defscope
+	
+	if ( bLocal ) { scope += " [local]" }
+	return
+	
+//------------------------------------------------
+// 定義をリストアップする
+//------------------------------------------------
+#define nowTkType mTkTypeList(idx)
+#define nowTkStr  mTkStrList (idx)
+
+#modfunc hspDeflister_list  \
+	local lexer, local befTkType, local idx, local sIdent, local areaScope, local scope, \
+	local nowline, local bGlobal, local bLocal, local deftype, local uniqueCount, local fSplit
+	
+	// 字句解析
+	fSplit  = HspLexer_Flag_NoBlank
+	
+	dim lexer
+	hspLexer_new lexer
+	hspLexer_set lexer, fSplit
+	hspLexer_lex lexer, mTkTypeList, mTkStrList, mScript
+	
+	mCntTokens = stat
+	if ( mCntTokens <= 0 ) {
+		return 0
+	}
+	
+	hspLexer_delete lexer
+	
+	// 準備
+	sdim sIdent
+	sdim scope
+	sdim areaScope
+	
+	dim listIndex, 5	// 文字インデックスのリスト( 高速化のために使う )
+	
+	nowline     = 0
+	uniqueCount = 0
+	areaScope   = AREA_GLOBAL
+	befTkType   = TKTYPE_END
+	
+	repeat mCntTokens
+		gosub *LNextToken
+		if ( idx >= mCntTokens ) {
+			break
+		}
+	loop
+	
+	return mCount
+	
+*LProcToken
+	switch ( nowTkType )
+		
+		//--------------------
+		// 文の終端
+		//--------------------
+		case TkType_End
+			c = peek(nowTkStr)
+			if ( IsNewLine( c ) ) {
+				nowline ++
+			}
+			swbreak
+			
+		//--------------------
+		// 改行回避
+		//--------------------
+		case TkType_EscLineFeed
+			nowline ++
+			swbreak
+			
+		//--------------------
+		// コメント
+		//--------------------
+		case TkType_Comment
+			// 複数行コメントの場合、行数を数える
+			if ( wpeek(nowTkStr) == 0x2A2F ) {		// /*
+				gosub *LCountLines
+			}
+			swbreak
+			
+		//--------------------
+		// 文字列
+		//--------------------
+		case TkType_String
+			// 複数行文字列定数の場合、行数を数える
+			if ( wpeek(nowTkStr) == 0x227B ) {		// {"
+				gosub *LCountLines
+			}
+			swbreak
+			
+		//--------------------
+		// ラベル
+		//--------------------
+		case TkType_Label
+			// 行頭の場合のみ
+			if ( befTkType == TkType_End ) {
+				sIdent = nowTkStr
+				
+				gosub *LDecideModuleName
+				
+				// リストに追加
+				deftype = DEFTYPE_LABEL
+				gosub *LAddDefList
+			}
+			swbreak
+			
+		//--------------------
+		// プリプロセッサ命令
+		//--------------------
+		case TkType_PreProc
+			deftype  = 0
+			bGlobal  = true
+			bLocal   = false
+			
+			ppident  = CutPreprocIdent@MCHspLexer(nowTkStr) // 識別子部分だけにする
+			
+			switch ( ppident )
+				
+				// モジュール空間に突入
+				case "module"
+					gosub *LNextToken
+					
+					// #module "modname" の形式
+					if ( nowTkType == TkType_String ) {
+						nowTkStr = CutStrInner@MCHspLexer(nowTkStr)
+						
+					// #module modname の形式
+					} else : if ( nowTkType == TkType_Ident ) {
+						
+					// 無名モジュール
+					} else {
+						// ユニークな空間名を与える
+						nowTkStr = strf("m%02d [unique]", uniqueCount)
+						uniqueCount ++
+					}
+					
+					areaScope = nowTkStr
+					swbreak
+					
+				// モジュール空間から脱出
+				case "global"
+					areaScope = AREA_GLOBAL
+					swbreak
+					
+				case "include"
+				case "addition"
+					gosub *LNextToken
+					
+					if ( nowTkType == TkType_String ) {
+						nowTkStr = CutStrInner@MCHspLexer( nowTkStr )
+						
+						mInclude(mCntInclude) = nowTkStr
+						mCntInclude ++
+						
+;						logmes "#include "+ nowTkStr
+					} else {
+						logmes "[Warning] in mod_deflist line "+ nowline +"\nBad #include Syntax:\n\t#include "+ nowTkStr +"\n\tTKTYPE = "+ nowTkType
+					}
+					swbreak
+					
+				case "modfunc"  : deftype  = DEFTYPE_MODULE
+				case "deffunc"  : deftype |= DEFTYPE_FUNC                    : goto *LAddDefinition
+				case "modcfunc" : deftype  = DEFTYPE_MODULE
+				case "defcfunc" : deftype |= DEFTYPE_FUNC   | DEFTYPE_CTYPE  : goto *LAddDefinition
+				case "define"   : deftype  = DEFTYPE_MACRO : bGlobal = false : goto *LAddDefinition
+				case "const"
+				case "enum"     : deftype  = DEFTYPE_CONST : bGlobal = false : goto *LAddDefinition
+				case "cfunc"    : deftype  = DEFTYPE_CTYPE
+				case "func"     : deftype |= DEFTYPE_DLL   : bGlobal = false : goto *LAddDefinition
+				case "cmd"      : deftype  = DEFTYPE_CMD   : bGlobal = true  : goto *LAddDefinition
+				case "comfunc"  : deftype  = DEFTYPE_COM   : bGlobal = false : goto *LAddDefinition
+				case "usecom"   : deftype  = DEFTYPE_IFACE : bGlobal = false : goto *LAddDefinition
+			:*LAddDefinition
+					gosub *LNextToken
+					
+					switch ( nowTkStr )
+						case "global" : bGlobal  = true                  : goto *LAddDefinition
+						case "ctype"  : deftype |= DEFTYPE_CTYPE         : goto *LAddDefinition
+						case "local"  : bGlobal  = false : bLocal = true : goto *LAddDefinition
+						case "double" : goto *LAddDefinition
+						
+						// 定義される識別子
+						default:
+							sIdent = nowTkStr
+							swbreak
+					swend
+					
+					// スコープを解決
+					gosub *LDecideModuleName
+					if ( scope != areaScope ) {		// ident@scope の場合
+						bGlobal = false
+					}
+					
+					// 範囲を作成
+					MakeScope scope, areaScope, deftype, bGlobal, bLocal
+					
+					// リストに追加
+					gosub *LAddDefList
+					swbreak
+			swend
+			swbreak
+	swend
+	return
+	
+*LAddDefList
+	hspDeflister_add thismod, sIdent, nowline, deftype, scope
+	return
+	
+*LNextToken
+	befTkType = nowTkType
+	
+	idx ++
+	if ( idx >= mCntTokens ) {
+		nowTkStr  = ""
+		nowTkType = TkType_Error
+		
+	} else {
+		gosub *LProcToken
+	}
+	return
+	
+*LCountLines
+	notesel nowTkStr
+	nowline += notemax - 1		// 行数
+	noteunsel
+	return
+	
+//----------------------------
+// モジュール空間名を決定する
+//----------------------------
+*LDecideModuleName
+	if ( idx == mCntTokens ) {
+		goto *LDecideModuleName_areaScope
+	}
+	
+	if ( mTkTypeList(idx + 1) == TkType_Scope ) {
+		
+		gosub *LNextToken
+		
+		if ( nowTkStr == "@" ) {
+			scope = AREA_GLOBAL
+		} else {
+			scope = nowTkStr
+		}
+		return
+		
+	}
+*LDecideModuleName_areaScope
+	scope = areaScope
+	return
+	
+//------------------------------------------------
+// 定義タイプから TkTypeEx を得る
+// @static
+//------------------------------------------------
+#defcfunc getTkTypeFromDefType int deftype,  local stype, local bCType
+	if ( deftype & DEFTYPE_LABEL ) { return TkType_Label     }
+	if ( deftype & DEFTYPE_MACRO ) { return TkTypeEx_Macro   }
+	if ( deftype & DEFTYPE_CONST ) { return TkTypeEx_Const   }
+	if ( deftype & DEFTYPE_DLL   ) { return TkTypeEx_DllFunc }
+	if ( deftype & DEFTYPE_CMD   ) { return TkTypeEx_Cmd     }
+	if ( deftype & DEFTYPE_COM   ) { return TkTypeEx_DllFunc }
+	if ( deftype & DEFTYPE_IFACE ) { return TkTypeEx_IFace   }
+	
+	if ( deftype & DEFTYPE_FUNC  ) {
+		if ( (deftype & DEFTYPE_CTYPE) == false ) {
+			return TkTypeEx_DefSttm
+		} else {
+			return TkTypeEx_DefFunc
+		}
+	}
+	
+	return TkType_None
+	
+#global
+
+#endif
