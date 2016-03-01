@@ -1,14 +1,13 @@
-// ctype
+#ifndef IG_CHARCTOR_TYPE_HSP
+#define IG_CHARCTOR_TYPE_HSP
 
-#ifndef __CHARCTOR_TYPE_AS__
-#define __CHARCTOR_TYPE_AS__
+// 文字のタイプの判定
 
-#ifndef __UserDefHeader__
+#ifndef __userdef__
 #define ctype numrg(%1,%2=0,%3=MAX_INT) (((%2) <= (%1)) && ((%1) <= (%3)))
 #endif
 
 #define ctype IsSJIS1st(%1) (numrg(%1, 0x81, 0x9F) || numrg(%1, 0xE0, 0xFC))// 全角第一バイトを判定
-;#define ctype IsSJIS1st(%1) ( (((%1) ^ 0x20) - 0xA1) < 0x3C)// 巧妙バージョン ( ttp://www.st.rim.or.jp/~phinloda/cqa/cqa15.html#Q4 )
 #define ctype IsSJIS2nd(%1) (numrg(%1, 0x40, 0x7E) || numrg(%1, 0x80, 0xFC))// 全角第二バイトを判定
 
 #define ctype IsAlpha(%1)   ( IsAlphaLw(%1) || IsAlphaUp(%1) )
@@ -26,5 +25,7 @@
 #define ctype IsBlank(%1)   ( IsSpace(%1) || IsNewLine(%1) )
 #define ctype IsSpace2(%1,%2=0) ( IsSpace(%1) || ((%2) != 0) * IsNewLine(%1) )
 #define ctype IsNull(%1)    ( (%1) == 0 )
+
+#define ctype IsPrint(%1) ( ((%1) & 0x60) != 0 && (%1) != 0x7F )
 
 #endif
