@@ -1,0 +1,45 @@
+#ifndef ig_module_search_file_ex_hsp
+#define ig_module_search_file_ex_hsp
+
+// 指定の検索パスを使って、ファイルを検索する
+
+#module SearchFileEx_mod
+
+#uselib "kernel32.dll"
+#func   GetFullPathName@SearchFileEx_mod "GetFullPathNameA" sptr,int,int,nullptr
+
+#define MAX_PATH 260
+
+#deffunc SearchFileEx str _pathlist, str fname,  \
+	local curdir, local filepath, \
+	local pathlist, local paths, local paths_len
+	
+	curdir = dir_cur
+	sdim filepath, MAX_PATH
+	
+	pathlist = _pathlist
+	split pathlist, ";", paths
+	paths_len = stat
+	
+	// カレントディレクトリも検索パスに加える
+	paths(paths_len) = curdir
+	paths_len ++
+	
+	repeat paths_len
+		if ( paths(cnt) == "" ) { continue }
+		
+		chdir paths(cnt)
+		exist fname
+		if ( strsize >= 0 ) {
+			GetFullPathName fname, MAX_PATH, varptr(filepath)
+			break
+		}
+	loop
+	
+	// カレントディレクトリを元に戻す
+	chdir curdir
+	return filepath
+	
+#global
+
+#endif
