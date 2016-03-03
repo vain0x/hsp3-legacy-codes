@@ -1,0 +1,30 @@
+#ifndef        ig_abdata_header_hsp
+#define global ig_abdata_header_hsp
+
+#ifdef _debug
+	#define declvar@__abdata(%1) if 0 { dim %1 }
+#else
+	#define declvar@__abdata(%1) :
+#endif //defined(_debug)
+
+	declvar@__abdata stt_allinsts@__abdata
+	declvar@__abdata defvar@__abdata
+
+#define ctype _cat@__abdata(%1,%2)%1%2
+#define _empty@__abdata//
+
+#define global ctype abdataInsts(%1) stt_allinsts@__abdata(%1)
+#define global abdataInsts_var stt_allinsts@__abdata
+#define global abdataNull      0
+
+#define true@__abdata 1
+#define false@__abdata 0
+
+#define global abdata_sort_ascending 0
+#define global abdata_sort_decending 1
+#define global abdata_ix_end (-127)
+#define global stdarray_index_of_end (-127)
+
+	dimtype nullmod@__abdata, 5 // vartype("struct")
+
+#endif
