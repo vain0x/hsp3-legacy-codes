@@ -1,0 +1,47 @@
+// Light Filer - Variable
+
+#ifndef __LFILER_SUB_VARIABLE_HSP__
+#define __LFILER_SUB_VARIABLE_HSP__
+
+*LClearVariable
+	// global
+	sdim ownpath, MAX_PATH
+	dim  hWindow, IDW_MAX
+	
+	// main window
+	dim  winsize, 2
+	dim  hTab
+	dim  _tvcx
+	dim  bUseTv
+	dim  infTb, 2
+	dim  infSb, 2
+	dim  TbHeight
+	dim  SbHeight
+	
+	// pathbar
+	sdim curPath, MAX_PATH
+	dim  infPathBox, 2
+	
+	// utility
+	dim  rect, 4
+	dim  tabrect, 4
+	sdim stmp, 320
+	
+	// ê›íËì«Ç›çûÇ›Ç»Ç«
+	ownpath = GetOwnpath("D:/repo/LFiler/src")
+	SetIniName ownpath +"\\"+ STR_ININAME
+	
+	exist INIPATH
+	if ( strsize < 0 ) {
+		bsave INIPATH, INIPATH, 0		// ãÛÇÃÉtÉ@ÉCÉãÇçÏê¨
+	}
+	
+	winsize(0) = GetIntIni("Startup", "cx")
+	winsize(1) = GetIntIni("Startup", "cy")
+	
+	bUseTv = GetIntIni("Window", "bUseTv")
+	_tvcx  = GetIntIni("Window", "tvcx")
+	
+	return
+	
+#endif

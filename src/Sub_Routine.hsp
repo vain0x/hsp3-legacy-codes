@@ -1,0 +1,126 @@
+// Light Filer - Routine
+
+#ifndef __LFILER_SUB_ROUTINE_HSP__
+#define __LFILER_SUB_ROUTINE_HSP__
+
+//##############################################################################
+//        メッセージハンドラ
+//##############################################################################
+*OnKeyProc
+	switch ( ginfo(3) )
+	case IDW_MAIN
+		getkey bCtrl, 17
+		if ( bCtrl && iparam == 'N' ) {
+			CreateNewView , actTabIdx + 1
+			SetActiveView stat
+			
+		} else {
+			objsel -1
+			if ( stat == infPath(1) ) {
+				if ( iparam == 13 ) {
+					View_GoDir actView, GetRealPath(curPath)
+				}
+			}
+		}
+		swbreak
+	swend
+	return
+	
+*OnSize
+	winsize(0) = LOWORD(lparam)
+	winsize(1) = HIWORD(lparam)
+	
+	MoveWindow    hTab, PX_TAB,  PY_TAB,  CX_TAB,  CY_TAB,  true
+	MoveWindow infPath, PX_PATH, PY_PATH, CX_PATH, CY_PATH, true
+	MoveWindow   infTb, PX_TB,   PY_TB,   CX_TB,   CY_TB,   true
+	MoveWindow   infSb, PX_SB,   PY_SB,   CX_SB,   CY_SB,   true
+	
+	foreach mView
+		AdjustWindowRect mTab, WtoI( mTab, View_wID( mView(cnt) ) - IDW_TABTOP )
+		View_OnSize mView(cnt)
+	loop
+	
+	return
+	
+*OnSizing
+	OnSizingToFlexFrame 120, 80
+	return
+	
+*OnNotify
+	dupptr nmhdr, lparam, 12
+	notify_result = 0.0
+	
+	gosub *OnNotify_tab
+	gosub *OnNotify_toolbar
+	
+	if ( vartype(notify_result) == 3 ) {
+		return
+	}
+	return notify_result
+	
+*OnOpenNewView
+	dupptr lpPath, lparam, 1, 2
+	CreateNewView lpPath, actTabIdx + 1
+	return
+	
+// wp = tab window's absID, lp = ptr to path
+*OnSetPath
+	dupptr lpPath, lparam, 1, 2
+	stmp     = lpPath
+	iSentTab = WtoI(mTab, wparam - IDW_TABTOP)
+	
+	gsel IDW_MAIN
+	
+	// アクティブなタブから送られてきたら、画面の他も修整する
+	if ( iSentTab == actTabIdx ) {
+		objprm infPath(1),     stmp
+		SetTitle GetFolderName(stmp)
+	}
+	SetTabStrItem mTab, iSentTab, GetFolderName(stmp)
+	return
+	
+// wp = iTabItem, lp = ZERO
+*OnActViewChange
+	iSentTab_avc = wparam
+	ShowTab mTab,  wparam
+	View_OnActivate mView( TabInt(mTab, iSentTab_avc) )
+	return
+	
+//##############################################################################
+//        サブルーチン群
+//##############################################################################
+*LInitialize
+	gsel 0, -1
+	CheckMouseButton
+	
+	gosub *LClearVariable		// 変数を初期化
+	gosub *LSetScreen			// ウィンドウを準備
+	gosub *LInitDefaultViews	// 初期ビューを準備
+	gosub *LSetInterrupt		// 割り込みを設定
+	return
+	
+*LInitDefaultViews
+	// 終了時のビューを開く
+	repeat GetIntIni("StartFolders", "count")
+		CreateNewView IniLoad("StartFolders", strf("n%02d", cnt))
+		if ( cnt == 0 ) {
+			sendmsg whMain, UWM_SETPATH, 0, IniLoad("StartFolders", "n00")
+		}
+	loop
+	
+	// 一つもなければ、デフォルトのビューを開く
+	if ( GetTabNum(mTab) == 0 ) {
+		CreateNewView "", 0
+	}
+	
+	// 1つめのビューを前面にする
+	gsel IDW_TABTOP, 1
+	ShowTab mTab, 0
+	return
+	
+// データを保存する
+*LSaveData
+	
+	return
+	
+#endif

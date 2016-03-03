@@ -1,0 +1,62 @@
+// Light Filer - GlobalFunction
+
+#ifndef __LFILER_GLOBAL_FUNCTION_HSP__
+#define __LFILER_GLOBAL_FUNCTION_HSP__
+
+// パスの正規化
+#defcfunc GetRealPath str p1, local path
+	sdim path, MAX_PATH
+	path = getpath(p1, 16)
+	if ( peek(path, 1) == ':' ) { return p1 }
+	
+	// キーワードの場合
+	if ( peek(path) == '@' ) {
+		
+		getstr path, path, 1
+		
+		switch ( path )
+			case "windows" : return dirinfo(2)
+			case "mydoc"   : return dirinfo(0x10005)
+			case "sendto"  : return dirinfo(0x10009)
+			case "ごみ箱"
+			case "dustbox" : return dirinfo(0x1000A)
+			case "デスクトップ"
+			case "desktop" : return dirinfo(0x10000)
+			default
+				path = "$default"
+				swbreak
+		swend
+		
+	// 定義済みディレクトリ
+	} else : if ( peek(path) == '$' ) {
+		getstr path, path, 1
+		GetIni "ShortcutPath", path, path, MAX_PATH, "$default"
+		
+	// 空文字列ならdefault
+	} else : if ( peek(path) == 0 ) {
+		path = "$default"
+		
+	// カレントから探す
+	} else {
+		path = dirinfo(0) +"\\"+ path
+	}
+	
+	if ( peek(path) == '$' || peek(path) == '@' ) {
+		path = GetRealPath(path)
+	}
+	
+	return path
+	
+// 新しいビューを開く( path, タブ位置 )
+#define global CreateNewView(%1="$default",%2=-1) _CreateNewView %1,%2
+#deffunc _CreateNewView str p1, int p2, local path, local iTabItem
+	sdim path, MAX_PATH
+	path = GetRealPath(p1)
+	
+	InsertTab mTab, getpath(path, 8), p2 : iTabItem = stat
+	newmod   mView, MCView, whMain, IDW_TABTOP + ItoW(mTab, iTabItem), path
+	TabIntSet mTab, iTabItem, stat
+	
+	return iTabItem
+	
+#endif

@@ -1,0 +1,109 @@
+// Light Filer - Control
+
+#ifndef __LFILER_CONTROL_HSP__
+#define __LFILER_CONTROL_HSP__
+
+//######## ツールバー ##########################################################
+#define TBN_DROPDOWN		-710
+#define TB_BUTTONSTRUCTSIZE	0x041E
+#define TB_ADDBITMAP		0x0413
+#define TB_AUTOSIZE			0x0421
+#define TB_ADDBUTTONS		0x0414
+#define TB_SETEXTENDEDSTYLE 0x0454
+#define TB_GETRECT			0x0433
+#define TBSTYLE_TOOLTIPS	0x0100
+#define TBSTYLE_EX_DRAWDDARROWS 1
+#define TTN_NEEDTEXT		0xFFFFFDF8
+
+*LCreateToolBar
+	// ビットマップを作成する
+	buffer IDW_ICON, 16 * MAX_TOOLBTN, 16
+	picload "resource/toolimg.bmp"
+	hToolBmp = CreateDIB(0, 0, 16 * MAX_TOOLBTN, 16)
+	
+	// ツールバーを作成する
+	gsel IDW_MAIN
+	winobj "ToolbarWindow32", "", 0, 0x50000000 | 0x0800 | 0x0001 | TBSTYLE_TOOLTIPS
+	infTb = objinfo(stat, 2), stat
+	
+	sendmsg infTb, TB_BUTTONSTRUCTSIZE, 20, 0
+	sendmsg infTb, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_DRAWDDARROWS
+	
+	tbadd(0) = 0			// HINST_COMMCTRL
+	tbadd(1) = hToolBmp		// IDB_STD_SMALL_COLOR
+	sendmsg infTb, TB_ADDBITMAP, MAX_TOOLBTN, varptr(tbadd)
+	
+	dim tbb, MAX_TOOLBTN * 5
+		tbb( 0) = 0, IDT_BACK, (8 << 8) | 4, 0, 0	// 戻る
+		tbb( 5) = 1, IDT_NEXT, (8 << 8) | 4, 0, 0	// 進む
+		tbb(10) = 2, IDT_UP,     0x04, 0, 0			// 上へ
+		tbb(15) = 3, IDT_FOLDER, 0x04, 0, 0			// 新規フォルダ
+		tbb(20) = 4, IDT_DOS,    0x04, 0, 0			// DOS
+		tbb(25) = 5, IDT_RENEW,  0x04, 0, 0			// 更新
+		tbb(30) = 6, IDT_DELETE, 0x04, 0, 0			// 削除
+	sendmsg infTb, TB_ADDBUTTONS, MAX_TOOLBTN, varptr(tbb)
+	sendmsg infTb, TB_AUTOSIZE, 0, 0
+	
+	// 高さを得る
+	GetWindowRect infTb, varptr(rect)
+	TbHeight = rect(3) - rect(1)
+	
+	// ツールチップ文字列を設定
+	sdim tbTooltipStr, 32, MAX_TOOLBTN
+	tbTooltipStr = "戻る", "進む", "一つ上の階層へ", "新規フォルダ作成", "コマンドプロンプト", "更新", "選択ファイル削除"
+	
+	return
+	
+*OnNotify_toolbar
+	if ( nmhdr(2) == TTN_NEEDTEXT ) {
+		dupptr tooltiptext, lparam, 104
+		
+		// lp.1 = NMHDR.idFrom ← ボタン番号
+		// lp.3 = TOOLTIPTEXT.lpszText ← テキストのポインタをセットして返す
+		tooltiptext(3) = varptr( tbTooltipStr( tooltiptext(1) ) )
+	}
+	return
+	
+//######## ステータスバー ######################################################
+*LCreateStatusBar
+	winobj "msctls_StatusBar32", "ready", , 0x50000000, ginfo(20), ginfo(21)
+	infSb = objinfo(stat, 2), stat
+	
+	GetWindowRect infSb, varptr(rect)	// rect 取得
+	SbHeight = rect(3) - rect(1)		// 高さ取得
+	return
+	
+//######## タブコントロール ####################################################
+*LCreateTabControl
+	
+	CreateTab mTab, ginfo(20), ginfo(21), IDW_TABTOP, 0x8000
+	hTab = stat
+	
+	MoveWindow hTab, PX_TAB, PY_TAB, CX_TAB, CY_TAB, true
+	
+	return
+	
+// Tab が送ってくるメッセージ
+*OnNotify_tab
+	if ( nmhdr(0) != hTab ) { return }
+	if ( nmhdr(2) == -551 ) {
+		gosub *OnTabChanged
+	}
+	return
+	
+// タブ項目の選択が変わった
+*OnTabChanged
+	ChangeTab mTab
+	View_OnActivate mView( TabInt(mTab, stat) )
+	return
+	
+//######## パスボックス ########################################################
+*LCreatePathbox
+	objmode 2, 0
+	font "MS Gothic", 12
+	pos            PX_PATH, PY_PATH
+	input curPath, CX_PATH, CY_PATH, MAX_PATH
+	infPath = objinfo(stat, 2), stat
+	return
+	
+#endif

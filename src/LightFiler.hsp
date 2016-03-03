@@ -1,0 +1,71 @@
+// Light Filer - main
+
+#packopt name "LFiler"
+#packopt hide 1
+
+#define __USE_TABINT__
+
+#include "Mo/userdef.as"
+#include "Mo/BitmapMaker.as"
+#include "Mo/flexFrame.as"
+#include "Mo/GetOwnpath.as"
+#include "Mo/ini.as"
+#include "Mo/IsMouseButtonSwapped.as"
+#include "Mo/Lvmod.as"
+#include "Mo/Tvmod.as"
+#include "Mo/Tabmod.as"
+#include "Mo/mutex.as"
+
+#include "LFilerMessage.as"
+#include "LightFiler.as"
+#include "MCView.as"
+
+	goto *main
+
+#include "Sub_GFunc.hsp"
+#include "Sub_Control.hsp"
+#include "Sub_Screen.hsp"
+#include "Sub_Variable.hsp"
+#include "Sub_Command.hsp"
+#include "Sub_Routine.hsp"
+
+//##############################################################################
+//        メイン・ルーチン
+//##############################################################################
+*main
+	if ( IsUsedByMutex("LFilerMutex_Udsoft") ) { end }
+	
+	gosub *LInitialize		// 初期化
+	
+	View_OnActivate actView
+	gsel IDW_MAIN, 1
+	stop
+	
+// 割り込みを設定
+*LSetInterrupt
+	gsel IDW_MAIN
+		oncmd gosub *OnSize,    0x0005
+		oncmd gosub *OnSizing,  0x0214
+		oncmd gosub *OnNotify,  0x004E
+		oncmd gosub *OnCommand, 0x0111
+		
+		oncmd gosub *OnOpenNewView,   UWM_OPENNEWVIEW
+		oncmd gosub *OnSetPath,       UWM_SETPATH
+		oncmd gosub *OnActViewChange, UWM_ACTVIEW_CHANGE
+		
+	onkey  gosub *OnKeyProc
+	onexit gosub *exit
+	return
+	
+// 終了時の割り込み
+*exit
+	// 終了時の保存
+	gosub *LSaveData
+	
+	// 終了
+	onerror false
+	oncmd   false
+	onexit  false
+	PostMessage whMain, 0x0010, 0, 0
+	return
+	

@@ -1,0 +1,23 @@
+// Light Filer - Screen
+
+#ifndef __LFILER_SUB_SCREEN_HSP__
+#define __LFILER_SUB_SCREEN_HSP__
+
+#include "Mo/CreateChildWindow.as"
+
+*LSetScreen
+	//-------- メインウィンドウ --------
+	screen IDW_MAIN, ginfo(20), ginfo(21), 2 + 16, (ginfo(20) - winsize(0)) / 2, (ginfo(21) - winsize(1)) / 2, winsize(0), winsize(1)
+		SetTitle "untitled"
+		whMain = hwnd
+		SetStyle hwnd, -16, 0x00040000 | 0x00010000 | (0x01000000 * GetIntIni("Startup", "bMaxed"))
+		
+		syscolor 15 : boxf : color
+		gosub *LCreateToolBar		// ToolBar
+		gosub *LCreateStatusBar		// StatusBar
+		gosub *LCreatePathbox		// Pathbox (EditControl)
+		gosub *LCreateTabControl	// TabControl
+		
+	return
+	
+#endif
