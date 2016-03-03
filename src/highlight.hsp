@@ -1,0 +1,24 @@
+#ifndef        ig_hsp_green_highlight_hsp
+#define global ig_hsp_green_highlight_hsp
+
+//スクリプトエディタにマクロではないキーワードをハイライトさせる
+
+#define self
+#undef  self
+
+#define global global
+#undef  global
+
+#define ctype ctype
+#undef  ctype
+
+#define var
+#undef  var
+
+#define array
+#undef  array
+
+#define local
+#undef  local
+
+#endif
