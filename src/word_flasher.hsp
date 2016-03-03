@@ -5,9 +5,10 @@
 #packopt name Str_AppName
 #packopt hide 1
 
+#include "hsp_green/src/all.hsp"
 #include "abdata/abdata/all.hsp"
+#include "hspini/ini.hsp"
 #include "Mo/SearchFileEx.as"
-#include "Mo/MCIni.as"
 #include "Mo/MCMultiString.as"
 #include "Mo/mod_xrnd.as"
 
@@ -101,14 +102,16 @@
 	
 	MStr_chainSplitString keylist, srcKeylist, ","
 	
-	IterateBegin keylist, MStr, key
+	repeat MStr_size(keylist) 
+		MStr_getv keylist, key, cnt
 		srcFilelist = ini_gets(ini, "Filelist", key)
 		expath      = ini_gets(ini, "Filelist", key + ".path")		// このキーのファイル群の検索時にのみ使う、フォルダのリスト
 		
 		MStr_clear            filelist
 		MStr_chainSplitString filelist, srcFilelist, ","
 		
-		IterateBegin filelist, MStr, fname
+		repeat MStr_size(filelist)
+			MStr_getv filelist, fname, cnt
 			
 			// ファイルを検索
 			SearchFileEx expath + ";" + pathSearch, fname
@@ -117,7 +120,7 @@
 			exist fname
 			if ( strsize < 0 ) {
 				ini_puts ini, "Error", fname, "can't be found."		// エラーを書いておく
-				_continue
+				continue
 			}
 			
 			// 辞書データを解析
@@ -128,15 +131,16 @@
 			repeat MStr_size(wordlist)
 				MStr_clear            dataSplitter
 				MStr_chainSplitString dataSplitter, MStr_get(wordlist, cnt), "\t"
+				if ( MStr_size(dataSplitter) < 2 ) { assert : continue }
 				unor_add tmpDict, MStr_get(dataSplitter, 0), stresc( MStr_get(dataSplitter, 1) )	// データの方は esc する
 			loop
 			
 			// 辞書リストに追加
 			unor_add dictlist, fname, tmpDict
 			
-		IterateEnd
+		loop
 		
-	IterateEnd
+	loop
 	
 	return
 	
@@ -189,7 +193,7 @@
 *LInitScreen
 	screen IDW_Main, ,, (screen_hide | screen_tool), ,, ginfo_dispx, ginfo_dispy
 		title Str_AppName
-		SetStyle hwnd, -16, 0x40000		// 可変枠
+		;SetStyle hwnd, -16, 0x40000		// 可変枠
 		
 	return
 	
