@@ -5,11 +5,7 @@
 #packopt name Str_AppName
 #packopt hide 1
 
-#include "Mo/abdata/unor.as"
-#include "Mo/abdata/list.as"
-#include "Mo/abdata/pair.as"
-#include "Mo/abdata/alg_iter.as"
-#include "Mo/GetOwnpath.as"
+#include "abdata/abdata/all.hsp"
 #include "Mo/SearchFileEx.as"
 #include "Mo/MCIni.as"
 #include "Mo/MCMultiString.as"
@@ -53,8 +49,6 @@
 	randomize
 	
 	gosub *LInitScreen
-	
-	ownpath = GetOwnpath("H:/Docs/prg/hsp/ProjSmall/WordFlasher")
 	gosub *LLoadSetting
 	gosub *LLoadWordlist
 	gosub *LCreateDatabase
@@ -85,7 +79,7 @@
 //                  ÉfÅ[É^èàóù
 //##############################################################################
 *LLoadSetting
-	ini_new ini, ownpath + "/" + Str_IniName
+	ini_new ini, dir_exe2 + "/" + Str_IniName
 	
 	span       = ini_geti(ini, "Option", "span")
 	fontFamily = ini_gets(ini, "Option", "fontFamily")
