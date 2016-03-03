@@ -1,0 +1,106 @@
+#include "abtest_header.hsp"
+
+#module
+#defcfunc make_iota_unor int n,  local self
+	self = unor_make()
+	repeat n
+		unor_add self, "#" + cnt, cnt
+	loop
+	return self
+#global
+
+	//追加
+	
+	un = unor_make()
+	assert unor_size(un) == 0
+	
+	unor_add un, "#0", "val0"
+	assert unor_size(un) == 1
+	assert unor_get(un, "#0") == "val0"
+	
+	unor_add un, "#1", 1
+	assert unor_size(un) == 2
+	assert unor_get(un, "#0") == "val0"
+	assert unor_get(un, "#1") == 1
+	
+	//追加に失敗
+	unor_add un, "#1", -1
+	assert unor_size(un) == 2
+	assert unor_get(un, "#1") == 1
+	
+	//参照化
+	un = make_iota_unor(3)
+	
+	declvar r
+	unor_dup un, "#1", r
+	assert r == 1
+	r = 99
+	assert unor_get(un, "#1") == 99
+	
+	unor_ref(un, "#2") = 99
+	assert unor_get(un, "#2") == 99
+	
+	//書き換え
+	un = make_iota_unor(3)
+	unor_set un, "#1", -1
+	assert unor_size(un) == 3
+	assert unor_get(un, "#1") == -1
+	
+	//除去
+	
+	un = make_iota_unor(5)
+	assert unor_size(un) == 5
+	unor_erase un, "#2"
+	assert unor_size(un) == 5 - 1
+	repeat 5
+		if ( cnt == 2 ) {
+			assert unor_count_key(un, "#2") == 0
+		} else {
+			assert unor_get(un, "#" + cnt) == cnt
+		}
+	loop
+	
+	//消去
+	
+	un = make_iota_unor(3)
+	unor_clear un
+	assert unor_size(un) == 0
+	
+	//連結
+	
+	un0 = make_iota_unor(3)
+	un1 = unor_make()
+	repeat 4
+		unor_add un1, "@" + cnt, double(cnt)
+	loop
+	unor_chain un0, un1
+	assert unor_size(un0) == 3 + 4
+	repeat 3
+		assert unor_get(un0, "#" + cnt) == cnt
+	loop
+	repeat 4
+		assert unor_get(un0, "@" + cnt) == double(cnt)
+	loop
+	
+	//共有参照ではないこと
+	unor_set un0, "@3", M_PI
+	assert unor_get(un1, "@3") == double(3)
+	
+	//数え上げ
+	un = make_iota_unor(3)
+	unor_add un, "#3", "2"
+	two_str = "2"
+	assert unor_count_value(un, two_str) == 1
+	assert unor_count_value(un, defvar@__abdata) == 1
+	assert unor_count_key(un, "#2") == 1
+	assert unor_count_key(un, "#4") == 0
+	
+	//比較
+	un0 = make_iota_unor(3)
+	un1 = make_iota_unor(2)
+	unor_add un1, "#3", -1
+	assert unor_compare(un0, un0) == 0
+	assert unor_compare(un0, un1) < 0
+	assert unor_compare(un1, un0) > 0
+	
+	logmes "Unor test completed."

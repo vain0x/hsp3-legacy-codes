@@ -1,0 +1,17 @@
+
+#include "../abdata/all.hsp"
+	
+	// 要素数10の配列
+	ls = list_make()
+	repeat 10
+		list_push_back ls, strf("#%02d", cnt)
+	loop
+	
+	// ls の各要素について反復
+	IterateBegin ls, list, it
+		// it に要素の値が代入される
+		
+		mes strf("ls(%d) = %s", cnt, it)
+	IterateEnd
+	stop
+	
