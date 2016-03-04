@@ -3,10 +3,9 @@
 // 制約
 // @ 1つのウィンドウにのみ使用できる
 // @ 非マルチプルインスタンス
-//
 
-#ifndef IG_SPLITTER_SIMPLE_AS
-#define IG_SPLITTER_SIMPLE_AS
+#ifndef IG_SPLITTER_SIMPLE_HSP
+#define IG_SPLITTER_SIMPLE_HSP
 
 #module SplitterSimple
 
@@ -27,7 +26,7 @@
 #define mousex2 ( ginfo_mx - (ginfo_wx1 + (ginfo_sizex - ginfo_winx) / 2) )
 #define mousey2 ( ginfo_my - (ginfo_wy1 + (ginfo_sizey - ginfo_winy) - (ginfo_sizex - ginfo_winx) / 2) )
 
-#if _DEBUG
+#ifdef _DEBUG
 // @static
 	dim bDragging
 	dim bLBtnDown
