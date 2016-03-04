@@ -1,0 +1,16 @@
+// ex00 : テキトーなサンプル
+
+#include "opex.hsp"
+
+	a = 1, 2, 3, 4, 5
+	b = 20
+	c = 30
+	s = "hello"
+	
+	test
+	
+	stop
+	
+#deffunc test  local x, local y, local z
+	swap s, z
+	return
