@@ -6,4 +6,5 @@
 * [Gitを始めよう](chapter3.md)
 * [Gitで編集しよう](chapter4.md)
 * [Gitの記録](chapter5.md)
+* GitHubに送る
 
