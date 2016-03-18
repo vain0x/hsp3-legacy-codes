@@ -61,7 +61,7 @@
 		return
 	}
 	
-	if ( str_is_ascii_printable(user_name) == 0 ) {
+	if ( str_is_name_like(user_name) == 0 ) {
 		dialog "ƒ†[ƒU–¼‚Í”¼Šp‚Ì‚İ‚É‚·‚×‚«‚Å‚·B", 1, app_name
 		return
 	}
@@ -112,12 +112,20 @@
 	return
 
 #module
-#defcfunc str_is_ascii_printable var s,  local ok
+
+#defcfunc char_is_alphanum int ch
+	return ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z') || ('0' <= ch && ch <= '9')
+
+#defcfunc char_is_name_like int ch
+	return char_is_alphanum(ch) || ch == ' ' || ch == '_' || ch == '@'
+
+#defcfunc str_is_name_like var s,  local ok
 	ok = 1
 	repeat strlen(s)
-		if ((32 <= peek(s, cnt) && peek(s, cnt) < 0x7F) == 0) {
+		if (char_is_name_like(peek(s, cnt)) == 0) {
 			ok = 0 : break
 		}
 	loop
 	return ok
+
 #global
