@@ -6,7 +6,7 @@
 	gsel , -1
 	user_name = sysinfo(1)
 	home_dir = "C:\\Users\\" + user_name
-	gitconfig_dir = home_dir + "\\.gitconfig"
+	gitconfig_path = home_dir + "\\.gitconfig"
 	sdim mail_addr
 	sdim editor_path
 	sdim gitconfig_text
@@ -74,13 +74,13 @@
 	}
 	
 	gosub *l_make_config_text
-	exist gitconfig_dir
+	exist gitconfig_path
 	if ( strsize > 0 ) {
 		dialog "git 設定ファイルがすでにあります。上書きしますか？", 2
 		if ( stat != 6 ) { return }
 	}
 	notesel gitconfig_text
-	notesave gitconfig_dir
+	notesave gitconfig_path
 	noteunsel
 	dialog "設定ファイルの作成に成功しました！", 0, app_name
 	end
