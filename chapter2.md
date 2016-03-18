@@ -5,14 +5,13 @@ git を使うには、テキストエディタが必要になります。
 
 * 起動が速い。(任意)
 * 改行コードを自動認識し、元の改行コードのまま保存できる。(必須)
-* UTF-8、Shift-JIS を扱える。(HSPユーザにとっては必須)
+* utf-8, shift_jis を扱える。(HSPユーザにとっては必須)
 * diff の色分けができる。(任意)
 
 この条件を満たすエディタには、[Atom](https://atom.io/), TeraPad などがあります。
-Atom はソフトウェアとしてはやや大きめですし、TeraPad は文字コード検出機能に (ASCII文字を SHIFT_JIS で開いてしまうという) 不都合があります。
+Atom はソフトウェアとしてはやや大きめですし、TeraPad は文字コード検出機能に (ANSIファイルを shift_jis で開いてしまうという) 不都合があります。
 
-ここで、[GreenPad](http://www.kmonos.net/lib/gp.ja.html) というオープンソースのメモ帳風のテキストエディタを紹介します。
-TeraPad と似ていますが、積極的にユニコードを使うように筆者が改造しておきました。
+ここで、[GreenPad](http://www.kmonos.net/lib/gp.ja.html) というオープンソースのメモ帳風のテキストエディタを紹介します。オリジナルのそれは TeraPad と同じ問題を抱えているのですが、筆者が [微調整](https://github.com/vain0/GreenPad/commit/16988251e37) して、utf-8 を使うようにしてあります。
 以下のリンク先からダウンロードしてきてください。
 
 <https://github.com/vain0/GreenPad/releases/latest> (GreenPad_unicode.zip)
@@ -27,9 +26,10 @@ TeraPad と似ていますが、積極的にユニコードを使うように筆
 
 解凍した gitconfig_gen.exe を実行して、
 
-* ユーザ名、メールアドレス、
-* エディタの位置 (先ほどメモした GreenPad のパス)、
-* git ディレクトリのパス (前回メモしたやつ)、
+* ユーザ名
+* メールアドレス
+* エディタの位置 (先ほどメモした GreenPad のパス)
+* git ディレクトリのパス (前回メモしたやつ)
 
 を入力します。
 
