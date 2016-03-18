@@ -1,6 +1,6 @@
 
 #define global app_name "gitconfig_gen"
-#packopt app_name
+#packopt name app_name
 #packopt hide 1
 
 	gsel , -1
