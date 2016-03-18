@@ -12,6 +12,8 @@
 いままで git add と git commit については、あまり詳しく話していませんでした。
 今回はこれを詳しく解説します。
 
+## コミットオブジェクト
+
 いままで直接は説明しませんでしたが、git commit を行うと、「前回の git commit より後にした変更」がリポジトリに記録されます。
 このときの「記録」のことを、まとめて1個の **コミットオブジェクト**(commit object) と呼びます。
 (単にコミットと略すのが一般的です。)
@@ -48,7 +50,59 @@ dfb29ca 1 回目の更新  [親なしコミット]
 ```
 
 ここでの矢印は、「子 → 親」という関係を表しています。
-git log は、最新のコミットオブジェクト 3456001 (= HEAD) から始めて、親へ親へと辿っていくことで、コミットオブジェクト (のハッシュ値とメッセージ) を一覧にしていたのです。
+git log は、最新のコミットオブジェクト 3456001 (= HEAD) から始めて、親へ親へと辿っていくことで、コミットオブジェクト (のハッシュ値とメッセージ) を列挙していたのです。
+
+そう考えると、コミットオブジェクトというのは、「1回の変更」と言いましたが、 **1つのバージョンを表している** とみなすことも可能です。
+
+## HEADの定義の更新
+さて、 [第5回](chapter5.md) で HEAD を以下のように説明しましたが、(意図的な)誤りです。謝ります。
+
+> HEAD とは「最後に git commit された変更」を表しているものです。
+
+いままで私が説明したコマンドだけを使っているかぎり、上の理解でもある意味正しいのですが、これから次のステップに進むため、もう少し正確な説明を与えます。
+
+* HEAD とは、作業ディレクトリが元にしているコミットオブジェクトを指し示す名前である。
+
+よく分かりませんね。
+とりあえず関係代名詞があるので、2つの文に分けてみます。
+
+* HEAD とは、あるコミットオブジェクトを指し示す名前である。
+* 作業ディレクトリは、そのコミットオブジェクトを元にしている。
+
+コミットオブジェクトが「バージョン」を表すと前節でいいましたが、ここでそのように言い換えてみましょう。
+
+* HEAD とは、あるバージョンを指し示す名前である。
+* 作業ディレクトリは、そのバージョンを元にしている。
+
+分かりやすくなってきました。
+ここでいう「あるバージョン」は、今までは常に「最新のバージョン」でした。
+git checkout を使うことで、別のバージョンを指すようにすることができます。
+
+適当なリポジトリで bash を開き、作業ディレクトリをクリーンにしてから (つまり、git commit していない変更がないようにしてから)、以下のコマンドを実行してみてください。
+
+```
+$ git checkout HEAD~
+```
+
+すると、例えば以下のような表示になります。
+長い英文が出てきますが、これは git からの親切な忠告です。無視します。
+
+```
+$ git co HEAD~
+Note: checking out 'HEAD~'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by performing another checkout.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -b with the checkout command again. Example:
+
+  git checkout -b <new-branch-name>
+
+HEAD is now at 3456001... 7 回目の更新
+```
+
 
 
 
