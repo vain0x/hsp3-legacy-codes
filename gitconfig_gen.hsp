@@ -1,0 +1,123 @@
+
+#define global app_name "gitconfig_gen"
+#packopt app_name
+#packopt hide 1
+
+	gsel , -1
+	user_name = sysinfo(1)
+	home_dir = "C:\\Users\\" + user_name
+	gitconfig_dir = home_dir + "\\.gitconfig"
+	sdim mail_addr
+	sdim editor_path
+	sdim gitconfig_text
+	gosub *l_init_screen
+	stop
+	
+*l_init_screen
+	title app_name
+	width 370, 200
+	hsvcolor , , 245 : boxf : color
+	
+	font msgothic, 12
+	objmode objmode_usefont
+	
+	pos 10, 10
+	mes "ユーザ名 (必須、半角のみ、公開されます、変更可):"
+	input user_name, 200, 24
+	
+	pos 10, 60
+	mes "メールアドレス (必須、公開されます、変更可):"
+	input mail_addr, 200, 24
+	
+	pos 10, 110
+	mes "エディタ(GreenPad等)の実行ファイル(exe)の位置 (必須):"
+	input editor_path, 320, 24
+	oid_editor_path = stat
+	
+	pos 335, 120
+	objsize 24, 24
+	button gosub "...", *l_find_editor
+	
+	objsize 120, 24
+	pos ginfo_winx - 130, ginfo_winy - 34
+	button gosub "完了", *l_complete
+	
+	gsel , 1
+	return
+	
+*l_find_editor
+	dialog "exe", 16, "テキストエディタ"
+	if (stat == 0) { return }
+	editor_path = refstr
+	objprm oid_editor_path, editor_path
+	return
+
+*l_complete
+	user_name = strtrim(user_name, 0, ' ')
+	mail_addr = strtrim(mail_addr, 0, ' ')
+	
+	if ( user_name == "" || mail_addr == "" ) {
+		dialog "ユーザ名、アドレスは必須です。", 1, app_name
+		return
+	}
+	
+	if ( str_is_ascii_printable(user_name) == 0 ) {
+		dialog "ユーザ名は半角のみにすべきです。", 1, app_name
+		return
+	}
+	
+	strrep editor_path, "\\", "/"
+	exist editor_path
+	if ( strsize < 0 ) {
+		dialog "テキストエディタが見つかりません。", 1, app_name
+		return
+	}
+	
+	gosub *l_make_config_text
+	exist gitconfig_dir
+	if ( strsize > 0 ) {
+		dialog "git 設定ファイルがすでにあります。上書きしますか？", 2
+		if ( stat != 6 ) { return }
+	}
+	notesel gitconfig_text
+	notesave gitconfig_dir
+	noteunsel
+	dialog "設定ファイルの作成に成功しました！", 0, app_name
+	end
+
+*l_make_config_text
+	gitconfig_text = {"
+[user]
+	\tname = '"} + user_name + {"'
+	\temail = '"} + mail_addr + {"'
+[core]
+	\teditor = '"} + editor_path + {"'
+	\tautocrlf = true
+	\tquotepath = false
+[push]
+	\tdefault = simple
+[alias]
+	\tgit = !git
+	\tco = checkout
+	\tcob = checkout -b
+	\ta = add
+	\tci = commit --verbose
+	\tb = branch --verbose
+	\ts = status --short --branch
+	\tdi = diff
+	\trb = rebase
+	\trbi = rebase --interactive
+	\tmg = merge --edit
+	"}
+	return
+
+#module
+#defcfunc str_is_ascii_printable var s,  local ok
+	ok = 1
+	repeat strlen(s)
+		if ((32 <= peek(s, cnt) && peek(s, cnt) < 0x7F) == 0) {
+			ok = 0 : break
+		}
+	loop
+	return ok
+#global
