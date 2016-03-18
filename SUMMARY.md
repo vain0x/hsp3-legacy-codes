@@ -8,5 +8,5 @@
 * [Gitの記録](chapter5.md)
 * [GitHubに送る](chapter6.md)
 * [Gitのコミット](chapter7.md)
-* Git時空の旅
+* [Git時空の旅](chapter8.md)
 
