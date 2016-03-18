@@ -5,5 +5,5 @@
 * [Gitの初期設定](chapter2.md)
 * [Gitを始めよう](chapter3.md)
 * [Gitで編集しよう](chapter4.md)
-* [Gitの記録](chapter6.md)
+* [Gitの記録](chapter5.md)
 
