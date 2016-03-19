@@ -9,5 +9,5 @@
 * [GitHubに送る](chapter6.md)
 * [Gitの補足](chapter07.md)
 * [Gitのコミット](chapter08.md)
-* Git様のブランチ
-* [Git時空の旅](chapter09.md)
+* [Git様のブランチ](chapter09.md)
+* [Git時空の旅](chapter10.md)
