@@ -9,4 +9,5 @@
 * [GitHubに送る](chapter6.md)
 * [Gitのコミット](chapter08.md)
 * [Git時空の旅](chapter09.md)
+* Gitのエイリアス
 
