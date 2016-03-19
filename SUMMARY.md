@@ -7,6 +7,6 @@
 * [Gitで編集しよう](chapter4.md)
 * [Gitの記録](chapter5.md)
 * [GitHubに送る](chapter6.md)
-* [Gitのコミット](chapter7.md)
+* [Gitのコミット](chapter08.md)
 * [Git時空の旅](chapter09.md)
 
