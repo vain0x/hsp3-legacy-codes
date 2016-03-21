@@ -7,5 +7,5 @@
 * [Gitで編集しよう](git_edit.md)
 * [Gitの記録](git_log.md)
 * [GitHubに送る](github_push.md)
-* [Gitの補足](chapter07.md)
+* [Gitの補足](git_appendix.md)
 
