@@ -6,6 +6,6 @@
 * [Gitを始めよう](git_start.md)
 * [Gitで編集しよう](git_edit.md)
 * [Gitの記録](git_log.md)
-* [GitHubに送る](chapter6.md)
+* [GitHubに送る](github_push.md)
 * [Gitの補足](chapter07.md)
 
