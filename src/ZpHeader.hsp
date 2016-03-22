@@ -96,7 +96,7 @@
 #const ShiftY_CardAbility (PosY1_CardAbility2 - PosY1_CardAbility1)
 
 // 手札の位置
-#define ctype PosY1_BothHandCard(%1) (20 + (SizeY_Card + 13) * cnt)// 戦場にある n 番目のカードのY座標
+#define ctype PosY1_BothHandCard(%1) (20 + (SizeY_Card + 13) * %1)// 戦場にある n 番目のカードのY座標
 #const PosX1_OurHandCard 20
 #const ShiftX_OurCombatCard PosX1_OurHandCard + SizeX_Card //味方のカードの戦場に出ている場合のシフト量
 #const PosX1_EmyHandCard WIN_SIZEX - (SizeX_Card + 20)
