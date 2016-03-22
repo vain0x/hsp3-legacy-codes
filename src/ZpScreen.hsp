@@ -8,6 +8,10 @@
 		title zeofive_
 		
 		#const MesboxStyle_GameLogBox (mesbox_disable | mesbox_vscroll)
+		#ifdef CMPOPT_FULLVER
+		font msgothic, 12
+		objmode objmode_usefont
+		#endif //defined(CMPOPT_FULLVER)
 		//ÉQÅ[ÉÄÉçÉOÇê›íu
 		sdim gamelog, 1200
 		pos PosX1_GameLogBox, PosY1_GameLogBox
