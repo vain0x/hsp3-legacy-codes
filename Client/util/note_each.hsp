@@ -1,0 +1,27 @@
+#ifndef        IG_NOTE_EACH_HSP
+#define global IG_NOTE_EACH_HSP
+
+#ifndef _empty
+ #define global _empty//
+#endif
+
+/**
+* ‹æØ‚è•¶š—ñ‚ğ—v‘f‚²‚Æ‚É”½•œ‚·‚é
+*
+* note_each : ... : note_each_end
+*
+* @prm iter: Še—v‘f‚ª‘ã“ü‚³‚ê‚é•Ï”
+* @prm src: Œ³‚Ì•¶š—ñ
+* @prm delimiter ['\n']: ‹æØ‚è•¶š
+* @prm max_len   [1024]: Å‘å•¶š”
+*/
+#define global note_each(%1, %2, %3 = _empty, %4 = _empty) %tnote_each \
+	%i = 0 :\
+	while(true) :\
+		getstr %1, %2, %p, %3, %4 : %p += strsize :\
+		if ( strsize == 0 ) { _break } :\
+		//
+
+#define global note_each_end %tnote_each wend
+
+#endif

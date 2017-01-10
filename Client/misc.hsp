@@ -6,8 +6,13 @@
 #include "util/MCIni.as"
 #include "util/dirlist_rec.hsp"
 #include "util/mkdir_rec.hsp"
+#include "util/unzip32.hsp"
 
 #module
+
+#deffunc rmdir str path
+	exec "cmd /K \"rmdir /S /Q \"" + path + "\"\""
+	return
 
 #deffunc copy_file str path_src, str path_dst
 	mkdir_rec getpath(path_dst, 32) //ディレクトリのみ
