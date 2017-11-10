@@ -1,0 +1,54 @@
+// call.hpi - sample 21
+
+#include "call.as"			// (省略可)
+#include "call_modcls.as"	// 拡張ヘッダの include が必要
+#include "call_for_sample.as"		// サンプル用
+
+// nullmod
+// @ 「インスタンスを参照していない」ことを示す値である。
+// @ ex16 も参照
+
+// 比較
+// @ nullmod であるか否かの比較に等しい。
+// @	すなわち、右辺も nullmod ならば「等しい」、そうでなければ「異なる」。
+// @ また、nullmod はすべてのインスタンスより「小さい」こととする。
+// @	任意のインスタンス x に対して nullmod < x が true であるだけでなく、
+// @	x > nullmod も、x のクラスに依らず true である。例外的な規定。
+// @	このとき x の比較関数は呼び出されない (定義されている必要もない)。
+
+	newmod x, Test
+	mes "nullmod == nullmod ? " + (nullmod == nullmod)
+	mes "nullmod < x ? " + (nullmod < x)
+	mes "x > nullmod ? " + (x > nullmod)
+	
+	assert( nullmod == nullmod )
+	assert( nullmod < x )
+	assert( x > nullmod )
+	
+// 演算
+// @ (nullmod ? x) という二項演算はすべて nullmod となる。
+// @	副作用はない。
+// @	一方、(x ? nullmod) は x の指定された演算を実行する。
+
+	nullmod_plus = nullmod + x
+	assert( nullmod + x       == nullmod )
+	assert( nullmod + nullmod == nullmod )
+;	assert( x + nullmod == ??? )
+	
+// 型変換
+// @ 次の組み込み型への型変換は、プラグイン内で定義されている。
+	
+//	nullmod_to_label  =  label(nullmod)	//= nullptr
+	nullmod_to_str    =    str(nullmod)	//= ""
+	nullmod_to_double = double(nullmod)	//= qNaN
+	nullmod_to_int    =    int(nullmod)	//= 0
+	
+;	mes " label(nullmod) = nullptr"
+	mes "   str(nullmod) = " + nullmod_to_str
+	mes "double(nullmod) = " + nullmod_to_double
+	mes "   int(nullmod) = " + nullmod_to_int
+	assert( "" == nullmod )
+;	assert( isNaN( nullmod ) )
+	assert( 0 == nullmod )
+	
+	stop

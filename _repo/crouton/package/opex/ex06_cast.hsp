@@ -1,0 +1,26 @@
+// ex06
+
+#include "opex.as"
+
+// キャスト(型変換)
+
+// cast_to( 値, 型タイプ値 )
+// @ 値を、型タイプ値の型にキャストする。
+
+// value_cast(TYPE)( 値 )
+// @ TYPE には型名を指定する：
+// @	label, str, double, int, ...
+// @	前後に空白を入れてはいけない。
+// @ 受け取った値を、その型にキャスト(型変換)する。
+// @ とりあえず **_cast という名前にしたかったが、良い案がなかった。
+
+// @ やることはどちらも同じだが、書式が異なる。
+// @	好きな方を使おう。
+
+	x = value_cast(str)( 1234 )
+;	x = cast_to( 1234, vartype("str") )
+	mes x + " : vartype " + vartype(x)
+	
+	assert( x == "1234" && vartype(x) == vartype("str") )
+	stop
+

@@ -1,0 +1,19 @@
+// ex07
+
+#include "opex.as"
+
+// constptr キーワード
+// 文字列リテラルか、実数値リテラルへのポインタを得る。
+// Rem: 整数値リテラルへのポインタは取得できません。
+// Rem: 定数式はコンパイル時に展開されている必要があります。
+//  	すなわち constptr ("a" + "b") のように実行時に式となっている場合は失敗します。
+
+	pStr = constptr "Hello, world!"
+	dupptr s, pStr, 1, vartype("str")
+	mes s		//=> Hello, world!
+	
+	pDouble = constptr M_PI
+	dupptr d, pDouble, 8, vartype("double")
+	mes d		//=> 3.14159
+	
+	stop

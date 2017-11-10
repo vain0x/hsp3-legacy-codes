@@ -1,0 +1,33 @@
+// ex02
+
+#include "opex.as"
+
+// 多数の「==」
+
+// eq_and( val, ... )
+// @ 引数のすべての値が等しいとき、true。そうでなければ false。
+
+// eq_or( val, ... )
+// @ val と他のいずれか1つの引数の値が等しいとき、true。そうでなければ false。
+	
+	repeat 127
+		// (cnt == 'x' || cnt == 'o' || ..略.. || cnt == 'v') と同じこと
+		if ( eq_or( cnt, 'x', 'o', 'd', 'b', 't', 'v' ) ) {
+			mes strf("%c", cnt)
+		}
+	loop
+	
+	randomize
+	count = 0
+	repeat 10
+		slot = rnd(3), rnd(3), rnd(3)
+		mes strf("[%d][%d][%d]", slot(0), slot(1), slot(2))
+		
+		// (slot(0) == slot(1) && slot(0) == slot(2)) と同じこと
+		if ( eq_and( slot(0), slot(1), slot(2) ) ) {
+			mes "当たり！"
+			count ++
+		}
+	loop
+	mes "count = " + count
+	stop
