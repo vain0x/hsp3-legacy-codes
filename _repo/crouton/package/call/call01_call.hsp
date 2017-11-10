@@ -1,0 +1,41 @@
+#include "../crouton.as"
+
+// 単語：ユーザ定義コマンド(module command)
+// #deffunc, #defcfunc, #modfunc, #modcfunc で定義された、
+// 命令や関数のことは、今後「ユーザ定義コマンド」と呼ぶことにする。
+
+// 関数：axcmdOf(cmd)
+// HSPのコマンド cmd から、それを表す整数値を得る。
+// ユーザ定義コマンドの axcmd 整数は、call に使うことができる。
+
+	// ユーザ定義関数「CustomGreetString」に対応する整数値
+	f = axcmdOf(CustomGreetString)
+	
+	mes strf("f = 0x%08X", f)
+	
+// 関数：call(f, args...)
+// 「f(args...)」ということ。
+
+	greetStr = call(f, "世界")
+;	greetStr = CustomGreetString("世界") と同じ。
+
+	mes "挨拶の言葉は「" + greetStr + "」"
+	
+// 命令：call f, args...
+// 「f args...」ということ。
+
+	call f, "そしてさようなら"
+	mes refstr
+	
+	mes "以上"
+	stop
+	
+//------------------------------------------------
+// 挨拶の文字列を作る関数
+// 
+// name: 挨拶する相手の名前
+//------------------------------------------------
+#defcfunc CustomGreetString str name
+	mes "呼び出し：CustomGreetString(" + name + ")"
+	return "こんにちわ、" + name + "！"
+	

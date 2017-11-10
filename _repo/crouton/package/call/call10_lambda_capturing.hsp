@@ -1,0 +1,47 @@
+#include "../crouton.as"
+
+// !! this doesn't work
+
+// ラムダ関数によるキャプチャ
+
+// 挙動：lambda(...) の引数中の local
+// lambda の本体の中に local 変数があれば、ラムダ関数の中にそのコピーが作られる。
+// ラムダ関数の中でその local 変数を参照するなら、代わりに、そのコピーを参照する。
+
+// (メモ：var エイリアスもキャプチャされるが、スクリプト側から気にすべきことはない。)
+
+#module
+
+#deffunc make_swapper_f var _f, var _ref, int _n
+	v = _n
+	_f = lambda@(swap(_ref, v))
+	return
+	
+#defcfunc test  local _arr
+	_arr = 0, 1, 2, 3, 4
+	
+	// _arr は local 変数なので、f にコピーされる
+	f = lambda@(_arr(logging(__p0)))
+	
+	// _arr を書き換える
+	_arr(0) = 100
+	
+	repeat 2
+		mes "f(" + cnt + ") = (コピーされた _arr)(" + cnt + ") = " + f(cnt)
+	loop
+	
+	// return すると arr は消滅する
+	call_return f
+	
+#defcfunc logging int n
+	mes "log: n = " + n
+	return n
+#global
+
+	iota = 0, 1, 2, 3
+	make_swapper_f f, iota(2), 10
+	mes f()
+	stop
+	// test を呼ぶ
+	lmb = call( axcmdOf(test) )
+	stop

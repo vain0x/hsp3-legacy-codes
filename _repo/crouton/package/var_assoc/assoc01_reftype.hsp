@@ -1,0 +1,44 @@
+#include "../crouton.as"
+
+// 参照型としての振る舞い
+
+	a = assoc(  "name", "a",  "id", 0  )
+	
+// assoc 型の代入
+// これにより「assoc への参照」がコピーされる。
+// 注意してほしい。
+// 1. assoc 自体がコピーされるわけではない。
+// 2. vector とは違って「同じ内部変数を持つ新しい assoc を作る」わけではない。
+
+	// a_ref は「a と同じ assoc への参照」を持つ。
+	a_ref = a
+	
+	mes "a_ref.name = " + a_ref("name")
+	mes "a_ref.id = " + a_ref("id")
+	mes "a_ref は 'new' を持つ？ : " + AssocExists(a, "new")
+	
+	mes "a.new に新しい要素を入れる！"
+	a("new") = "a の新しい要素"
+	
+	// a_ref は、a と同じ assoc を指している
+	mes "a_ref.new = " + a_ref("new")
+	mes
+	
+// 関数：AssocDupShallow(self)
+// assoc self と同じ要素を持つ新しい assoc を作る。
+
+	mes "a_slice: a のスライス、に要素 (slice, 1) を加える。"
+	a_slice = AssocDupShallow(a)
+	a_slice("slice") = 1
+	mes "a.slice は存在" + which(AssocExists(a, "slice"), "する", "しない") + "。"
+	
+	mes "a_slice.name を変更すると："
+	a_slice("name") = "a_slice"
+	mes "a.name = " + a("name")
+	mes
+	
+// 関数：AssocDupDeep
+// assoc self と同じ値を持つ新しい要素からなる新しい assoc を作る。
+
+	mes "以上"
+	stop

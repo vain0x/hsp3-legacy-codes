@@ -1,0 +1,45 @@
+// ex03 : map, filter
+
+#include "crouton.as"
+
+// VectorMap( self, functor fMap )
+// @ self の各要素に対して fMap を適用し、
+// @	その返値の列を vector として返却する。
+// @	[ a, b, ... ] → [ fMap(a), fMap(b), ... ]
+
+// VectorFilter( self, functor fPred )
+// @ self の各要素に対して fPred を適用し、
+// @	それが true を返却した要素からなる vector を返却する。
+// @	filter(0でない) [ 1, 0, 2, 3, 0, 0, 4 ] → [ 1, 2, 3, 4 ]
+
+	// map
+	v      = vector( 2, 3, 4, 5, 6 )
+	square = axcmdOf(_square)		// 整数を2乗する関数
+	
+	v`2 = VectorMap( v, square )	// v の各要素の2乗の列
+	
+	mes "v   = " + VectorJoin( v, ", " )
+	mes "v`2 = " + VectorJoin( v`2, ", " )
+	
+	// filter
+	v_even  = VectorFilter( v, funcexpr( (__p0 & 1) == 0 ) )
+	
+	mes "v_even = " + VectorJoin( v_even, ", " )
+	
+	// test
+	assert v`2(0) == 4 && v`2(1) == 9 && v`2(4) == 36
+	assert VectorSize(v_even) == 3
+	stop
+	
+#defcfunc _square int n
+	return n * n
+
+// おまけ
+#define global myVectorMap VectorExpr._myVectorMap
+
+#defcfunc _myVectorMap var self, var fMap,  local result
+	vector result, VectorSize(self)
+	repeat VectorSize(self)
+		result(cnt) = fMap( self(cnt) )
+	loop
+	return VectorResult( result() )
