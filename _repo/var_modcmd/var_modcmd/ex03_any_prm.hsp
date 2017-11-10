@@ -1,0 +1,22 @@
+// variant 引数
+
+// 通常の呼び出しとは異なり、local は variant 引数として扱う。
+// 省略値 0 なので、仮引数リストの末尾にある local には影響しない。
+
+// また、label 引数を使用できる。
+
+#include "var_modcmd.as"
+
+#module
+
+#defcfunc my_assign var x, local y
+	x = y
+	return
+	
+#global
+
+	assign = modcmdOf(my_assign)
+	
+	mes "(a = 10) #=> " + assign(a, 10)
+	mes "a #=> " + a
+	stop
