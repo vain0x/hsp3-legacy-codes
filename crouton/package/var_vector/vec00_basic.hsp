@@ -1,0 +1,130 @@
+#include "../crouton.as"
+
+// vector の生成と添字
+
+// 命令：vector v0(L0), v1(L1), ...
+// 変数 v0, v1, ... を、それぞれ長さ L0, L1, ... の vector 型に初期化する。
+
+	vector u(2), v(3)
+	
+// 命令：vector v, L
+// 変数 v を 長さ L の vector 型に初期化する。「vector v(L)」と同じ。
+
+	vector w, 4
+;	vector w(4)
+
+	mes "v は長さ 3 で初期化された。"
+	
+// ただし length 関数は役に立たない (いつも 1 を返す) ので注意。
+// (この問題に対処するのはやや難しい。)
+
+	mes "length(v) = " + length(v)
+	mes "VectorSize(v) = " + VectorSize(v)
+	mes
+	assert (length(v) == 1 && VectorSize(v) == 3)
+	
+// 関数：vector(...)
+// 与えられた列を、そのまま要素として持つ vector 型の値を生成する。
+	
+	u = vector(1, "two", 3.14)
+	repeat VectorSize(u)
+		mes strf("u(%d) = %s", cnt, str(u(cnt)))
+	loop
+	mes
+	assert (u(0) == 1 && u(1) == "two")
+	
+// 添字
+// vector 型の変数は、普通の配列変数と同様に、添字を使って要素を参照できる。
+// それぞれの要素を「内部変数」と呼び、これは1つの変数と思ってよい。
+
+	// 指定された要素への代入
+	v(0) = 1
+	v(1) = "「v(1) の値」"
+	
+	// 要素の値の参照
+	mes "v(1) = " + v(1)
+	
+// 普通の配列変数と同様に、いくつかの値を同時に代入することもできる。
+// ただし必ず添字をつける必要がある。
+	
+	w(0) = "a", "b", "c", "d", "e"
+	
+	assert(w(0) == "a" && w(3) == "d" && w(4) == "e")
+	
+// vector の存在しない要素に代入する場合、自動で拡張される。
+
+;	mes "vector v の長さ = " + vectorSize(v)	// 3
+	v(7) = 7
+;	mes "vector v の長さ = " + vectorSize(v)	// 8
+	
+// 内部変数は配列にすることもできる。
+
+	v(0, 1) = 2
+	v(0, 2) = 3, 4	// 連続代入
+	
+	repeat VectorLen(v(0))
+		mes strf("v(0, %d) = %s", cnt, str(v(0, cnt)))
+	loop
+	mes
+	
+// vector 型の変数の添字の後に、その内部変数につける添字を続けて書ける。
+
+	// 配列「v(0)」の (1) の要素
+	mes "v(0)(1) ではなく v(0, 1) = " + v(0, 1)
+	
+// 普通に、内部変数も vector 型にできる。
+
+	v(2) = u
+	mes "v(2) = u : " + (v(2) == u)
+	mes "v(2, 0) = u(0) = " + v(2, 0)
+	
+	mes "以上"
+	stop
+	
+// 
+	
+// 
+
+/*
+	// vector を生成してみる
+	vector v
+	v(0) = 41, "Hello, world!"		// 連続代入
+//	v(0) = 41
+//	v(1) = "Hello, world!"
+	v(2) = 3.14159					// 自動拡張
+	
+	VectorForeach v
+		mes "v(" + cnt + ") = " + v(cnt)
+	VectorForeachEnd
+	assert( v(0) == 41 && v(1) == "Hello, world!" && absf(v(2) - M_PI) < 0.1 )
+	
+	// vector を入れ子にしてみる
+	v(3) = vector()					// 内部変数も vector にできる
+	v(3, 0) = 1, 2, 3
+	
+	VectorForeach v(3)
+		mes "v(3, " + cnt + ") = " + v(3, cnt)
+	VectorForeachEnd
+	assert( v(3, 0) == 1 && v(3, 2) == 3 )
+	
+	// vector の他のコンストラクタ
+	v_lit = vector( -1, "str", M_PI )	// リテラル
+	VectorForeach v_lit
+		mes "v_lit(" + cnt + ") = " + v_lit(cnt)
+	VectorForeachEnd
+	
+	d = VectorDup(v)		// 複製
+	d(0) = -99
+	
+	v_res = vector_reserved( 10 )
+	
+	// COMオブジェクトを使用する
+	newcom x, "WScript.Shell"
+	
+	v(4) = x
+	mes VectorVartype(v(4))
+	mcall VectorRef(v(4)), "Run", "notepad.exe"
+	
+	stop
+	
+	//*/

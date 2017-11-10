@@ -1,0 +1,41 @@
+// call.hpi - sample 14
+
+#include "call.as"
+
+#if 0
+
+// コマンド呼び出し (番外編)
+// @ switch での応用
+
+#define global switch_call(%1, %2, %3) %tswitch_call %i = (%1)		:\
+	foreach %2 : if ( %2(cnt) == %p ) { callcs(%3(cnt)) : break } loop	\
+	%o0
+	
+	// 下拵え
+	sdim  msglist,, n
+	dim  sttmlist,  n
+	
+	// 以下 n 個のメッセージと命令の対応を設定する
+	n = 0
+	
+	sttmlist(n) = axcmdOf(1st_function) : n ++
+	sttmlist(n) = axcmdOf(2nd_function) : n ++
+//	...
+	
+	switch_call "message", msglist, sttmlist
+	
+	stop
+	
+// 命令リスト
+#deffunc 1st_function
+	// 長々しい処理コード
+	return
+	
+#deffunc 2nd_function
+	// 長々しい処理コード
+	return
+	/*
+	以下 n 個の長々しい #deffunc 命令の羅列
+	*/
+
+#endif

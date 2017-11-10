@@ -1,0 +1,65 @@
+#include "../crouton.as"
+
+// 関数子(functor)
+
+// 型：functor
+// このプラグインで命令や関数として扱える、つまり call コマンドで呼び出すことができる値の型。
+// ラベルや、ユーザ定義コマンドの axcmd 値などから作ることができる。
+
+// 命令：functor v, i0, i1, ...
+// 変数 v を functor 型 (の配列変数) に初期化する。dim 命令と同様。
+
+	functor f, 3
+
+// 注意：functor の初期値は「無効」なので、呼び出すとエラーになる。
+
+	mes "f : " + which(varuse(f), "有効", "無効")
+	mes "f.length = " + length(f)
+	
+// 関数：functor( f )
+// 値 f を、functor 型に変換する。
+// f に渡して有効なのは、次の4通り：
+//	ラベル, ラベルの axcmd 値, ユーザ定義コマンドの axcmd 値, functor 型の値
+
+	fLabel = functor(*LHello)
+	fModcmd = functor(axcmdOf(Add))
+	
+	mes "fLabel  : " + which(varuse(fLabel),  "有効", "無効")
+	mes "fModcmd : " + which(varuse(fModcmd), "有効", "無効")
+	
+// システム変数：functor
+// functor 型の型タイプ値を返す。
+
+	mes "functor の型タイプ値：" + functor
+	
+// functor 型の値も call コマンドで呼び出すことができる。
+
+	mes "fLabel は *LHello を指しているなう"
+	call fLabel
+	
+// 添字：f(args...) [if length(f) == 1 && length2(f) == 0]
+// functor 型の配列でない変数 f に添字を付けて値を取り出すと、
+// その添字を実引数として関数呼び出しを行う。
+// つまり「f(args...) = call(f, args...)」
+
+	mes "fModcmd は Add を指しているなう"
+	mes "fModcmd(1, 2) = " + fModcmd(1, 2)
+	
+// f は配列変数なので、添字をつけても呼び出しは起こらない。
+// 通常の配列と同様に、指定された番号の要素が返る。
+
+	// f(2) はいま無効なので、もし呼び出したらエラーになる
+	f2 = f(2)
+	
+// functor にはラベル、ユーザ定義コマンド以外のものもある。詳しくは後述。
+	
+	mes "以上"
+	stop
+	
+	
+*LHello
+	mes "Hello, world!"
+	return
+	
+#deffunc Add int a, int b
+	return a + b

@@ -1,0 +1,32 @@
+#include "var_modcmd.as"
+
+// 配列の使用と、2引数関数
+// 強引なサンプル
+
+#module
+
+#defcfunc my_add int lhs, int rhs
+	return lhs + rhs
+	
+#defcfunc my_mul int lhs, int rhs
+	return lhs * rhs
+	
+#global
+
+	fAdd = modcmdOf(my_add)
+	fMul = modcmdOf(my_mul)
+	
+	f_operations    = fAdd,  fMul	// modcmd 型の配列
+	operation_names = "add", "mul"
+	
+	randomize
+	repeat 10
+		lhs = rnd(10)
+		rhs = rnd(10)
+		repeat 2
+			result = modcmdCall(f_operations(cnt), lhs, rhs)	// 足すか掛けるかする
+			mes "[" + cnt + "] " + operation_names(cnt) + "(" + lhs + ", " + rhs + ") = " + result
+		loop
+	loop
+	
+	stop

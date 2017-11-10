@@ -1,0 +1,50 @@
+#include "../crouton.as"
+
+// ラベルの比較演算子
+
+// 命令：call_defineLabelComparison
+// label 型の比較演算を定義する。(上書き)
+// crouton.as の中で自動的に実行される。
+
+*LLabel1
+	mes "1"
+	
+*LLabel2
+*LLabel3
+	mes "2, 3"
+	
+*LLabel4
+	mes "4"
+	mes
+	
+	// lb0 : 無効(nullptr)
+	dimtype lb0, vartype("label")
+	lb1 = *LLabel1
+	
+#define global ctype echo(%1, %2 = 1) mes "(%1) = " + (%1) : assert((%2) == (%1))
+	
+	// 有効性
+	echo(varuse(lb0),   0)
+	echo(varuse(lb1))
+	mes
+	
+	// 同値性
+	echo(lb0 == lb0)
+	echo(lb1 == lb1)
+	echo(*LLabel2 == *LLabel2)
+	echo(*LLabel2 == *LLabel3)
+	
+	echo(lb0 != lb1)
+	echo(lb1 != *LLabel2)
+	mes
+	
+	// 順序
+	echo(lb0 < lb1)
+	echo(lb0 < *LLabel2)
+	echo(lb1 < *LLabel2)
+	echo(*LLabel1 > *LLabel4,   0)
+	mes
+	
+	mes "以上"
+	stop
+
