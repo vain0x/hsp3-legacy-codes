@@ -1,0 +1,19 @@
+// 配列の保存
+
+#include "valptr.as"
+
+	// 一次元配列の valptr
+	// 多次元配列には対応していない。
+	// 値の型はすべて揃っていなければいけない。
+	valptr = new_valptr( 2, 3, 5, 7, 11 )
+	
+	// sttm valptr_get arr, valptr
+	// valptr が表す配列の値を arr にコピーする。
+	
+	valptr_get list, valptr
+	foreach list
+		mes "list[" + cnt + "] = " + list(cnt)
+	loop
+	
+	stop
+	
