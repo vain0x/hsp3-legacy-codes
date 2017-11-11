@@ -1,0 +1,10 @@
+# temporary files
+obj
+hsptmp
+hsptmp.i
+packfile
+start.ax
+*.clrtxtcache
+
+# binaries
+*.exe

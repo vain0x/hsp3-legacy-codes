@@ -1,0 +1,424 @@
+
+#define global MAX_TEXTLEN 0x7FFFFFFF  // 無制限
+
+#include "Renzok.hsp"
+
+	#define __ODLB_LISTBOX
+
+#include "dll/ODListbox/ODListbox.as"
+#include "dll/Footy2/Footy2.as"
+#include "dll/hscallbk/hscallbk.as"
+#include "Mo/Footy2mod.as"
+#include "Mo/ClrtxtOptimize.as"
+#include "Mo/GetFontOfHSP.as"
+#include "Mo/MenuBarAPI.as"
+
+*l_var_init_custom
+	dim  iList					// Listbox の選択されているIndex
+	
+	dir_exe_root = dir_cur
+	
+	sdim ClrtxtLib, MAX_PATH	// ClrtxtLib パス
+	sdim Clrtxt, 1024
+	
+	dim bModified
+	dim bCanUndo
+	dim bCanRedo
+	dim cntUndoed				// Undo処理を行った回数
+	dim cntModified				// 編集した回数 (Undo 以外)
+	
+	dim bWriteMode				// Insert(真) or Overwrite(偽)
+	dim bHasFocus
+;	dim bSelected
+	return
+	
+*exit
+	if ( bDragging ) { ClipCursor NULL : bDragging = false }
+	if ( hShortMenu ) { DestroyMenu hShortMenu }
+	gosub *DeleteClrtxtCache
+	
+	DeleteFont  hFont : hFont = NULL
+;	ODLbDestroy LbInfo(1)
+	end : end
+	
+//######## メッセージハンドラ ##################################################
+*l_key_map_init
+	key_map_('A', key_map_ctrl) = *Menu_SelAll
+	key_map_('B', key_map_ctrl) = *l_editbox_go_eof
+	key_map_('C', key_map_ctrl) = *Menu_Copy
+	key_map_('S', key_map_ctrl) = *Save
+	key_map_('T', key_map_ctrl) = *l_editbox_go_top
+	key_map_('V', key_map_ctrl) = *Menu_Paste
+	key_map_('X', key_map_ctrl) = *Menu_Cut
+	key_map_('Y', key_map_ctrl) = *Menu_Redo
+	key_map_('Z', key_map_ctrl                ) = *Menu_Undo
+	key_map_('Z', key_map_ctrl | key_map_shift) = *Menu_Redo
+	return
+	
+*l_resize_editbox
+	Footy2Move footyID, LBWIDTH + 10,            5, BOXWIDTH, BOXHEIGHT
+	return
+	
+*OnDrawItem
+	ODLbProc LbInfo(1), iparam, wparam, lparam
+	return stat
+	
+*OnMeasureItem
+	ODLbProc LbInfo(1), iparam, wparam, lparam
+	return stat
+	
+*l_on_command_editbox
+	// pass
+	return
+	
+*l_on_command_listbox_default
+	ODLbProc LbInfo(1), iparam, wparam, lparam
+	return stat
+	return
+	
+*OnRenewal
+	// ListBox を再構築する
+	ODLbClearItem LbInfo(1)
+	sendmsg LbInfo, 0x000B, false, 0			// WM_SETREDRAW ( 再描画禁止 )
+	
+	DirlistEx  filelist, path
+	NoteRepeat filelist
+		note = nrNote
+		
+		if ( note == "" ) { _continue }
+		
+		ODLbInsertItem LbInfo(1), note, nrCnt
+		
+		if ( peek(note) == '[' ) {				// フォルダ
+			ODLbSetItemColor LbInfo(1), nrCnt, 0x808080, cond_i(nrCnt & 1, 0xADFF2F, 0x2FFFAD)
+			_continue
+		} else {
+			exist path + "/" + note
+			if ( /*strsize > MAX_TEXTLEN ||*/ strsize < 0 ) {
+				ODLbSetItemColor LbInfo(1), nrCnt, 0xFFFFFF, 0xA0A0A0
+				_continue
+			}
+		}
+		ODLbSetItemColor LbInfo(1), nrCnt, 0x000000, cond_i(nrCnt & 1, 0xEEEEFF, 0xEEFFEE)
+		
+	NoteLoop
+	
+	ODLbInsertItem   LbInfo(1), STR_DIALOG
+	ODLbSetItemColor LbInfo(1), stat, 0x000000, 0xFFDDDD
+	
+	sendmsg LbInfo, 0x000B, true, 0					// WM_SETREDRAW ( 再描画許可 )
+	return
+	
+*OnContextMenu
+	repeat 4
+		GetWindowRect Footy2GetWnd(footyID, cnt), varptr(rect)
+		if ( boxin(rect(0), rect(1), rect(2), rect(3), ginfo_mx, ginfo_my) == false ) {
+			// 外なら無視
+			continue
+		}
+		bIsSelected = IsSelOnFooty(footyID)
+		EnableMenuItem hShortMenu, CMD_UNDO,	bCanUndo == false
+		EnableMenuItem hShortMenu, CMD_REDO,	bCanRedo == false
+		EnableMenuItem hShortMenu, CMD_CUT,		bIsSelected == 0
+		EnableMenuItem hShortMenu, CMD_COPY,	bIsSelected == 0
+	;	EnableMenuItem hShortMenu, CMD_PASTE,	0
+		EnableMenuItem hShortMenu, CMD_DELETE,	bIsSelected == 0
+	;	EnableMenuItem hShortMenu, CMD_SELALL,	0
+		
+		// メニューをポップアップ
+		TrackPopupMenuEx hShortMenu, 0x0180, ginfo_mx, ginfo_my, hMain, 0
+		
+		switch (stat)
+		case CMD_UNDO   : gosub *Menu_Undo   : return
+		case CMD_REDO   : gosub *Menu_Redo   : return
+		case CMD_CUT    : gosub *Menu_Cut    : return
+		case CMD_COPY   : gosub *Menu_Copy   : return
+		case CMD_PASTE  : gosub *Menu_Paste  : return
+		case CMD_DELETE : gosub *Menu_Delete : return
+		case CMD_SELALL : gosub *Menu_SelAll : return
+		swend
+		
+		break
+	loop
+	return
+	
+//######## サブルーチン群 ######################################################
+*l_create_listbox
+	oncmd gosub *OnDrawItem   , 0x002B
+	oncmd gosub *OnMeasureItem, 0x002C
+	
+	ODLbCreate hwnd, 5, 5, LBWIDTH, LBHEIGHT
+	LbInfo(1) = stat
+	LbInfo(0) = ODLbGetHandle( LbInfo(1) )
+	
+	// リストボックスの設定
+	ODLbSetItemHeight  LbInfo(1), 14				// 小さめにしておく
+	ODLbSetItemMargin  LbInfo(1), 1
+	ODLbSetMarginColor LbInfo(1), , 0xFFCCCC
+	
+	hFont = CreateFontByHSP(LISTBOX_FONT_FAMILY, LISTBOX_FONT_SIZE, 0)
+	ODLbSetFont LbInfo(1), hFont
+	return
+	
+*l_create_editbox
+	Footy2Create hMain, LBWIDTH + 10, 5, BOXWIDTH, BOXHEIGHT, 0
+	footyID = stat
+	gosub *SetFootyEditor
+;	gosub *SetFooty
+
+	oncmd gosub *OnContextMenu, 0x007B  // WM_CONTEXTMENU
+	gosub *SetClrtxtLibPath
+	gosub *CreateShortCutMenu
+	return
+	
+*ResetByEdited
+	bModified   = false
+	bCanUndo    = false
+	bCanRedo    = false
+	cntModified = 0
+	cntUndoed   = 0
+	return
+	
+*CreateShortCutMenu
+	// メイン
+	hShortMenu = CreatePopupMenu()
+		AppendMenu hShortMenu, 0, CMD_UNDO,     "元に戻す(&U)"	+"\t\t\tCtrl+Z"
+		AppendMenu hShortMenu, 0, CMD_REDO,     "やり直す(&R)"	+"\t\t\tCtrl+Y"
+		AddSeparator hShortMenu
+		AppendMenu hShortMenu, 0, CMD_CUT,      "切り取り(&T)"	+"\t\t\tCtrl+X"
+		AppendMenu hShortMenu, 0, CMD_COPY,     "コピー(&C)"	+"\t\t\tCtrl+C"
+		AppendMenu hShortMenu, 0, CMD_PASTE,    "貼り付け(&P)"	+"\t\t\tCtrl+V"
+		AppendMenu hShortMenu, 0, CMD_DELETE,   "削除(&D)"		+"\t\t\t Delete "
+		AddSeparator hShortMenu
+		AppendMenu hShortMenu, 0, CMD_SELALL,   "すべて選択(&A)"+"\t\t\tCtrl+A"
+	return
+	
+*Menu_Undo   : if ( bCanUndo ) { Footy2Undo footyID } : return
+*Menu_Redo   : if ( bCanRedo ) { Footy2Redo footyID } : return
+*Menu_Cut    : Footy2Cut       footyID : return
+*Menu_Copy   : Footy2Copy      footyID : return
+*Menu_Paste  : Footy2Paste     footyID : return
+*Menu_Delete : Footy2DeleteSel footyID : gosub *OnModify : return
+*Menu_SelAll : Footy2SelectAll footyID : return
+
+//######## コールバック関数系のルーチン ################################################################
+*l_init_callback
+	setcallbk proc_Focus,             Focus,             *onFocus
+	setcallbk proc_MoveCaret,         MoveCaret,         *onMoveCaret
+	setcallbk proc_TextModified,      TextModified,      *onTextModified
+	setcallbk proc_InsertModeChanged, InsertModeChanged, *onInsertModeChanged
+	return
+	
+*SetCallbackToFooty
+	Footy2SetFuncFocus				footyID, varptr(proc_Focus            ), 0
+	Footy2SetFuncMoveCaret			footyID, varptr(proc_MoveCaret        ), 0
+	Footy2SetFuncTextModified		footyID, varptr(proc_TextModified     ), 0
+	Footy2SetFuncInsertModeChanged	footyID, varptr(proc_InsertModeChanged), 0
+	return
+	
+*onFocus
+	bHasFocus = callbkarg(3) & 0x00FF
+	return
+	
+*onMoveCaret
+	return
+	
+*onTextModified
+	
+	switch callbkarg(2)
+	case MODIFIED_CAUSE_UNDO
+		// Undo 処理
+		cntModified --
+		cntUndoed   ++
+		bCanRedo    = true
+		bCanUndo    = ( cntModified != 0 )	// 編集状態なら Undo 可能
+		
+		if ( cntModified == 0 && bModified ) {
+			editbox_set_modify_flag false
+			
+		} else : if ( bModified == false ) {
+			editbox_set_modify_flag true
+		}
+		swbreak
+		
+	case MODIFIED_CAUSE_REDO
+		// Redo 処理
+		cntModified ++
+		cntUndoed   --
+		bCanUndo  = true
+		bCanRedo  = ( cntUndoed != 0 )		// 限界まで取り消したら偽になる
+		
+		if ( cntModified != 0 && bModified == false ) {
+			editbox_set_modify_flag true
+		}
+		swbreak
+		
+	default
+		// その他の入力
+	*OnModify
+		cntModified ++
+		cntUndoed   = 0
+		
+		bCanUndo = true
+		bCanRedo = false
+		
+		if ( bModified == false ) {
+			editbox_set_modify_flag true
+		}
+	swend
+	return
+	
+// 挿入/上書モードの変更
+*onInsertModeChanged
+	bWriteMode = callbkarg(2) & 0x00FF
+	return
+	
+//######## Clrtxt 系ルーチン ###########################################################################
+// ClrtxtLib のパスを設定
+*SetClrtxtLibPath
+	ClrtxtLib = dir_exe_root + "/ClrtxtLib/"
+	ClrtxtLibIs ClrtxtLib	// ClrtxtOptimize.as のモジュールに登録する
+	return
+	
+// 色分け情報を読み込み、コントロールに反映する
+*ClrtxtLoad
+	exist ClrtxtLib + refstr + "cache"
+	if ( strsize < 0 ) {
+		
+		stmp = ClrtxtLib + refstr			// Clrtxt へのパス
+		ClrtxtOptimize stmp, Clrtxt
+		bsave stmp + "cache", Clrtxt, stat	// キャッシュする
+		
+	} else {
+		// 読み込むだけでいい
+		bload ClrtxtLib + refstr + "cache", Clrtxt, strsize + 1
+	}
+	
+	ClrtxtInput footyID, Clrtxt, true
+	return
+	
+// Clrtxt のキャッシュを削除
+*DeleteClrtxtCache
+	sdim       filelist, MAX_PATH * 5
+	dirlist    filelist, ClrtxtLib + "*.clrtxtcache", 2
+	NoteRepeat filelist
+		remove_file_if_exists ClrtxtLib + nrNote
+	NoteLoop
+	return
+	
+// 拡張子を見て、色分けを決める
+*CheckExt
+	switch getpath(filepath, 2 + 16)
+	case ".hsp" : case ".as"
+		return "HSPbasic.clrtxt"
+	case ".html": case ".htm" : case ".aspx"
+		return "HTMLbasic.clrtxt"
+	case ".c" : case ".cpp" : case ".cxx" : case ".h" : case ".hpp" : case ".hxx"
+		return "CppBasic.clrtxt"
+	case ".js"
+		return "JS_basic.clrtxt"
+	case ".clrtxt"
+		return "ClrtxtBasic.clrtxt"
+	case ".bat"
+		return "BAT_basic.clrtxt"
+	case ".klac"
+		return "KlacBasic.clrtxt"
+	swend
+	return ""
+	
+*SetFooty
+	// Footy コントロールの設定
+	Footy2ClearEmphasis footyID
+	gosub *CheckExt
+	if ( refstr != "" ) {
+		gosub *ClrtxtLoad
+	}
+	return
+	
+*SetFootyEditor
+	gosub *SetCallbackToFooty
+	
+	// Font
+	repeat FFM_NUM_FONTS
+		Footy2SetFontFace footyID, cnt, EDITOR_FONT_FAMILY, false
+	loop
+	Footy2SetFontSize footyID, EDITOR_FONT_SIZE, false
+	
+	// 数値設定
+		// 記号の可視
+	Footy2SetMetrics footyID, SM_MARK_VISIBLE , EDM_FULL_SPACE | EDM_EOF, false
+	Footy2SetMetrics footyID, SM_LINENUM_WIDTH, -1, false
+	Footy2SetMetrics footyID, SM_RULER_HEIGHT , -1, false
+	
+	// EditColor
+	Footy2SetColor footyID, CP_TEXT				, RGB(255, 255, 255), false
+	Footy2SetColor footyID, CP_BACKGROUND		, RGB(0, 5, 0), false
+;	Footy2SetColor footyID, CP_CRLF				, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_HALFSPACE		, RGB(0, 0, 0), false
+	Footy2SetColor footyID, CP_NORMALSPACE		, RGB(255, 0, 0), false
+;	Footy2SetColor footyID, CP_TAB				, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_EOF				, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_UNDERLINE		, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_LINENUMBORDER	, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_LINENUMTEXT		, RGB(0, 128, 255), false
+	Footy2SetColor footyID, CP_CARETLINE		, RGB(255, 255, 0), false
+;	Footy2SetColor footyID, CP_RULERBACKGROUND	, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_RULERTEXT		, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_RULERLINE		, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_CARETPOS			, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_URLTEXT			, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_UNDERLINE		, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_MAILTEXT			, RGB(0, 0, 0), false
+;	Footy2SetColor footyID, CP_MAILUNDERLINE	, RGB(0, 0, 0), false
+	
+	// TextColor
+	Footy2Refresh footyID
+	return
+
+*l_focus_editbox
+	Footy2SetFocus footyID, 0
+	return
+	
+*l_editbox_go_eof
+	GobtmOnFooty footyID
+	return
+	
+*l_editbox_go_top
+	GotopOnFooty footyID
+	return
+	
+*l_editbox_save
+	Footy2SaveToFile footyID, filepath, 0, 0
+	
+	editbox_set_modify_flag false
+	return
+	
+#deffunc editbox_load_text_file str prm_new_file_path
+	
+	filepath = prm_new_file_path
+	// assert filepath: テキストファイル
+	
+	Footy2TextFromFile footyID, filepath, 0
+	gosub *SetFooty
+	
+	editbox_set_modify_flag false
+	gosub *ResetByEdited						// 編集記憶変数の再初期化
+	return
+	
+#deffunc editbox_set_modify_flag_impl
+	// pass
+	return
+	
+#deffunc editbox_set_enable_impl int prm_enable
+	EnableWindow Footy2GetWnd(footyID, 0), prm_enable
+	return
+	
+#deffunc editbox_load_error str prm_message
+
+	editbox_set_enable false
+	filepath = ""	
+	Footy2SetText footyID, prm_message
+	return
+
+#defcfunc editbox_has_focus
+	return Footy2GetActiveView(footyID) != FOOTY2ERR_NOACTIVE
