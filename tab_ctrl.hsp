@@ -3,37 +3,6 @@
 #ifndef IG_TABCONTROL_MODULE_AS
 #define IG_TABCONTROL_MODULE_AS
 
-#addition "Mo/GetFontOfHSP.as"	// フォント取得モジュール
-#ifndef CreateFontByHSP			// ↓圧縮版
- #module gfoh_mod
-	#uselib "gdi32.dll"
-	#func   CreateFontIndirect@gfoh_mod "CreateFontIndirectA" int
-	#func   GetObject@gfoh_mod          "GetObjectA" int,int,int
-	
-	#deffunc GetStructLogfont array _logfont, local bmscr
-		dim _logfont,15:mref bmscr,67:GetObject bmscr(38),60,varptr(_logfont):return
-	#defcfunc GetFontName local sRet
-		sdim sRet:GetStructLogfont logfont:getstr sRet,logfont(7):return sRet
-	#defcfunc GetFontSize int bStillGotLogfont
-		if (bStillGotLogfont==0) {GetStructLogfont logfont}return abs(logfont(0))
-	#defcfunc GetFontStyle int bStillGotLogfont
-		if (bStillGotLogfont==0) {GetStructLogfont logfont}return ((logfont(4)>=700))|(((logfont(5)&0xFF)!=0)<<1)|(((logfont(5)&0xFF00)!=0)<<2)|(((logfont(5)&0xFF0000)!=0)<<3)|(((logfont(6)&0x40000)!=0)<<4)
-	#defcfunc CreateFontByHSP str p1, int p2, int p3, local sFontName, local nFontData
-		sdim sFontName:dim nFontData,2:sFontName=GetFontName():nFontData=GetFontSize(1),GetFontStyle(1):font p1,p2,p3:GetStructLogfont logfont:CreateFontIndirect varptr(logfont):hFont=stat:font sFontName,nFontData(0),nFontData(1):return hFont
- #global
-#endif
-
-#module
-// 内部処理用命令 ( int 型一次元配列を拡張 )
-#deffunc ____ArrayExpand array p1, int p2, local temp
-	if ( length(p1) >= p2 ) { return }	// 増えない場合は無視
-	dim    temp, length(p1)
-	memcpy temp, p1, length(p1) * 4		// コピー
-	dim    p1, p2
-	memcpy p1, temp, length(temp) * 4	// 戻す
-	return
-#global
-
 // TabInt ( 関連数値 ) 機能を使う場合は、定義してください。
 ;	#define __USE_TABINT__
 
@@ -147,14 +116,11 @@
 
 // TtoW …… TabIndex を入力したら、WindowID を返す(相対値)
 // WtoT …… WindowID を入力したら、TabIndex を返す
-#module Tabmod hTab, TabID, TabNum, fUsing, TtoW, WtoT, Index, wID, bReverse, hFont
+#module Tabmod hTab, TabID, TabNum, fUsing, TtoW, WtoT, Index, wID, bReverse
 
 #define true  1
 #define false 0
 #define nBitOfInt 32	// int型のビット数
-#define mv modvar Tabmod@
-
-#define redim ____ArrayExpand
 
 //------------------------------------------------
 //        マクロ
@@ -189,9 +155,6 @@
 
 #uselib "gdi32.dll"
 #cfunc  GetStockObject@Tabmod		"GetStockObject"		int
-#func   GetObject@Tabmod			"GetObjectA"			int,int,int
-#func   DeleteObject@Tabmod			"DeleteObject"			int
-#func   CreateFontIndirect@Tabmod	"CreateFontIndirectA"	int
 
 #deffunc _Tabmod_init
 	dim  rect, 4		// RECT 構造体
@@ -237,7 +200,7 @@
 	return (stat)
 	
 #define global ctype GetTabStrItem(%1,%2=0,%3=511) _GetTabStrItem(%1,%2,%3)
-#defcfunc _GetTabStrItem mv, int p2, int p3
+#modcfunc _GetTabStrItem int p2, int p3
 	
 	memexpand pszText, p3 + 1					// 必要なだけ拡張する
 	tcitem = 1, 0, 0, varptr(pszText), p3		// ポインタ, バッファ数
@@ -262,7 +225,6 @@
 	dim  fUsing, 3			// Window の使用状況を表すフラグ
 	dim  TtoW, 5			// winID を返す
 	dim  WtoT, 5			// index を返す
-	dim hFont				// フォントハンドル (ChangeTabStrFont 使用時のみ)
  #ifdef __USE_TABINT_ON__
 	dim  LPRM, 5			// 関連 int ( LPARAM 値 )
  #endif
@@ -286,13 +248,13 @@
 		InsPos = rvI( limit(p3, 0, TabNum + 1) )
 	}
 	
-	// テーブルの修正
-	redim    WtoT, TabNum + 1	// 配列を、タブの数ぶんにまで拡張 ( + 1 は保険 )
-	redim	 TtoW, TabNum + 1	// 同上
+	// 配列を、タブの数ぶんにまで拡張
+	WtoT(TabNum) = 0
+	TtoW(TabNum) = 0
 	ArrayIns TtoW, InsPos		// 要素を配列の途中に挿入する
 	
  #ifdef __USE_TABINT_ON__
-	redim    LPRM, TabNum + 1
+	LPRM(TabNum) = 0
 	ArrayIns LPRM, InsPos
  #endif
 	
@@ -396,7 +358,7 @@
 //----------------------------------------------------------
 // イメージリストの取得
 //----------------------------------------------------------
-#defcfunc GetTabImageList mv
+#modcfunc GetTabImageList
 	sendmsg hTab, 0x1302, 0, 0		// TCM_GETIMAGELIST (hImageList を取得)
 	return (stat)
 	
@@ -409,22 +371,6 @@
 	return (stat != 0)
 	
 //##########################################################
-//        つまみのフォントを設定する
-//##########################################################
-#modfunc ChangeTabStrFont str p2, int p3, int p4
-	
-	if ( hFont ) { DeleteObject hFont }		// 解放しておく
-	
-	hFont = CreateFontByHSP(p2, p3, p4)		// フォントオブジェクトを作成
-	sendmsg hTab, 0x0030, hFont, true		// 変更する
-	
-	// サイズを適正にする
-	repeat TabNum
-		AdjustWindowRect thismod, cnt		// すべてを矯正
-	loop
-	return
-	
-//##########################################################
 //        その他の動作
 //##########################################################
 //----------------------------------------------------------
@@ -432,7 +378,7 @@
 // 
 // @ 座標は絶対座標
 //----------------------------------------------------------
-#defcfunc NumberOfTabInPoint mv, int p2, int p3, local tabrect, local cntTabs, local ptMouse, local nRet
+#modcfunc NumberOfTabInPoint int p2, int p3, local tabrect, local cntTabs, local ptMouse, local nRet
 	sendmsg hTab, 0x1304, 0, 0	// TCM_GETITEMCOUNT (タブ数を取得)
 	cntTabs = stat
 	
@@ -487,7 +433,7 @@
 //----------------------------------------------------------
 // 取得関数
 //----------------------------------------------------------
-#defcfunc TabInt mv, int p2		// tabindex
+#modcfunc TabInt int p2		// tabindex
  #ifdef __USE_TABINT_ON__
 	return LPRM( p2 )
  #else
@@ -497,39 +443,30 @@
 //##########################################################
 //        内部参照用関数
 //##########################################################
-#defcfunc GetTabHandle mv
+#modcfunc GetTabHandle
 	return hTab
 	
-#defcfunc GetTabNum mv
+#modcfunc GetTabNum
 	sendmsg hTab, 0x1304, 0, 0		// TCM_GETITEMCOUNT (数を取得する)
 	TabNum = stat					// 調整
 	return TabNum
 	
-#defcfunc ActTabIndex mv
+#modcfunc ActTabIndex
 	return Index
 	
-#defcfunc ActTabWinID mv
+#modcfunc ActTabWinID
 	return wID
 	
-#defcfunc  ItoW mv, int p2		// iTabItem -> WindowID
+#modcfunc  ItoW int p2		// iTabItem -> WindowID
 	return TtoW( limit( p2, 0, TabNum ) )
 	
-#defcfunc  WtoI mv, int p2		// WindowID -> iTabItem
+#modcfunc  WtoI int p2		// WindowID -> iTabItem
 	return WtoT( limit( p2, 0, TabNum ) )
 	
-#defcfunc IsReverse mv
+#modcfunc IsReverse
 	return bReverse != 0
-	
-//----------------------------------------------------------
-// デストラクタ
-//----------------------------------------------------------
-#modterm
-	if ( hFont ) { DeleteObject hFont : hFont = 0 }	// フォントハンドルを解放する
-	return
 	
 #global
 _Tabmod_init
-
-#undef ____ArrayExpand
 
 #endif	// モジュール全体
