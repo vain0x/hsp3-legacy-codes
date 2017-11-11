@@ -1,0 +1,27 @@
+// Light Filer - Sub Command
+
+#ifndef __LFILER_SUB_COMMAND_HSP__
+#define __LFILER_SUB_COMMAND_HSP__
+
+*OnCommand
+	if ( lparam == infTb ) {
+		gosub *OnCommand_Toolbar
+	}
+	return
+	
+//######## ツールバー ##########################################################
+*OnCommand_Toolbar
+	switch LOWORD( wparam )
+	
+	case IDT_BACK   : View_OnBack actView	: swbreak
+	case IDT_NEXT   : View_OnNext actView	: swbreak
+	case IDT_UP     : View_OnUp   actView	: swbreak
+	case IDT_FOLDER : swbreak
+	case IDT_DOS    : chdir View_path(actView) : exec "cmd.exe"	: swbreak
+	case IDT_RENEW  : View_GoDir actView, View_path(actView)
+	case IDT_DELETE : swbreak
+	
+	swend
+	return
+	
+#endif
