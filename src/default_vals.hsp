@@ -1,20 +1,21 @@
 ; 擬似変数リスト
 ; 定義 ( ～_set は、入力(orコンボ)ボックスの状態を表す。)
-	
+
+*l_var_reset
 	; global
 	sdim ms, 1024, 50, 20, 5, 5		; メモ変数
 	dim mi, 100, 50, 20, 5			; メモ変数
 	sdim nomal, 512						; 初期設定ファイル名
-	sdim file, 128, 6					; ファイル名
-	sdim edit, 500000, 6				; テキストデータ
-	dim hMain, 6						; 箱のハンドル
-	sdim box_symbol, , 6				; 箱の印。" ← ↑ "etc...
+	sdim file, 128, count_boxes					; ファイル名
+	sdim edit, 500000, count_boxes				; テキストデータ
+	dim hMain, count_boxes						; 箱のハンドル
+	sdim box_symbol, , count_boxes				; 箱の印。" ← ↑ "etc...
 	
 	sdim savedl, 510					; セーブ時に使う
 	;routine	; SetButton の gosub するラベル
 	
 	; 箱のサイズ
-	dim sizex, 6 : dim sizex_set, 6		; 箱の横幅
+	dim sizex, count_boxes : dim sizex_set, count_boxes		; 箱の横幅
 	dim sizey, 3 : dim sizey_set, 3		; 箱の縦幅
 	dim hBlance, 9				; 箱サイズ編集用の Input Box のハンドル
 	
@@ -25,18 +26,18 @@
 	dim edit_long, 2		; 追加するとき、そのすぐ下までのオフセット値をstrlen関数で溜めておく変数。0が元、1が先。
 	
 	; フォント
-	dim fontname, 6						; テキストフォントのコンボボックスでの設定用
-		dim fontname_set, 6
-	dim fontselect, 6, 2				; フォントスタイル(0は太字と斜体、1は下線と打ち消し線)
-		dim fontselect_set, 6, 2
-	dim fontstile, 6					; 実際に使用するフォントのスタイル
-	dim fontsize, 6						; フォントの大きさ
-		dim fontsize_set, 6
-	sdim fontmode, 30, 6				; テキストフォント
+	dim fontname, count_boxes						; テキストフォントのコンボボックスでの設定用
+		dim fontname_set, count_boxes
+	dim fontselect, count_boxes, 2				; フォントスタイル(0は太字と斜体、1は下線と打ち消し線)
+		dim fontselect_set, count_boxes, 2
+	dim fontstile, count_boxes					; 実際に使用するフォントのスタイル
+	dim fontsize, count_boxes						; フォントの大きさ
+		dim fontsize_set, count_boxes
+	sdim fontmode, 30, count_boxes				; テキストフォント
 	
 	; 右端で折り返す
-	dim MiGiHaShi, 6					; 右端で折り返す
-	dim MiGi_set, 6						; 右端で折り返す ON/OFF の設定
+	dim MiGiHaShi, count_boxes					; 右端で折り返す
+	dim MiGi_set, count_boxes						; 右端で折り返す ON/OFF の設定
 	
 	; 書式
 	
@@ -44,15 +45,15 @@
 	secret_open = 0						; 秘密コマンド解錠度(0～4)
 
 	; 色
-	dim wr, 6 : dim wg, 6 : dim wb, 6		; 箱の文字色
-	dim br, 6 : dim bg, 6 : dim bb, 6		; 箱の背景色
+	dim wr, count_boxes : dim wg, count_boxes : dim wb, count_boxes		; 箱の文字色
+	dim br, count_boxes : dim bg, count_boxes : dim bb, count_boxes		; 箱の背景色
 		; インプットボックスの状態
-	dim wr_set, 6 : dim wg_set, 6 : dim wb_set, 6	; 箱の文字色
-	dim br_set, 6 : dim bg_set, 6 : dim bb_set, 6	; 箱の背景色
+	dim wr_set, count_boxes : dim wg_set, count_boxes : dim wb_set, count_boxes	; 箱の文字色
+	dim br_set, count_boxes : dim bg_set, count_boxes : dim bb_set, count_boxes	; 箱の背景色
 		; インプットボックスのID
-	dim clIDr, 6
-	dim clIDg, 6
-	dim clIDb, 6
+	dim clIDr, count_boxes
+	dim clIDg, count_boxes
+	dim clIDb, count_boxes
 	
 	; _____
 	sdim secret, 64, 5	; パスワード入力ボックスの内容
@@ -60,7 +61,7 @@
 	secret_open = 0		; 解錠度
 	
 	; 代入---------------------------------------------------------------------------------------------------------
-	repeat 6
+	repeat count_boxes
 	file(cnt) = "無題"
 	loop
 	
@@ -78,7 +79,11 @@
 	
 	; 新規
 	sdim ownpath, 256					; [新ワリガキ]のための変数。自身のファイルパスを格納するため
-	GetModuleFileName , varptr(ownpath), 256	; 自身のファイルパスを取得＆格納
+	#ifdef _debug
+		ownpath = dir_cur + "/.."
+	#else
+		ownpath = dir_exe
+	#endif
 	
 	; セーブ&ロード関連
 	n = 0 								; note の略。略しすぎにご注意
@@ -94,7 +99,7 @@
 	LastStr = 0							; 検索した単語の後ろのインデックス
 	
 	; 初期フォント
-	repeat 6
+	repeat count_boxes
 	fontname(cnt) = 0					; 0 = "ＭＳ ゴシック", 1 = "MS 明朝"
 	fontmode(cnt) = "ＭＳ ゴシック"		; 各ボックスごとにフォント変更させるため
 	fontsize(cnt) = 15					; 文字サイズ	font のp2
@@ -115,7 +120,7 @@
 	MiGi_set  = 1, 1, 1, 1, 1, 0		; 右端で折り返すのON/OFFチェックボックスを全部ONにする。
 	
 	; 初期色
-	repeat 6
+	repeat count_boxes
 	br(cnt) = 255	; 背景色 255 = 白
 	bg(cnt) = 255
 	bb(cnt) = 255
@@ -135,4 +140,5 @@
 	wc = 0			; Word Color type の略 0は背景色、1だと文字色
 	new_end = 0		; NEW END　[新規]の時に終了セーブを行うために使用
 	secret_time_sw=0; SECRET TIME SWitch 秘密コマンドの回数で、0なら window ID 4 に描画。
-		;return
+	return
+	

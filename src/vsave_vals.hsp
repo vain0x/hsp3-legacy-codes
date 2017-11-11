@@ -1,4 +1,4 @@
-;*Vsave_Vals
+*LVarSave
 	vsave_start
 	
 	vsave_put edit				; mesbox の内容
@@ -64,5 +64,4 @@
 	vsave_put secret_open		; 解錠度
 	
 	vsave_end savedl	; savedl = ファイルパス
-	
-		;return
+	return

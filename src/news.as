@@ -4,10 +4,10 @@
 #deffunc faceup int FaceUp_p1, int FaceUp_p2
 	faceupmode = limit(FaceUp_p1, 0, 2)
 	if mode = 0 {
-		gsel 0, faceupmode
+		gsel wid_split_edit, faceupmode
 	} else {
-		gsel 3, faceupmode
-		if FaceUp_p2 >= 1 : gsel 100+actobj, FaceUp_p2
+		gsel wid_tab_edit, faceupmode
+		if FaceUp_p2 >= 1 : gsel wid_tab_first + actobj, FaceUp_p2
 	}
 	return
 	
@@ -64,23 +64,13 @@
 ;-------------------------------------------------------------------------------
 #deffunc Back
 	faceup 1
-	gsel 1,0 : esr ,1 : gsel 1,-1	; ツール画面初期化
+	
+	// ツール画面初期化
+	gsel wid_tool
+	esr , 1
+	gsel wid_tool, -1
+	
 	faceup 0
-	return
-	
-;-------------------------------------------------------------------------------
-#deffunc b
-	
-	return
-	
-;-------------------------------------------------------------------------------
-#deffunc c
-	
-	return
-	
-;-------------------------------------------------------------------------------
-#deffunc d
-	
 	return
 	
 ;-------------------------------------------------------------------------------
