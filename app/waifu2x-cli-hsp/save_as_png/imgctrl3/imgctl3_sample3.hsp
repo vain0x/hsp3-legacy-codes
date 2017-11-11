@@ -1,0 +1,105 @@
+/*--------------------------------------------------------------------
+	imgctl.dll Sapmle Code for HSP3 (2006/10/15)
+	by Kpan
+	http://lhsp.s206.xrea.com/
+
+	imgctl.dll
+	by ルーチェ (ruche)
+	http://www.ruche-home.net/
+
+	描画した適当な文字列を元にアニメーションGIFファイルを
+	出力するサンプルです。
+--------------------------------------------------------------------*/
+
+#include "imgctl3.as"
+
+
+/*--------------------------------------------------------------------
+	Windows API
+--------------------------------------------------------------------*/
+#uselib "user32"
+#cfunc GetSystemMenu "GetSystemMenu" int, nullptr
+#func InsertMenu "InsertMenuA" int, int, int, int, str
+
+#define ctype LOWORD(%1) (%1 & $FFFF)
+
+
+/*--------------------------------------------------------------------
+	メイン
+--------------------------------------------------------------------*/
+	title "imgctl.dll Sapmle Code for HSP3"
+
+;	imgctl.dll ファイルの確認
+	exist "imgctl.dll"
+	if strsize = -1 : dialog "imgctl.dll ファイルが見つかりません。", 1, "エラー" : end
+
+;	ウィンドウメッセージ
+	onexit *exit
+	oncmd gosub *syscommand, $112
+
+;	バージョン情報用システムメニュー
+	hSystemMenu = GetSystemMenu (hwnd)
+		InsertMenu hSystemMenu, 0, $400, 1, "バージョン情報(&A)..."
+		InsertMenu hSystemMenu, 1, $400 | $800, , ""
+
+
+;	表示文字列
+	message = "Let's HSP!"
+	font "", 40, 1 | 4
+
+
+;	赤色
+	color 255, 0, 0
+	pos 0, 0 : mes message
+
+;	DIBデータハンドルを取得
+	DCtoDIB hdc, 0, 0, ginfo (14), ginfo (15)
+	hDib.0 = stat
+
+;	青色
+	color 0, 0, 255
+	pos 0, 50 : mes message
+
+;	DIBデータハンドルを取得
+	DCtoDIB hdc, 0, 50, ginfo (14), ginfo (15)
+	hDib.1 = stat
+
+;	黄色
+	color 255, 255, 0
+	pos 0, 100 : mes message
+
+;	DIBデータハンドルを取得
+	DCtoDIB hdc, 0, 100, ginfo (14), ginfo (15)
+	hDib.2 = stat
+
+
+;	アニメーションGIFを出力
+;	(DIBデータハンドルの配列を指定。間隔は50=0.5秒、100=1秒。)
+	DIBtoGIFAni "imgctl3_anitest.gif" , varptr (hDib), 3, 50
+
+;	DIBデータハンドルを開放
+	repeat 3
+		if hDib.cnt != 0 : DeleteDIB hDib.cnt
+	loop
+
+	stop
+
+
+/*--------------------------------------------------------------------
+	WM_SYSCOMMAND (バージョン情報表示)
+--------------------------------------------------------------------*/
+*syscommand
+	if wparam = 1 {
+		ImgctlVersion
+		version = LOWORD (stat)
+		dialog "\nimgctl.dll Sapmle Code for HSP3\nCopyright (C) 2006 Kpan\n\nimgctl.dll v"+version / 100+"."+version \ 100+"\nby ルーチェ (ruche)", , "バージョン情報"
+	}
+	return
+
+
+/*--------------------------------------------------------------------
+	終了
+--------------------------------------------------------------------*/
+*exit
+	end
+

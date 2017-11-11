@@ -1,0 +1,632 @@
+// 簡易レコード編集ソフト
+// @from RoutineManager
+
+// レコードの既定値(default)を取得する方法が分からない。
+// 'Id' というプライマリー・キーを含まないテーブルは扱えない。
+// テーブルを作成・削除する機能がない。(用途を考えると十分だが)
+// assoc の使い方が雑？
+
+#include "uedai_userdef/all.hsp"
+
+#define global Str_AppName "RecordWriter"
+#define global Str_AppVer  "1.0"
+#define global Str_IniName (Str_AppName + ".ini")
+
+#packopt name Str_AppName
+#packopt hide true
+
+#include "Mo/MCIni.as"
+
+#include "hpi/sqle/sqlele.as"
+#include "use_table_as_assoc.as"
+
+#include "hpi/var_assoc/var_assoc.as"
+#include "Mo/abdata/mod_shiftArray.as"
+
+#include "Mo/GetFontOfHSP.as"
+#include "Mo/flexFrame.as"
+#include "Mo/Lvmod.as"
+#include "Mo/MenubarAPI.as"
+
+#uselib "user32.dll"
+#func   global SetWindowLong  "SetWindowLongA" int,int,int
+#cfunc  global GetWindowLong  "GetWindowLongA" int,int
+#func   global MoveWindow     "MoveWindow"     int,int,int,int,int,int
+#func   global PostMessage    "PostMessageA"   int,int,int,sptr
+#func   global GetClientRect  "GetClientRect"  int,int
+
+#module
+#deffunc SetStyle int p1, int p2, int p3, int p4
+	SetWindowLong p1, p2, bit_sub(GetWindowLong(p1, p2 | p3), p4)
+	return
+#global
+
+// applycation consts
+#enum global IDW_Main = 0
+#enum global IDW_TableList = 0
+#enum global IDW_Listview
+#enum global IDW_RecordEdit
+
+#enum global IDM_None = 0
+#enum global IDM_Edit
+#enum global IDM_Insert
+#enum global IDM_Remove
+#enum global IDM_MoveUp
+#enum global IDM_MoveDown
+
+#define global curTable nameTables(iTableCur)
+
+*main
+	gosub *LInitialize
+	
+	gsel IDW_TableList, 1
+	stop
+	
+*LInitialize
+	gsel 0, -1
+	
+	gosub *LInitVar
+	gosub *LInitScreen
+	
+	onexit gosub *LExit
+	return
+	
+*LOpenDb
+	if ( dir_cmdline != "" ) {
+		fnameDb = dir_cmdline
+		return
+	}
+	
+	fnameDb = ini_gets(cfg, "Init", "DefaultDb")
+	if ( fnameDb != "" ) { return }
+	
+	dialog "db", 16, Str_AppName  + ": Open"
+	if ( stat == 0 ) { end }
+	fnameDb = refstr
+	return
+	
+*LInitVar
+	ini_new cfg, (dir_exe2 + "/" + Str_IniName)
+	
+	gosub *LOpenDb
+	sql_open fnameDb
+	return
+	
+*LInitScreen
+	screen IDW_TableList, 280, 30, 2
+		title Str_AppName + " " + Str_AppVer + ": Table"
+		syscolor 15 : boxf : color
+	;	SetStyle hwnd, -16, 0x40000		// 可変枠
+	
+		winpos(0)  = ini_geti( cfg, "Tablelist", "Pos.X", (ginfo_dispx - ginfo_winx) / 2 )
+		winpos(1)  = ini_geti( cfg, "Tablelist", "Pos.Y", (ginfo_dispy - ginfo_winy) / 2 )
+		width , , winpos(0), winpos(1)
+		
+	;	objmode 2
+		objsize 180, 20
+		
+		// テーブルリスト
+		sql_q "SELECT * FROM SQLITE_MASTER", masterTable
+		cntTables = stat
+		repeat cntTables
+			nameTables(cnt) = sql_v("name", masterTable)
+			sql_next masterTable
+		loop
+		if ( cntTables == 0 ) { end : end }
+		
+		// コンボボックス
+		pos 5, 5
+		combox iTableCur, 100, "" : infCombox = objinfo(stat, 2), stat
+		repeat cntTables
+			sendmsg infCombox, 0x0143, 0, varptr(nameTables(cnt))	// CB_ADDSTRING
+		loop
+		objprm infCombox(1), 0
+		
+		// ボタン
+		objsize 80, 20
+		pos 195, 5 : button gosub "編集", *LBeginTableEdit
+		
+	screen IDW_Listview, ginfo_dispx, ginfo_dispy, 2
+		title Str_AppName + " " + Str_AppVer + ": Listview"
+		syscolor 15 : boxf : color
+		SetStyle hwnd, -16, 0x40000		// 可変枠
+		
+		winsize(0) = ini_geti( cfg, "Listview", "Size.X", 768 )
+		winsize(1) = ini_geti( cfg, "Listview", "Size.Y", 320 )
+		winpos(0)  = ini_geti( cfg, "Listview", "Pos.X", (ginfo_dispx - winsize(0)) / 2 )
+		winpos(1)  = ini_geti( cfg, "Listview", "Pos.Y", (ginfo_dispy - winsize(1)) / 2 )
+		width winsize(0), winsize(1), winpos(0), winpos(1)
+		
+		// リストビュー
+		pos 0, 0
+		CreateListview mLv, ginfo_dispx, ginfo_dispy, (0x0001 | 0x0004 | 0x0008 | 0x8000)
+		infLv = objinfo(stat, 2), stat
+		
+		SetStyle     infLv, (-20), 0x0200		// 枠
+		LvSetExStyle   mLv, (0x0001 | 0x0020)	// 
+		
+		// フォント変更
+		ChangeControlFont infLv, ini_gets( cfg, "Listview", "Font.Family", msgothic ), ini_geti( cfg, "Listview", "Font.Size", 13 ), false
+		hFont = stat
+		
+		// ポップアップメニュー
+		hListviewPopupMenu = CreatePopupMenu()
+			AppendMenu   hListviewPopupMenu, 0, IDM_Edit,   "編集(&E)\tEnter"
+			AddSeparator hListviewPopupMenu	// ----
+			AppendMenu   hListviewPopupMenu, 0, IDM_Insert, "挿入(&I)\tInsert"
+			AppendMenu   hListviewPopupMenu, 0, IDM_Remove, "除去(&R)\tDelete"
+			AddSeparator hListviewPopupMenu	// ----
+			AppendMenu   hListviewPopupMenu, 0, IDM_MoveUp,   "一つ上に(&A)"
+			AppendMenu   hListviewPopupMenu, 0, IDM_MoveDown, "一つ下に(&D)"
+		
+		oncmd gosub *OnNotify, 0x004E		// WM_NOTIFY
+		oncmd gosub *OnSize,   0x0005		// WM_SIZE
+		oncmd gosub *OnSizing, 0x0214		// WM_SIZING
+		gosub *OnSize
+		
+	screen IDW_RecordEdit, ginfo_dispx, ginfo_dispy, (1 | 2 | 4 | 8)
+		title Str_AppName + ": Record"
+		objmode 2
+		
+	return
+	
+//------------------------------------------------
+// 終了時
+//------------------------------------------------
+*LExit
+	if ( wparam == IDW_TableList ) {
+		gosub *LSaveWindowTablelist
+		gosub *LDeleteResource
+		end : end
+		
+	} elsif ( wparam == IDW_Listview ) {
+		gosub *LEndTableEdit
+		return
+		
+	} else {
+		gsel wparam, -1
+		return
+	}
+	
+*LDeleteResource
+	onexit false
+	DeleteFont  hFont
+	DestroyMenu hListviewPopupMenu
+	return
+	
+//------------------------------------------------
+// ウィンドウのサイズが変わった
+//------------------------------------------------
+*OnSize
+	gsel IDW_Listview
+	MoveWindow infLv, 0, 0, ginfo_winx, ginfo_winy, true
+	return
+	
+//------------------------------------------------
+// サイズが変更されている
+//------------------------------------------------
+*OnSizing
+	OnSizingToFlexFrame 240, 200
+	return
+	
+//------------------------------------------------
+// コントロールからの通知
+//------------------------------------------------
+*OnNotify
+	dupptr nmhdr, lparam, 12
+	
+	if ( nmhdr(0) == infLv ) {
+		
+		// 項目の状態が変わった (選択項目IDを追う)
+		if ( nmhdr(2) == -101 ) {			// LVN_ITEMCHANGED
+			dupptr nmListview, lparam, 12 + 32			// NMLISTVIEW 構造体
+			iLvCur = nmListview(3)						// NMLISTVIEW::iItem
+		;	if ( nmListview(5) & 0x02 )					// NMLISTVIEW::uNewState & LVIS_SELECTED
+			
+		// 項目がアクティブ化した ( [Enter], Ｗクリック )
+		} elsif ( nmhdr(2) == (-114) ) {		// LVN_ITEMACTIVATE
+			gosub *LBeginEdit
+			
+		// キー押下
+		} elsif ( nmhdr(2) == (-155) ) {		// LVN_KEYDOWN
+			dupptr nmLvKeydown, lparam, 18				// NMLVKEYDOWN
+			
+			switch ( wpeek(nmLvKeydown, 12) )
+			;	case 0x0A: gosub *LBeginEdit     : swbreak	// VK_ENTER  [enter]
+				case 0x2D: gosub *LBeginInsert   : swbreak	// VK_INSERT [insert]
+				case 0x2E: gosub *LDeleteCurItem : swbreak	// VK_DELETE [delete]
+			swend
+			
+		// 右クリック
+		} elsif ( nmhdr(2) == (-5) ) {		// NM_RCLICK
+			dupptr nmItemActivate, lparam, 48			// NMITEMACTIVATE 構造体
+			if ( nmItemActivate(3) >= 0 ) {				// .iItem : アイテム上で右クリック
+				gosub *LListviewTrackPopupMenu
+			} elsif ( cntRecords == 0 ) { // レコードがなければ新規要素をすぐに追加する
+				textAttr(0) = "0"
+				iLvCur = -1
+				gosub *LBeginInsert
+				gosub *LInsertEditRecord
+			}
+			
+		// Ｗクリック
+		} elsif ( nmhdr(2) == (-3) ) {		// NM_DBCLK
+			;dupptr 
+			
+		} /*elsif ( nmhdr(2) == (-105) ) {	// LVN_BEGINLABELEDIT
+			gosub *OnBeginLabelEdit
+			
+			sendmsg infLv, 0x1018, 0, 0					// LVM_GETEDITCONTROL
+			hItemEdit = stat							// エディタのハンドルを得る
+			
+		// ラベル編集終了
+		} elsif ( nmhdr(2) == (-106) ) {	// LVN_ENDLABELEDIT
+			GetWindowText hItemEdit, varptr(textCell), 1023
+			LvSetStr mLv, textCell, iLvCur, 0
+			return false
+		}//*/
+		
+	}
+	return
+	
+*OnKeyOnEdit
+	if ( wparam == 27 ) { // [Esc]
+		gosub *LCloseEditRecord
+	}
+	return
+	
+//------------------------------------------------
+// 設定保存
+//------------------------------------------------
+*LSaveWindowTablelist
+	gsel IDW_Tablelist, 0
+	ini_puti cfg, "Tablelist", "Pos.X", ginfo_wx1
+	ini_puti cfg, "Tablelist", "Pos.Y", ginfo_wy1
+	return
+	
+*LSaveWindowListview
+	gsel IDW_Listview, 0
+	
+	dim rc, 4
+	GetClientRect hwnd, varptr(rc)
+	
+	ini_puti cfg, "Listview", "Size.X", rc(2) - rc(0) + 2
+	ini_puti cfg, "Listview", "Size.Y", rc(3) - rc(1) + 2
+	ini_puti cfg, "Listview", "Pos.X", ginfo_wx1
+	ini_puti cfg, "Listview", "Pos.Y", ginfo_wy1
+	
+	repeat cntColumns
+		sendmsg infLv, 0x101D, cnt, 0 // LVM_GETCOLUMNWIDTH
+		ini_puti cfg, "Listview", curTable + "." + columns(cnt) + ".Size", stat
+	loop
+	return
+	
+//##########################################################
+//        テーブル
+//##########################################################
+//------------------------------------------------
+// テーブルの編集を開始する
+//------------------------------------------------
+*LBeginTableEdit
+	gsel IDW_TableList, -1
+	
+	gosub *LLoadTable
+	
+	gosub *LRenewScreenToTable		// ウィンドウ調整
+	gsel IDW_Listview, 1
+	return
+	
+*LEndTableEdit
+	gsel IDW_RecordEdit, -1
+	gsel IDW_Listview, -1
+	gosub *LSaveWindowListview
+	
+	LvDeleteAll mLv						// LVM_DELETEALLITEMS
+	repeat cntColumns
+		sendmsg infLv, 0x101C, 0, 0		// LVM_DELETECOLUMN
+	loop
+	
+	gosub *LSaveTable
+	
+	gsel IDW_TableList, 1
+	return
+	
+//------------------------------------------------
+// テーブルを読み込む
+// 
+// @global of table:
+// @	curTable, setRecords,
+// @	columns, cntColumns,
+// @	records, cntRecords,
+//------------------------------------------------
+*LLoadTable
+	
+	// @ カラム名列を得る
+	sql_q "SELECT * FROM " + curTable, setRecords
+	cntRecords = stat
+	
+	columns = sql_collist(",", setRecords)	// カラム名列(",")
+	split columns, ",", columns
+	cntColumns = stat
+	
+	// レコード読み込み
+	assoc records			// レコード設定
+	repeat cntRecords : iRecord = cnt
+		sql_move iRecord, setRecords
+		
+		// 各メンバの値を読み込む
+		repeat cntColumns
+			records( iRecord, columns(cnt) ) = sql_v( columns(cnt), setRecords )
+		loop
+		
+	loop
+	
+	assoc recordDefault
+	/*
+	// レコード
+	// @ recordDefault : 各キーの省略値を保持する。
+	// @ 'Name' は無いかも？
+	// @ 既定値でレコードを挿入して、それの値を読み取り、そのレコードを除去する、という流れ。
+;	sql_q "INSERT INTO " + curTable + " DEFAULT VALUES", _def
+	sql_q "SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '" + curTable + "'", _def
+	assert
+	sql_q "SELECT * FROM " + curTable + " WHERE Name = '$_Default_$'"
+	repeat cntColumns
+		recordDefault( columns(cnt) ) = sql_v( columns(cnt) )
+	loop
+	recordDefault("Name") = ""		// '$_Default_$' になっているため
+	sql_q "DELETE FROM " + curTable + " WHERE Name = '$_Default_$'"	// 邪魔なのですぐに削除
+	//*/
+	return
+	
+//------------------------------------------------
+// テーブルを保存する
+//------------------------------------------------
+*LSaveTable
+	sql_q "BEGIN"
+	
+	// テーブルを再構築する
+	sql_q "DELETE FROM " + curTable			// 一旦、全てのレコードを除去する
+	repeat cntRecords : iRecord = cnt
+		records(iRecord, "Id") = cnt		// 表の順に合わせる
+		
+		tmp = "INSERT INTO " + curTable + " VALUES("
+		repeat cntColumns
+			if ( cnt ) { tmp += ", " }
+			tmp += "'" + ( records( iRecord, columns(cnt) ) ) + "'"
+		loop
+		tmp += ")"
+		sql_q tmp
+	loop
+	
+	sql_q "COMMIT"
+	return
+	
+//------------------------------------------------
+// テーブルによってウィンドウを再調整する
+//------------------------------------------------
+*LRenewScreenToTable
+	gsel IDW_Listview
+		title Str_AppName + ": Table '" + curTable + "'"
+		
+		// カラム追加
+		repeat cntColumns
+			clText(cnt) = ini_gets( cfg, "Listview", curTable + "." + columns(cnt) + ".Text", columns(cnt) )
+			clSize(cnt) = ini_geti( cfg, "Listview", curTable + "." + columns(cnt) + ".Size", ginfo_winx / cntColumns - 1 )
+			LvInsertColumn mLv, clText(cnt), cnt, clSize(cnt), cnt
+		loop
+		
+		// 既存レコードをリストビューに追加
+		repeat cntRecords
+			record_insertListview cnt, -1
+		loop
+		
+	gsel IDW_RecordEdit
+		winsize = 330, ( cntColumns + 1 ) * 25 + 10 - 5
+		winpos  = (ginfo_dispx - winsize(0)) / 2, (ginfo_dispy - winsize(1)) / 2	// 中央配置
+		
+		width winsize(0), winsize(1), winpos(0), winpos(1)
+		syscolor 15 : boxf : color
+		clrobj
+		
+		// 各属性について1つずつボックスを用意する
+		sdim textAttr, 260, cntColumns
+		repeat cntColumns
+			sysfont 0
+			pos 5,  5 + 25 * cnt : mes   clText(cnt) + "："
+			font msgothic, 12
+			pos 70, 3 + 25 * cnt : input textAttr(cnt), 255, 24
+		loop
+		
+		// ボタン
+		objsize 80, 22
+		sysfont 11
+		pos  75, ginfo_winy - 25 : button gosub "更新", *LReplaceEditRecord
+		pos 160, ginfo_winy - 25 : button gosub "挿入", *LInsertEditRecord
+		pos 245, ginfo_winy - 25 : button gosub "キャンセル", *LCloseEditRecord
+		
+		onkey gosub *OnKeyOnEdit
+	
+	return
+	
+//##########################################################
+//        レコード・リストビュー
+//##########################################################
+//------------------------------------------------
+// リストビューの右ポップアップメニュー
+// 
+// @ nmItemActivate(3) : ポップアップ下のアイテムの番号
+//------------------------------------------------
+*LListviewTrackPopupMenu
+	// ポップアップメニューを出す
+	gsel IDW_Listview, 1
+	TrackPopupMenuEx hListviewPopupMenu, 0x0180, ginfo_mx, ginfo_my, hwnd, NULL
+	
+	switch ( stat )
+		case IDM_Edit:
+			iLvCur = nmItemActivate(3)
+			gosub *LBeginEdit
+			swbreak
+			
+		case IDM_Insert:
+			iLvCur = nmItemActivate(3)
+			gosub *LBeginInsert
+			swbreak
+			
+		case IDM_Remove:
+			iLvCur = nmItemActivate(3)
+			gosub *LDeleteCurItem
+			swbreak
+			
+		case IDM_MoveUp:   record_moveUpOrDown nmItemActivate(3),  1 : swbreak
+		case IDM_MoveDown: record_moveUpOrDown nmItemActivate(3), -1 : swbreak
+		
+	;	case IDM_None:
+		default:
+			swbreak
+	swend
+	return
+	
+//------------------------------------------------
+// 新たなレコードの挿入を準備する
+//------------------------------------------------
+*LBeginInsert
+	gsel IDW_RecordEdit, 1
+	assert // recordDefaultの初期化は未実装
+	
+	// 既定値をボックスに格納しておく
+	repeat cntColumns
+		objprm cnt, ""//str( recordDefault(columns(cnt)) )
+	loop
+	
+	objsel 0
+	return
+
+//------------------------------------------------
+// レコードの編集を開始する
+//------------------------------------------------
+*LBeginEdit
+	gsel IDW_RecordEdit, 1
+	
+	// 選択されたレコードの情報をボックスに格納しておく
+	repeat cntColumns
+		objprm cnt, records( iLvCur, columns(cnt) )
+	loop
+	
+	objsel 0
+	return
+	
+//------------------------------------------------
+// 新たなレコードを追加する
+// 
+// @from: 「レコード編集」ウィンドウの「追加」ボタン
+// @global
+// @	textAttr[]: 各要素の値を保有する
+//------------------------------------------------
+*LInsertEditRecord
+	iLvCur ++	// 一つ下に追加する
+	
+	ArrayInsert records, iLvCur
+	records(iLvCur) = assoc()		// ゴミが残る
+	cntRecords ++
+	
+	repeat cntColumns
+		records( iLvCur, columns(cnt) ) = textAttr(cnt)
+	loop
+	
+	record_insertListview iLvCur, iLvCur
+	
+	iLvCur --
+	
+	gosub *LCloseEditRecord
+	return
+	
+//------------------------------------------------
+// 現在のレコードを置換する
+// 
+// @from: 「レコード編集」ウィンドウの「置換」ボタン
+// @global
+// @	textAttr[]: 各要素の値を保有する
+//------------------------------------------------
+*LReplaceEditRecord
+	repeat cntColumns
+		records( iLvCur, columns(cnt) ) = textAttr(cnt)
+		LvSetStr mLv, textAttr(cnt), iLvCur, cnt
+	loop
+	
+	gosub *LCloseEditRecord
+	return
+	
+//------------------------------------------------
+// 「レコード編集」ウィンドウを閉じる
+//------------------------------------------------
+*LCloseEditRecord
+	gsel IDW_RecordEdit, -1
+	gsel IDW_Listview, 1
+	return
+	
+//------------------------------------------------
+// カレントレコードの削除を始める
+//------------------------------------------------
+*LDeleteCurItem
+;	logmes "delete "+ iLvCur
+	dialog "レコード[" + iLvCur + "]を削除してよろしいですか？", 2, Str_AppName + ": Remove"
+	if ( stat == 6 ) {						// MB_OK
+		record_remove iLvCur
+	}
+	return
+	
+//------------------------------------------------
+// レコードをリストビューに挿入する
+// 
+// @ 予め records(iRecord) にデータを設定しておく。
+// @ iDst の下に挿入する。(iDst < 0) のとき最後尾。
+// @global: mLv, records, columns
+// @prm iRecord, iDst
+//------------------------------------------------
+#deffunc record_insertListview int idx, int iDst, local iLvItem
+	LvInsertItem mLv, records( idx, columns(0) ), iDst : iLvItem = stat
+	repeat cntColumns - 1, 1
+		LvSetSub mLv, records( idx, columns(cnt) ), iLvItem, cnt
+		logmes "#" + iLvItem + "[" + cnt + "] = " + records( idx, columns(cnt) )
+	loop
+	return
+	
+//------------------------------------------------
+// レコードを削除する
+//------------------------------------------------
+#deffunc record_remove int idx
+	if ( idx < 0 ) { return }
+	
+	LvDelete mLv, idx			// 除去
+	
+	ArrayRemove records, idx	// 実体データを破壊
+	cntRecords --
+	return
+	
+//------------------------------------------------
+// リストビューのアイテムを上下入れ替える
+// 
+// @ このアプリケーションでは、アイテムを一旦除去して、
+// @	その後適切な位置に挿入し直せばよい。
+// @	( lparam など他の要素を使っていないため )
+// @prm idx : 上下のアイテムの有無等は事前に判定しておく
+// @prm dir : 方向 (正: 上, 負: 下)
+//------------------------------------------------
+#deffunc record_moveUpOrDown int idx, int dir,  local idxDst
+	if ( idx < 0 || dir == 0 ) { return }
+	idxDst = idx - (dir / abs(dir))
+	
+	if ( in_interval(idxDst, 0, cntRecords) == false ) { return }
+	
+	swap_var record(idx), record(idxDst)
+	
+	LvDelete mLv, idx
+	record_insertListview idxDst, idxDst
+	return
+	
+#deffunc swap_var var x, var y,  local t
+	t = x
+	x = y
+	y = t
+	return

@@ -1,0 +1,67 @@
+*LVarSave
+	vsave_start
+	
+	vsave_put edit				; mesbox の内容
+	vsave_put file				; ファイル名
+	vsave_put number			; 分割モードならboxsと同じ。タブモードなら 6
+	
+	vsave_put sizex				; 箱の横の長さ
+	vsave_put sizex_set			; 
+	vsave_put sizey				; 箱の縦の長さ
+	vsave_put sizey_set			; 
+	
+	vsave_put graft_info		; 移植の設定
+	
+	vsave_put fontname			; フォント名を選ぶ combox の状態
+	vsave_put fontname_set		; 
+	
+	vsave_put fontmode			; フォント名
+	
+	vsave_put fontsize			; フォントの大きさ
+	vsave_put fontsize_set		; 
+	
+	vsave_put fontstile			; フォントのスタイル
+	
+	vsave_put fontselect		; フォントのスタイル設定
+	vsave_put fontselect_set	; 
+		
+	vsave_put MiGiHaShi			; 右端折り返しスイッチ
+	vsave_put MiGi_set			; 
+	
+	vsave_put wr				; 文字色 赤輝度
+	vsave_put wr_set			; 
+	
+	vsave_put wg				; 文字色 緑輝度
+	vsave_put wg_set			; 
+	
+	vsave_put wb				; 文字色 青輝度
+	vsave_put wb_set			; 
+	
+	vsave_put br				; 背景色 赤輝度
+	vsave_put br_set			; 
+	
+	vsave_put bg				; 背景色 緑輝度
+	vsave_put bg_set			; 
+	
+	vsave_put bb				; 背景色 青輝度
+	vsave_put bb_ser			; 
+	
+	vsave_put boxs				; 箱数
+	vsave_put boxspecial		; special モードか
+	vsave_put btw				; 左右分割
+	vsave_put bju				; 十字分割
+	
+	vsave_put SearchWord		; 検索する単語
+	vsave_put ChangedWord		; 置換した後の単語
+	
+	vsave_put Current_File		; カレントファイル
+	vsave_put Current_Box		; カレントボックス
+	
+	vsave_put Tabsize			; タブの大きさ
+	vsave_put tabstops			; tabstops
+	
+	vsave_put secret			; 秘密
+	vsave_put secret_open		; 解錠度
+	
+	vsave_end savedl	; savedl = ファイルパス
+	return

@@ -1,0 +1,64 @@
+// 初期フォルダ指定付きフォルダ選択ダイアログ
+
+#include "hscallbk10/hscallbk.as"
+
+#uselib "ole32.dll"
+#func CoInitializeEx		"CoInitializeEx"		int,int
+#func CoTaskMemFree			"CoTaskMemFree"			int
+
+#uselib "shell32.dll"
+#func SHGetMalloc			"SHGetMalloc"			var
+#func SHBrowseForFolder		"SHBrowseForFolderA"	var
+#func SHGetPathFromIDList	"SHGetPathFromIDListA"	sptr,sptr
+
+#uselib ""
+#func BrowseCallbackProc	""						int,int,int,int
+
+#define BFFM_INITIALIZED			0x00000001
+#define BFFM_SETSELECTION			0x00000466
+#define COINIT_APARTMENTTHREADED	0x00000002
+#define global BIF_USENEWUI			0x00000050
+
+*main
+	sdim buf,      MAX_PATH
+	sdim FirstDir, MAX_PATH
+	sdim sztitle,  MAX_PATH
+	sdim pathname, MAX_PATH
+	
+	FirstDir = dirinfo(0)
+	style    = BIF_USENEWUI
+	sztitle  = "フォルダを選択してください"
+	
+	setcallbk      Proc, BrowseCallbackProc, *OnBrowseCallbackProc
+	CoInitializeEx 0, COINIT_APARTMENTTHREADED
+	SHGetMalloc    pMalloc
+	
+	BROWSEINFO = hwnd, 0, varptr(buf), varptr(sztitle), style, varptr(Proc), varptr(FirstDir), 0
+	
+	// フォルダ選択ダイアログを表示する
+	SHBrowseForFolder BROWSEINFO
+    pidl = stat
+    if (pidl == 0) {
+		CoTaskMemFree pidl
+		mes "SHBrowseForFolder関数のエラー"
+		stop
+    }
+    
+    SHGetPathFromIDList pidl, varptr(pathname)
+    if (stat == 0) {
+		CoTaskMemFree pidl
+		mes "SHGetPathFromIDList関数のエラー"
+		stop
+    }
+	CoTaskMemFree pidl
+	
+	mes pathname
+	stop
+	
+*OnBrowseCallbackProc
+	// フォルダ選択ダイアログが開いた時
+	if ( callbkarg(1) == BFFM_INITIALIZED ) {
+		sendmsg callbkarg(0), BFFM_SETSELECTION, true, callbkarg(3)
+	}
+	return 1
+	

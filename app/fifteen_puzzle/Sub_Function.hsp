@@ -1,0 +1,82 @@
+// FifPz - Sub Function
+
+#ifndef IG_FIFPZ_SUB_FUNCTION_HSP
+#define IG_FIFPZ_SUB_FUNCTION_HSP
+
+#define global ctype isDisShard(%1) ( (%1) < 0 )
+
+//##############################################################################
+//        ƒ‚ƒWƒ…[ƒ‹’è‹`
+//##############################################################################
+#module
+
+#deffunc swap var p1, var p2
+	tmptoSwap = p1
+	p1        = p2
+	p2        = tmptoSwap
+	return
+	
+#deffunc shuffleArray array p1, local lenArray
+	lenArray = length(p1)
+	repeat lenArray - 1
+		swap p1(cnt), p1(cnt + rnd(lenArray - cnt))
+	loop
+	return
+	
+#global
+
+//##############################################################################
+//        ƒOƒ[ƒoƒ‹’è‹`
+//##############################################################################
+
+// ’f•ÐID ‚©‚çŽÀÛ‚ÌÀ•W‚ð“¾‚é
+#defcfunc posidToPos int p1, int x_or_y
+	if ( x_or_y == x ) {
+		return ( (p1 \ cntShardsRoot) * sizePicShard.x )
+	} else {
+		return ( (p1 / cntShardsRoot) * sizePicShard.y )
+	}
+	return
+	
+// ’f•Ð‚ð1‚ÂƒRƒs[‚·‚é
+#deffunc copyShard int wid_from, int id_shard
+	gcopy wid_from, posidToPos(id_shard, x), posidToPos(id_shard, y), sizePicShard.x, sizePicShard.y
+	return
+	
+// ‚ ‚é’f•Ðindex‚ÌA‚ ‚é•ûŒü‚Ì’f•Ðindex‚ð“¾‚é
+#defcfunc getNexttoShardID int idx, int dir
+	switch ( dir )
+		case DIR_UPPER
+			if ( idx < cntShardsRoot ) {
+				swbreak		; return idx + cntShardsRoot * (cntShardsRoot - 1)
+			}
+			return idx - cntShardsRoot
+			
+		case DIR_LOWER
+			if ( idx >= ( cntShards - cntShardsRoot ) ) {
+				swbreak		; return idx \ cntShardsRoot
+			}
+			return idx + cntShardsRoot
+			
+		case DIR_RIGHT
+			if ( idx \ cntShardsRoot == (cntShardsRoot - 1) ) { swbreak }
+			return idx + 1
+			
+		case DIR_LEFT
+			if ( idx \ cntShardsRoot == 0 ) { swbreak }
+			return idx - 1
+	swend
+	return idx
+	
+// ’f•Ð‚ðˆÚ“®‚³‚¹‚é
+#deffunc moveShard int idx, int dir
+	swap placePics(idx), placePics( getNexttoShardID(idx, dir) )
+	return
+	
+// –³Œø’f•Ð‚ðˆÚ“®‚³‚¹‚é
+#deffunc moveDisShard int dir
+	moveShard idxDisShard, dir
+	idxDisShard = getNexttoShardID(idxDisShard, dir)
+	return
+	
+#endif

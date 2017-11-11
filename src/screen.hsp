@@ -1,0 +1,75 @@
+
+*l_window_init
+	screen wid_tool, 500, 300, 2+8+16, 200, 180
+	
+	screen wid_exit, 400, 200, 2+16, 260, 200
+	title " - ワリガキ・エディタ -  ver 1.0　終了画面"
+	
+	screen wid_tab_edit, 800, 680, 2+16, 30, 0
+	title " - ワリガキ・エディタ -  ver 1.0  タブ・モード"
+	
+	screen wid_secret_key, 290, 210, 2+4+16, 160, 120
+	title " - Secret Command Getter - "
+	
+	screen wid_exit_save, 500, 300, 2+4+16, 20, 30
+	title " - ワリガキ・エディタ -  ver 1.0  終了セーブ"
+	
+	screen wid_split_edit, 800, 680, 2+16, 30, 0
+	title " - ワリガキ・エディタ -  ver 1.0"
+	return
+
+*l_window_close
+; 表裏一体のサブルーチン
+	gsel wid_tool, 1
+	redraw redraw_off
+	esr
+	title "セーブ・ブロック選択"
+	objmode objmode_guifont, true
+	
+	pos 20,30
+	objsize 60,20,20
+	font_gui
+	mes "どの部分を保存しますか？"
+	; ボタン押した時、stst にそのオブジェクトID が代入される
+	routine = *save
+	SetButton
+	
+	pos 20,130
+	objsize 70,25
+	button gosub "完全保存",*Vsv ; Vsave
+	button "やめる",*sleep
+	
+		; 不要なボタンを削除
+	if mode = 0 : DelButton
+	
+	objmode objmode_usefont, true
+	redraw 1
+	return
+
+*l_window_open_file
+; 表裏一体のサブルーチン
+	gsel wid_tool, 1
+	redraw 2
+	esr
+	title "オープン・ブロック選択"
+	objmode objmode_guifont, true
+	
+	pos 20,30
+	objsize 60,20,20
+	font_gui
+	mes "どの部分に開きますか？"
+	; ボタン押した時、stst にそのオブジェクトID が代入される
+	routine = *load
+	SetButton
+	
+	pos 20,130
+	objsize 70,25
+	button gosub "完全データ",*Vlv ; Vload
+	button "やめる",*sleep
+	
+	; 不要なボタンを削除
+	if mode = 0 : DelButton
+	
+	objmode objmode_usefont, true
+	redraw 1
+	return

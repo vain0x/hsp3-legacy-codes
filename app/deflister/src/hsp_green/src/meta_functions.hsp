@@ -1,0 +1,25 @@
+#ifndef        ig_hsp_green_meta_functions_hsp
+#define global ig_hsp_green_meta_functions_hsp
+
+#define global _empty// empty
+#define global ctype _rm(%1)/*%1*/
+#define global ctype _stringify(%1) {"%1"}
+
+#define global ctype _cat(%1,%2)%1%2
+#define global ctype _cat3(%1,%2,%3)%1%2%3
+#define global ctype _cat_scope(%1,%2)_cat3(%1,@,%2)
+#define global ctype _tmp_var(%1) _cat(%1,@__tmp)
+
+#define global _comma ,
+#define global _colon :
+
+#define global ctype _unique_ident(%1 = _empty) %tuedai_uqid _cat(%n,%1)
+
+#define global ctype _replicate2(%1 = _empty)%1%1
+#define global ctype _replicate3(%1 = _empty)_replicate2(%1)%1
+#define global ctype _replicate4(%1 = _empty)_replicate3(%1)%1
+#define global ctype _replicate5(%1 = _empty)_replicate4(%1)%1
+#define global ctype _replicate6(%1 = _empty)_replicate5(%1)%1
+#define global ctype _replicate7(%1 = _empty)_replicate6(%1)%1
+
+#endif

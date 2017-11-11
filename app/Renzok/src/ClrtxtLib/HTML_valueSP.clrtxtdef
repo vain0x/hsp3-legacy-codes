@@ -1,0 +1,48 @@
+@// HTML タグの属性値の定型
+
+@//-------- 特殊な値 ---------------------------------------
+@(COLOR)HTMLspecial_param
+@(LEVEL)4
+@//@(KYOKA)1000000
+@(CIDPD)OPERATORS,SPACE,TAB,
+
+@//--- Meta タグ
+@(ENTRY)"auther","robots","description","copyright","keywords","date","generator","content-language","content-type","content-style-type","content-script-type","refresh",
+
+@//--- BR タグ
+@(ENTRY)"none","all",
+
+@//--- Maquee タグ
+@(ENTRY)"scroll","slide","alternate","up","down",
+
+@//--- UL,OL,LI タグ
+@(ENTRY)"disc","square","circle","a","i",
+
+@//--- A タグ
+@(ENTRY)"_blank","_self","_top","_parent",
+
+@//--- Area タグ
+@(ENTRY)"rect","poly",
+
+@//--- Table 系タグ
+@(ENTRY)"void","above","below","hsides","vsides","lhs","rhs","box","border","groups","rows","cols",
+
+@//--- Frame 系タグ
+@(ENTRY)"yes","no",
+
+@//--- Form 系タグ
+@(ENTRY)"GET","POST","soft","hard","off",
+@//-- Input_Type
+@(ENTRY)"text","password","radio","checkbox","submit","reset","button","image","file","hidden",
+
+@//--- 位置
+@(ENTRY)"top","middle","bottom","left","right","center","baseline",
+
+@//--- 色 (基本カラーネーム)
+@(ENTRY)"black","silver","gray","white","maroon","red","purple","fuchsia","green","lime","olive","yellow","navy","blue","teal","aqua",
+
+@//--- 色 (独自カラーネーム、使用できないブラウザもある)
+@//(ENTRY)
+
+@//---- 言語名の略称 (未完成)
+@(ENTRY)"ja","en","zn",

@@ -1,0 +1,41 @@
+#packopt name "ZeoFivePlayer"
+#packopt hide 1
+
+#ifdef _DEBUG
+ #undef picload
+ #define global picload(%1,%2=0) logmes {"%1"}: picload@hsp %1,%2
+#endif
+
+#include "hsp_green/src/all.hsp"
+
+#include "ZeoHeader.hsp"
+#include "ZpHeader.hsp"		// player ヘッダ
+
+#ifdef CMPOPT_FULLVER
+	#include "Mo/boxl.hsp"
+#endif //defined(CMPOPT_FULLVER)
+
+	if (false) {
+#include "ZpVariable.hsp"	// 変数の初期化
+#include "ZpFunc.hsp"		// 命令・関数
+#include "ZpBattle.hsp"
+#include "ZpRoutine.hsp"	// サブルーチン群
+#include "ZpScreen.hsp"		// 画面のセットなど
+	}
+
+///前処理
+	randomize
+	gosub *LInitVariables
+	gosub *LInitScreens
+	//goto *Top
+
+///タイトル画面
+*Top
+	combatCard = CardId_Invalid, CardId_Invalid
+	
+	gsel /*wID_Main*/
+	SetTitleWindow
+	gosub *LRedrawTitle
+	
+	gsel_show /*wID_Main*/
+	//stop

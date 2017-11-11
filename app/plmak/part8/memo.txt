@@ -1,0 +1,11 @@
+
+	領域の形式的追加＆バグ取り
+	
+- isSttmSplitter の追加
+- 領域文(block)の追加
+	( '{', '}' の追加、PrsNodeType_Block の追加、mTree の仕様の一般化 )
+	
+- LxOpType_Splitter の prs で、next する必要はない。
+- 返値がなければ、nullList を返却するように。
+
+( 変数などを導入するときの、スコープ関連ため )

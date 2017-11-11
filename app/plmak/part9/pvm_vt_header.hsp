@@ -1,0 +1,6 @@
+// plmak - vm - header for vartype
+
+#ifndef IG_PLMAK_VM_VT_HEADER_HSP
+#define IG_PLMAK_VM_VT_HEADER_HSP
+
+#endif

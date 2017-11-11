@@ -1,0 +1,222 @@
+#ifndef IG_MODULECLASS_HSP_IDENTIFIER_COLLECTOR_HSP
+#define IG_MODULECLASS_HSP_IDENTIFIER_COLLECTOR_HSP
+
+// HSPスクリプトから定義を収集する。
+// HspDeflister に include の処理を加えたもの。
+
+#include "easyhash.hsp"
+#include "SearchFileEx.hsp"
+#include "array_assign.hsp"
+#include "HspDeflister.hsp"
+
+#module MCHspIdenter \
+	mfOpt, mpathCommon, mSearchPath, \
+	keylist_all, keylist_sttm, keylist_func, keylist_sysvar, \
+	keylist_preproc, keylist_macro, keylist_modname, keylist_ppword, keylist_const, \
+	keylist_defsttm, keylist_deffunc, keylist_dllfunc, keylist_iface, keylist_var
+
+#include "common.hsp"
+
+//------------------------------------------------
+// キーワードリスト
+//------------------------------------------------
+#define Keywords_All   \
+	( Keywords_Sttm    \
+	+ Keywords_Func    \
+	+ Keywords_Sysvar  \
+	+ Keywords_Preproc \
+	+ Keywords_Macro   \
+	+ Keywords_ModName \
+	+ Keywords_PPWord  \
+	)
+#define Keywords_Sttm    \
+	( "goto,gosub,return,break,repeat,loop,continue,wait,await,dim,sdim,foreach,dimtype,dup,dupptr,end,stop,newmod,delmod,mref,run,exgoto,on,mcall,assert,logmes,newlab,resume,yield,onexit,onerror,onkey,onclick,oncmd,exist,delete,mkdir,chdir,dirlist,bload,bsave,bcopy,memfile,if,else,poke,wpoke,lpoke,getstr,chdpm,memexpand,memcpy,memset,notesel,noteadd,notedel,noteload,notesave,randomize,noteunsel,noteget,split,strrep,setease,sortval,sortstr,sortnote,sortget," \
+	+ "button,chgdisp,exec,dialog,mmload,mmplay,mmstop,mci,pset,pget,syscolor,mes,print,title,pos,circle,cls,font,sysfont,objsize,picload,color,palcolor,palette,redraw,width,gsel,gcopy,gzoom,gmode,bmpsave,hsvcolor,getkey,listbox,chkbox,combox,input,mesbox,buffer,screen,bgscr,mouse,objsel,groll,line,clrobj,boxf,objprm,objmode,stick,grect,grotate,gsquare,gradf,objimage,objskip,objenable,celload,celdiv,celput,gfilter,setreq,getreq,mmvol,mmpan,mmstat,mtlist,mtinfo,devinfo,devinfoi,devprm,devcontrol,httpload,httpinfo,gmulcolor,setcls,celputm,newcom,querycom,delcom,cnvstow,comres,axobj,winobj,sendmsg,comevent,comevarg,sarrayconv," \
+	)
+#define Keywords_Func    "callfunc,cnvwtos,comevdisp,libptr,int,rnd,strlen,length,length2,length3,length4,vartype,gettime,peek,wpeek,lpeek,varptr,varuse,noteinfo,instr,abs,limit,getease,notefind,str,strmid,strf,getpath,strtrim,sin,cos,tan,atan,sqrt,double,absf,expf,logf,limitf,powf,geteasef,ginfo,objinfo,dirinfo,sysinfo,"
+#define Keywords_Sysvar  "system,hspstat,hspver,stat,cnt,err,strsize,looplev,sublev,iparam,wparam,lparam,refstr,refdval,mousex,mousey,mousew,hwnd,hinstance,hdc,thismod,"
+#define Keywords_Preproc "addition,aht,ahtmes,cfunc,cmd,cmpopt,comfunc,const,defcfunc,deffunc,define,else,endif,enum,epack,func,global,if,ifdef,ifndef,include,modfunc,modcfunc,modinit,modterm,module,pack,packopt,regcmd,runtime,undef,usecom,uselib,"
+#define Keywords_Macro   "__hspver__,__hsp30__,__date__,__time__,__file__,_debug,alloc,ddim,_break,_continue,case,default,do,for,next,swbreak,swend,switch,until,wend,while,and,not,or,xor,ginfo_act,ginfo_b,ginfo_cx,ginfo_cy,ginfo_dispx,ginfo_dispy,ginfo_g,ginfo_intid,ginfo_mesx,ginfo_mesy,ginfo_mx,ginfo_my,ginfo_paluse,ginfo_r,ginfo_sel,ginfo_sizex,ginfo_sizey,ginfo_sx,ginfo_sy,ginfo_vx,ginfo_vy,ginfo_winx,ginfo_winy,ginfo_wx1,ginfo_wx2,ginfo_wy1,ginfo_wy2,ginfo_newid,dir_cmdline,dir_cur,dir_desktop,dir_exe,dir_mydoc,dir_sys,dir_win,font_normal,font_bold,font_italic,font_underline,font_strikeout,font_antialias,gmode_add,gmode_alpha,gmode_gdi,gmode_mem,gmode_pixela,gmode_rgb0,gmode_rgb0alpha,gmode_sub,objmode_normal,objmode_bmscr,objmode_hwnd,objmode_mode,objmode_guifont,objmode_usefont,msgothic,msmincho,notemax,notesize,"
+#define Keywords_ModName "hsp,"
+#define Keywords_PPWord  "global,ctype,int,str,sptr,wstr,double,float,label,comobj,var,array,modvar,nullptr,wptr,pval,bmscr,prefstr,pexinfo,local,onexit,"
+
+//------------------------------------------------
+// 構築
+//------------------------------------------------
+#modinit
+	sdim mSearchPath, 260
+	mSearchPath = ""
+	mfOpt       = 0
+	
+	keylist_all       = "," + Keywords_All
+	keylist_sttm      = "," + Keywords_Sttm
+	keylist_func      = "," + Keywords_Func
+	keylist_sysvar    = "," + Keywords_Sysvar
+	keylist_preproc   = "," + Keywords_Preproc
+	keylist_macro     = "," + Keywords_Macro
+	keylist_modname   = "," + Keywords_ModName
+	keylist_ppword    = "," + Keywords_PPWord
+	keylist_const     = ","
+	keylist_defsttm   = ","
+	keylist_deffunc   = ","
+	keylist_dllfunc   = ","
+	keylist_iface     = ","
+	keylist_var       = ","
+	return
+	
+//------------------------------------------------
+// 設定
+//------------------------------------------------
+#modfunc hspIdenter_set int fOpt
+	mfOpt = fOpt
+	return
+	
+//------------------------------------------------
+// common パス
+//------------------------------------------------
+#modfunc hspIdenter_setCommonPath str pathCommon
+	mpathCommon = pathCommon
+	hspIdenter_appendSearchPath thismod, mpathCommon
+	return
+	
+//------------------------------------------------
+// 検索パスを追加する
+//------------------------------------------------
+#modfunc hspIdenter_appendSearchPath str path_,  local path, local c, local len
+	sdim path, MAX_PATH
+	path = path_
+	len  = strlen(path)
+	c    = peek(path, len - 1)
+	if ( c == '/' ) { len -- }
+	if ( c != '\\') { wpoke path, len, '\\' : len ++ }
+	if ( instr(mSearchPath, 0, ";" + path + ";") < 0 ) {
+		mSearchPath += path + ";"
+	}
+	return
+	
+//------------------------------------------------
+// 予約語の追加
+//------------------------------------------------
+#define ctype FTC_add(%1, %2, %3) swbreak : case %1: if ( instr(%2, 0, "," + (%3) + ",") >= 0 ) { %2 += (%3) }
+#modfunc hspIdenter_reserveIdent str src_, int type,  local src
+	src = getpath(src_, 16)
+	if ( peek(src, strlen(src) - 1) != ',' ) { src += "," }
+	
+	switch ( type )
+		FTC_add( TkTypeEx_Sttm,    keylist_sttm,    src )
+		FTC_add( TkTypeEx_Func,    keylist_func,    src )
+		FTC_add( TkTypeEx_Sysvar,  keylist_sysvar,  src )
+		FTC_add( TkTypeEx_PreProc, keylist_preproc, src )
+		FTC_add( TkTypeEx_Macro,   keylist_macro,   src )
+		FTC_add( TkTypeEx_Modname, keylist_modname, src )
+		FTC_add( TkTypeEx_PPWord,  keylist_ppword,  src )
+		FTC_add( TkTypeEx_Const,   keylist_const,   src )
+		FTC_add( TkTypeEx_DefSttm, keylist_defsttm, src )
+		FTC_add( TkTypeEx_DefFunc, keylist_deffunc, src )
+		FTC_add( TkTypeEx_DllFunc, keylist_dllfunc, src )
+		FTC_add( TkTypeEx_IFace,   keylist_iface,   src )
+		FTC_add( TkTypeEx_Var,     keylist_var,     src )
+	swend
+	return
+	
+#undef FTC_add
+	
+//------------------------------------------------
+// 識別子のタイプの有無
+//------------------------------------------------
+#define ctype FT_exists(%1, %2, %3) if ( instr(%2, 0, "," + (%3) + ",") >= 0 ) { return %1 }
+#modcfunc hspIdenter_exists str src_,  local src
+	src = getpath(src_, 16)
+	
+	FT_exists( TkTypeEx_Sttm,    keylist_sttm,    src )
+	FT_exists( TkTypeEx_Func,    keylist_func,    src )
+	FT_exists( TkTypeEx_Sysvar,  keylist_sysvar,  src )
+	FT_exists( TkTypeEx_PreProc, keylist_preproc, src )
+	FT_exists( TkTypeEx_Macro,   keylist_macro,   src )
+	FT_exists( TkTypeEx_Modname, keylist_modname, src )
+	FT_exists( TkTypeEx_PPWord,  keylist_ppword,  src )
+	FT_exists( TkTypeEx_Const,   keylist_const,   src )
+	FT_exists( TkTypeEx_DefSttm, keylist_defsttm, src )
+	FT_exists( TkTypeEx_DefFunc, keylist_deffunc, src )
+	FT_exists( TkTypeEx_DllFunc, keylist_dllfunc, src )
+	FT_exists( TkTypeEx_IFace,   keylist_iface,   src )
+	FT_exists( TkTypeEx_Var,     keylist_var,     src )
+	return 0
+	
+#undef FT_exists
+	
+//------------------------------------------------
+// 定義を収集する
+//------------------------------------------------
+#modfunc hspIdenter_collectDefs array deflister, str path,  \
+	local listIncludeToLoad, local hashList, local hashListLen
+	
+	dim deflister
+	dim hashList, 32
+	listIncludeToLoad = path
+	hspIdenter_collectDefsRec thismod, deflister, listIncludeToLoad, hashList, hashListLen
+	return
+	
+#modfunc hspIdenter_collectDefsRec \
+	array deflister, array listIncludeToLoad, array hashList, var hashListLen,  \
+	local listInclude, local filename, local idx, local bListed, local ident, local tktype
+	
+	foreach listIncludeToLoad
+		
+		// 次のファイルのフルパスを取得
+		if ( peek(listIncludeToLoad(cnt), 1) != ':' ) {		// "x:/.." なら既にフルパス
+			SearchFileEx mSearchPath, listIncludeToLoad(cnt)
+			if ( refstr == "" ) { continue }
+			listIncludeToLoad(cnt) = refstr
+			hspIdenter_appendSearchPath thismod, getpath(refstr, 32)	// 逐一検索パスを拡張していく
+		}
+		
+		// ファイル名のみを取得しておく
+		filename = getpath(listIncludeToLoad(cnt), 8)
+		
+		// 既に開かれているファイルは無視
+		bListed = false
+		hash    = EasyHash( listIncludeToLoad(cnt) )		// フルパス
+		
+		repeat hashListLen
+			if ( hashList(cnt) == hash ) {
+				// 念のためファイルパスでも比較する
+				if ( hspDeflister_GetFileName( deflister(cnt) ) == filename ) {
+					bListed = true
+					break
+				}
+			}
+		loop
+		if ( bListed ) { continue }			// 定義済みなので無視する
+		
+		// 開いたリストに追加
+		if ( bListed == false ) {
+			hashList(hashListLen) = hash
+			hashListLen ++
+		}
+		
+		// 定義リストを作成する
+		hspDeflister_new deflister, listIncludeToLoad(cnt)
+		idx = stat
+		
+		// 定義リストを identer に反映する
+		repeat hspDeflister_getCount( deflister(idx) )
+			ident  = hspDeflister_getIdent( deflister(idx), cnt ) + "@" + hspDeflister_getScope( deflister(idx), cnt )
+			tktype = getTkTypeFromDefType( hspDeflister_getDefType(deflister(idx), cnt) )
+			hspIdenter_reserveIdent thismod, ident, tktype
+		loop
+		
+		// 再帰的に結合されたファイルから定義を取り出す
+		if ( hspDeflister_getCntInclude( deflister(idx) ) > 0 ) {
+			// #include されたファイルのリストを得る
+			hspDeflister_getIncludeArray deflister(idx), listInclude
+			
+			// 再帰
+			hspIdenter_collectDefsRec thismod, deflister(idx), listInclude, hashList, hashListLen
+		}
+	loop
+	return
+	
+#global
+
+#endif

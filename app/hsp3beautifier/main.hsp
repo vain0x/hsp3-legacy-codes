@@ -1,0 +1,48 @@
+// HSPスクリプトの体裁を整える
+
+#define global app_name "hsp3beautifier"
+#packopt name app_name
+#packopt hide 1
+
+#runtime "hsp3cl"
+
+#include "hsp_green/src/all.hsp"
+#define global MAKELONG2 MAKELONG4
+#define global max_int 0x7FFFFFFF
+
+#include "HPM_beautify.as"
+
+*main
+	gosub *ClearVariable
+	gosub *ProcCmdline
+	gosub *Transration
+	assert
+	end : end
+	
+*ClearVariable
+	sdim cmdline, MAX_PATH
+	return
+	
+*ProcCmdline
+	cmdline = dir_cmdline
+	if ( peek(cmdline) == '"' ) { getstr cmdline, cmdline, 1, '"' }
+	
+#ifdef _debug
+	if ( peek(cmdline) == 0 ) {
+		cmdline  = "D:/Docs/prg/hsp/Project/hsp3beautifier/_nobak/input.hsp"
+	}
+#endif
+	return
+	
+*Transration
+	exist cmdline
+	if ( strsize < 0 ) { print "File not found." : assert : end 1 }
+	
+	sdim     script, strsize + 1
+	notesel  script
+	noteload cmdline
+	hpm_beautify script, script
+	notesave getpath(cmdline, getpath_filename) + "_o" + getpath(cmdline, getpath_ext)
+	noteunsel
+	return
+	

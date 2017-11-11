@@ -1,0 +1,28 @@
+// plmak - private header
+
+#ifndef IG_PLMAK_PRIVATE_HEADER_HSP
+#define IG_PLMAK_PRIVATE_HEADER_HSP
+
+#define _plmak_DebugOut
+
+/*
+#ifdef _DEBUG
+ #define global ctype dbgpair(%1, %2) ( {"(%1,%2) = ("} + (%1) + ", " + (%2) + ")" )
+#else
+ #define global ctype dbgpair(%1, %2) ""
+#endif
+//*/
+
+//------------------------------------------------
+// 字句タイプ (lex)
+//------------------------------------------------
+#enum LxTkType_None = 0
+#enum LxTkType_Int			// 整数
+#enum LxTkType_Operator		// 二項演算子
+#enum LxTkType_Comma		// カンマ
+#enum LxTkType_Splitter		// 文区切り
+#enum LxTkType_Term			// 終端
+#enum LxTkType_Max
+#enum LxTkType_Error = (-1)
+
+#endif

@@ -1,0 +1,33 @@
+// plmak - interface
+
+#ifndef IG_PLMAK_INTERFACE_HSP
+#define IG_PLMAK_INTERFACE_HSP
+
+#include "plmak_lex.hsp"
+
+#module plmak
+
+//------------------------------------------------
+// ビルド
+// 
+// @prm output : 出力用変数 (形式は未定)
+// @prm script : スクリプト
+//------------------------------------------------
+#deffunc plmak_bulid array output, str script,  local tklist
+	plmak_lex tklist, script
+	
+	//
+	return
+	
+//------------------------------------------------
+// 実行
+// 
+// @prm ;
+//------------------------------------------------
+#deffunc plmak_run
+//	dummy
+	return
+	
+#global
+
+#endif

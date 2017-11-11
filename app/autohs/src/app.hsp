@@ -1,0 +1,100 @@
+// auto hs framework
+
+#packopt hide    1
+#packopt orgpath 1
+
+#runtime "hsp3cl"
+
+#include "ini/ini.hsp"
+#include "Mo/userdef.as"
+#include "Mo/hsedutil.as"
+#include "Mo/LexCmdline.as"
+
+#include "autohs.as"
+#include "mod_autohs.as"
+
+#module
+
+#deffunc app_init
+	sdim curpath, MAX_PATH : curpath = dir_cur
+	sdim ownpath, MAX_PATH : ownpath = dir_cur
+	sdim result
+	return
+
+#deffunc app_onexit onexit
+	chdir curpath
+	
+#ifdef _DEBUG
+	print result
+	assert
+#endif
+	return
+	
+#deffunc app_proc_cmdline str ext, \
+	local script
+
+	LexCmdline cmdopt, 2 ;, "hsed"
+	cntCmdopt = stat
+	
+;	cmdopt = "hsptmp", "" : cntCmdopt = length(cmdopt)
+	
+	// コマンドラインなし
+	if ( cntCmdopt == 0 ) {
+#ifdef _DEBUG
+		dialog "hsp;*.as;", 16, "HSP Script File"
+		if ( stat == 0 ) { end }
+		inFile  = refstr
+		outFile = getpath(inFile, 1) + ext
+#else
+		PutErrorMessage Error_NeedCmdline
+		end
+#endif
+	
+	// hsed を参照する呼び出し
+	} else : if ( cmdopt(0) == "hsed" ) {
+		bHsed = true
+		
+		// hsed があるかチェック
+		hsed_exist
+		if ( stat == false ) { PutErrorMessage Error_NoHsed : end }
+		
+		inFile  = HSED_TEMPFILE_HSP
+		outFile = inFile
+		
+		sdim script
+		hsed_GetActText script		// アクティブな Footy のテキストを取得
+		notesel script
+		notesave inFile
+		noteunsel
+		
+	// 通常の呼び出し
+	} else {
+		inFile  = cmdopt(0)
+		outFile = cmdopt(1)
+		
+		// エラーチェック・補完
+		if ( inFile == "" && outFile == "" ) {
+			PutErrorMessage Error_NeedCmdline
+			end
+		} else : if ( inFile != "" && outFile == "" ) {
+			outFile = getpath( inFile, 1 ) + ext
+		} else : if ( inFile == "" && outFile != "" ) {
+			inFile  = outFile
+		}
+	}
+	
+	// 出力ファイルの拡張子は必ず ext
+	outFile = getpath( outFile, 1 ) + ext
+	return
+	
+#deffunc app_output
+	notesel result
+	notesave outFile
+	noteunsel
+	return
+	
+#deffunc app_proc
+	app_proc_impl result, inFile
+	return
+	
+#global

@@ -1,0 +1,123 @@
+#define global app_name "HspUpdateModuleClient"
+#packopt name app_name
+#runtime "hsp3cl"
+
+#define global __LOCAL 1
+#define global __DRY_RUN 1
+#include "misc.hsp"
+
+*LMain
+	gosub *LInit
+	gosub *LDownload
+	gosub *LBackup
+	gosub *LStore
+	gosub *LTerm
+	assert
+	end : end
+	
+*LInit
+	randomize
+	
+#ifdef _DEBUG
+	dir_root      = "C:/Users/Owner/Source/Repos/AutoUpdate/_work"
+	dir_new_files = dir_root + "/$temp_new$"
+	dir_bak_files = dir_root + "/$temp_bak$"
+#else
+	dir_root      = getpath(dir_exe, 32) //ディレクトリのみ
+	dir_new_files = dir_root + "/$temp_new$" + rnd(0x7FFF)
+	dir_bak_files = dir_root + "/$temp_bak$" + rnd(0x7FFF)
+#endif
+
+	declvar cfg
+	ini_new cfg, dir_root + "/AutoUpdate.ini"
+	
+	path_package = dir_new_files + "/" + ini_gets(cfg, "Setting", "package_name")
+	
+	//無視リスト
+	declvar paths_ignored
+	ini_get_array cfg, paths_ignored, "Setting", "paths_ignored"
+	
+	//アップデート起動前のフォルダ構成を記憶
+	declvar paths_old_files
+	dirlist_rec paths_old_files, dir_root, "*"
+	
+#if __DRY_RUN == 0
+	mkdir_rec dir_new_files
+	mkdir_rec dir_bak_files
+#endif
+	
+	;onerror *LRestore
+	return
+	
+*LDownload
+#if __LOCAL == false
+	netinit
+	neturl ini_gets("Setting", "url")
+	netload path_package
+	
+	//TODO: unzip
+	//dir_new_filesに直接展開する
+#endif
+	unzip path_package, dir_new_files
+	if ( stat ) { print "解凍に失敗しました。" }
+	
+	//新しいパッケージのファイルを列挙
+	declvar paths_new_files
+	dirlist_rec paths_new_files, dir_new_files, "*"
+	sortstr paths_new_files
+	return
+	
+*LBackup
+	//上書きされるファイルを一時フォルダに移動する
+	
+	sdim paths_bak_files, , length(paths_old_files)
+	repeat length(paths_old_files)
+		//無視リストに入っているか確認
+		if ( is_ignored(paths_old_files(cnt), paths_ignored) ) {
+			continue
+		}
+		
+		index = arrayStr_find_index(paths_new_files, paths_old_files(cnt))
+		if ( index >= 0 ) {
+			//TODO: アップデート後と同一のファイルだったらコピーしない
+			
+			//一時フォルダに移動
+			file_name              = paths_new_files(index)
+			paths_bak_files(index) = path_flatten(file_name)
+			copy_file dir_root + "/" + file_name, dir_bak_files + "/" + paths_bak_files(index)
+			
+		} else {
+			// 未確認のファイルを警告する
+
+			print "unknown file: " + paths_old_files(cnt)
+		}
+	loop
+	return
+	
+*LStore
+	//新しいファイルを元のフォルダに移動する
+	
+	repeat length(paths_new_files)
+		file_name = paths_new_files(cnt)
+		
+		copy_file dir_new_files + "/" + file_name, dir_root + "/" + file_name
+	loop
+	return
+	
+*LRestore
+	onerror false
+	
+	//バックアップされたファイルを元の位置に戻す
+	repeat length(paths_bak_files)
+		if ( paths_bak_files(cnt) == "" ) { continue }
+		
+		copy_file dir_bak_files + "/" + paths_bak_files(cnt), dir_root + "/" + paths_old_files(cnt)
+	loop
+	return
+	
+*LTerm
+#if __LOCAL == 0
+	rmdir dir_new_files
+#endif
+	rmdir dir_bak_files
+	return

@@ -1,0 +1,191 @@
+// LightBrowser - Tabs
+
+// 各タブのデータをカプセル化するモジュール
+
+#module "tm" ax, event, url, winID
+
+#define mTab	mTab@
+#define TS		TS@
+#define actwin	actwin@
+#define tmpAx	tmpAx@
+
+#const axID 0	// activex のオブジェクトID ( 確実に 0 )
+
+//#### マクロ定義 ########
+#define IID_IUnknown "{00000000-0000-0000-C000-000000000046}"
+
+#uselib "ole32.dll"
+#func   IIDFromString "IIDFromString" wstr, var
+
+#usecom  IUnknown IID_IUnknown
+#comfunc IUnknown_QueryInterface 0 int, int
+
+#define IID_IDispatch "{00020400-0000-0000-C000-000000000046}"
+
+#define DIID_DWebBrowserEvents2		"{34A715A0-6587-11D0-924A-0020AFC7AC4D}"
+
+#define DISPID_COMMANDSTATECHANGE   105
+#define DISPID_BEFORENAVIGATE2      250
+#define DISPID_NEWWINDOW2           251		// 新規ウィンドウで開こうとする
+#define DISPID_NAVIGATECOMPLETE2    252		// リンクを現在ので開く
+#define DISPID_ONQUIT               253
+#define DISPID_ONMENUBAR            256
+#define DISPID_ONSTATUSBAR          257
+#define DISPID_ONFULLSCREEN         258
+#define DISPID_WINDOWSETLEFT        264
+#define DISPID_WINDOWSETTOP         265
+#define DISPID_WINDOWSETWIDTH       266
+#define DISPID_WINDOWSETHEIGHT      267
+#define DISPID_ONTHEATERMODE        260
+
+//######## メイン ##############################################################
+#define global Newtab(%1=BLANK) _NewTab %1
+#deffunc _NewTab str p1
+	
+	// 使う TS のインデックスを求める
+	UseTS = length( TS )
+	repeat UseTS
+		if ( varuse( TS.cnt ) == False ) {
+			UseTS = cnt
+		}
+	loop
+	
+	newmod TS, tm@, UseTS, p1
+	return
+	
+#modinit int p2, str p3, local tabindex
+	gsel wID_Main, 1
+	oncmd 0
+	
+	sdim url, 512
+		 url = p3		// url を格納
+	
+	// タブを追加
+	InsertTab mTab, "blank", actwin +1	// 右側に追加
+	tabindex = stat						// 挿入した位置が返ってくる
+	if ( tabindex < 0 ) { return -1 }
+	winID    = ItoW( mTab, tabindex )	// WindowID は変化しないので、記憶しておく
+	TabIntSet mTab, tabindex, p2		// TS のインデックスを格納しておく
+	
+	// ActiveX を設置
+	gsel wID_TabStart + winID, 1
+	pos 0, 0 : axobj ax, "Shell.Explorer.2", ginfo(12), ginfo(13)
+	
+	// 移動
+	if ( url == "" ) { url = BLANK }
+	mcall ax, "Navigate", url
+	
+	// イベント登録
+	comevent event, ax, DIID_DWebBrowserEvents2, *OnEvent
+	
+	gsel wID_Main, 1
+	oncmd 1
+	return tabindex
+	
+// 指定アドレスにジャンプする
+#modfunc JumpUrl str p2
+	url = p2
+	mcall ax, "Navigate", url
+	return
+	
+// ax をクローンする
+#modfunc DupAx var p2
+	dimtype p2, vartype("comobj"), 1
+	dup p2, ax
+	return
+	
+#defcfunc GetAddress modvar tm@, local pDoc
+	return ax("LocationURL")	// URL
+	
+#defcfunc GetWinID modvar tm@
+	return winID
+	
+#modfunc SetTabStr local name, local pDoc
+	
+	sdim name, 320
+	
+	// ドキュメントの種類を取得
+	name = ax("Type")						// 種類文字列が返ってくる
+	if ( name == "HTML ドキュメント") {		// HTML (画像・ムービー・音声も含まれる) の場合
+		pDoc = ax("Document")				// ドキュメント情報を取得
+		name = pDoc("Title")				// タイトルの文字列が格納される
+		delcom pDoc							// 破棄
+	}
+	
+	if (        name == "" ) { name = "　blank　" } else
+	if ( strlen(name) > 30 ) { name = strmid(name, 0, 30) +"..." }
+	
+	SetTabStrItem mTab, WtoI(mTab, winID), name	// つまみ変更
+	
+	// アクティブなら
+	if ( actwin == actWID ) {
+		SetTitle name
+		
+		gsel wID_Main, 0
+		objprm oID_Address, ax("LocationURL")	// URLを書き換える
+	}
+	
+	return
+	
+//######## COM イベント処理 ########################################################################
+#modfunc OnNewWindow2 local IID, local v1, local tabindex
+	
+	// 新たにタブを開く
+	NewTab
+	tabindex = stat
+	if ( tabindex < 0 ) { return -1 }
+	dupAx TS( UseTS ), tmpAx
+	
+	comevarg v1, event, 0, 2	// 一つ目のパラメータをVARIANT型で取得
+	ppDisp = v1("refptr")		// ppdispVal
+	
+	// IID 構造体に変換
+	dim IID, 4
+	IIDFromString IID_IDispatch, IID
+	
+	// 新規IE の IDispatch を ppdispVal に取得
+	IUnknown_QueryInterface tmpAx, varptr( IID ), ppDisp
+	
+	// アクティブにする
+	ShowTab mTab, tabindex
+	return 0
+	
+#modfunc OnNavigateComplete2		// 移動
+	SetTabStr thismod
+	return 0
+	
+#modfunc OnEventFunc
+	DispID = comevdisp( event )
+	
+	// 分岐
+	switch DispID
+	
+	case DISPID_NEWWINDOW2			: OnNewWindow2 thismod			: swbreak
+	case DISPID_NAVIGATECOMPLETE2	: OnNavigateComplete2 thismod	: swbreak
+	
+	swend
+	
+	return
+	
+*OnEvent
+	// イベント内容を取得
+	OnEventFunc actTS
+	return
+	
+#global
+
+// タブ項目切り替え処理部分
+*Notify
+	dupptr NMHDR, lparam, 12
+	if ( ( nmhdr.0 == hTab ) && ( nmhdr.2 == -551 ) ) {
+		
+		ChangeTab mTab			// 現行タブの ID を切り替える
+		
+		// 書き換える
+		SetTitle GetTabStrItem( mTab, actwin )
+		
+		gsel wID_Main, 0							// 元々の screen 命令のウィンドウID 0に描画先を戻す
+		objprm oID_Address, GetAddress( actTS )		// アドレスを取得
+	}
+	return
+	

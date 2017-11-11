@@ -1,0 +1,39 @@
+// plmak - vm - int 処理モジュール
+
+#ifndef IG_PLMAK_VM_VT_INT_HSP
+#define IG_PLMAK_VM_VT_INT_HSP
+
+#include "pvm_vt_header.hsp"
+
+// @ 仕様未定
+
+#module pvm_vtInt
+
+//------------------------------------------------
+// 単項演算
+//------------------------------------------------
+*LProcPlus:  return
+*LProcMinus: arg *= -1 : return
+	
+//------------------------------------------------
+// 二項演算
+//------------------------------------------------
+*LProcAdd: lhs += rhs : return
+*LProcSub: lhs -= rhs : return
+*LProcMul: lhs *= rhs : return
+*LProcDiv:
+	if (rhs == 0) { pvm_puterror pvm, RunErr_DivByZero }
+	lhs /= rhs
+	return
+*LProcMod: if (rhs == 0) { pvm_puterror pvm, RunErr_DivByZero }
+	lhs \= rhs
+	return
+*LProcCmp: lhs -= rhs : return
+	
+#deffunc vtInt_init array vtbl
+	vtbl = *LProcPlus, *LProcMinus, *LProcAdd, *LProcSub, *LProcMul, *LProcDiv, *LProcMod
+	return
+	
+#global
+
+#endif

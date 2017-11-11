@@ -1,0 +1,116 @@
+
+#define global MAX_TEXTLEN 0x1FFFF  // 127KB までサポート
+
+#include "Renzok.hsp"
+
+*l_var_init_custom
+	dim  BoxInfo, 2
+	return
+	
+*exit
+	if ( bDragging ) { ClipCursor NULL : bDragging = false }
+	end : end
+	
+//######## メッセージハンドラ ##################################################
+*l_key_map_init
+	key_map_('S', key_map_ctrl) = *Save
+	return
+	
+*l_resize_editbox
+	MoveWindow  BoxInfo, LBWIDTH + 10,            5, BOXWIDTH, BOXHEIGHT, true
+	return
+	
+*l_on_command_editbox
+		// 編集ボックスの割り込み
+		wNotifyCode = HIWORD(wparam)
+		if ( wNotifyCode == 0x300 ) {		// EN_CHANGE (編集された)
+			
+			if ( bModified == false ) {				// まだ編集されていなかったときだけ
+				sendmsg BoxInfo, 0x00B8, 0, 0		// EM_GETMODIFY (編集フラグを取得)
+				if ( stat ) {
+					editbox_set_modify_flag true
+				}
+			}
+		}
+	return
+	
+*l_on_command_listbox_default
+	// pass
+	return
+	
+*OnRenewal
+	// ListBox を再構築する
+	sendmsg LbInfo, 0x0184, 0, 0						// LB_RESETCONTENT
+;	sendmsg LbInfo, 0x018D, 0x0010, path +"\\*.*"		// LB_DIR (wparam == DDL_DIRECTORY)
+	sendmsg LbInfo, 0x000B, false, 0					// WM_SETREDRAW ( 再描画禁止 )
+	DirlistEx  filelist, path
+	NoteRepeat filelist
+		sendmsg LbInfo, 0x0180, 0, nrNote
+	NoteLoop
+	sendmsg LbInfo, 0x0180, 0, STR_DIALOG				// LB_ADD
+	sendmsg LbInfo, 0x000B, true, 0					// WM_SETREDRAW ( 再描画許可 )
+	
+	return
+	
+//######## サブルーチン群 ######################################################
+*l_create_listbox
+	font LISTBOX_FONT_FAMILY, LISTBOX_FONT_SIZE
+	objmode objmode_usefont, false
+	objsize LBWIDTH, LBHEIGHT
+	pos 5, 5 : listbox iList, 0, ""
+	LbInfo = objinfo(stat, 2), stat
+	return
+	
+*l_create_editbox
+	font EDITOR_FONT_FAMILY, EDITOR_FONT_SIZE
+	objmode objmode_usefont, false
+	pos LBWIDTH + 10, 5 : mesbox buf, BOXWIDTH, BOXHEIGHT, 5, MAX_TEXTLEN
+	BoxInfo = objinfo(stat, 2), stat
+	return
+	
+*l_init_callback
+	return
+
+*l_focus_editbox
+	objsel BoxInfo(1)	// カーソルを与える
+	return
+	
+*l_editbox_save
+	notesel buf
+	notesave filepath
+	noteunsel
+	
+	editbox_set_modify_flag false
+	return
+	
+#deffunc editbox_load_text_file str prm_new_file_path
+
+	filepath = prm_new_file_path
+	// assert filepath: テキストファイル
+	
+	notesel   buf
+	noteload  filepath
+	noteunsel
+	
+	objprm BoxInfo(1), buf
+	editbox_set_modify_flag false
+	return
+	
+#deffunc editbox_set_modify_flag_impl
+	sendmsg BoxInfo, 0x00B9, bModified, 0
+	return
+	
+#deffunc editbox_set_enable_impl int prm_enable
+	EnableWindow BoxInfo(0), prm_enable
+	return
+	
+#deffunc editbox_load_error str prm_message
+
+	editbox_set_enable false
+	filepath = ""	
+	objprm BoxInfo(1), prm_message
+	return
+
+#defcfunc editbox_has_focus
+	objsel -1
+	return stat == BoxInfo(1)

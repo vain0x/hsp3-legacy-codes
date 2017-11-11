@@ -1,0 +1,164 @@
+#include "uedai_userdef/all.hsp"
+#define global Str_AppName "HsedBackup"
+
+#packopt name Str_AppName
+#packopt hide true
+
+#include "hspinet.as"
+#include "util/note_each.hsp"
+#include "util/mutex.hsp"
+#include "util/ini.hsp"
+#include "util/trayicon.hsp"
+#include "util/MCTimer.hsp"
+
+#include "appMisc.hsp"
+#include "trayMenu.hsp"
+
+*main
+	gosub *LInitialize
+	stop
+	
+*LInitialize
+	declvar stt_mutex@
+	if ( is_unique_run(stt_mutex@, Str_AppName) == false ) { end }
+	
+	gosub *LInitSetting
+	gosub *LInitTimer
+	gosub *LInitIcon
+	backup_all
+	return
+	
+*LInitSetting
+	ini_new cfg, dir_exe2 + "/" + Str_AppName + ".ini"
+	spnTime = ini_geti(cfg, "backup", "span", 60 * 1000)
+	
+	max_cnt_bak_files = ini_geti(cfg, "backup", "max_cnt_bak_files", 30)
+	makes_backup_of_unmodified_tabs = ini_geti(cfg, "backup", "makes_backup_of_unmodified_tabs", true)
+	
+	mkdir_if_able dir_baks()
+	return
+	
+*LInitTimer
+	timer_new backup_timer, , spnTime, *OnTimer
+	return
+	
+*LInitIcon
+	CreateTrayIcon Str_AppName
+	return
+	
+*OnTimer
+	backup_all
+	return
+	
+#module
+
+#deffunc backup_all  \
+	local cnt_tabs, local id_footy, local mutex_backup
+	
+	if ( is_unique_run(mutex_backup, Str_AppName + "_is_making_backup") == false ) { return }
+	
+	verify_hsed_exists
+	
+	hsed_gettabcount cnt_tabs
+	logmes strf("Backup (%d tabs) %s", cnt_tabs, string_now())
+	
+	repeat cnt_tabs
+		hsed_getfootyid id_footy, cnt
+		backup_tab id_footy, cnt
+	loop
+	return
+	
+#deffunc backup_tab int id_footy, int id_tab,  \
+	local is_modified, \
+	local path_new_bak, local path_tar, local path_bakdir, \
+	local content, local content_size, local hash
+	
+	if ( makes_backup_of_unmodified_tabs@ == false ) {
+		hsed_getmodify is_modified, id_footy
+		if ( is_modified == false ) { return }
+	}
+	
+	//パスを取得
+	//一時ファイル用のディレクトリを用意
+	hsed_getpath path_tar, id_tab
+	if ( stat ) { return }
+	if ( str_begins_with(path_tar, dir_baks()) ) { return }
+	regularize_path path_tar, id_tab
+	path_tar    = path_flatten(path_tar)
+	path_bakdir = bakdir_from_path_tar(path_tar)
+	mkdir_if_able path_bakdir
+	
+	path_new_bak = path_bakdir + "/" + string_now() + getpath(path_tar, getpath_ext)
+	
+	//テキスト取得
+	hsed_gettext content, id_footy
+	content_size = strlen(content) + 1
+	if ( content_size == 1 ) { return }
+	
+	//ハッシュ値を比較
+	varmd5@ hash, content, content_size
+	if ( hash == ini_gets(cfg, path_tar, "latest_hash") ) { return }
+	ini_puts cfg, path_tar, "latest_hash", hash
+	
+	//保存
+	backup_save path_new_bak, path_tar, path_bakdir, content, content_size
+	
+	ini_puts cfg, "backup", "latest_backup", path_new_bak
+	return
+	
+#deffunc backup_save var path_new_bak, var path_tar, var path_bakdir, var content, int content_size,  local cnt_bak_files, local path_bak_files, local path_bak
+
+	bsave path_new_bak, content, content_size
+	cnt_bak_files = ini_geti(cfg, path_tar, "count") + 1
+	
+	//バックアップが多すぎる場合は、古いものから削除
+	if ( cnt_bak_files > max_cnt_bak_files@ ) {
+		dirlist path_bak_files, path_bakdir + "/*", dirlist_files
+		cnt_bak_files = stat
+		note_each path_bak, path_bak_files
+			if ( cnt >= (cnt_bak_files - max_cnt_bak_files@ / 2) ) { break }
+			delfile path_bakdir + "/" + path_bak
+		note_each_end
+		
+		cnt_bak_files = max_cnt_bak_files@ / 2
+	}
+	
+	ini_puti cfg, path_tar, "count", cnt_bak_files
+	return
+	
+#global
+
+#module
+
+#deffunc diffView_exec_active_tab  \
+	local id_tab, local path_tar
+	
+	verify_hsed_exists
+	hsed_getacttabid id_tab
+	hsed_getpath path_tar, id_tab
+	if ( stat ) { return }
+	regularize_path path_tar, id_tab
+	diffView_exec path_tar
+	return
+	
+#deffunc diffView_exec str path_tar
+	exec "diffView " + path_tar
+	return
+	
+#global
+
+*OnTrayIconEvent@
+	// wparam = idIcon
+	
+	switch ( lparam )
+		case 0x0203: //正クリック W-Click
+			end
+			
+		case 0x0204: //逆クリック 押下
+			trayMenu_popup
+			swbreak
+	swend
+	return
+
+//最適化対策
+	varmd5
