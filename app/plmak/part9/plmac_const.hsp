@@ -1,0 +1,56 @@
+// plmak - plmac header
+
+#ifndef IG_PLMAK_PLMAK_CODE_H
+#define IG_PLMAK_PLMAK_CODE_H
+
+// @ plmak code に関する定数群
+
+//------------------------------------------------
+// コマンドID
+//------------------------------------------------
+#enum PlmacCmd_None = 0
+#enum PlmacCmd_Quit		// quit (int)
+#enum PlmacCmd_Push		// push (any)
+#enum PlmacCmd_Pop		// pop
+#enum PlmacCmd_Plus		// (+) 単項演算
+#enum PlmacCmd_Minus	// (-)
+#enum PlmacCmd_Neg		// (!)
+#enum PlmacCmd_Eq		// (==)
+#enum PlmacCmd_Ne		// (!=)
+#enum PlmacCmd_Lt		// (<)
+#enum PlmacCmd_Gt		// (>)
+#enum PlmacCmd_LtEq		// (<=)
+#enum PlmacCmd_GtEq		// (>=)
+#enum PlmacCmd_Add		// (+) 二項演算
+#enum PlmacCmd_Sub		// (-)
+#enum PlmacCmd_Mul		// (*)
+#enum PlmacCmd_Div		// (/)
+#enum PlmacCmd_Mod		// (%)
+#enum PlmacCmd_Cmp		// (<>)
+;#enum PlmacCmd_		// 
+#enum PlmacCmd_Max
+
+//------------------------------------------------
+// 実行モード
+//------------------------------------------------
+#enum RunMode_None = 0	// 停止
+#enum RunMode_Run		// 通常実行
+#enum RunMode_Step		// ステップ実行
+#enum RunMode_Err		// エラー発生中
+#enum RunMode_Quit		// 正常終了
+#enum RunMode_Abort		// エラー終了
+#enum RunMode_Max
+
+#define ctype isRunModeExit(%1) ( (%1) == RunMode_Err || (%1) == RunMode_Quit || (%1) == RunMode_Abort )
+
+//------------------------------------------------
+// 実行時エラー
+//------------------------------------------------
+#enum RunErr_None = 0		// 正常
+#enum RunErr_Unknown		// (不明)
+#enum RunErr_DivByZero		// 零除算
+#enum RunErr_StkUnderFlow	// Stack Under Flow (too many popping)
+#enum RunErr_Max
+//#enum RunErr_		// 
+
+#endif

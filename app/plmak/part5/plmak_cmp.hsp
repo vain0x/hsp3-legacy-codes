@@ -1,0 +1,72 @@
+// plmak - cmp
+
+#ifndef IG_PLMAK_COMPILE_HSP
+#define IG_PLMAK_COMPILE_HSP
+
+// コンパイル (compile)
+// @ 構文木を解析し、実行可能なコード plmac を生成する。
+
+#include "abdata/abdata/all.as"
+
+#include "MCCompiler.hsp"
+
+#module m_plmak_cmp
+
+#include "plmak_inh.hsp"
+
+//------------------------------------------------
+// 構文解析
+// 
+// @prm stxtree:    構文木
+// @prm tklist_enc: 符号化-字句リスト
+//------------------------------------------------
+#deffunc plmak_cmp var plmac, var stxtree;,  local parser
+	
+	cmp_new     compiler
+	cmp_compile compiler, plmac, stxtree
+	if ( stat ) { return stat }
+	
+	// デバッグ出力
+#ifdef _plmak_DebugOut
+	logmes "＠コンパイル"
+	cmp_dbglog compiler
+	logmes ""
+#endif
+	
+	return 0
+	
+//------------------------------------------------
+// エラー時の文字列
+//------------------------------------------------
+#defcfunc GetCmpErrStr int errcode
+	switch ( errcode )
+		case CmpErr_None: return "(正常)"
+		default:
+			return "(謎のエラー)"
+	swend
+	
+#global
+
+//##############################################################################
+//                サンプル・スクリプト
+//##############################################################################
+#if 0
+
+#include "plmak_lex.hsp"
+#include "plmak_enc.hsp"
+#include "plmak_prs.hsp"
+
+	script = "1 + 2 * 3 - 4_5 % 6"
+	
+	plmak_lex tklist_lex, script     : if ( stat ) { mes GetLxErrStr(stat)  : stop }
+	plmak_enc tklist_enc, tklist_lex : if ( stat ) { mes GetEncErrStr(stat) : stop }
+	plmak_prs stxtree,    tklist_enc : if ( stat ) { mes GetPrsErrStr(stat) : stop }
+	plmak_cmp plmac,      stxtree    : if ( stat ) { mes GetCmpErrStr(stat) : stop }
+	
+	stop
+	
+#endif
+
+#endif
+
+

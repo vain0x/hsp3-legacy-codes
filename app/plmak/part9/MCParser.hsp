@@ -1,0 +1,550 @@
+// plmak - MC Parser
+
+#ifndef IG_PLMAK_MODULECLASS_PARSER_HSP
+#define IG_PLMAK_MODULECLASS_PARSER_HSP
+
+#include "abdata/abdata/all.as"
+
+#include "abdata/abdata/all.as"
+
+// @ 構文木 mTree (abdata_tree) の説明：
+// @	root:
+// @		(子): 文リスト
+// @	node:
+// @		ノード自体の data は、PrsNodeType_* を表す。この値次第で、意味が変わる。
+// @		なお、sttm_* 系は文ノード、op_ 系と val_* 系は式ノードと呼ぶ。特に、val_* 系は値ノードとも呼ぶ。
+// @		(ノードの種類): [ノードの意味] < 子の数; 子の意味 > 備考
+// @		(sttm_void):  [空文] <0>
+// @		(sttm_block): [領域文] < 0~; 文ノード... >
+// @		(sttm_expr):  [式文] < 1; 式ノード >
+// @		(op_bin):     [二項演算式] < 3; (lxoptype, lhs, rhs) >
+// @		(val_int):    [整数リテラル] < 1; 整数値 >
+// @		(val_bool):   [boolリテラル] < 1; bool値 >
+// @		@ 実際には、種類が [0]、それ以降を子ノードのリスト(あるいは実データ)として扱う
+
+//##############################################################################
+//                  定義部 : MCParser
+//##############################################################################
+#module MCParser mTree, mBlockStk, mTklist, mIdx, mCalcStk
+
+#define _plmak_local_DebugOut
+#include "plmak_inh.hsp"
+
+#define mCurBlock stack_peek(mBlockStk)
+#define _nextType ( prs_nextType(thismod) )
+#define _nextVal  ( prs_nextVal (thismod) )
+#define ChkErr    if ( stat ) { return stat }
+
+//##########################################################
+//        構築・解体
+//##########################################################
+#define global prs_new(%1,%2) newmod %1, MCParser@, %2
+#define global prs_delete(%1) delmod %1
+
+//------------------------------------------------
+// 構築
+//------------------------------------------------
+#modinit array tklist
+	list_new   mTree			// 構文木(root)
+	stack_new  mBlockStk
+	stack_new  mCalcStk			// 式の処理に使用するスタック
+	dim mIdx
+	
+	// 弱参照の生成
+	mTklist(0) = tklist(0)
+	mTklist(1) = tklist(1)
+	
+	// 構文木の構築
+	prs_root thismod : ChkErr
+	
+	return 0
+	
+//------------------------------------------------
+// 解体
+//------------------------------------------------
+#modterm
+	return
+	
+//##########################################################
+//        取得系
+//##########################################################
+//------------------------------------------------
+// 構文木を取り出す
+//------------------------------------------------
+#modfunc prs_getSyntaxTree var vResult
+	vResult = mTree
+	return
+	
+//##########################################################
+//        設定系
+//##########################################################
+//------------------------------------------------
+// 
+//------------------------------------------------
+
+//##########################################################
+//        構築系
+//##########################################################
+//------------------------------------------------
+// 根
+//------------------------------------------------
+#modfunc prs_root
+	stack_push  mBlockStk, mTree		// 最初のノードは mTree となる
+	stack_clear mCalcStk
+	
+	// ルートはブロックとして処理する
+	list_add mTree, PrsNodeType_SttmBlock
+	prs_block thismod : ChkErr
+	
+	stack_remove mBlockStk			// mTree を取り出して終わり
+	return 0
+	
+//++++++++++++++++++++++++++++++++++++++++++++++++
+//        文
+//++++++++++++++++++++++++++++++++++++++++++++++++
+//------------------------------------------------
+// 文
+//------------------------------------------------
+#modfunc prs_sttm  local node
+	dbgout "prs sttm.begin"
+	node = new_list()
+	
+	switch ( _nextType )		// 次の字句の字句タイプ(lex)
+		case LxTkType_None:
+		case LxTkType_Splitter:
+		case LxTkType_BlockR:
+		case LxTkType_Term:
+			dbgout "put sttm: void"
+			list_add node, PrsNodeType_SttmVoid		// 空文
+			swbreak
+			
+		case LxTkType_BlockL:
+			dbgout "put sttm: block"
+			list_add node, PrsNodeType_SttmBlock	// 領域文
+			stack_push mBlockStk, node
+			prs_next  thismod
+			prs_block thismod : ChkErr
+			if ( _nextType != LxTkType_BlockR ) { return PrsErr_SyntaxSttm }
+			prs_next thismod
+			stack_remove mBlockStk
+			swbreak
+			
+		case LxTkType_Int:
+		case LxTkType_Bool:
+		case LxTkType_ParenL:
+		case LxTkType_Operator:
+			dbgout "put sttm: expr"
+			prs_expr thismod : ChkErr
+			list_add node, PrsNodeType_SttmExpr
+			list_add node, stack_pop(mCalcStk)		// PrsNodeType_Expr のノード
+			swbreak
+			
+		default:
+			return PrsErr_SyntaxSttm
+	swend
+	
+	list_add mCurBlock, node
+	dbgout "prs sttm.end"
+	return 0
+	
+//------------------------------------------------
+// 領域文
+// 
+// @ mCurBlock の子ノードに文リストを追加する。
+//------------------------------------------------
+#modfunc prs_block
+	
+	// 文リスト
+	while ( _nextType != LxTkType_Term )
+		prs_sttm thismod : ChkErr
+		
+		if ( _nextType == LxTkType_Splitter ) {
+			prs_next thismod
+		;	_continue
+		} else : if ( isSttmSplitter(_nextType) ) {
+			_break
+		} else {
+			return PrsErr_SyntaxSttm
+		}
+	wend
+	
+	return 0
+	
+//++++++++++++++++++++++++++++++++++++++++++++++++
+//        式
+//++++++++++++++++++++++++++++++++++++++++++++++++
+//------------------------------------------------
+// 式 (一般)
+//------------------------------------------------
+#modfunc prs_expr  local node
+	dbgout "prs expr.begin()"
+	
+	// 式を解析する
+	prs_expr_add thismod : ChkErr
+	
+	// 式ノードの追加
+	list_new node
+	list_add node, PrsNodeType_Expr
+	list_add node, stack_pop(mCalcStk)
+	stack_push mCalcStk, node
+	
+	dbgout "(stk) push(expr) : " + stack_peek(mCalcStk)
+	dbgout "prs expr.end()"
+	return 0
+	
+//------------------------------------------------
+// 式 (bin; impl)
+// 
+// @prm %1 : 演算優先度の名称 (ex: add, mul)
+// @prm %2 : 演算優先度が一つ高次のものの名称 (ex: add => mul, mul => uni)
+//------------------------------------------------
+#define global ctype FTM_prs_expr_bin(%1,%2) \
+/* #modfunc prs_expr_%1  local optype */\
+	prs_expr_%2 thismod : ChkErr								:\
+	\
+	while		/* chkerr で return できるように */				:\
+		if ( _nextType != LxTkType_Operator ) { _break }		:\
+		\
+		optype = _nextVal										:\
+		if ( isLxOpBin%1(optype) == false ) { _break }			:\
+		\
+		dbgout "prs %1.begin"									:\
+		prs_next        thismod									:\
+		if ( isExprSplitter(_nextType) ) { return PrsErr_SyntaxExpr }\
+		prs_expr_%2     thismod : ChkErr						:\
+		prs_makeNode_op thismod, optype, 2						:\
+		dbgout "prs %1.end (put " + optype + ")"				:\
+	wend														:\
+	return 0													;
+	
+#modfunc prs_expr_cmp  local optype
+	FTM_prs_expr_bin(cmp,add)
+	
+#modfunc prs_expr_add  local optype
+	FTM_prs_expr_bin(add,mul)
+	
+#modfunc prs_expr_mul  local optype
+	FTM_prs_expr_bin(mul,uni)
+	
+	/*
+//------------------------------------------------
+// 式 (bin; add)
+//------------------------------------------------
+#modfunc prs_expr_add  local optype
+	prs_expr_mul thismod : ChkErr
+	
+	while		// chkerr で return できるように
+		if ( _nextType != LxTkType_Operator ) { _break }
+		
+		optype = _nextVal
+		if ( isLxOpBinAdd(optype) == false ) { _break }
+		
+		dbgout "prs add.begin"
+		prs_next        thismod
+		if ( isExprSplitter(_nextType) ) { return PrsErr_SyntaxExpr }
+		prs_expr_mul    thismod : ChkErr
+		prs_makeNode_op thismod, optype, 2
+		dbgout "prs add.end (put +)"
+	wend
+	
+	return 0
+	
+//------------------------------------------------
+// 式 (bin; mul)
+//------------------------------------------------
+#modfunc prs_expr_mul  local optype
+	prs_expr_uni thismod : ChkErr
+	
+	while
+		if ( _nextType != LxTkType_Operator ) { _break }
+		
+		optype = _nextVal
+		if ( isLxOpBinMul(optype) == false ) { _break }
+		
+		dbgout "prs mul.begin"
+		prs_next        thismod
+		if ( isExprSplitter(_nextType) ) { return PrsErr_SyntaxExpr }
+		prs_expr_uni    thismod : ChkErr
+		prs_makeNode_op thismod, optype, 2
+		dbgout "prs mul.end (put *)"
+	wend
+	
+	return 0
+	//*/
+	
+//------------------------------------------------
+// 式 (uni-prefix)
+//------------------------------------------------
+#modfunc prs_expr_uni  local nodeUni, local tktype, local optype, local bProced
+	
+	// 前置単項演算子か
+	optype = _nextVal
+	if ( (_nextType == LxTkType_Operator) && isLxOpUni(optype) ) {
+		dbgout "prs uni.begin"
+		prs_next        thismod
+		if ( isExprSplitter(_nextType) ) { return PrsErr_SyntaxExpr }
+		prs_expr_uni    thismod : ChkErr	// 右結合
+		prs_makeNode_op thismod, optype, 1
+		dbgout "prs uni.end (put uni(+, -))"
+		
+	} else {
+		prs_expr_val thismod : ChkErr
+	}
+	
+	return 0
+	
+//------------------------------------------------
+// 式 (val)
+// 
+// @ 現在は整数/boolリテラルとグループ式のみ。
+//------------------------------------------------
+#modfunc prs_expr_val  local nodeVal
+	
+	switch ( _nextType )
+		// 整数リテラル
+		case LxTkType_Int:
+			list_new nodeVal
+			list_add nodeVal, PrsNodeType_ValInt
+			list_add nodeVal, _nextVal
+			stack_push mCalcStk, nodeVal
+			
+			dbgout "(stk) push(int " + list_get(nodeVal, 1) + ") : " + nodeVal
+			prs_next thismod
+			swbreak
+			
+		// bool リテラル
+		case LxTkType_Bool:
+			list_new nodeVal
+			list_add nodeVal, PrsNodeType_ValBool
+			list_add nodeVal, _nextVal
+			stack_push mCalcStk, nodeVal
+			
+			dbgout "(stk) push(bool " + list_get(nodeVal, 1) + ") : " + nodeVal
+			prs_next thismod
+			swbreak
+			
+		// グループ式
+		case LxTkType_ParenL:
+			prs_next thismod
+			prs_expr thismod		// 括弧内の式を処理する
+			
+			nodeval = stack_peek(mCalcStk)	// for debug
+			dbgout "(stk) push(expr (" + list_get(nodeVal, 1) + ")) : " + nodeVal
+			
+			if ( _nextType == LxTkType_ParenR ) {
+				prs_next thismod
+			} else {
+				return PrsErr_Paren
+			}
+			swbreak
+			
+		default:
+			return PrsErr_SyntaxExpr
+	swend
+	
+	dbgout "put val: " + list_get(nodeVal, 1)
+	return 0
+	
+//------------------------------------------------
+// Ｘ項演算ノードの生成
+//------------------------------------------------
+#modfunc prs_makeNode_op int lxOpType, int cntOperands,  local node, local operands
+	repeat cntOperands
+		dbgout "(stk) pop : " + stack_peek(mCalcStk)
+		operands(cnt) = stack_pop(mCalcStk)
+	loop
+	
+	list_new node
+	list_add node, PrsNodeType_OpUni + (cntOperands - 1)
+	list_add node, GetOpType( lxOpType, cntOperands )
+	
+	repeat cntOperands
+		list_add node, operands( cntOperands - (cnt + 1) )
+	loop
+	
+	stack_push mCalcStk, node
+	dbgout "(stk) push(op<" + cntOperands + "> " + GetOpType( lxOpType, cntOperands ) + ") : " + stack_peek(mCalcStk)
+	return
+	
+//------------------------------------------------
+// Ｘ項演算子タイプ
+//------------------------------------------------
+#defcfunc GetOpType int lxOpType, int cntOperands
+	switch ( cntOperands )
+		case 1:
+			switch ( lxOpType )
+				case LxOpType_Add: return UniOp_Plus
+				case LxOpType_Sub: return UniOp_Minus
+				case LxOpType_Neg: return UniOp_Neg
+			swend
+			swbreak
+			
+		case 2:
+			switch ( lxOpType )
+				case LxOpType_Add: return BinOp_Add
+				case LxOpType_Sub: return BinOp_Sub
+				case LxOpType_Mul: return BinOp_Mul
+				case LxOpType_Div: return BinOp_Div
+				case LxOpType_Mod: return BinOp_Mod
+				
+				case LxOpType_Cmp:  return BinOp_Cmp
+				case LxOpType_Eq:   return BinOp_Eq
+				case LxOpType_Ne:   return BinOp_Ne
+				case LxOpType_Lt:   return BinOp_Lt
+				case LxOpType_Gt:   return BinOp_Gt
+				case LxOpType_LtEq: return BinOp_LtEq
+				case LxOpType_GtEq: return BinOp_GtEq
+			swend
+			swbreak
+	swend
+	return -1
+	
+//++++++++++++++++++++++++++++++++++++++++++++++++
+//        その他
+//++++++++++++++++++++++++++++++++++++++++++++++++
+//------------------------------------------------
+// 次の字句を取り出す
+//------------------------------------------------
+#modfunc prs_next
+	mIdx ++
+	dbgout strf("( nextToken: <%d, %d> )", _nextType, _nextVal)
+	return
+	
+//------------------------------------------------
+// 次の字句のデータ
+//------------------------------------------------
+#modcfunc prs_nextVal
+	return list_get( mTklist(0), mIdx )
+	
+#modcfunc prs_nextType
+	return list_get( mTklist(1), mIdx )
+	
+//##########################################################
+//        動作系
+//##########################################################
+//------------------------------------------------
+// 
+//------------------------------------------------
+
+//##########################################################
+//        統一関数
+//##########################################################
+//------------------------------------------------
+// 
+//------------------------------------------------
+
+//##########################################################
+//        その他
+//##########################################################
+//------------------------------------------------
+// 
+//------------------------------------------------
+
+//##########################################################
+//        デバッグ用
+//##########################################################
+#ifdef _DEBUG
+
+//------------------------------------------------
+// デバッグ出力
+//------------------------------------------------
+#define global prs_dbglog(%1) prs_dbglog_ %1, "%1"
+#modfunc prs_dbglog_ str _ident,  local ident, local node
+	ident = _ident
+	
+	logmes "[" + strtrim(ident, 0, ' ') + "] dbglog"
+	
+	repeat list_size(mTree) / 2
+		list_new node
+		list_add node, list_get(mTree, cnt * 2 + 0)
+		list_add node, list_get(mTree, cnt * 2 + 1)
+		
+		prs_dbglog_impl thismod, node, 0
+	loop
+	
+	return
+	
+#modfunc prs_dbglog_impl var node, int nest,  local chd
+	switch ( list_get(node, 0) )		// PrsNodeType_*
+		// 空文
+		case PrsNodeType_SttmVoid:
+			prs_dbglog_print thismod, "sttm<void>", nest
+			swbreak
+			
+		// 領域文
+		case PrsNodeType_SttmBlock:
+			prs_dbglog_print thismod, "sttm<block>: {", nest
+			repeat list_size(node) - 1, 1
+				chd = list_get(node, cnt)
+				prs_dbglog_impl thismod, chd, nest + 1
+			loop
+			prs_dbglog_print thismod, "}", nest
+			swbreak
+			
+		// 式文
+		case PrsNodeType_SttmExpr:
+			chd = list_get(node, 1)
+			prs_dbglog_print thismod, "sttm<expr>:", nest
+			prs_dbglog_impl  thismod, chd, nest + 1
+			swbreak
+			
+		// 式
+		case PrsNodeType_Expr:
+			chd = list_get(node, 1)
+			prs_dbglog_print thismod, "expr:", nest
+			prs_dbglog_impl  thismod, chd, nest + 1
+			swbreak
+			
+		// 単項演算式
+		case PrsNodeType_OpUni:
+			chd = list_get(node, 2)
+			prs_dbglog_print thismod, "op<1>: " + list_get(node, 1), nest
+			prs_dbglog_impl  thismod, chd, nest + 1
+			swbreak
+			
+		// 二項演算式
+		case PrsNodeType_OpBin:
+			prs_dbglog_print thismod, "op<2>: " + list_get(node, 1), nest
+			repeat 2
+				chd = list_get(node, 2 + cnt)
+				prs_dbglog_impl thismod, chd, nest + 1
+			loop
+			swbreak
+			
+		// 整数値
+		case PrsNodeType_ValInt:
+			prs_dbglog_print thismod, "int: " + list_get(node, 1), nest
+			swbreak
+			
+		default:
+			prs_dbglog_print thismod, "(unknown value: " + list_get(node, 0) + ")"
+	swend
+	
+	return
+	
+#modfunc prs_dbglog_print str _msg, int nest,  local msg
+	sdim msg, nest * 4 + 2
+	repeat nest
+		msg += "    "
+	loop
+	logmes msg + "- " + _msg
+	return
+	
+#else
+
+#define global prs_dbglog(%1) :
+
+#endif
+
+#global
+
+//##############################################################################
+//                サンプル・スクリプト
+//##############################################################################
+#if 0
+
+	stop
+	
+#endif
+
+#endif
