@@ -1,0 +1,183 @@
+// 高速じゃんけん
+
+#packopt name "QuickJanken"
+#packopt hide 1
+
+// Win32API
+#uselib "winmm.dll"
+#cfunc  timeGetTime "timeGetTime"
+
+//######## 定数 ##################################
+#const IDW_MAIN   0
+#const IDW_JUNKEN 1
+
+#const global MAX_QUESTION 10
+
+#enum global IDJ_GOO   = 0
+#enum global IDJ_CHOKI
+#enum global IDJ_PAR
+#enum global IDJ_MAX
+
+#enum global CONDITION_WIN = 0
+#enum global CONDITION_LOSE
+#enum global CONDITION_EQUAL
+#enum global CONDITION_MAX
+
+#const global UWM_GAMEOVER 0x0400
+
+// モジュール
+#module
+
+// 条件の文字列を取得する
+#defcfunc GetConditionString int p1
+	switch ( p1 \ 3 )
+		case CONDITION_WIN   : return "勝て"
+		case CONDITION_LOSE  : return "負けろ"
+		case CONDITION_EQUAL : return "あいこ"
+	swend
+	return ""
+	
+// 小さい絵柄を描画する
+#deffunc DrawSmall int p1
+	gzoom 75, 50, p1, 0, 0, 300, 200
+	return
+	
+#global
+
+//##############################################################################
+//        メイン・ルーチン
+//##############################################################################
+*main
+	gosub *LInitialize
+	
+	oncmd gosub *OnGameOver, UWM_GAMEOVER
+	
+	time = timeGetTime()
+	gsel IDW_MAIN, 1
+	goto *mainlp
+	
+*mainlp
+	gosub *LRedraw
+	gosub *LCheckKeydown
+	
+	await 17
+	goto *mainlp
+	
+// キー入力を調べる
+*LCheckKeydown
+	stick stkKeydown
+	
+	// 勝てる方向
+	if ( stkKeydown & cwhich_int( winside == 2, 4, 1 ) ) {
+		on ( condition == CONDITION_WIN ) gosub *OnClear, *OnMiss
+		
+	// ↑↓ ( あいこ )
+	} else : if ( (stkKeydown & 2) || (stkKeydown & 8) ) {
+		on ( condition == CONDITION_EQUAL ) gosub *OnClear, *OnMiss
+		
+	// 負ける方向
+	} else : if ( stkKeydown & cwhich_int( loseside == 1, 1, 4 ) ) {
+		on ( condition == CONDITION_LOSE ) gosub *OnClear, *OnMiss
+	}
+	
+	return
+	
+// 画面を再描画する
+*LRedraw
+	redraw 2
+	color 255, 255, 255 : boxf : color
+	
+	pos 90, 205 : mes GetConditionString(condition)
+	pos 30,   0 : gcopy IDW_JUNKEN + enemyType, 0, 0, 300, 200
+	
+	pos  10, 30 : DrawSmall IDW_JUNKEN + ( enemyType +  winside ) \ 3
+	pos 280, 30 : DrawSmall IDW_JUNKEN + ( enemyType + loseside ) \ 3
+	
+	redraw
+	return
+	
+// 成功したときの動作
+*OnClear
+	gosub *LProcQuestion
+	return
+	
+// 失敗したときの動作
+*OnMiss
+	cntMiss ++
+	gosub *LProcQuestion
+	return
+	
+// 問題を処理したときの動作
+*LProcQuestion
+	usedTime(cntQuestion) = timeGetTime() - time
+	time                  = timeGetTime()
+	
+	cntQuestion ++
+	if ( cntQuestion < MAX_QUESTION ) {
+		gosub *LSetNewQuestion
+	} else {
+		sendmsg hwnd, UWM_GAMEOVER, 0, 0
+	}
+	return
+	
+// ゲームオーバーしたとき
+*OnGameOver
+	score = 0
+	repeat MAX_QUESTION
+		score += 10 - ( usedTime(cnt) / 100 )
+	loop
+	score -= cntMiss * 10
+	
+	redraw 2
+	color 255, 255, 255 : boxf : color
+	
+	pos 0, 0 : mes "スコアは\n "+ score +"/100"
+	
+	redraw
+	stop
+	
+	return
+	
+//################ サブルーチン群 ##############################################
+// 前処理
+*LInitialize
+	gsel 0, -1
+	randomize
+	
+	gosub *LClearVariable
+	gosub *LSetWindow
+	return
+	
+// 変数を初期化する
+*LClearVariable
+	gosub *LSetNewQuestion
+	
+	dim usedTime, MAX_QUESTION
+	dim cntQuestion
+	dim cntMiss
+	
+	return
+	
+// ウィンドウを準備する
+*LSetWindow
+	screen IDW_MAIN, 360, 300, 2
+	title "QuickJanken"
+	font "ＭＳ ゴシック", 68
+	
+	// 画像を読み込む
+	repeat 3
+		buffer IDW_JUNKEN + cnt, 300, 200
+		picload "resource/janken"+ cnt +".bmp", 1
+	loop
+	
+	gsel IDW_MAIN
+	return
+	
+// 次の問題を出す
+*LSetNewQuestion
+	enemyType = rnd(IDJ_MAX)
+	condition = rnd(CONDITION_MAX)
+	winside   = rnd(2) + 1
+	loseside  = ( winside == 2 ) | ( winside == 1 ) * 2
+	return
+	
