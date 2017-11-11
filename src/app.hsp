@@ -30,7 +30,8 @@
 #endif
 	return
 	
-#deffunc app_proc_cmdline str ext
+#deffunc app_proc_cmdline str ext, \
+	local script
 
 	LexCmdline cmdopt, 2 ;, "hsed"
 	cntCmdopt = stat
@@ -57,6 +58,15 @@
 		hsed_exist
 		if ( stat == false ) { PutErrorMessage Error_NoHsed : end }
 		
+		inFile  = HSED_TEMPFILE_HSP
+		outFile = inFile
+		
+		sdim script
+		hsed_GetActText script		// アクティブな Footy のテキストを取得
+		notesel script
+		notesave inFile
+		noteunsel
+		
 	// 通常の呼び出し
 	} else {
 		inFile  = cmdopt(0)
@@ -71,23 +81,10 @@
 		} else : if ( inFile == "" && outFile != "" ) {
 			inFile  = outFile
 		}
-		
-		// 出力ファイルの拡張子は必ず ext
-		outFile = getpath( outFile, 1 ) + ext
 	}
-	return
 	
-#deffunc app_input
-	if ( bHsed ) {
-		inFile  = HSED_TEMPFILE_HSP
-		outFile = HSED_TEMPFILE_HS
-		hsed_GetActText script		// アクティブな Footy のテキストを取得
-		
-	} else {
-		notesel script
-		noteload inFile
-		noteunsel
-	}
+	// 出力ファイルの拡張子は必ず ext
+	outFile = getpath( outFile, 1 ) + ext
 	return
 	
 #deffunc app_output
@@ -97,7 +94,7 @@
 	return
 	
 #deffunc app_proc
-	app_proc_impl result, script
+	app_proc_impl result, inFile
 	return
 	
 #global

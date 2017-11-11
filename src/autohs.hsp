@@ -12,7 +12,6 @@
 	app_init
 	app_read_config
 	app_proc_cmdline ".hs"
-	app_input
 	app_proc
 	app_output
 	end
@@ -26,10 +25,10 @@
 	return
 
 #deffunc app_proc_impl \
-	var result, var script,  \
+	var result, str path,  \
 	local autogen
 	
 	newmod autogen, autogen_hs
-	autogen_generate autogen, result, script
+	autogen_generate autogen, result, path
 	return
 #global
