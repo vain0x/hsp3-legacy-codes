@@ -1,0 +1,447 @@
+#packopt name "tiny_tic_tac_toe"
+#packopt hide 1
+#packopt orgpath 1
+
+#ifndef __UserDefHeader__
+#define global color32(%1=0) color@hsp ((%1) & 0x0000FF),(((%1) & 0x00FF00) >> 8),(((%1) & 0xFF0000) >> 16)
+#define global ctype boxin(%1=0,%2=0,%3=640,%4=480,%5=mousex,%6=mousey) ( (((%1) <= (%5)) && ((%5) <= (%3))) && (((%2) <= (%6)) && ((%6) <= (%4))) )
+#define global ctype RGB(%1,%2,%3) ((%1) | (%2) << 8 | (%3) << 16)
+#define global NULL   0
+#define global true   1
+#define global false  0
+#endif
+
+#define global ID_YOU 0	// プレイヤー
+#define global ID_COM 1	// 敵
+
+#define global BLUE 0, 0, 255
+#define global RED  255
+#define global WHITE 255, 255, 255
+
+#enum global JK_NONE  = -1
+#enum global JK_GOO   = 1
+#enum global JK_CHOKI = 2
+#enum global JK_PAR   = 3
+#enum global JK_EQUAL
+
+#define global UM_GAMESET 0x500
+
+#define global ctype BtnEx(%1="") %tButtonEx button %1, *%i : if(0):*%o:
+#define global Settitle(%1) title "○×ゲーム - "+ (%1)
+
+#uselib "user32.dll"
+#func global PostMessage "PostMessageA" int,int,int,sptr
+
+#module
+// p1 が勝ったら真
+#defcfunc DoJanken int p1, int p2
+	if ( p1 == p2 ) { return JK_EQUAL }
+	switch p1
+	case JK_GOO		: return ( p2 == JK_CHOKI )
+	case JK_CHOKI	: return ( p2 == JK_PAR )
+	case JK_PAR		: return ( p2 == JK_GOO )
+	swend
+	return 0
+	
+// じゃんけんフラグを文字列に変換
+#defcfunc JKFlagToStr int p1
+	switch p1
+	case JK_GOO		: return "グー　"
+	case JK_CHOKI	: return "チョキ"
+	case JK_PAR		: return "パー　"
+	swend
+	return ""
+	
+#global
+
+#module "erasure"
+// 簡易バージョンのerasure
+#deffunc esr
+	color 255, 255, 255 : boxf	// 画面塗りつぶし
+	color r, g, b				// 描画色リセット
+	clrobj						// オブジェクト全消し
+	pos 0, 0					// カレントポジション リセット
+	return
+#global
+
+// テンプレ( どこか一列が完了しているか )
+#define IsLineComplete(%1) \
+	repeat 3		:\
+		i     = 0	:\
+		bMark = %1		/* その列で一致する可能性のあるマーク */:\
+		if ( bMark < 0 ) { continue }		/* 空いているなら× */\
+		\
+		while ( i < 3 )	:\
+			if ( %1 != bMark ) { continue }	/* 違うものがあった */\
+			i ++	:\
+		wend		:\
+		/* 抜けられた ＝ そろっている */\
+		bGameSet = bMark	:\
+		break		:\
+	loop			:\
+	if ( bGameSet >= 0 ) { goto *@f }
+	
+// テンプレ( 指定列がリーチか )
+#define global IsTheLineReach(%1) \
+	i     = 0	:\
+	bNone = 0	:\
+	bMark = %1		/* その列で一致する可能性のあるマーク */:\
+	if ( bMark < 0 ) {	/* 空白なら、次の位置にあるものを取り出す */\
+		i ++		:\
+		bMark = %1	:\
+		i --		:\
+		if ( bMark < 0 ) { return false }	/* 空白が2つ → × */\
+	}\
+	if ( bMark != m ) { return false }\
+	\
+	while ( i < 3 )	:\
+		if ( %1 != bMark ) {	\
+			if ( %1 < 0 ) {		\
+				if ( bNone ) { return false }/* 2つめの空白は許さない */\
+				bNone ++	/* 空白発見 */:\
+				n = i		/* 空白のある位置 */:\
+			} else {	\
+				return false	:\
+			}\
+		}\
+		i ++	:\
+	wend		:\
+	/* bNone にリーチか、n に空白の番号 */
+
+#module
+
+#defcfunc IsLineReachV int p1, array vBan, var vx, var vy, int m, local i, local n, local bNone
+	IsTheLineReach vBan(p1, i)	// 縦に検索
+	if ( bNone ) {
+		vx = p1
+		vy = n
+		return true
+	}
+	return false
+	
+#defcfunc IsLineReachH int p1, array vBan, var vx, var vy, int m, local i, local n, local bNone
+	IsTheLineReach vBan(i, p1)	// 横に検索
+	if ( bNone ) {
+		vx = n
+		vy = p1
+		return true
+	}
+	return false
+	
+// m のリーチを検索 (あれば真を返し、埋まっていない位置を vx, vy に格納)
+#deffunc SearchReach array vBan, var vx, var vy, int m, local i, local n, local bNone
+	// 縦一列パターン
+	for i, 0, 3
+		if ( IsLineReachV(i, vBan, vx, vy, m) ) {
+			return true
+		}
+	next
+	
+	// 横一行パターン
+	for i, 0, 3
+		if ( IsLineReachH(i, vBan, vx, vy, m) ) {
+			return true
+		}
+	next
+	
+	// 斜めパターン
+	repeat 2
+		bNone = false
+		bMark = vBan(2 * cnt, 0)
+		
+		if ( bMark < 0 ) {
+			bMark = vBan(1, 1)
+		;	if ( bMark < 0 ) { continue }
+		}
+		if ( bMark != m ) { continue }
+		
+		if ( cnt == false ) {
+			// 左上から右下へ
+			for i, 0, 3
+				if ( vBan(i, i) != bMark ) {
+					if ( bNone ) { continue }
+					bNone = true
+					n = i
+				}
+			next
+			vx = n
+			vy = n
+		} else {
+			// 右上から左下へ
+			for i, 0, 3
+				if ( vBan(2 - i, i) != bMark ) {
+					if ( bNone ) { bNone = false : continue }
+					bNone = true
+					n     = i
+				}
+			next
+			vx = 2 - n
+			vy = n
+		}
+		break
+	loop
+	return bNone
+	
+// 敵の置く位置を決定する
+#deffunc DecidePosToPut array vBan, var vx, var vy, local i
+	// まず真ん中を狙う
+	if ( vBan(1, 1) < 0 ) {
+		vx = 1
+		vy = 1
+		return
+	}
+	// 勝てるリーチ → 負けるリーチの順に探す
+	for i, 0, 2
+		SearchReach vBan, vx, vy, i ^ 1
+		if ( stat ) {				// 真
+			if ( vBan(vx, vy) < 0 ) {
+				return
+			}
+		}
+	next
+	
+	// 最終手段：ランダム作戦
+	while
+		vx = rnd(3)
+		vy = rnd(3)
+		if ( vBan(vx, vy) < 0 ) { _break }
+	wend
+;	logmes "ランダム作戦 ( "+ vx +", "+ vy +" )"
+	return
+	
+// ゲームオーバーする
+#deffunc GameOver int p1, local text, local colorref
+	switch p1
+	case ID_YOU : text = "You win..."	: colorref = RGB(0, 0, 255)	: swbreak
+	case ID_COM : text = "You lose..."	: colorref = RGB(255, 0, 0)	: swbreak
+	case 2      : text = "   Drawn"		: colorref = RGB(0, 225, 0)	: swbreak
+	default		: return
+	swend
+	
+	color 225, 255, 225
+	font msgothic, 65, 3
+	pos 18, 118 : mes text
+	
+	color32 colorref
+	font msgothic, 65
+	pos 20, 120 : mes text
+	
+	// タイトル変更
+	Settitle text
+	return
+	
+#deffunc _exdel str p1
+	exist p1
+	if ( strsize >= 0 ) { delete p1 }
+	return
+	
+#deffunc _CleanUp_ onexit
+	_exdel "hsptmp"
+	_exdel "obj"
+	return
+	
+#global
+	
+//######## メイン開始 ##############################################################################
+*main
+	randomize
+	dim    Ban, 3, 3
+	memset Ban, 0xFF, 3 * 3 * 4	// 0xFFFFFFFF で初期化
+	bGameSet = -1
+	
+	gosub *CreateWindow
+	gosub *Janken
+	gosub *SelectFirst
+	gosub *DrawMain
+	
+	if ( bYouFirst == false ) {
+		gosub *EnemyPutBatten
+	}
+	Settitle "あなたの番です"
+	
+	onclick gosub *Click
+	oncmd   gosub *OnGameSet, UM_GAMESET
+	stop
+	
+*OnGameSet
+	GameOver wparam
+	onclick false
+	return
+	
+*CreateWindow
+	screen wID_Main, 320, 320
+	title "○×ゲーム"
+	return
+	
+*Janken
+	esr
+	dim fJanken, 2
+	fJanken = JK_NONE, JK_NONE
+	
+	sysfont 0
+	objsize 200, 40 : objmode 2
+	pos 60,  80 : button gosub "グー",   *Goo
+	pos 60, 140 : button gosub "チョキ", *Choki
+	pos 60, 200 : button gosub "パー",   *Par
+	
+	font msgothic, 40
+	pos 20, 20 : mes "じゃんけん……"
+	
+	// 相手の出す手を決定
+	fJanken(1) = rnd(3) + JK_GOO
+	
+	// ボタンを押すのを待つ
+	while ( fJanken(0) < 0 )
+		wait 5
+	wend
+	
+	clrobj		// ボタンを削除
+	
+	// 表示
+	pos 20, 80
+	color BLUE	: mes ""+ JKFlagToStr(fJanken(0))
+	color 		: mes "　ＶＳ"
+	color RED	: mes "　　"+ JKFlagToStr(fJanken(1))
+	mes			// 改行
+	wait 100
+	
+	// あいこならやり直し
+	if ( fJanken(0) == fJanken(1) ) {
+		color : mes "　あいこ！！"
+		wait 120
+		goto *Janken
+	}
+	
+	// 判定 (真なら勝利)
+	bWin = DoJanken( fJanken(0), fJanken(1) )
+	
+	if ( bWin ) {
+		color BLUE	: mes "勝った！"
+	} else {
+		color RED	: mes "負けました……"
+	}
+	wait 120
+	return
+	
+*Goo	: fJanken(0) = JK_GOO	: return
+*Choki	: fJanken(0) = JK_CHOKI	: return
+*Par	: fJanken(0) = JK_PAR	: return
+	
+*SelectFirst
+	if ( bWin ) {
+		esr
+		
+		bYouFirst = -1
+		font msgothic, 40
+		pos 20, 20 : mes "先攻・後攻が\n　選べます。"
+		
+		sysfont 0
+		pos 60, 120 : BtnEx(gosub "先攻を取る") { bYouFirst = true  : return }
+		pos 60, 180 : BtnEx(gosub "後攻にする") { bYouFirst = false : return }
+		
+		while ( bYouFirst < 0 )
+			wait 7
+		wend
+		
+		esr
+	} else {
+		bYouFirst = false	// 必ず後攻
+	}
+	return
+	
+*DrawMain
+	font msgothic, 100
+	color 255, 255, 255 : boxf : color
+	repeat 3
+		boxf   0, cnt * 110, 100, 100 + cnt * 110
+		boxf 110, cnt * 110, 210, 100 + cnt * 110
+		boxf 220, cnt * 110, 320, 100 + cnt * 110
+	loop
+	color 255, 255, 255
+	return
+	
+*Click
+	for i, 0, 3
+		for j, 0, 3
+			if ( boxin(i * 110, j * 110, 100 + i * 110, 100 + j * 100) ) {
+				if ( Ban(i, j) < 0 ) {
+					onclick false
+					gosub *PutCircle
+					if ( bGameSet >= 0 ) { PostMessage hwnd, UM_GAMESET, bGameSet, 0 }
+					onclick true
+				}
+				return
+			}
+		next
+	next
+	return
+	
+*PutCircle
+	pos i * 110, j * 110 : mes "○"
+	Ban(i, j) = ID_YOU
+	gosub *CheckGameOver
+	if ( stat >= 0 ) { return }
+	
+	// 相手が打つ
+	Settitle "敵 思考中"
+	wait 40
+	wait ( rnd(100) )
+	
+	gosub *EnemyPutBatten		// ×を置く
+	if ( stat ) { return }
+	
+	// 番を自分に返す
+	Settitle "あなたの番です"
+	return
+	
+*EnemyPutBatten
+	// アルゴリズムに頼る
+	DecidePosToPut Ban, i, j			// i, j に位置
+	
+	pos i * 110, j * 110 : mes "×"
+	Ban(i, j) = ID_COM
+	gosub *CheckGameOver
+	return (stat >= 0)
+	
+*CheckGameOver
+	// 縦一列パターン
+	IsLineComplete Ban(cnt, i)
+	
+	// 横一行パターン
+	IsLineComplete Ban(i, cnt)
+	
+	// 斜めパターン
+	repeat 2
+		bMark = Ban(2 * cnt, 0)
+		if ( bMark < 0 ) { continue }
+		
+		if ( cnt == false ) {
+			// 左上から右下へ
+			for i, 0, 3
+				if ( Ban(i, i) != bMark ) { continue }
+			next
+		} else {
+			// 右上から左下へ
+			for i, 0, 3
+				if ( Ban(2 - i, i) != bMark ) { continue }
+			next
+		}
+		// 抜けられた ＝ そろっている
+		bGameSet = bMark
+		break
+	loop
+	if ( bGameSet >= 0 ) { goto *@f }
+	
+	// すべて揃っているか
+	bGameSet = 2
+	repeat 3
+		for i, 0, 3
+			if ( Ban(cnt, i) < 0 ) { bGameSet = -1 : break }
+		next
+	loop
+;	if ( bGameSet >= 0 ) { goto *@f }
+	
+	*@
+	return bGameSet
+	
+	
