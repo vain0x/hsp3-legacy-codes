@@ -1,0 +1,31 @@
+#ifndef IG_MUTEX_MODULE_HSP
+#define IG_MUTEX_MODULE_HSP
+
+#module mutex h_
+
+#define true  1
+#define false 0
+#define null  0
+
+#uselib "kernel32.dll"
+#func   CreateMutex  "CreateMutexA" nullptr,int,sptr
+#cfunc  GetLastError "GetLastError"
+#func   CloseHandle  "CloseHandle"  int
+
+#modinit str name
+	CreateMutex false, name
+	h_ = stat
+	
+	return ( h_ != null && GetLastError() == 183 ) // ERROR_ALREADY_EXISTS
+	
+#modterm
+	if ( h_ ) { CloseHandle h_ }
+	return
+	
+#defcfunc is_unique_run array self, str name
+	newmod self, mutex@, name
+	return stat == false
+	
+#global
+
+#endif
