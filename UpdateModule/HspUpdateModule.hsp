@@ -1,0 +1,26 @@
+
+#include "hspinet.as"
+
+#module __hsp_update_module
+
+/**
+* 自動アップデートの準備を行う。
+*
+* @return: 成功したら 1、失敗したら 0。
+*/
+#defcfunc HspUpdateModule_prepare_to_update
+
+	return
+
+/**
+* 自動アップデート処理を行う。
+*
+* 新しいバージョンがあったらプログラムを終了するので、きりのいいときに呼ぶこと。
+* @param path: プログラムが入ったフォルダ (基本的には dir_exe でよい)
+* @return: 成功したら end、失敗したら return。
+*/
+#deffunc HspUpdateModule_update str path
+	//ダウンロード
+	return
+
+#global

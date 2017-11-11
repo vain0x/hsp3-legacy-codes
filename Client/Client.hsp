@@ -31,6 +31,8 @@
 	declvar cfg
 	ini_new cfg, dir_root + "/AutoUpdate.ini"
 	
+	path_package = dir_new_files + "/" + ini_gets(cfg, "Setting", "package_name")
+	
 	//無視リスト
 	declvar paths_ignored
 	ini_get_array cfg, paths_ignored, "Setting", "paths_ignored"
@@ -51,12 +53,14 @@
 #if __LOCAL == false
 	netinit
 	neturl ini_gets("Setting", "url")
-	netload dir_new_files + "/" + ini_gets("Setting", "package_name")
+	netload path_package
 	
 	//TODO: unzip
 	//dir_new_filesに直接展開する
 #endif
-
+	unzip path_package, dir_new_files
+	if ( stat ) { print "解凍に失敗しました。" }
+	
 	//新しいパッケージのファイルを列挙
 	declvar paths_new_files
 	dirlist_rec paths_new_files, dir_new_files, "*"
@@ -112,5 +116,8 @@
 	return
 	
 *LTerm
-	//TODO: dir_new_files, dir_bak_files を除去する
+#if __LOCAL == 0
+	rmdir dir_new_files
+#endif
+	rmdir dir_bak_files
 	return
