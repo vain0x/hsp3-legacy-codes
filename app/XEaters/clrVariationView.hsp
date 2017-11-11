@@ -1,0 +1,26 @@
+// 色テーブル閲覧
+
+	clrVariation( 0) = 0xFF0000, 0x00FF00, 0x0000FF, 0xFFFF00, 0xFF00FF, 0x00FFFF, 0xFFFFFF
+	clrVariation( 7) = 0xAA0000, 0x00AA00, 0x0000AA, 0xAAAA00, 0xAA00AA, 0x00AAAA, 0xAAAAAA
+	clrVariation(14) = 0xFFAA00, 0xAAFF00, 0xAA00FF, 0xFFFFAA, 0xFFAAFF, 0xAAFFFF, 0x808080
+	clrVariation(21) = 0xFF00AA, 0x00CCAA, 0x00AAFF, 0xFF00AA, 0x000000, 0x000000, 0x000000
+	
+	maxpane = 4
+	
+	x = (640 / maxpane)
+	y = (480 / (length(clrVariation) / maxpane))
+	i = 0
+	n = 0
+	color
+	boxf
+	
+	repeat maxpane
+		repeat 7
+			
+			color32 clrVariation(i)
+			boxf x * n, y * cnt, x * (n + 1), y * (cnt + 1)
+			
+			i ++
+		loop
+		n ++
+	loop
