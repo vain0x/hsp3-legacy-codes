@@ -1,0 +1,21 @@
+#ifndef IG_BOX_LINE_HSP
+#define IG_BOX_LINE_HSP
+
+#module
+
+#define global boxl(%1 = 0, %2 = 0, %3 = ginfo_winx, %4 = ginfo_winy) \
+	_boxl %1, %2, %3, %4
+
+#deffunc _boxl int sx, int sy, int ex, int ey
+	pset sx, sy				// 最初の座標に空白が出るため
+	
+	// 枠なし四角形描画
+	line sx, sy, sx, ey		// 左側
+	line sx, sy, ex, sy		// 上側
+	line ex, sy, ex, ey		// 右側
+	line sx, ey, ex, ey		// 下側
+	return
+	
+#global
+
+#endif

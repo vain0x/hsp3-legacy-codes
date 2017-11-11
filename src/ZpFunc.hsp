@@ -1,0 +1,95 @@
+// Zplayer - Function
+
+#ifndef IG_ZEOPLAYER_FUNCTION_AS
+#define IG_ZEOPLAYER_FUNCTION_AS
+
+//-------------------------------------------------
+// ダイアログでデッキを開く
+//
+// @result 何らかの失敗があれば true
+//-------------------------------------------------
+*LOpenDeckWithDialog
+	assert (idActivePlayer != PlayerId_Invalid)
+	
+	chdir ownpath + "/decks"
+	dialog "zeo_d", dialog_open, playerName(idActivePlayer) + "用デッキ"
+	if (stat) {
+		_path = refstr
+		
+		//パスは有効
+		#ifdef _debug
+			exist _path
+			assert (strsize >= 0) // refstr は必ず有効である
+		#endif
+		
+		//デッキを閉じる
+		//カードデータを直接書き換えるため、途中で停止しても大丈夫なように。
+		poke deckpath(idActivePlayer)
+		
+		gosub *LLoadDeck
+	}
+	return
+	
+*LLoadDeck
+	assert (idActivePlayer != PlayerId_Invalid)
+	assert (_path != "")
+	
+	//ファイル内容を読み取る
+	declvar _decktext : declvar _buf
+	notesel _decktext
+	noteload _path
+	repeat notemax
+		noteget _buf, cnt
+		
+		//csv分割 -> name, hp, sp, at, ig, ab0, ab1
+		sdim _statusText
+		split _buf, ",", cardname(cnt, idActivePlayer), _statusText
+		if (length(_statusText) < 6) { ErrorOnTitle "エラー「" + cardname(cnt, idActivePlayer) + "」:ステータス未定義" }
+		
+		_idCard = cnt // カードの番号
+		repeat StatusId_Max
+			statuses(cnt, _idCard, idActivePlayer) = 0 + _statusText(cnt)
+		loop
+		repeat 2, 4
+			abilities(_idCard, idActivePlayer, cnt) = _statusText(cnt)
+		loop
+	loop
+	
+	//正常性チェック
+	repeat Count_CardsInDeck
+		_buf = "エラー「" + cardname(cnt, idActivePlayer) + "」:"
+		
+		//各ステータスは正であること
+		_idCard = cnt
+		dim _sumStatuses //= 0
+		repeat StatusId_Max
+			_status = statuses(cnt, _idCard, idActivePlayer) //対象のステータス値
+			if (_status <= 0) { ErrorOnTitle _buf + statusNames(cnt) + "=" + _status }
+			_sumStatuses += _status
+		loop
+		
+		//合計値が200であること
+		if (_sumStatuses != 200) {
+			ErrorOnTitle _buf + "ステータス合計=" + _sumStatuses
+		}
+	loop
+	
+	//正常に開けたらファイルパスを設定する
+	deckpath(idActivePlayer) = _path
+	return
+	
+//-------------------------------------------------
+// ゲームログを追加する
+//-------------------------------------------------
+#deffunc AddGameLog str msg
+	gamelog += "\n" + msg
+	objprm ObjId_GameLogBox, gamelog
+	
+	//カーソルを末尾に移動
+	#define EM_SETSEL      0x000000B1
+	#define EM_SCROLLCARET 0x000000B7
+	sendmsg objinfo_hwnd(ObjId_GameLogBox), EM_SETSEL, , -1
+	sendmsg objinfo_hwnd(ObjId_GameLogBox), EM_SCROLLCARET
+	return
+	
+#endif
