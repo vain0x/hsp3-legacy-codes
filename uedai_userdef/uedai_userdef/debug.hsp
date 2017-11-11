@@ -1,7 +1,7 @@
 // デバッグ支援モジュール
 
-#ifndef IG_MODULE_DEBUG_AS
-#define IG_MODULE_DEBUG_AS
+#ifndef IG_UEDAI_DEBUG_HSP
+#define IG_UEDAI_DEBUG_HSP
 
 #undef logmes
 ;#undef assert
@@ -11,10 +11,6 @@
 
 //ログを保存するフォルダへのパス
 #define global Dir_LogFilePath (dir_mydoc + "/hsp_debug_log.txt")
-
-#define null 0
-#define true  1
-#define false 0
 
 #uselib "winmm.dll"
 #cfunc timeGetTime "timeGetTime"
@@ -63,7 +59,7 @@
 #defcfunc varTypeName int type,  local name, local hvpPtr, local hvp, local prms
 	prms = type
 	hvpPtr = callfunc(prms, exinfoAt(25), 1) //HspFunc_getproc
-	if ( hvpPtr != null ) {
+	if ( hvpPtr != 0 ) {
 		dupptr hvp, hvpPtr, 20
 		if ( hvp(3) != 0 ) {
 			dupptr name, hvp(3), 1, vartype("str")
@@ -205,7 +201,7 @@
 #define global ctype dbgchk_i(%1, %2) dbgchkImpl_i(dbgchkSet_i(%1), %2, {"%1"}, {"%2"}, __HERE__)
 
 #define ctype FTM_dbgchkImpl(%1) \
-	if ( b == false ) { \
+	if ( b == 0 ) { \
 		logwarn "dbgchk(%1) error\n\texpr: " + x + "\n\tvalue = " + code_value + "\n\tcondition: " + code_condition, there :\
 	} :\
 	return x ://
