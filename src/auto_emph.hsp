@@ -12,7 +12,6 @@
 	app_init
 	app_read_config
 	app_proc_cmdline ".txt"
-	app_input
 	app_proc
 	app_output
 	end
@@ -35,11 +34,11 @@
 	bExplicitUselib@ = ini_geti(cfg, "Option", "bExplicitUselib", true)
 	return
 	
-#deffunc app_proc_impl var result, var script, \
+#deffunc app_proc_impl var result, str path, \
 	local autogen
 	
 	newmod autogen, autogen_emph
-	autogen_generate autogen, result, script
+	autogen_generate autogen, result, path
 	return
 	
 #global

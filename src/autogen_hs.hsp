@@ -13,13 +13,10 @@
  * @	Win
 //*/
 
-#include "Mo/HPM_split.as"
+#include "hsplex/HspDeflister.hsp"
 #include "Mo/MCLongString.as"
 
 #module autogen_hs hs_, docdata_, tkstrlist_, tktypelist_, cnt_tokens_
-
-#include "Mo/HPM_header.as"
-#include "Mo/hpm_deftype.hsp"
 
 //------------------------------------------------
 // DocData
@@ -46,24 +43,22 @@
 	stt_docdata_identlist = "name", "author", "date", "version", "type", "group", "note", "url", "port"
 	return
 	
-#modfunc autogen_set_cnt_tokens int k
-	cnt_tokens_ = k
-	return
-	
-#modfunc autogen_generate var result, var script, \
-	local fSplit
+#modfunc autogen_generate var result, str path, \
+	local deflister
 	
 	sdim docdata_, , DOCDATA_MAX
 	
 	LongStr_new hs_
 	LongStr_add hs_, STR_HS_HEADER  // ヘッダ文字列を設定する
 	
-	fSplit  = HPM_SPLIT_FLAG_NO_RESERVED
-;	fSplit |= HPM_SPLIT_FLAG_NO_BLANK
-;	fSplit |= HPM_SPLIT_FLAG_NO_COMMENT
-;	fSplit |= HPM_SPLIT_FLAG_NO_SCOPE
+	hspDeflister_new          deflister, path
+	hspDeflister_getTokenList deflister, tkstrlist_, tktypelist_
+	cnt_tokens_ = stat
 	
-	CreateHs result, script, fSplit, thismod, tktypelist_, tkstrlist_
+	// コメントを操作して埋め込みドキュメントを
+	repeat cnt_tokens
+		
+	loop
 	
 	LongStr_tobuf  hs_, result
 	LongStr_delete hs_

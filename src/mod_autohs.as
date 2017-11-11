@@ -39,11 +39,16 @@
 	autogen_get_next_token autogen, idx
 
 #deffunc CreateHs \
-	var result, var script, int fSplit, \
+	var result, str path, int fSplit, \
 	var autogen, array tktypelist, array tkstrlist, \
-	local cntToken, local idx, \
+	local script, local cntToken, local idx, \
 	local deftype, local sDefIdent, \
 	local bGlobal, local bInModule
+	
+	sdim script
+	notesel script
+	noteload path
+	noteunsel
 	
 	// š‹å‰ğÍ
 	hpm_split tktypelist, tkstrlist, script, fSplit

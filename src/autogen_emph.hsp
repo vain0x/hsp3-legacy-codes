@@ -26,7 +26,7 @@
 	cnt_tokens_ = k
 	return
 	
-#modfunc autogen_generate var result, var script, \
+#modfunc autogen_generate var result, str path, \
 	local fSplit
 	
 	LongStr_new emph_
@@ -37,7 +37,7 @@
 	fSplit |= HPM_SPLIT_FLAG_NO_COMMENT
 ;	fSplit |= HPM_SPLIT_FLAG_NO_SCOPE
 	
-	CreateHs result, script, fSplit, thismod, tktypelist_, tkstrlist_
+	CreateHs result, path, fSplit, thismod, tktypelist_, tkstrlist_
 	
 	LongStr_tobuf  emph_, result
 	LongStr_delete emph_

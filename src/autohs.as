@@ -5,7 +5,6 @@
 
 #define global HSED_TEMPFILE_DIR (ownpath +"\\"+ HSED_TEMPFILE_NAME)
 #define global HSED_TEMPFILE_HSP (ownpath +"\\"+ HSED_TEMPFILE_NAME +".hsp")
-#define global HSED_TEMPFILE_HS  (ownpath +"\\"+ HSED_TEMPFILE_NAME +".hs")
 #define global HSED_TEMPFILE_NAME "hsedtmp"
 
 //------------------------------------------------
