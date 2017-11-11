@@ -1,0 +1,34 @@
+// 定義から hs を自動生成
+
+// ＠TODO
+// ・「埋め込みヘッダ情報」への対応
+
+#packopt name "autohs.exe"
+
+#include "app.hsp"
+#include "autogen_hs.hsp"
+
+*main
+	app_init
+	app_read_config
+	app_proc_cmdline ".hs"
+	app_proc
+	app_output
+	end
+	
+#module
+#deffunc app_read_config  \
+	local cfg
+	
+	ini_new cfg, "./autohs.ini"
+	autogen_set_header ini_gets(cfg, "Resource", "hsHeader")
+	return
+
+#deffunc app_proc_impl \
+	var result, str path,  \
+	local autogen
+	
+	newmod autogen, autogen_hs
+	autogen_generate autogen, result, path
+	return
+#global

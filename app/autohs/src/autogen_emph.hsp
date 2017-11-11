@@ -1,0 +1,130 @@
+// emphasis code 自動生成モジュール
+
+#ifndef ig_auto_gen_emph_as
+#define ig_auto_gen_emph_as
+
+#include "Mo/HPM_split.as"
+#include "Mo/MCLongString.as"
+
+/**+
+ * @name     : autogen_emph
+ * @author   : ue-dai
+ * @date     : 2011 12/25 (Sun)
+ * @type     : autoEmphasis 特化モジュール
+ * @group    : 
+ * @url      : https://github.com/vain0/autohs
+ * @port
+ * @	Win
+ **/
+
+#module autogen_emph emph_, tkstrlist_, tktypelist_, cnt_tokens_
+
+#include "Mo/HPM_header.as"
+#include "Mo/hpm_deftype.hsp"
+
+#modfunc autogen_set_cnt_tokens int k
+	cnt_tokens_ = k
+	return
+	
+#modfunc autogen_generate var result, str path, \
+	local fSplit
+	
+	LongStr_new emph_
+	
+	// 字句解析
+	fSplit  = HPM_SPLIT_FLAG_NO_RESERVED
+	fSplit |= HPM_SPLIT_FLAG_NO_BLANK
+	fSplit |= HPM_SPLIT_FLAG_NO_COMMENT
+;	fSplit |= HPM_SPLIT_FLAG_NO_SCOPE
+	
+	CreateHs result, path, fSplit, thismod, tktypelist_, tkstrlist_
+	
+	LongStr_tobuf  emph_, result
+	LongStr_delete emph_
+	return
+	
+#define nowTkStr   tkstrlist_(idx)
+#define nowTkType  tktypelist_(idx)
+#define NextToken  autogen_get_next_token thismod, idx
+	
+#modfunc autogen_get_next_token var idx
+	
+	idx ++
+	if ( idx >= cnt_tokens_ ) { idx = cnt_tokens_ }
+	return
+	
+#modfunc autogen_add_def \
+	var sDefIdent, int deftype, var idx,  \
+	local prmlist, local cntPrm
+	
+	// 先頭 or 末尾 が _ なら、無視する
+	if ( peek(sDefIdent) == '_' || peek(sDefIdent, strlen(sDefIdent) - 1) == '_' ) {
+		return
+	}
+	
+	// 使用ライブラリをコメントに書く
+	if ( deftype == DEFTYPE_LIB && bExplicitUselib@ ) {
+		LongStr_add emph_, "; #uselib " + sDefIdent + "\n"
+		return
+	}
+	
+	// 定義タイプの文字列を得る
+	deftypeString = MakeDefTypeString( deftype )
+	
+	// 定義タイプ → (独立性, 色)
+	foreach keylist@
+		if ( keylist@(cnt) == deftypeString ) {
+			dependency = depenId@(cnt)
+			clrText    = clrTxId@(cnt)
+			break
+		}
+	loop
+	
+	// 出力
+	if ( dependency != "" && clrText != "" ) {
+		LongStr_add emph_, sDefIdent + " " + dependency + " " + clrText + "\n"
+	}
+	
+	return
+	
+//------------------------------------------------
+// 定義タイプから文字列を生成する
+// @static
+// @from deflister
+//------------------------------------------------
+#defcfunc MakeDefTypeString int deftype,  local stype, local bCType
+	sdim stype, 320
+	bCType = ( deftype & DEFTYPE_CTYPE ) != false
+	
+	if ( deftype & DEFTYPE_LABEL ) { stype = "Label" }
+	if ( deftype & DEFTYPE_MACRO ) { stype = "Macro" }
+	if ( deftype & DEFTYPE_CONST ) { stype = "Const" }
+	if ( deftype & DEFTYPE_CMD   ) { stype = "Cmd"   }
+	if ( deftype & DEFTYPE_COM   ) { stype = "COM"   }
+	if ( deftype & DEFTYPE_IFACE ) { stype = "IFace" }
+	
+	if ( deftype & DEFTYPE_NAMESPACE ) { stype = "NameSpace" }
+	if ( deftype & DEFTYPE_CLASS     ) { stype = "Class" }
+	
+	if ( deftype & DEFTYPE_DLL ) {
+		if ( bCType ) { stype = "Func<dll>" } else { stype = "Sttm<dll>" }
+		
+	} else : if ( deftype & DEFTYPE_FUNC ) {
+		if ( bCType ) { stype = "Func" } else { stype = "Sttm" }
+		
+		// 静的 or メンバ
+		if ( deftype & DEFTYPE_MODULE ) {
+			stype += "<member>"
+		} else {
+			stype += "<static>"
+		}
+		
+	} else {
+		if ( bCType ) { stype += "<ctype>" }
+	}
+	
+	return stype
+	
+#global
+
+#endif

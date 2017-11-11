@@ -1,0 +1,304 @@
+#ifndef ig_auto_gen_hs_hsp
+#define ig_auto_gen_hs_hsp
+
+/**+
+ * @name     : auto_gen_hs
+ * @author   : ue_dai
+ * @date     : 2016/Feb/23
+ * @version  : 1.0
+ * @type     : 定義列からhsを生成するモジュール
+ * @group    : 
+ * @url      : https://github.com/vain0/autohs
+ * @port
+ * @	Win
+//*/
+
+#include "hsplex/HspDeflister.hsp"
+#include "Mo/MCLongString.as"
+
+#module autogen_hs hs_, docdata_, tkstrlist_, tktypelist_, cnt_tokens_
+
+//------------------------------------------------
+// DocData
+//------------------------------------------------
+#enum DocData_Name = 0
+#enum DocData_Author
+#enum DocData_Date
+#enum DocData_Version
+#enum DocData_Type
+#enum DocData_Group
+#enum DocData_Note
+#enum DocData_Url
+#enum DocData_Port
+#enum DocData_MAX
+
+#define STR_HS_HEADER stt_hsHeader
+
+#deffunc autogen_set_header str header
+	stt_hsHeader = header
+	strrep stt_hsHeader, "\\n", "\n"
+	return
+	
+#modinit
+	stt_docdata_identlist = "name", "author", "date", "version", "type", "group", "note", "url", "port"
+	return
+	
+#modfunc autogen_generate var result, str path, \
+	local deflister
+	
+	sdim docdata_, , DOCDATA_MAX
+	
+	LongStr_new hs_
+	LongStr_add hs_, STR_HS_HEADER  // ヘッダ文字列を設定する
+	
+	hspDeflister_new          deflister, path
+	hspDeflister_getTokenList deflister, tkstrlist_, tktypelist_
+	cnt_tokens_ = stat
+	
+	// コメントを操作して埋め込みドキュメントを
+	repeat cnt_tokens
+		
+	loop
+	
+	LongStr_tobuf  hs_, result
+	LongStr_delete hs_
+	
+	// 埋め込みドキュメント情報の展開
+	if ( docdata_(DocData_Name) != "" ) {
+		repeat DocData_MAX
+			strrep result, ";$(" + stt_docdata_identlist(cnt) + ")", docdata_(cnt)
+		loop
+	}
+	return
+	
+#define nowTkStr   tkstrlist_(idx)
+#define nowTkType  tktypelist_(idx)
+#define NextToken  autogen_get_next_token thismod, idx
+	
+#modfunc autogen_get_next_token var idx
+	repeat
+		idx ++
+		
+		if ( idx >= cnt_tokens_ ) { idx = cnt_tokens_ : break }
+		
+		switch ( nowTkType )
+			case TKTYPE_COMMENT:
+				autogen_proc_comment thismod, idx
+				continue
+				
+			case TKTYPE_BLANK:
+			case TKTYPE_SCOPE:
+			case TKTYPE_ESC_LINEFEED:
+				continue
+				
+			default: break
+		swend
+	loop
+	return
+	
+#modfunc autogen_add_def \
+	var sDefIdent, int deftype, var idx,  \
+	local prmlist, local cntPrm
+	
+	// 先頭 or 末尾 が _ なら、無視する
+	if ( peek(sDefIdent) == '_' || peek(sDefIdent, strlen(sDefIdent) - 1) == '_' ) {
+		return
+	}
+	// 定数、モジュール名、ライブラリは無視する
+	if ( deftype == DEFTYPE_CONST || deftype == DEFTYPE_NSPACE || deftype == DEFTYPE_CLASS || deftype == DEFTYPE_LIB ) {
+		return
+	}
+	
+	// 仮引数リストを作成する
+	CreatePrmlist thismod, prmlist, deftype, idx
+	cntPrm = stat
+	
+	// 出力
+	LongStr_add hs_, ";--------------------\n%index\n" + sDefIdent + "\n\n\n%prm\n"
+	
+	// 仮引数リスト
+	if ( deftype & DEFTYPE_CTYPE ) {
+		LongStr_add hs_, "("
+	}
+	
+	repeat cntPrm
+		if ( cnt ) { LongStr_add hs_, ", " }
+		
+		LongStr_add hs_, prmlist(cnt, 0)
+		
+		// 省略値
+		if ( prmlist(cnt, 2) != "" ) {
+			LongStr_add hs_, " = "+ prmlist(cnt, 2)
+		}
+	loop
+	
+	if ( deftype & DEFTYPE_CTYPE ) {
+		LongStr_add hs_, ")"
+	}
+	LongStr_add hs_, "\n"
+	
+	// 仮引数詳細
+	repeat cntPrm
+		LongStr_add hs_, prmlist(cnt, 1) + " " + prmlist(cnt, 0) + " : \n"
+	loop
+	
+	// 残り
+	LongStr_add hs_, "\n%inst\n\n\n%href\n\n%group\n\n"
+	return
+	
+//------------------------------------------------
+// 仮引数リストの作成
+//------------------------------------------------
+#define AddPrmlist(%1, %2 = "", %3 = "", %4 = "") \
+	%1(cntPrm, 0) = %2 :\
+	%1(cntPrm, 1) = %3 :\
+	%1(cntPrm, 2) = %4 :\
+	logmes strf("AddPrmlist[%1] %%s, %%s, %%s", %2, %3, %4) :\
+	cntPrm ++ :\
+	//
+	
+#modfunc CreatePrmlist@autogen_hs \
+	array prmlist, int deftype, var idx, \
+	local cntPrm, local sType, local sIdent, local sDefault
+	
+	sdim prmlist, , 20, 3
+	dim  cntPrm
+	sdim sIdent
+	sdim sType
+	sdim sDefault
+	
+	if ( deftype & DEFTYPE_MACRO ) {
+		if ( nowTkType != TKTYPE_CIRCLE_L ) { return 0 }
+		NextToken
+	}
+	if ( deftype & DEFTYPE_MODULE ) { AddPrmlist prmlist, "self", "modvar" }
+	if ( deftype & DEFTYPE_DLL    ) { NextToken }
+	if ( deftype & DEFTYPE_COM    ) { NextToken }
+	if ( deftype & DEFTYPE_CMD    ) { return 0 }
+	if ( deftype & DEFTYPE_IFACE  ) { return 0 }
+	
+	repeat
+		if ( nowTkType == TKTYPE_END ) { break }
+		
+		// ユーザ定義命令・関数
+		if ( deftype & DEFTYPE_FUNC ) {
+			
+			sType = nowTkStr : NextToken
+			
+			if ( nowTkType == TKTYPE_IDENT ) {
+				sIdent = nowTkStr
+				NextToken
+				
+			} else {
+				poke sIdent
+			}
+			
+			// ローカル引数は追加しない
+			if ( sType != "local" ) {
+				AddPrmlist prmlist, sIdent, sType
+			}
+			
+		// Dll 命令・関数
+		} else : if ( deftype & DEFTYPE_DLL ) {
+			
+			if ( nowTkType != TKTYPE_IDENT ) { break }
+			
+			AddPrmlist prmlist, "p"+ (cntPrm + 1), nowTkStr
+			NextToken
+			
+		// マクロ
+		} else : if ( deftype & DEFTYPE_MACRO ) {
+			if ( nowTkType != TKTYPE_MACRO_PRM ) { break }
+			
+			NextToken
+			if ( nowTkStr == "=" ) {
+				NextToken
+				sDefault = nowTkStr
+				NextToken
+			} else {
+				poke sDefault
+			}
+			
+			AddPrmlist prmlist, "p" + (cntPrm + 1), "any", sDefault
+		}
+		
+		// , を飛ばす
+		if ( nowTkType == TKTYPE_COMMA ) {
+			NextToken
+		} else {
+			break
+		}
+	loop
+	
+	return cntPrm
+	
+#modfunc autogen_proc_comment var idx, \
+	local index, local len_max, local typeDocData, 
+	
+	// 埋め込みドキュメント
+	if ( lpeek(nowTkStr) == 0x2B2A2A2F ) {  // long("/**+")
+		index       = 4
+		len_max     = strlen(nowTkStr)
+		typeDocdata = -1
+		
+		repeat
+			index += CntSpaces(nowTkStr, index, true)	// 改行を文字列と認める
+			
+			if ( (len_max - 2) <= index ) { break }
+			
+			if ( peek(nowTkStr, index) != '*' ) { break }
+			index ++
+			index += CntSpaces(nowTkStr, index)
+			
+			// 識別子の取得 ( 情報タイプ )
+			if ( peek(nowTkStr, index) != '@' ) { continue }
+			index ++
+			index += CutIdent( stt_sIdent, nowTkStr, index )
+			index += CntSpaces(nowTkStr, index)
+			
+			stt_sIdent = getpath(stt_sIdent, 16)
+			
+			// ':' を許可
+			if ( peek(nowTkStr, index) == ':' ) {
+				index ++
+				index += CntSpaces(nowTkStr, index)
+				stt_bPermitEmptyLine = true			// 空行でも無視されない
+			} else {
+				stt_bPermitEmptyLine = false
+			}
+			
+			// doc data の取得 ( 行末まで )
+			getstr stt_sData, nowTkStr, index : index += strsize
+			
+			if ( stt_sIdent != "" ) {		// 維持
+				typeDocdata = -1
+				repeat DocData_MAX
+					if ( stt_sIdent == stt_docdata_identlist(cnt) ) {
+						typeDocdata = cnt
+						break
+					}
+				loop
+			}
+			
+			// ドキュメント情報の配列に追加
+			if ( typeDocdata < 0 ) {
+				break
+				
+			} else {
+				// コロン(:)がない＆空の行 ⇒ 無視する
+				if ( stt_bPermitEmptyLine == false && stt_sData == "" ) {
+					continue
+				}
+				
+				if ( docdata_( typeDocdata ) != "" ) {
+					docdata_( typeDocdata ) += "\n"
+				}
+				docdata_( typeDocdata ) += stt_sData
+			}
+		loop
+	}
+	return
+	
+#global
+
+#endif

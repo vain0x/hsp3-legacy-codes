@@ -1,0 +1,44 @@
+// 定義から拡張 hsed の色分けデータを自動生成
+
+// @ autohs の流用
+// @ hs は色分けデータのこと (嘘)
+
+#packopt name "auto_emph.exe"
+
+#include "app.hsp"
+#include "autogen_emph.hsp"
+
+*main
+	app_init
+	app_read_config
+	app_proc_cmdline ".txt"
+	app_proc
+	app_output
+	end
+	
+#module
+#deffunc app_read_config  \
+	local cfg, local stmp
+	
+	ini_new cfg, "./auto_emph.ini"
+	
+	stmp = ini_gets(cfg, "Color", "Id.$idtypelist") : split@hsp stmp, ",", idtypelist@	// 識別子タイプ
+	stmp = ini_gets(cfg, "Color", "Id.$keylist")    : split@hsp stmp, ",", keylist@		// ini キーのリスト
+	foreach keylist@
+		depenId@(cnt) = ini_gets(cfg, "Color", "Type.Id." + keylist@(cnt), "")
+		clrTxId@(cnt) = ini_gets(cfg, "Color", "Text.Id." + keylist@(cnt), "")
+	;	clrBgId@(cnt) = ini_gets(cfg, "Color", "Back.Id." + keylist@(cnt), "")
+	loop
+	
+	// 未実装
+	bExplicitUselib@ = ini_geti(cfg, "Option", "bExplicitUselib", true)
+	return
+	
+#deffunc app_proc_impl var result, str path, \
+	local autogen
+	
+	newmod autogen, autogen_emph
+	autogen_generate autogen, result, path
+	return
+	
+#global
