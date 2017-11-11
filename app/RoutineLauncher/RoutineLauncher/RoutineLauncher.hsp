@@ -1,0 +1,479 @@
+#define global app_name "RoutineLauncher"
+#packopt name app_name
+#packopt hide 1
+
+#include "uedai_userdef/all.hsp
+;#define global USING_INI (true)
+
+#ifdef USING_INI
+ #include "Mo/MCIni.as"
+#else
+ #include "hpi/sqle/sqlele.as"
+ #include "use_table_as_assoc.as"
+#endif
+
+#include "Mo/MenuBarAPI.as"
+#include "Mo/Trayicon.as"
+#include "Mo/refEnvar.as"
+#include "Mo/mod_replace.as"
+
+#uselib "user32.dll"
+#func   SetForegroundWindow "SetForegroundWindow" int
+#func   PostMessage         "PostMessageA"        int, int, int, sptr
+#func   SetTimer            "SetTimer"            int, int, int, nullptr
+#func   KillTimer           "KillTimer"           int, int
+#func   SetWindowLong       "SetWindowLongA"      int, int, int
+#cfunc  GetWindowLong       "GetWindowLongA"      int, int
+
+#define MAX_CMD 60
+#define ctype ItemIdOf(%1) strf("%%02d", (%1))
+
+#enum IDW_MAIN = 0
+
+//------------------------------------------------
+// エントリーポイント
+//------------------------------------------------
+*LMain
+#ifdef USING_INI
+	ini_new ini, dir_exe2 + "/config.ini"
+#else
+	exist "routine.db"
+	bNeedInitialize = ( strsize <= 0 )
+	sql_open "routine.db"
+	if ( bNeedInitialize ) {
+		dialog "データベースが存在しないので初期化します。プログラムを再起動してください。", 0, Str_AppName
+		exec "RoutineConfigInitializer.exe"
+		end : end
+	}
+#endif
+
+	gosub *LLoadSetting
+	gosub *LSettingMenu
+	
+	if ( cntItems == 0 ) { end }
+	
+	// タスクトレイに格納
+	CreateTrayIcon "RoutineStarter.exe\nWaiting..."
+	
+	// タイマーを設置
+	repeat cntItems
+		MakeTimer cnt
+	loop
+	
+	oncmd  gosub *LOnTimer, 0x0113 // WM_TIMER
+	onexit gosub *LExit
+	stop
+	
+//------------------------------------------------
+// タイマー実行
+//------------------------------------------------
+*LOnTimer
+	logmes dbgstr(stat)
+	logmes dbgstr(iparam)
+	logmes dbgstr(wparam)
+	logmes dbgstr(lparam)
+	
+;	wparam = timerId
+	KillTimer hwnd, wparam
+	
+	n = -1
+	foreach timerId
+		if ( timerId(cnt) == wparam ) {
+			n = cnt
+			break
+		}
+	loop
+	
+	if ( n >= 0 ) {
+		// 指定時間を過ぎているか確認
+		_now = GetTimeSpanFromWeekTop_Now()
+		logmes dbgpair(_now, date_t(n))
+		if ( GetTimeSpanFromWeekTop_Now() >= date_t(n) - 3 ) { // 3[s]までなら早くても許容
+			ExecFile n
+			await 3000
+		}
+		
+		// タイマー再設定
+		MakeTimer n
+	}
+	return
+	
+//------------------------------------------------
+// 終了ラベル
+//------------------------------------------------
+*LExit
+	DestroyTrayIcon
+	if ( hmenu ) { DestroyMenu hmenu }
+	gosub *LFreeTimerAll
+	onexit false
+	PostMessage hwnd, 0x0010, 0, 0
+	return
+;	end : end
+	
+//------------------------------------------------
+// 全タイマー削除
+//------------------------------------------------
+*LFreeTimerAll
+	foreach timerId
+		KillTimer hwnd, timerId(cnt)
+		timerId(cnt) = 0
+	loop
+	return
+	
+//------------------------------------------------
+// 設定の読み出し
+//------------------------------------------------
+*LLoadSetting
+	sdim tmp, 64
+	
+#ifdef USING_INI
+	cntItems = ini_geti(ini, "Schedule", "@cnt")	// 登録されているアイテムの数
+#else
+	sql_assoc_begin "TConfig", cfg
+	sql_q "SELECT * From TSchedule", schedule		// Load File で利用する
+	cntItems = stat
+	
+	dim taskId, cntItems		// タスク固有ID
+#endif
+	sdim taskname, , cntItems						// タスク名
+	sdim dirFile, MAX_PATH, cntItems				// ファイルパス
+	sdim cmdline, MAX_CMD,  cntItems				// コマンドライン
+	sdim dirExec, MAX_PATH, cntItems				// 起動ディレクトリ
+	dim  runmode,           cntItems				// 実行モード(exec の p2)
+	dim  times,             cntItems				// 実行回数
+	sdim date_d,, cntItems		// days
+	dim  date_h,  cntItems		// hour
+	dim  date_m,  cntItems		// min
+	dim  date_s,  cntItems		// s
+	dim  date_t,  cntItems		// タイマーが仕掛けられた実行時刻 (タイマーがないとき 0)
+	dim  timerId, cntItems
+	
+	gosub *LLoadFiles	// ファイルを読み込む (実行可能になる)
+	return
+	
+//------------------------------------------------
+// ファイル読み込み
+//------------------------------------------------
+*LLoadFiles
+#ifdef USING_INI
+	i = 0
+	repeat cntItems
+	;	idx  = 0
+		sCnt = ItemIdOf(cnt)
+		
+		// タスク名
+		taskname(i) = ini_gets( ini, "Schedule", sCnt + ".name", "#" + sCnt )
+		
+		// 実行リンク
+		dirFile(i) = ExpandEnvar( ini_gets( ini, "Schedule", sCnt + ".link", "", MAX_PATH ) )
+		
+		// コマンドライン
+		cmdline(i) = ExpandEnvar( ini_gets( ini, "Schedule", sCnt + ".args" ) )
+		
+		// 起動ディレクトリ
+		dirExec(i) = ExpandEnvar( ini_gets( ini, "Schedule", sCnt + ".path" ) )
+		
+		// 実行モード
+		runmode(i) = ini_geti( ini, "Schedule", sCnt + ".mode", 0 )
+		
+		// 実行回数
+		times(i) = ini_geti( ini, "Schedule", sCnt + ".cnt", -1 )
+		
+		// 時刻
+		SplitTimeString date_h(i), date_m(i), date_s(i), ini_gets( ini, "Schedule", sCnt + ".time", "00:00:00" )
+		
+		// 曜日
+		date_d(i) = ini_gets( ini, "Schedule", sCnt + ".days", "日月火水木金土" )
+		
+		// エラーチェック
+		if ( runmode(i) != 16 ) {
+			exist dirFile(i)
+			if ( strsize < 0 ) {
+				ini_puts ini, "Failure", "Entry." + sCnt, "File Not Found"	// 読み込み失敗のサイン
+				memset dirFile(i), 0, MAX_PATH
+				continue
+			}
+		}
+		
+		// 成功したら、Failure のところを消しておく
+		ini_puts ini, "Failure", "Entry." + sCnt, ""
+		i ++
+	loop
+#else
+;	sqle_q "SELECT * From TSchedule"	// 既にやった
+	repeat cntItems
+		sql_move cnt, schedule
+		
+		taskId(cnt)   = sql_i("Id",   schedule)
+		taskname(cnt) = sql_v("Name", schedule)
+		dirFile(cnt)  = ExpandEnvar( sql_v("Link", schedule) )
+		cmdline(cnt)  = ExpandEnvar( sql_v("Args", schedule) )
+		dirExec(cnt)  = ExpandEnvar( sql_v("Path", schedule) )
+		runmode(cnt)  = sql_i("Mode", schedule)
+		times(cnt)    = sql_i("Cnt",  schedule)
+		date_d(cnt)   = sql_v("Days", schedule)
+		
+		SplitTimeString date_h(cnt), date_m(cnt), date_s(cnt), sql_v("Time", schedule)
+		
+		// エラーチェック
+		if ( runmode(cnt) != 16 ) {
+			exist dirFile(cnt)
+			if ( strsize < 0 ) {
+				sql_q "UPDATE TFailure SET Pred = 1 WHERE Id = " + taskId(cnt)
+				times(cnt) = 0
+				continue
+			}
+			
+		}
+		
+		// 成功
+		sql_q "UPDATE TFailure SET Pred = 0 WHERE Id = " + taskId(cnt)
+	loop
+#endif
+	
+	// その他
+#ifdef USING_INI
+	formatInfo = ini_gets( ini, "Resource", "formatInfo", "$(Name) at $(Time) on $(Days)" )
+#else
+	formatInfo = sql_assoc_v("formatInfo", "$(Name) at $(Time) on $(Days)", cfg)
+#endif
+	return
+	
+//------------------------------------------------
+// タイマーの作成
+// 
+// @ date_t(id) != 0 のとき、指定時刻より前にタイマーが来たので、
+// @	同じ時間の設定でタイマーを作り直す。
+//------------------------------------------------
+#deffunc MakeTimer int id,  local span
+	if ( times(id) != 0 ) {
+		timerId(id) = id + 1
+		
+		if ( date_t(id) != 0 ) {
+			span = date_t(id) - GetTimeSpanFromWeekTop_Now()
+			logmes "timer->restored"
+		} else {
+			span = GetTimeSpanForTimer(id)	// [今, 指定時刻] の時間を求める
+			logmes "timer->next"
+		}
+		
+		if ( span > 0 ) {
+			SetTimer hwnd, timerId(id), span * 1000		// (span[s] * 1000)[ms]
+		}
+		
+		timerId(id) = stat
+	}
+	return
+	
+//------------------------------------------------
+// ファイルの実行
+//------------------------------------------------
+#deffunc ExecFile int id,  local curdir_bak
+	curdir_bak = dir_cur
+	
+	date_t(id) = 0
+	
+	if ( times(id) != 0 ) {
+		// 実行ファイルの起動
+		if ( runmode(id) != 16 ) {
+			if ( dirExec(id) == "" ) {
+				dirExec(id) = getpath( dirFile(id), 32 )
+			}
+			chdir dirExec(id)
+			exec  dirFile(id) + " " + cmdline(id), runmode(id)
+			
+		// 関連付けられたファイルの実行
+		} else {
+			exec  dirFile(id), runmode(id)
+		}
+		
+		// 実行回数減少
+		if ( times(id) > 0 ) {
+			times(id) --
+#ifdef USING_INI
+			ini_puti ini, "Schedule", ItemIdOf(id) + ".cnt", times(id)
+#else
+			sql_q "UPDATE TSchedule SET Cnt = Cnt - 1 WHERE Id = " + taskId(id)
+#endif
+		}
+			
+	}
+	
+	chdir curdir_bak
+	return
+	
+//------------------------------------------------
+// 週の初めを 0 とする時刻 [s]
+//------------------------------------------------
+#const TimeSpanOfWeek (60 * 60 * 24 * 7)
+#const TimeSpanOfDay  (60 * 60 * 24)
+#const TimeSpanOfHour (60 * 60)
+#const TimeSpanOfMin  (60)
+
+#defcfunc GetTimeSpanFromWeekTop int day, int h, int min, int s
+	return ( (day * TimeSpanOfDay) + (h * TimeSpanOfHour) + (min * TimeSpanOfMin) + (s) )
+	
+// 「今」の時刻
+#defcfunc GetTimeSpanFromWeekTop_Now
+	return GetTimeSpanFromWeekTop( gettime(2), gettime(4), gettime(5), gettime(6) )
+	
+// * 時刻/Time     (= 週の初めから、現在までの時間)
+// * 時間/TimeSpan (= 時刻の差)
+	
+//------------------------------------------------
+// 現在から指定時刻までの時間 [s]
+// 
+// @ タイマー設定用
+// @ タイマーは [ms] だけど、混乱防止のため [s] で返す。
+//------------------------------------------------
+#defcfunc GetTimeSpanForTimer int id,  local span, local nowtime, local date, local day, local bIncludeToday
+	
+	// 今と予定の時刻を得る
+	nowtime = GetTimeSpanFromWeekTop_Now()
+	date    = GetTimeSpanFromWeekTop( 0, date_h(id), date_m(id), date_s(id) )	// day は暫定 0
+	
+	// 実行する曜日を求める
+	// @ 今日の予定時刻を過ぎていたら、明日以降の曜日を利用するために、明日基準で計算する。
+	bIncludeToday = ( (nowtime \ TimeSpanOfDay) > date )		// 0(false) or 1(true)
+	day = GetNextDayId( date_d(id), (gettime(2) + bIncludeToday) \ 7 )
+	if ( day < 0 ) { return -1 }
+	logmes "day  = " + stt_str_day(day)
+	
+	date += (day * TimeSpanOfDay)	// 「曜日」の分を含める
+	date_t(id) = date				// 実行予定時刻を保存する
+	
+	// 今から実行時までの時間 [s]
+	span = date - nowtime
+	
+	if ( span <= 0 ) {
+		span += TimeSpanOfWeek
+	}
+	
+	logmes "now  = " + nowtime
+	logmes "date = " + date
+	logmes "span = " + span
+	return span
+	
+//------------------------------------------------
+// 曜日番号の取得
+//------------------------------------------------
+#defcfunc GetDayId str day,  local id
+	if ( stt_str_day == 0 ) {
+		stt_str_day = "日", "月", "火", "水", "木", "金", "土"
+	}
+	
+	id = -1
+	foreach ( stt_str_day )
+		if ( day == stt_str_day(cnt) ) {
+			id = cnt
+			break
+		}
+	loop
+	
+	return id
+	
+//------------------------------------------------
+// 次の曜日番号の取得
+// 
+// @ 今日(含む)以降で、一番近い曜日の番号(idx)を取り出す。
+// @ 時刻のことは考えない。
+// @prm _days: 選択可能な曜日 (単漢字列)
+//------------------------------------------------
+#defcfunc GetNextDayId str _days, int today,  local id, local idIt, local days, local it
+	sdim it
+	days  = _days
+	
+	id = 256		// default
+	repeat strlen(days) / 2
+		wpoke it, 0, wpeek(days, cnt * 2)	// 曜日1つ
+		
+		idIt = GetDayId(it)
+		if ( idIt < today ) { idIt += 7 }	// (今日より前は来週と解釈)
+		if ( idIt < id    ) { id = idIt }	// idIt のが近い
+	loop
+	if ( id == 256 ) { return -1 }			// なし
+	
+	return id \ 7
+	
+//------------------------------------------------
+// 時刻文字列の分解
+//------------------------------------------------
+#deffunc SplitTimeString var dstHour, var dstMinute, var dstSecond, str _timeString,  local timeString, local temp, local idx
+	timeString = _timeString
+;	idx = 0
+	
+	getstr temp, timeString, idx, ':' : idx += strsize
+	dstHour = int(temp)
+	
+	getstr temp, timeString, idx, ':' : idx += strsize
+	dstMinute = int(temp)
+	
+	getstr temp, timeString, idx;, ',' : idx += strsize
+	dstSecond = int(temp)
+	return
+	
+//------------------------------------------------
+// タスク情報の生成
+//------------------------------------------------
+#defcfunc MakeTaskInfo int id,  local result, local srcs, local dsts
+	sdim result, 1200
+	
+	result = formatInfo
+	srcs = "\\n", "$(Name)",    "$(Link)",   "$(Cmdline)", "$(Path)",   "$(Time)",                                                 "$(Days)"
+	dsts = "\n",  taskname(id), dirFile(id), cmdline(id),  dirExec(id), strf("%02d:%02d:%02d", date_h(id), date_m(id), date_s(id)), date_d(id)
+	
+	StrReplace_list result, srcs, dsts
+	return result
+	
+#deffunc PopupTaskInfo int id
+	dialog MakeTaskInfo(id), 0, "タスク詳細 - " + taskname(id)
+	return
+	
+//------------------------------------------------
+// ポップアップ・メニュー作成
+//------------------------------------------------
+#enum CMD_NONE = 0
+#enum CMD_END
+#enum CMD_TASK
+
+*LSettingMenu
+	hmenu = CreatePopupMenu()
+		AppendMenu hmenu, 0, CMD_END, "終了する(&Q)"
+			AddSeparator hmenu
+	;	AppendMenu hmenu, 0, CMD_NONE, "なにもしない(& )"
+		
+	// 各タスクごとに要素を追加
+	repeat cntItems
+		if ( times(cnt) != 0 && taskname(cnt) != "" ) {
+			AppendMenu hmenu, 0, CMD_TASK + cnt, ItemIdOf(cnt) + " " + taskname(cnt) + strf(" (&%c)", '0' + cnt )
+		}
+	loop
+	return
+	
+//------------------------------------------------
+// トレイアイコンからの割り込み
+//------------------------------------------------
+*OnTrayIconEvent@
+	// wparam = IconID, lparam = EventData
+	
+	// Single クリック (押下)
+	if ( (lparam == 0x0201) || (lparam == 0x0204) ) {
+		
+		// メニューをポップアップ
+		SetForegroundWindow hwnd
+		TrackPopupMenuEx    hmenu, 0x0180, ginfo_mx, ginfo_my, hwnd, NULL
+		
+		// stat に MenuID が返される
+		switch (stat)
+			case CMD_END:
+				PostMessage hwnd, 0x0010, 0, 0		// WM_CLOSE (終了させる)
+				swbreak
+				
+			// タスク詳細
+			case_if ( CMD_TASK <= swthis ):
+				PopupTaskInfo (swthis - CMD_TASK)
+				swbreak
+				
+		swend
+	}
+	return

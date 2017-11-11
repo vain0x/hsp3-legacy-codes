@@ -1,0 +1,15 @@
+#ifndef        IG_UEDAI_HIGHLIGHT_HSP
+#define global IG_UEDAI_HIGHLIGHT_HSP
+
+//スクリプトエディタにマクロではないキーワードをハイライトさせる
+
+#define self
+#undef  self
+
+#define global global
+#undef  global
+
+#define ctype ctype
+#undef  ctype
+
+#endif

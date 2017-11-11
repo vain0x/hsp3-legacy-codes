@@ -1,0 +1,7 @@
+_bak
+_nobak
+*.bak
+
+*.exe
+sqlite3.dll
+routine.db

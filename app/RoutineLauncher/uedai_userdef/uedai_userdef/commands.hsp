@@ -1,0 +1,138 @@
+#ifndef        IG_UEDAI_COMMANDS_HSP
+#define global IG_UEDAI_COMMANDS_HSP
+
+#define global null 0
+#ifndef true
+ #define global true    1
+ #define global false   0
+#endif
+#define global MAX_PATH 260
+
+#define global ctype MAKELONG(%1, %2) \
+	(LOWORD(%1) | (LOWORD(%2) << 16))
+
+#define global ctype MAKELONG4(%1 = 0, %2 = 0, %3 = 0, %4 = 0) \
+	MAKELONG(MAKEWORD((%1), (%2)), MAKEWORD((%3), (%4)))
+
+#define global ctype HIWORD(%1) LOWORD((%1) >> 16)
+#define global ctype LOWORD(%1) ((%1) & 0xFFFF)
+
+#define global ctype MAKEWORD(%1, %2) (LOBYTE(%1) | LOBYTE(%2) << 8)
+#define global ctype HIBYTE(%1)       LOBYTE((%1) >> 8)
+#define global ctype LOBYTE(%1)       ((%1) & 0xFF)
+#define global ctype byte_at(%1, %2)  LOBYTE((%1) >> ((%2) * 8))
+
+#define global ctype pow_2(%1)          (1 << (%1))
+#define global ctype bit_sub(%1, %2)    ((%1) & bit_complement(%2))
+#define global ctype bit_complement(%1) ((%1) ^ -1)
+#define global ctype bit_at(%1, %2)     (((%1) >> (%2)) & 1)
+
+#module
+#defcfunc int_from_signed_short int x
+	assert HIWORD(x) == 0
+	if ( x & 0x8000 ) { return 0 - (((%1) ^ 0xFFFF) - 1) }
+	return x
+#global
+
+#define global elsif else : if
+
+#module
+//gradf の、位置と大きさを指定するバージョン。
+#deffunc gradf2 int x1, int y1, int sx, int sy, int mode, int rgb1, int rgb2
+	gradf@hsp x1, y1, sx - x1, sy - y1, mode, rgb1, rgb2
+	return
+#global
+
+//マウスカーソルがウィンドウの外にあるときも、正しい座標を返す。
+#define global mousex2 (ginfo_mx - (ginfo_wx1 + (ginfo_sizex - ginfo_winx) / 2))
+#define global mousey2 (ginfo_my - (ginfo_wy1 + (ginfo_sizey - ginfo_winy) - (ginfo_sizex - ginfo_winx) / 2))
+
+//実行されたスクリプトファイルまたは exe ファイルのディレクトリを指す。
+#ifdef _DEBUG
+ #define global dir_exe2 dir_exe2@__uedai
+	dir_exe2 = dir_cur
+#else //defined(_DEBUG)
+ #define global dir_exe2 dir_exe
+#endif //defined(_DEBUG)
+
+//ファイルを削除する
+#define global delfile delete
+
+#module
+//ファイルをあれば削除する
+#deffunc delfile_if_exists str path
+	exist path
+	if ( strsize >= 0 ) { delfile path }
+	return
+#global
+
+//関数を実行し、その返値を無視する。
+#define global ignore(%1) __ignored_result@__uedai = (%1)
+
+#module
+//点が半区間上にあること
+#defcfunc in_interval int x, int first, int last
+	return (first <= x && x < last)
+#global
+
+#module
+//点が矩形上にあること
+#defcfunc in_rect int px, int py, int x1, int y1, int x2, int y2
+	return (x1 <= px && px <= x2) && (y1 <= py && py <= y2)
+#global
+
+//大きいほう、小さいほうを返す関数
+#module
+#defcfunc major_s str lhs, str rhs
+	if ((lhs != rhs) < 0) { return rhs } else { return lhs }
+#global
+#module
+#defcfunc minor_s str lhs, str rhs
+	if ((lhs != rhs) > 0) { return rhs } else { return lhs }
+#global
+#module
+#defcfunc major_d double lhs, double rhs
+	if (lhs < rhs) { return rhs } else { return lhs }
+#global
+#module
+#defcfunc minor_d double lhs, double rhs
+	if (lhs > rhs) { return rhs } else { return lhs }
+#global
+#module
+#defcfunc major_i int lhs, int rhs
+	if (lhs < rhs) { return rhs } else { return lhs }
+#global
+#module
+#defcfunc minor_i int lhs, int rhs
+	if (lhs > rhs) { return rhs } else { return lhs }
+#global
+
+#module
+//正格な条件演算子
+#defcfunc cond_i int cond, int x, int y
+	if (cond) { return x } else { return y }
+#global
+
+#module
+#define global ctype cond_d(%1, %2 = 0, %3 = 0) cond_d_@__uedai(%1, %2, %3)
+#defcfunc cond_d_@__uedai int cond, double x, double y
+	if (cond) { return x } else { return y }
+#global
+
+#module
+#define global ctype cond_s(%1, %2 = "", %3 = "") cond_s_@__uedai(%1, %2, %3)
+#defcfunc cond_s_@__uedai int cond, str x, str y
+	if (cond) { return x } else { return y }
+#global
+
+//COLORREF値
+#define global ctype RGB(%1 = 0, %2 = 0, %3 = 0) \
+	MAKELONG4((%1), (%2), (%3), 0)
+
+#module
+#deffunc color32 int cref
+	color byte_at(cref, 0), byte_at(cref, 1), byte_at(cref, 2)
+	return
+#global
+
+#endif

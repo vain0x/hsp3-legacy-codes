@@ -1,0 +1,9 @@
+obj
+hsptmp
+hsptmp.i
+start.ax
+packfile
+
+*.exe
+*.bak
+*.bat
