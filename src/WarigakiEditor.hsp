@@ -1,0 +1,1588 @@
+; タブ+分割、(2分割でない)多分割、多分(メモ帳に)勝つ　という意味で　タブンカツ・テキスト・エディタ
+
+#packopt name "WarigakiEditor"
+#packopt hide 1
+#packopt xsize 800
+#packopt ysize 680
+
+#include "mod_menu.as"
+#include "hspda.as"         // for vsave/vload
+
+#include "hsp_green/src/all.hsp"
+#include "util/userdef.hsp"
+#include "util/l_tooltips.as"
+#include "util/l_dialogex.as"
+#include "util/TabMaker.as"
+#include "util/erasureEx.hsp"
+
+	goto *l_init
+
+#include "header.hsp"
+#include "NewS.as"			; 新規命令・関数。New Statements and Functions の略。
+
+#include "screen.hsp"
+#include "menu.hsp"
+#include "ShortCutKey.hsp"
+#include "default_vals.hsp"
+#include "val.hsp"
+#include "Vsave_Vals.hsp"
+
+*l_init
+; 変数の定義 #######################################################################################
+	gosub *l_var_reset
+	gosub *l_set_start_val	; 初期変数値を外部から入手
+	
+; メッセージ割り込み################################################################################
+	oncmd gosub *l_on_command, WM_COMMAND	; メニューバーをクリックしたときに送信される
+	oncmd gosub *ctlcoloredit, $133		; 色変更
+	onkey gosub *l_onkey				; ショートカットキーかどうかを調べる
+	;onerror goto *error					; エラー発生時に(デバッグ用に外している)
+	onexit gosub *exit					; 終了割り込み
+	
+;###################################################################################################
+	gosub *l_window_init
+	
+	; オブジェクトの背景用にブラシを作成し、ハンドルを取得。
+	; 作成したブラシは最後に削除しておく必要があるようです。
+	dim hBrush,count_boxes						; 背景ブラシ
+	
+*brushmake
+	gosub *Delete_Brush
+	repeat count_boxes
+	hBrush(cnt) = CreateSolidBrush (RGB (br(cnt), bg(cnt), bb(cnt)))
+	loop
+	if bmonly = 1 : bmonly = 0 : return
+	
+;###################################################################################################
+
+	gosub *l_menu_init
+	gosub *Tabmake ; タブ画面を準備
+	gsel wid_tab_edit, -1
+	gsel wid_split_edit, 0
+	objmode objmode_usefont, true
+	goto *makebox
+	
+;###################################################################################################
+; タブ作成 -----------------------------------------------------------------------------------------
+*Tabmake
+	gsel wid_tab_edit, 0
+	oncmd gosub *l_on_command, WM_COMMAND	; これしないとタブ画面のメニューが使用不可。
+	
+	; タブコントロールの設置。第3パラはbgscr命令で作成するウィンドウIDの初期値です。
+	; たとえば、下のように｢1｣でタブの項目が4個あるとすると、1～4のウィンドウが使われます。
+	; ｢2｣でタブの項目が5個とすると、2～6が使われます。
+	; 別で使用するウィンドウID値と被らないよう注意。
+	
+	CreateTab 800, 660, wid_tab_first ; 100以降はタブに使用 (ID 値は飛ばしても中が抜けるだけっぽい)
+	hTabControl = stat		; タブつまみ切り替え時に利用するタブコントロールのハンドルを取得
+	
+	;########################################
+	TBC = 0		; repeat カウンタ
+	redraw 2
+	repeat count_boxes
+	; タブ作成、InstrtTab "タブに表示させる文字列" で、タブがつけられる。
+		InsertTab ""+box_symbol(cnt)	; box_symbol(int) は " ← ↑ "など
+		esr
+		gosub *MakeTabBox
+	loop
+	redraw 1
+	TBC = 0			; リセット
+	gosub *Tabkey
+	
+	; タブの項目追加が終わったら
+	; タブ内に貼り付けたbgscr命令が非表示状態になっているので、
+	; 表示されるようgsel命令を指定。
+	; CreateTab命令で指定したウィンドウID の初期値と同じ値を指定します。
+	gsel wid_tab_first, 1
+	; 元々のscreen命令のタブ用ウィンドウに描画先を戻します。
+	gsel wid_tab_edit, 0
+	; タブ項目切り替え処理時のメッセージ (WM_NOTIFY)
+	oncmd gosub *notify, $4E
+		return
+	
+; タブ項目切り替え処理部分です。
+*notify
+	; oncmd で飛んでくる
+	dupptr nmhdr, lparam, 12
+	if nmhdr(0) = hTabControl and nmhdr(2) = -551 {
+		ChangeTab	; 引数無し。新しい window の ID が stat に返る。
+		actobj = stat
+		; 元々のscreen命令のウィンドウID 3 に描画先を戻します。
+		objsel 0	; カーソル移動
+		gsel wid_tab_edit, 0
+	}
+		return
+
+*check
+	ID = stat : group = radio(ID)
+	
+	sendmsg buttonhwnd(sel(group)), $f1, 0, 0	; すでにチェックされていたものを OFF
+	sendmsg buttonhwnd(ID), $f1, 1, 0			; クリックされたものを ON
+	sel(group) = ID
+	n1 = no1 ( sel(0) )
+	n2 = no2 ( sel(1) )
+	result = double(val) * ratio(n1) / ratio(n2)
+	
+	mesbuf = ""+result
+	sendmsg mesboxhwnd, $C, 0, varptr(mesbuf) 	; $C が内容変更
+		return
+
+*checkW
+	ID = stat : groupW = radioW(ID)
+	
+	sendmsg buttonhwndW(selW(groupW)), $f1, 0, 0; すでにチェックされていたものを OFF
+	sendmsg buttonhwndW(ID), $f1, 1, 0			; クリックされたものを ON
+	selW (groupW) = ID
+	n1 = no1W ( selW(0) )
+	n2 = no2W ( selW(1) )
+	result = double(valW) * ratioW (n1) / ratioW (n2)
+	
+	mesbufW = ""+result
+	sendmsg mesboxhwndW, $C, 0, varptr(mesbufW); $C が内容変更
+		return
+		
+*MakeTabBox
+	pos 5, 24
+	objmode objmode_usefont, true
+	font fontmode(TBC), fontsize(TBC), fontstile(TBC)
+	mesbox edit(TBC), 785, 605, MiGiHaShi(TBC), 500000	; ID 0
+	hMain(TBC) = objinfo(stat, 2)				; ハンドル取得
+	pos 5,1
+	font_gui
+	mes "ファイル名 ："
+	pos 105, 1
+	objmode objmode_guifont
+	input file(TBC), 190, 22	; ID 1
+	
+	TBC ++		; カウントup
+		return
+	
+*RemakeTabBox
+	makeonly = 0	; ミスも修整
+	TBC = 0
+	redraw 2
+	repeat count_boxes
+		gsel wid_tab_first +cnt, 0
+		esr
+		gosub *MakeTabBox
+	loop
+	gosub *Tabkey
+	TBC = 0
+	redraw 1
+		return
+	
+*ReFileName
+	redraw 2
+	repeat count_boxes
+		gsel wid_tab_first + cnt,0
+		if file(cnt) = "" : file(cnt) = "無題"
+		objprm 1, file(cnt)
+	loop
+	redraw 1
+		return
+	
+;###################################################################################################
+		
+*makebox
+	gsel wid_split_edit, 1	; 画面呼び戻し
+	gsel wid_tab_edit, -1	; 新規の時に、modeが1ならWindow(3)を削除するため
+	gsel wid_split_edit, 0	; 画面呼び戻し
+	redraw 2
+	esr 1
+	
+	;repeat count_boxes
+	;font fontmode(cnt), fontsize(cnt), fontstile(cnt)					; フォントを決定
+	;mesbox edit(cnt), sizex(cnt), sizey(cnt), MiGiHaShi(cnt), 500000	; 箱を作成
+	;hMain(cnt) = objinfo(stat, 2)			; ハンドル取得
+	;loop
+	
+	; ← ↑
+	font fontmode(0), fontsize(0), fontstile(0)				; フォントを決定
+	mesbox edit(0), sizex(0), sizey(0), MiGiHaShi(0),500000	; 箱を作成
+	hMain(0) = objinfo(stat, 2)						; ハンドル取得
+	
+	; ← ←
+	if boxs >= 2 and btw = 0 {
+		font fontmode(1), fontsize(1), fontstile(1)
+		mesbox edit(1), sizex(2), sizey(1), MiGiHaShi(1), 500000
+		hMain(1) = objinfo(stat, 2)						; ハンドル取得
+	}
+	
+	; ← ↓
+	if boxs >= 3 {
+		font fontmode(2), fontsize(2), fontstile(2)
+		mesbox edit(2), sizex(4), sizey(2), MiGiHaShi(2), 500000
+		hMain(2) = objinfo(stat, 2)						; ハンドル取得
+	}
+	
+	; → ↑
+	pos sizex(0),0	; " ← ↑ " の箱の横の長さ分右にずれる。
+	if boxs >= 4 {
+		font fontmode(3), fontsize(3), fontstile(3)
+		mesbox edit(3), sizex(1), sizey(0), MiGiHaShi(3), 500000
+		hMain(3) = objinfo(stat, 2)						; ハンドル取得
+	}
+	if boxs = 2 and btw = 1{		; 2の特殊分割の時
+		font fontmode(3), fontsize(3), fontstile(3)
+		mesbox edit(3), sizex(1), sizey(0), MiGiHaShi(3), 500000
+		hMain(3) = objinfo(stat, 2)						; ハンドル取得
+	}
+	
+	; → →
+	pos sizex(2), sizey(0)	; " ← ← " の箱の横分右へ、" → ↑ "の縦分下へ。
+	if boxs >= 5 {
+		font fontmode(4), fontsize(4), fontstile(4)
+		mesbox edit(4), sizex(3), sizey(1), MiGiHaShi(4), 500000
+		hMain(4) = objinfo(stat, 2)						; ハンドル取得
+	}
+	if boxs = 4 and bju = 1 {
+		font fontmode(4), fontsize(4), fontstile(4)
+		mesbox edit(4), sizex(3), sizey(1), MiGiHaShi(4), 500000
+		hMain(4) = objinfo(stat, 2)						; ハンドル取得
+	}
+	
+	; → ↓
+	pos sizex(4), sizey(0) + sizey(1)
+	if boxs = count_boxes {
+		font fontmode(5), fontsize(5), fontstile(5)
+		mesbox edit(5), sizex(5), sizey(2), MiGiHaShi(5), 500000
+		hMain(5) = objinfo(stat, 2)						; ハンドル取得
+	}
+	
+	;	ツールチップコントロール設置
+	;	(目には見えませんがオブジェクトが設置されます)
+	; p1 は、$40だとバルーンタイプ(吹き出し型)
+	SetToolTips $40	; objID 0
+	
+	gosub *ToolTipsMake
+	
+	gosub *Tabkey
+	
+	redraw 1
+	if makeonly = 1 : makeonly = 0 : return	; 描画のみの時
+	
+	goto *sleep
+; メッセージの処理----------------------------------------------------------------------------------
+*l_on_command
+	if ( HIWORD(wparam) == 0 ) {
+		gosub *l_menu_dispatch
+	}
+	return
+	
+; サブ軍団 #########################################################################################
+; メイン用のサブルーチン群------------------------------------------------------
+*ToolTipsMake
+; AddToolTips p1, p2, p3
+; p1 は付けるオブジェクトのID
+; p2 は表示する内容
+; p3 が $2 だと、常にオブジェクトの真下に表示。
+	if mode = 1 : return	; ミスの無いように
+	gsel wid_split_edit, 1
+	repeat boxs 	; ツールチップス(カーソル合わせると出てくるあれ)
+		if boxs = 2 and btw = 1 {
+			AddToolTips 0, box_symbol(0)+ "： " +file(0)
+			AddToolTips 1, box_symbol(3)+ "： " +file(3)
+			break
+		}
+		if boxs = 4 and bju = 1 and cnt = 2 {
+			AddToolTips 2, box_symbol(3)+ "： " +file(3)
+			AddToolTips 3, box_symbol(4)+ "： " +file(4)
+			break
+		}
+		AddToolTips cnt, box_symbol(cnt)+ "： " +file(cnt) ; 通常
+	loop
+		return
+	
+; ファイル######################################################################
+; 初期ファイル設定###########################
+*First_File
+; 表裏一体のサブルーチン
+	exist "初期設定ファイル名.dat"
+	if strsize != -1 {
+		bload "初期設定ファイル名.dat", ms, 512	; ファイル名を取得
+	} else {
+		ms = "*.pf"
+	}
+	dialogEx 0, "初期状態ファイル (*.pf or *.fir)|*.pf;*.fir|", ""+ms+"", "初期設定ファイル選択", dir_cur
+	
+	sdim ms, 1024, 50, 20, 5, 5		; リセット
+	
+	if stat = 0 : return		; 選ばれなかったら戻る
+	
+	savedl = getpath(refstr, 8)		; 勝手に使用。ファイル名 + 拡張子
+	file_Ext = getpath(savedl, 2)	; 拡張子を取得。拡張子には「.(ドット)」も含まれる
+	
+	if file_Ext = "" : savedl += ".pf"	; 拡張子がない場合、.pfに直す
+	
+	if file_Ext != ".pf" {
+		dialog "完全ファイルを指定してください", 1, "設定失敗"
+		sdim savedl, 510	; リセット
+		sdim file_Ext, 24	; 
+			return
+	}
+	
+	exist "初期設定ファイル名.dat"			; 存在するかを確認
+	if strsize != -1 {						; 存在する場合は
+		delete "初期設定ファイル名.dat"		; 内容を一旦消去
+	}
+	
+	bsave "初期設定ファイル名.dat", savedl, strlen(savedl) ; セーブ
+	dialog ""+savedl+"にしました", 0, "報告"	; 報告
+	sdim savedl, 510	; リセット
+	sdim file_Ext, 24	; 同上
+		return
+	
+; 新規#######################################
+*NewEditor
+; 表裏一体のサブルーチン
+	new_end = 1
+	gosub *exit			; 終了セーブ
+	gosub *l_var_reset
+	dialog "初期化しました", 0, "報告"	; 報告
+		return "reset"
+	
+*save
+; 表裏一体のサブルーチン
+	n = stat				; ボタンID情報を一時的に保存
+	dialogEx 1,"テキストファイル (*.txt)|*.txt|HTMLﾌｧｲﾙ (*.html)|*.html;*.htm|", ""+File(n)+".txt", "名前を付けて保存", dir_mydoc
+	; セーブするファイルを選択 (この時にファイル名を付ける)
+	; マイドキュメントを初期に設定
+	file_Ext = getpath(refstr, 2)
+	if stat {
+		if file_Ext = "txt" {
+			notesel edit(n)
+			notesave refstr	; セーブ
+		} else {
+			bsave getpath(refstr, 8), edit(n), strlen(edit(n))+5 ; セーブ
+		}
+	}
+	; 指定物変更
+	Current_File = refstr
+	Current_Box  = n
+	
+	file(n) = getpath(refstr, 8+1)		; ファイル名取得
+	
+	; 分割モードなら、ツールチップスにファイル名表示
+	; タブモードなら、インプットボックスにファイル名表示
+	on mode gosub *ToolTipsMake, *ReFileName
+	Back
+		return
+	
+*Vsv
+; 表裏一体のサブルーチン
+	; セーブするファイルを選択させる
+	if getpath(Current_File, 2) = ".pf" { 
+		dialogEx 1, "ﾊﾟｰﾌｪｸﾄ ﾌｧｲﾙ (*.pf)|*.pf|", Current_File, "完全保存"
+	} else {
+		dialogEx 1, "ﾊﾟｰﾌｪｸﾄ ﾌｧｲﾙ (*.pf)|*.pf|", "*.pf", "完全保存"
+	}
+	if stat = 0 : return			; 選択されなかったら戻る。
+	
+	file_Ext = getpath(refstr, 2)	; 拡張子を取得。拡張子には「.(ドット)」も含まれる
+	
+	if file_Ext != ".pf" and file_Ext != "" {
+		dialog "拡張子が違います\n やり直してください", 1, "エラー" 
+		dialog refstr + "\t\n" + file_Ext + " ←拡張子のみ" , 0, "ディレクトリ情報"
+			return	; 拡張子がpfでない場合、諦めて戻る
+	}
+	
+	; 拡張子がない場合、.pfに直す
+	if file_Ext = "" {
+		file_Ext = ".pf"
+	} else {
+		sdim file_Ext, 24
+	}
+	
+	savedl = ""+refstr+""+file_Ext		; セーブするファイル情報を記入
+	gosub *LVarSave 					; セーブ
+	
+	Current_File = savedl				; 指定物変更
+	sdim savedl, 510					; 変数リセット
+	sdim file_Ext, 24					; 変数リセット
+	Back
+		return
+	
+; ロード#####################################
+*load
+	n = stat	; stat のオブジェクトIDは0から、実際(分割画面の箱ID)は1からなので、各+1処理をする。
+	dialogEx 0, "ﾃｷｽﾄﾌｧｲﾙ (*.txt)|*.txt|HTMLﾌｧｲﾙ (*.html)|*.html;*.htm|", "*.txt", ""+box_symbol(n)+"の内容", dir_mydoc
+	if stat = 0 : return					; 選ばれなかったら戻る
+	
+	file_Ext = getpath(refstr, 2)
+	
+	if file_Ext = ".txt" or file_Ext = ".html" or file_Ext = ".htm" {
+		notesel edit(n)		; バッファ指定
+		noteload refstr		; ロード
+	} else {
+		dialog "拡張子が .txt ではなく "+file_Ext+" になっています\n やり直してください。", 1, "エラー"
+		sdim file_Ext, 24
+			return
+	}
+	
+	; 指定物変更
+	Current_File = refstr
+	Current_Box  = n
+	
+	file(n) = getpath(refstr, 8+1)	; ファイル名取得
+	sdim file_Ext, 24				; 初期化
+	
+	if mode = 0 {
+		gsel wid_split_edit,1
+		objprm n, edit(n)
+			gosub *ToolTipsMake		; ツールチップスにファイル名を表示
+	} else {
+		gsel wid_tab_first + n, 0
+		objprm 0 , edit(n)			; 内容をタブに反映
+		objprm 1 , file(n)			; ファイル名編集ボックスを変更
+		gsel wid_tab_first + n, 1
+	}
+	Back
+		return
+*Vlv
+	; 出来れば指定ファイルを初期に設定。
+	if getpath(Current_File, 2) = ".pf" {
+		dialogEx 0, "ﾊﾟｰﾌｪｸﾄﾌｧｲﾙ (*.pf)|*.pf|", ""+Current_File+"", "完全データを開きます", ""
+		; 完全ファイルを選択
+	} else {
+		dialogEx 0, "ﾊﾟｰﾌｪｸﾄﾌｧｲﾙ (*.pf)|*.pf|", "*.pf", "完全データを開きます", ""
+	}
+	if stat = 0 : return			; 選択されなかったら戻る
+	file_Ext = getpath(refstr, 2)
+	n = mode						; ノートに入れとく
+	if file_Ext = ".pf" {
+		vload refstr				; ロード
+	} else {
+		dialog "拡張子が .pf ではなく "+ file_Ext +" です。\n やり直してください", 1, "エラー"
+		dim n, 1
+			return
+	}
+	
+	Current_File = refstr			; 指定物変更
+	mode = n						; mode 値を合わせる
+	dim n, 1						; 初期化
+	sdim file_Ext, 24				; 初期化
+	; 内容を書き換える
+	on mode gosub *Schange, *ReMakeTabBox
+	Back	; 戻る
+		return
+	
+	
+; 指定物変更#################################
+*Current_Change
+; 表裏一体のサブルーチン
+	; txt か pf ファイルを選択させる
+	dialogEx 0, "指定ファイル (*.pf;*.txt)|(*.pf;*.txt)|", Current_File, "指定ファイル選択", ""
+	if stat = 1 : Current_File = refstr			; 指定ファイル変更
+	
+	gsel wid_tool,1
+	redraw 2
+	esr
+	title "箱を指定"
+	objmode objmode_guifont, true
+	
+	pos 20,30
+	objsize 60,20,20
+	font_gui
+	mes "どれにしますか？"
+	routine = *CB
+	SetButton
+	
+	pos 20,130
+	objsize 70,25
+	mes "現在の指定は："+ box_symbol(Current_Box)
+	objsel Current_Box						; 現在の指定物にフォーカスを移動
+	pos 20,160
+	button gosub "そのまま", *CB
+	
+	if mode = 0 : DelButton
+	
+	objmode objmode_usefont, true
+	redraw 1
+	gosub *waitstay
+	
+	Back	; 戻る
+	dialog ""+ box_symbol(Current_Box) +"を指定しました", 0, "指定完了"
+		return
+	
+*CB
+	if stat > 5 : return "ON"
+	Current_Box = stat
+		return "ON"
+	
+; 上書き保存#################################
+*OverWriteSave
+; 表裏一体のサブルーチン
+	exist Current_File
+	if strsize = -1 {
+		dialog "先に指定ファイルを選んでください", 1, "エラー"
+			return
+	}
+	
+	if getpath(Current_File, 2) = ".pf" {
+		savedl = Current_File
+		gosub *LVarSave	; 完全データを保存する。
+		sdim savedl, 510	; 初期化
+	}
+	
+	; txt or HTMLデータを保存する。
+	if getpath(Current_File, 2) = ".txt" or getpath(Current_File, 2) = "html" or getpath(Current_File, 2) = "htm" {
+		bsave Current_File, edit(Current_Box), strlen(edit(Current_Box))+2
+	}
+	
+	dialog "上書きしました", 0, "報告"
+	faceup 1
+		return
+	
+; メモ帳#####################################
+*open_notepad
+; 表裏一体のサブルーチン
+	dialog "終了しますか？", 3, ""
+	exec "notepad"
+	if stat = 6 : end	; 終了
+		return
+	
+*open_newWarigaki
+; 表裏一体のサブルーチン
+	dialog "ワリガキ・エディタを開きますか？", 2, "確認"
+	if stat = 7 : return	; [いいえ]なら戻る
+	#ifndef _debug
+		exec dir_exe
+	#endif
+	return
+	
+; 編集##########################################################################
+; 元に戻す###################################
+*Undo
+	if mode = 1 {
+		sendmsg hMain(actobj), $C6		; EM_CANUNDO = $C6 (Undo できるか確認)
+		if stat = 1 {					; ↑できるなら、statに1を、出来ないなら0を返す。
+			sendmsg hMain(actobj), $C7	; EM_UNDO = $C7 (Undo)
+		}
+			return
+	}
+	objsel -1	; アクティブなオブジェクトのIDをstatに代入
+	unless (0 <= stat && stat < count_boxes) { return }
+	n = stat
+	sendmsg hMain(n), $C6		; EM_CANUNDO = $C6 (Undo できるか確認)
+	if stat {					; ↑できるなら、statに1を、出来ないなら0を返す。
+		sendmsg hMain(n), $C7	; EM_UNDO = $C7 (Undo)
+	}
+	dim n, 1
+		return
+	
+; 移植#######################################
+*Graft
+; 表裏一体のサブルーチン
+	gsel wid_tool,1
+	redraw 2
+	esr
+	title "情報移植"
+	objmode objmode_guifont, true
+	
+	pos 20,30
+	objsize 100, 20, 25
+	font_gui
+	mes "　↓　の　情 報　　　 を　　　　↓　　　　　に送る"
+	
+	pos 22, 60
+	combox graft_info(0), 100, " ← ↑ \n ← ← \n ← ↓ \n → ↑ \n → → \n → ↓ " ; コピー元
+	
+	pos 130, 60
+	mes "→→→→"
+	
+	pos 202, 60
+	combox graft_info(1), 100, " ← ↑ \n ← ← \n ← ↓ \n → ↑ \n → → \n → ↓ " ; コピー先
+	
+	pos 200, 110
+	mes "移植モード"
+	combox graft_info(2), 80, "上に追加\n下に追加\n上書き\n交換"	; 移植モード
+	mes "送り元にデータを残しますか？"
+	combox graft_info(3), 80, " 残す\n 残さない"			; 残すかどうか、0が残す、1が残さない
+	
+	pos 50,130
+	objsize 80,30,50
+	button gosub " 送る / 換える ",*Graft_send
+	button " や め る ",*sleep
+	
+	objmode objmode_usefont, true
+	redraw 1
+	gosub *waitstay
+	Back
+		return
+	
+*Graft_send
+	; ミスないか確認
+	if graft_info(0) < 0 or graft_info(1) < 0 : dialog "コピー元、コピー先を指定してください",, "エラー" : return
+	if graft_info(2) < 0 : dialog "移植モードを指定してください",, "エラー" : return
+	if graft_info(0) = graft_info(1) : dialog "おなじものは選ばないでください",, "エラー" : return
+	
+	; 上に追加
+	if graft_info(2) = 0 {
+		sdim edit_buf, 1000000	; 一応余分に確保
+		; edit_buf にコピー元 + α + コピー先の情報を格納
+		edit_buf = edit(graft_info(0)) + "\n\n\n" + edit(graft_info(1))
+		edit(graft_info(1)) = edit_buf	; コピー先に「コピー元 + α + コピー先」を上乗せ
+	}
+	
+	; 下に追加
+	if graft_info(2) = 1 {
+		edit_buf = "\n\n\n" + edit(graft_info(0))			; edit_buf にコピー元の情報を格納
+		edit_long = strlen(edit_buf), strlen(edit(graft_info(1)))	; 0はコピー元、1はコピー先
+		memcpy edit(graft_info(1)), edit_buf , edit_long(0), edit_long(1)
+			; コピー先(p1)に、 コピー元(p2)の内容を、コピー元の長さ分(p3)、コピー先の後(p4)に追加。
+			; 代入でもできる……！？
+	}
+	
+	; 上書き
+	if graft_info(2) = 2 {
+		edit(graft_info(1)) = edit(graft_info(0)) ; コピー先にコピー元の情報を上乗せ。
+	}
+	
+	; 交換
+	if graft_info(2) = 3 {
+		edit_buf = edit(graft_info(1))				; コピー先
+		edit(graft_info(1)) = edit(graft_info(0)) 	; コピー先にコピー元の情報を上乗せ。
+		edit(graft_info(0)) = edit_buf				; コピー元にコピー先の情報を上乗せ。
+	}
+	gosub *delete_copy_source		; コピー元削除
+	; 再描画
+	on mode gosub *Schange, *RemakeTabBox
+	
+	sdim edit_buf, 500000, 3		; 一時格納なので消去
+	dim edit_long, 2				; 一時格納なので消去
+		return "ON"
+	
+*delete_copy_source
+	if graft_info(3) = 1 and graft_info(2) = 3 {
+		dialog "交換する場合は削除出来ません", 1, "エラー"
+		graft_info(3) = 0			; 削除不可
+	}
+	if graft_info(3) = 1 {
+		edit(graft_info(0)) = ""	; コピー元消去
+	}
+		return
+	
+; 検索 & 置換################################
+*Search
+	;/*
+	if mode = 1 {
+		gosub *Search_T
+			return
+	}
+	gsel wid_tool,0
+	redraw 2
+	esr
+	title " - Word Searcher - "
+	objmode objmode_guifont, true
+	
+	
+	font_gui
+	
+	pos 20, 30 : mes " 検索する文字"
+	pos 20, 50 : input SearchWord, 130, 25, 1024
+	
+	pos 20, 90 : mes " 置換後の文字"
+	pos 20,110 : input ChangedWord, 130, 25, 1024
+	
+	pos 200, 30 : mes "検索位置"
+	objsize 100, 25, 20
+	pos 200, 60 : combox SetEdit, 120, " ← ↑ \n ← ← \n ← ↓ \n → ↑ \n → → \n → ↓"
+	
+	pos 200, 80
+	objsize 80, 25, 22
+	button gosub "次を検索", *Str_Search
+	button gosub "前を検索", *Str_Search
+	button gosub " 置換 ", *ChangeText
+	button gosub "すべて置換",*AllChange
+	
+	pos 20, 230
+	objsize 70, 25
+	button "やめる", *sleep
+	
+	gsel wid_tool, 1
+	objmode objmode_usefont, true
+	redraw 1
+	gosub *waitstay
+	;*/
+		return
+	
+*Str_Search
+	if n != SetEdit : LastStr = 0 : n = SetEdit
+	Position = instr(edit(n), LastStr, SearchWord)	; 検索
+	
+	if Position = -1 {
+		dialog "「"+ SearchWord +"」は存在しません"
+		n = 0
+		LastStr = 0
+			return "ON"
+	}
+	
+	LastStr = Position + strlen(SearchWord)
+	sendmsg hMain(n), $B1, Position, LastStr	; EM_SETSEL(検索した文字を選択)
+	LastStr += (strlen(ChangedWord) - strlen(SearchWord))	; ずらす
+		return
+	
+*ChangeText
+	if n != SetEdit : LastStr = 0 : n = SetEdit
+	sendmsg hMain(n), $C2, 1, ChangedWord		; EM_REPLACESEL(置換)
+	Laststr += strlen(SearchWord) - strlen(ChangedWord)	; ずらす
+		return
+	
+*AllChange
+	n = SetEdit
+	repeat
+		Position = instr(edit(n), LastStr, SearchWord)
+		
+		if Position = -1 : break				; 完了
+		
+		LastStr = Position + strlen(SearchWord)
+		sendmsg hMain(n), $B1, Position, LastStr	; EM_SETSEL(検索した文字を選択)
+		sendmsg hMain(n), $C2, 1, ChangedWord		; EM_REPLACESEL(置換)
+		LastStr += (strlen(ChangedWord) - strlen(SearchWord))	; ずらす
+		wait 1									; 休憩
+	loop
+	
+	dialog "すべて置換しました。", 0, "完了報告"
+		return "ON"
+	
+*Search_T
+	
+		return
+	
+*Str_Search_T
+	
+		return "ON"
+	
+; 切り取り###################################
+*Cut
+	if mode = 1 {
+		sendmsg hMain(actobj), $301		; コピー
+		sendmsg hMain(actobj), $303		; 削除
+			return
+	}
+	objsel -1	; アクティブなオブジェクトのIDをstatに代入
+	unless (0 <= stat && stat < count_boxes) { return }
+	n = stat
+	sendmsg hMain(n), $301		; コピー
+	sendmsg hMain(n), $303		; 削除
+	dim n, 1
+		return
+	
+; コピー#####################################
+*Copy
+	if mode = 1 {
+		sendmsg hMain(stat), $301	; コピー
+			return
+	}
+	objsel -1	; アクティブなオブジェクトのIDをstatに代入
+	unless (0 <= stat && stat < count_boxes) { return }
+	sendmsg hMain(stat), $301	; コピー
+		return
+	
+; 貼り付け###################################
+*Past
+	if mode = 1 {
+		sendmsg hMain(actobj), $302		; 貼り付け
+			return
+	}
+	objsel -1	; アクティブなオブジェクトのIDをstatに代入
+	unless (0 <= stat && stat < count_boxes) { return }
+	sendmsg hMain(stat), $302	; ペースト
+		return
+	
+; 削除#######################################
+*Del
+	if mode = 1 {
+		sendmsg hMain(actobj), $303		; 削除
+			return
+	}
+	objsel -1	; アクティブなオブジェクトのIDをstatに代入
+	unless (0 <= stat && stat < count_boxes) { return }
+	sendmsg hMain(stat), $303	; 削除
+		return
+	
+; すべて選択#################################
+*AllSelect
+	if mode = 1 {
+		sendmsg hMain(actobj), $B1, 0, strlen(edit(actobj))+3 ; wprm →開始, lprm →長さ
+			return
+	}
+	objsel -1	; アクティブなオブジェクトのIDをstatに代入
+	unless (0 <= stat && stat < count_boxes) { return }
+	sendmsg hMain(stat), $B1, 0, strlen(edit(stat))+10	; wprm →開始, lprm →長さ
+		return
+	
+; 書式##########################################################################
+; 表示
+*printmes
+; 表裏一体のサブルーチン
+	dialog "テキスト・エディタ作成", 0, "メッセージ"
+	; ここに何を入れるか考え中
+		return
+	
+; フォント###################################
+*font_edit
+; 表裏一体のサブルーチン
+	gsel wid_tool, 0	; 一瞬のちらつきが何故か発生するため、描画後に表示。
+	redraw 2
+	esr
+	title "フォント設定"
+	objmode objmode_guifont, true
+	
+	repeat count_boxes
+	fontname_set(cnt) = fontname(cnt)
+	fontselect_set(cnt, 0) = fontselect(cnt, 0)
+	fontselect_set(cnt, 1) = fontselect(cnt, 1)
+	fontsize_set(cnt) = fontsize(cnt)
+	loop
+	
+	pos 30, 30
+	font_gui
+	objsize 150,20, 30
+	
+	mes "フォント名"
+	repeat number
+	combox fontname_set(cnt), 100, "MS ゴシック\nMS Pゴシック\nMS 明朝\nHG正楷書体-PRO" ;\nHGP ゴシックE\nHGP創英角ゴシックUB\nHGP 創英角ポップ体\nHGS ゴシックE\nHGS 行書体\nHG丸ゴシックM-PRO"
+	loop
+	
+	pos 190,30
+	objsize 85,20, 30
+	mes "スタイル"
+	repeat number
+	combox fontselect_set(cnt,0), , "通常\n太字\n斜体\n両方"
+	loop
+	
+	pos 285, 30
+	objsize 85,20, 30
+	mes "文字の装飾"
+	repeat number
+	combox fontselect_set(cnt,1), , " - - - - \n下線\n打ち消し線\n両方"
+	loop
+	
+	pos 390,30
+	objsize 50,20,30
+	
+	mes "文字のサイズ"
+	repeat number
+	input fontsize_set(cnt)
+	loop
+	
+	pos 40,235
+	objsize 55, 25
+	button gosub "決定",*font_edit_end
+	button goto  "やめる",*sleep
+	
+	objmode objmode_usefont, true
+	redraw 1
+	
+	gsel wid_tool,1	; 表示
+	gosub *waitstay ; 決定が押されるまで待つ
+	
+		return
+	
+*font_edit_end
+	repeat count_boxes
+	fontname(cnt) = fontname_set(cnt)
+	fontselect(cnt,0) = fontselect_set(cnt,0)
+	fontselect(cnt,1) = fontselect_set(cnt,1)
+	fontsize(cnt) = fontsize_set(cnt)
+	
+	if fontselect(cnt,1) = 1 : fontselect_set(cnt,1) = 4
+	if fontselect(cnt,1) = 2 : fontselect_set(cnt,1) = 8
+	if fontselect(cnt,1) = 3 : fontselect_set(cnt,1) = 12
+	fontstile(cnt) = fontselect(cnt,0) + fontselect_set(cnt,1)
+
+	if fontname_set(cnt) = 0 : fontmode(cnt) = "ＭＳ ゴシック"
+	if fontname_set(cnt) = 1 : fontmode(cnt) = "ＭＳ Ｐゴシック"
+	if fontname_set(cnt) = 2 : fontmode(cnt) = "ＭＳ 明朝"
+	if fontname_set(cnt) = 3 : fontmode(cnt) = "HG正楷書体-PRO"
+	/*
+	if fontname(cnt) = 4 : fontmode(cnt) = ""
+	if fontname(cnt) = 5 : fontmode(cnt) = ""
+	if fontname(cnt) = 6 : fontmode(cnt) = ""
+	if fontname(cnt) = 7 : fontmode(cnt) = ""
+	if fontname(cnt) = 8 : fontmode(cnt) = ""
+	*/
+	loop
+	
+	; 再描画
+	makeonly = 1
+	on mode gosub *makebox, *RemakeTabBox
+	Back
+		return "ON"
+	
+; タブ長さ調整###############################
+*TabKey_Long
+	; ずれる。なぜだろう？
+	; 直ったぜーーーーー！ ( fontsize(cnt) を+1した！！)
+	gsel wid_tool,1
+	redraw 2
+	esr
+	title "タブ長さ調整"
+	objmode objmode_guifont, true
+	
+	font_gui
+	pos 20, 30
+	mes "タブの長さを指定してください。"
+	pos 50,50
+	input Tabsize, 50, 25
+	
+	; アップダウンコントロール作成
+	; (デフォルトの最大値・最小値は100～0の範囲)
+	winobj "msctls_updown32", "", , $50000012 | UDS_ALIGNRIGHT
+	hUpdown = objinfo(stat, 2)		; ハンドル取得
+	
+	; UDM_SETRANGE
+	; lparam値に最大値と最小値を指定 (±32767 の整数)
+	sendmsg hUpdown, $465, , MAKELONG(42, 1)
+	
+	; 数値指定
+	objprm 0, 8
+	
+	pos 110, 52
+	font_gui
+	mes "byte"
+	
+	pos 20, 150
+	button gosub "決定", *Tabkey_ok
+	button "やめる", *sleep
+	
+	objmode objmode_usefont, true
+	redraw 1
+	
+	gosub *waitstay
+		return
+	
+*Tabkey_ok
+	Back
+	gosub *Tabkey
+	return "ON"
+	
+*Tabkey
+	; アルティメットさん、ありがとうございました。
+	repeat count_boxes
+		tabstops = (fontsize(cnt) + 1) / 4 * tabsize
+		if mode = 1 : gsel wid_tab_first + cnt, 0
+		sendmsg hMain(cnt), 0x00CB, 1, varptr(tabstops) // EM_SETTABSTOPS
+	loop
+	return
+	
+; 右端で折り返す#############################
+*MiGiHaShi_Select
+	gsel wid_tool,1
+	redraw 2
+	esr
+	title "右端で折り返す"
+	objmode objmode_guifont, true
+	
+	; 適合
+	repeat count_boxes
+		MiGi_set(cnt) = MiGiHaShi(cnt)
+		if MiGi_set(cnt) = 5 : MiGi_set(cnt) = 0
+	loop
+	
+	pos 20, 30
+	font_gui
+	mes "右端で折り返す場合はONにしてください。"
+	
+	font_gui 12
+	objsize 70,30,25
+	pos 20,50
+	repeat count_boxes
+	if cnt = 3 : pos 120, 50
+	chkbox box_symbol(cnt), MiGi_set(cnt)	; 1がON
+	loop
+	
+	pos 40,200
+	objsize 55, 25
+	button gosub "決定",*MiGiHaShi_Change
+	button goto  "やめる",*sleep
+	
+	objmode objmode_usefont, true
+	redraw 1
+	gosub *waitstay
+	
+	Back
+	on mode gosub *Schange, *RemakeTabBox	; 再描画
+	return
+	
+*MiGiHaShi_Change
+	repeat count_boxes
+	; 1なら1のまま、0なら5に変更
+	if MiGi_set(cnt) = 1 : MiGiHaShi(cnt) = 1 ; 1は折り返しありなのでON。
+	if MiGi_set(cnt) = 0 : MiGiHaShi(cnt) = 5 ; 5は折り返し無しなのでOFF。スクロールバーあり。
+	loop
+	return "ON"
+	
+; ツール########################################################################
+*Tab_or_Bunkatsu
+; 表裏一体のサブルーチン ……ていうか、表裏を繋ぎとめる役割のサブルーチン
+	if mode = 0 : dialog "タブモードに切り替えますか？", 2, "モード切り替えインフォ"
+	if mode = 1 : dialog "分割モードに切り替えますか？", 2, "モード切り替えインフォ"
+	if stat = 7 : return	; [いいえ]を選んだらすぐに戻る
+	
+	mode ^= 1		; 0は分割、1はタブ
+	gosub *Mode_Change
+	return
+	
+*Mode_Change
+	if mode = 0 {
+		number = boxs
+		gsel wid_split_edit ,1
+		gsel wid_tab_edit, -1
+		gsel wid_split_edit, 1
+		makeonly = 1 : gosub *makebox
+	}
+	if mode = 1 {
+		number = count_boxes
+		gosub *ReMakeTabBox
+		gsel wid_tab_first, 1
+		objsel 0
+		gsel wid_tab_edit, 1
+		gsel wid_split_edit, -1
+		gsel wid_tab_edit, 0
+	}
+	return
+	
+	
+; ###########################################
+	
+; 色変更#####################################
+*Changer
+	repeat count_boxes
+		wr_set(cnt) = wr(cnt)
+		wg_set(cnt) = wg(cnt)
+		wb_set(cnt) = wb(cnt)
+		
+		br_set(cnt) = br(cnt)
+		bg_set(cnt) = bg(cnt)
+		bb_set(cnt) = bb(cnt)
+	loop
+	
+	gsel wid_tool, 1
+	redraw 2
+	esr
+	title "Color Changer"
+	objmode objmode_guifont, true
+	
+	pos 20, 30
+	objsize 60, 20, 25
+	font_gui
+	mes "色のバランスを指定して下さい"
+	pos 20, 50
+	color 255
+	mes "　赤"
+	color , 255
+	pos 90,50
+	mes "　緑"
+	color , , 255
+	pos 160, 50
+	mes "　青"
+	color
+	
+	pos 20, 70
+	repeat number
+		if wc = 1 : input wr_set(cnt) : else : input br_set(cnt)
+		clIDr(cnt) = stat
+	loop
+	
+	pos 90, 70
+	repeat number
+		if wc = 1 : input wg_set(cnt) : else : input bg_set(cnt)
+		clIDg(cnt) = stat
+	loop
+	
+	pos 160, 70
+	repeat number
+		if wc = 1 : input wb_set(cnt) : else : input bb_set(cnt)
+		clIDb(cnt) = stat
+	loop
+	
+	pos 230, 70
+	repeat number
+		button gosub "参照",*colordialog
+	loop
+	
+	wc = 0		; リセット
+	pos 40, 235
+	objsize 55, 25
+	button gosub "決定", *Changing
+	button "やめる", *sleep
+	
+	objmode objmode_usefont, true
+	redraw 1
+	gosub *waitstay
+	return
+	
+*Changing
+	; 背景色変更
+	repeat count_boxes
+		wr(cnt) = wr_set(cnt)
+		wg(cnt) = wg_set(cnt)
+		wb(cnt) = wb_set(cnt)
+		
+		br(cnt) = br_set(cnt)
+		bg(cnt) = bg_set(cnt)
+		bb(cnt) = bb_set(cnt)
+	loop
+	
+	Back
+	; 再描画
+	makeonly = 1
+	on mode gosub *makebox, *ReMakeTabBox
+	return "ON"
+	
+*colordialog
+	n = stat - number*3		; 色用のボックスの数を引く
+	logmes "stat = "+stat+" , n = "+n
+	dialog "", 33	; 色ダイアログ
+	if stat = 0 {	; [キャンセル]を押された
+		n = 0
+		return
+	}
+	objprm clIDr(n), ginfo_r
+	objprm clIDg(n), ginfo_g
+	objprm clIDb(n), ginfo_b
+	n = 0
+	return
+	
+; 分割数#####################################
+*bunkatsu
+	gsel wid_tool,1
+	redraw 2
+	esr
+	objmode objmode_guifont, true
+	title "分割数選択"
+		
+	pos 30,30
+	font_gui
+	mes "分割する数を決めてください"
+	font_gui 12
+	objsize 70, 25, 28
+	pos 120, 60
+	button "やめる",*sleep
+	pos 30, 60
+; button 命令で行った先の stat 初期値は、その button のオブジェクトIDと同じ
+
+	split_type_names = "一つだけ", "二分割", "三段腹", "四分割", "五分割", "六分割"
+	repeat count_boxes
+		button gosub split_type_names(cnt), *l_change_split_number
+	loop
+	
+	pos 30, 230
+	objsize 100, 28
+	combox box_special, 100, " - - - - - - - \n 特殊 分割 "
+	
+	objmode objmode_usefont, true
+	redraw 1
+	gosub *waitstay
+	
+	Back
+	return
+	
+*l_change_split_number
+	boxs = stat
+	number = boxs
+	if boxs = 2 and box_special = 1 : btw = 1 	; 横に分割 (真ん中に線があり、左右が別になる)
+	if boxs = 4 and box_special = 1 : bju = 1 	; 十字型に分割
+	gsel wid_split_edit, 1
+	gosub *Schange 				; 箱サイズ適正チェック &再描画
+	return "ON"
+	
+; バランス###################################
+*Blance_Change
+	if boxs = 1 {
+		dialog "変えようがありません。。。", 0, "無分割です"
+		return
+	}
+	; 適合
+	repeat count_boxes
+	sizex_set(cnt) = sizex(cnt)
+	if cnt <= 2 : sizey_set(cnt) = sizey(cnt)
+	loop
+	
+	gsel wid_tool,0	; 一瞬のちらつきを抑えるため、描画後に画面表示。
+	redraw 2
+	esr
+	title "バランス調整"
+	gosub *BoxBlanceChangeWindow
+	return
+	
+;###############################################################################
+*BoxBlanceChangeWindow
+	; 下準備
+	pos 20, 30
+	font "ＭＳ ゴシック",14,1
+	objsize 60, 20, 20
+	objmode objmode_guifont, true
+	mi = 0
+	ms = "一", "二", "三"	; 文字を代入
+	
+	mes "横幅"
+	; 横 幅 --------------------------------------
+	repeat 3
+		if cnt != 0 : pos 20, 50 + cnt*30	; カレントポジション移動 
+		input sizex_set(mi)					; ← ○ の箱の横幅
+		hBlance(mi) = objinfo(stat, 2)	; ハンドル入手
+		mi = mi + 1
+		
+		pos 93, 53 + cnt*30
+		mes " + "							; + の演算子
+		
+		pos 130, 50 + cnt*30
+		input sizex_set(mi)					; → ○ の箱の横幅
+		hBlance(mi) = objinfo(stat, 2)	; ハンドル入手
+		mi = mi + 1
+		
+		pos 203, 53 + cnt*30
+		mes "  ＝  ８００  ( "+ms(cnt)+"段目"	; 最後の解の部分
+	loop
+	
+	; 縦 幅 --------------------------------------
+	pos 20, 140
+	mes "縦幅"
+	input sizey_set(0) : hBlance(6) = objinfo(stat, 2)
+	
+	pos 93,163 : mes " + "
+	
+	pos 130,160
+	input sizey_set(1) : hBlance(7) = objinfo(stat, 2)
+	
+	pos 198,163 : mes " + "
+	
+	pos 230,160
+	input sizey_set(2) : hBlance(8) = objinfo(stat, 2)
+	
+	pos 303,163
+	mes " ＝ ６６０"
+	
+	; ツールチップス配置--------------------------
+	SetToolTips ; ツールチップコントロール設置
+	
+	; 一段目
+	AddToolTips 0, box_symbol(0)+"の横幅", $2
+	AddToolTips 1, box_symbol(3)+"の横幅", $2
+	
+	; 二段目
+	AddToolTips 2, box_symbol(1)+"の横幅", $2
+	AddToolTips 3, box_symbol(4)+"の横幅", $2
+	
+	; 三段目
+	AddToolTips 4, box_symbol(2)+"の横幅", $2
+	AddToolTips 5, box_symbol(5)+"の横幅", $2
+	
+	; 縦
+	repeat 3
+	AddToolTips cnt + count_boxes, ""+ms(cnt)+"段目の縦幅", $2	; ms = "一", "二", "三"
+	loop
+	sdim ms, 1024, 50, 20, 5, 5	; リセット
+	
+	; 編 集 束 縛 --------------------------------
+	dim mi, 100, 50, 20, 5		; リセット
+	; 条件式短縮用の変数 ------
+	if boxs = 2 and btw = 0 : mi = 2
+	if boxs = 2 and btw = 1 : mi = 21
+	if boxs = 3 			: mi = 3
+	if boxs = 4 and bju = 0 : mi = 4
+	if boxs = 4 and bju = 1 : mi = 41
+	if boxs = 5 			: mi = 5
+	;-------------------------
+	
+	if mi = 2 or mi = 3 {
+		; 一段目の箱の横幅。" ← ↑ " と " → ↑ "。
+		sendmsg hBlance(0), $CF, 1	; 編集不可
+		sendmsg hBlance(1), $CF, 1	; 編集不可
+	}
+	
+	if mi = 2 or mi = 21 or mi = 3 or mi = 4 {
+		; 二段目の箱の横幅。" ← ← " と " → → "。
+		sendmsg hBlance(2), $CF, 1	; 編集不可
+		sendmsg hBlance(3), $CF, 1	; 編集不可
+	}
+	
+	if boxs != 6 {
+		; 三段目の箱の横幅。" ← ↓ " と " → ↓ "。
+		sendmsg hBlance(4), $CF, 1	; 編集不可
+		sendmsg hBlance(5), $CF, 1	; 編集不可
+	}
+	
+	if mi = 21 {
+		; 一段目の高さ
+		sendmsg hBlance(6), $CF, 1	; 編集不可
+	}
+	
+	if mi = 21 {
+		; 二段目の高さ
+		sendmsg hBlance(7), $CF, 1	; 編集不可
+	}
+	
+	if mi = 2 or mi = 21 or mi = 41 {
+		; 三段目の高さ
+		sendmsg hBlance(8), $CF, 1	; 編集不可
+	}
+	
+	dim mi, 100, 50, 20, 5		; リセット
+	
+	; 終わりに -----------------------------------
+	font_gui 12
+	pos 20,220
+	objsize 60,25
+	button gosub "決定",*Blance_set
+	button "やめる",*sleep
+	
+	objmode objmode_usefont, true
+	redraw 1
+	gsel wid_tool,1
+	gosub *waitstay
+	return
+	
+*Blance_set
+	Back
+	; チェック！！
+	ms = "一", "二", "三"	; 文字を代入
+	
+	if sizey_set(0) + sizey_set(1) + sizey_set(2) != 660 : dialog "縦幅は 660 にして下さい！",1,"エラー" : return
+	repeat 3
+	if sizex_set(cnt*2) + sizex_set(cnt*2 +1) != 800 {
+		dialog "横幅は 800 にして下さい！ ("+ ms(cnt) +"段目",1,"エラー"
+			return
+	}
+	loop
+	sdim ms, 1024, 50, 20, 5, 5	; リセット
+	; 統合
+	repeat count_boxes
+	sizex(cnt) = sizex_set(cnt)
+	if cnt <= 2 : sizey(cnt) = sizey_set(cnt)
+	loop
+	gosub *Schange
+	return "ON"
+	
+; ##############################################################################
+*Schange
+	mi = 0	; メモ
+	ni = 0	; 謎の変数
+	if boxs != 2 : btw = 0 						; リセット(これ無いとバグる)
+	if boxs != 4 : bju = 0 						; リセット(これ無いとバグる)
+	
+	if boxs = 1 {
+		sizex = 800, 0								; edit(0)を画面いっぱいに広げる
+		sizey = 660, 0, 0							; edit(0)を画面いっぱいに広げる
+	}
+	if boxs = 2 and btw = 0 {						; 空白を埋めるようにedit(1)を拡張
+		ni = 1 ; 調整y1
+		sizex = 800, 0, 800, 0						; 横幅を修整
+		sizey(2) = 0								; 二段目を画面一番下まで拡張
+	}
+	if boxs = 2 and btw = 1 {						; 
+		mi = 1 ; 調整↑
+		sizey = 660, 0, 0							; 横分割時ように、→↑を使用・縦幅を限界に伸ばす
+	}
+	if boxs = 3 {
+		ni = 2 ; 調整y2
+		sizex = 800, 0, 800, 0, 800, 0				; しっかり三段腹にする
+	}
+	if boxs = 4 and bju = 0 {						; 
+		mi = 1 ; 調整↑
+		ni = 2 ; 調整y2 ( bju = 1 なら y1
+		sizex(2) = 800, 0, 800, 0					; 下二段を広げる
+	}
+	if boxs = 4 and bju = 1 {						; 
+		mi = 3 ; 調整→
+		ni = 1 ; 調整y1
+		sizey(2) = 0								; 
+		sizex(4) = 800, 0							; 
+	}
+	if boxs = 5 {									; 
+		mi = 3 ; 調整↑→
+		ni = 2 ; 調整y2
+		sizex(4) = 800, 0							; 
+	}
+	if boxs = 6 {
+		mi = 7 ; 調整全て
+		ni = 2 ; 調整y2
+	}
+	
+	if mi = 1 or mi = 3 or mi = 5 or mi = 7 {
+		sizex(0) = 800 - sizex(1)
+		if sizex(1) = 0 : sizex(0) = 500, 300	; 調整 ↑
+	}
+	if mi = 2 or mi = 3 or mi = 6 or mi = 7 {
+		sizex(2) = 800 - sizex(3)
+		if sizex(3) = 0 : sizex(2) = 420, 380	; 調整 →
+	}
+	if mi = 4 or mi = 5 or mi = 7 {
+		sizex(4) = 800 - sizex(5)
+		if sizex(5) = 0 : sizex(4) = 600, 200	; 調整 ↓
+	}
+	if ni = 1 {		; 二段の時のみ
+		sizey(1) = 660 - sizey(0)				; 二段目を画面一番下まで拡張
+		if sizey(1) = 0 : sizey = 320, 340
+	}
+	if ni = 2 {		; 三段の時のみ
+		sizey(2) = 660 - (sizey(0) + sizey(1))			; 三段目を画面一番下まで拡張
+		if sizey(1) = 0 : sizey = 320, 180
+		if sizey(2) = 0 : sizey = 320, 180, 160
+	}
+	
+	mi = 0 : ni = 0
+	
+	Back
+	makeonly = 1 : gosub *makebox	; 再描画
+	return "ON"
+	
+; ヘルプ########################################################################
+; ヘルプ#####################################
+*help_print
+	dialog "ヘルプを表示しますか？", 3, "ヘルプ"
+	if stat = 6 : exec ownpath + "/README.md",16
+	return
+	
+; バージョン情報#############################
+*version
+	dialog "Split Text Editor (Warigaki Editor)  \n   ver. 1.0  \nby Ue-Dai", 0, "Version 情報"
+	return
+	
+;##################～背景色変更 (引用) ～###########################################################
+*ctlcoloredit
+	i_box = -1
+	repeat count_boxes
+		if (hMain(cnt) == lparam) { i_box = cnt }
+	loop
+	if ( i_box >= 0 ) {
+		SetTextColor wparam, RGB(wr(i_box), wg(i_box), wb(i_box))
+		SetBkColor   wparam, RGB(br(i_box), bg(i_box), bb(i_box))
+		return hBrush(i_box)
+	}
+	return
+	
+; 待機 #############################################################################################
+*waitstay
+	repeat
+		if refstr = "ON" : break
+		wait 10	; 無いと固まる
+	loop
+	return "OFF"	; スイッチを切る
+	
+; エラー ###################################################
+*error
+	dialog "error："+err+"\n --> エラーが発生しました", 1, "error"
+	goto *sleep
+	
+; 終了 #####################################################
+*Delete_Brush
+;	作成した背景用ブラシを削除 (しないと駄目らしい)
+	repeat count_boxes
+	DeleteObject hBrush(cnt)
+	loop
+	return
+	
+*exit
+	if iparam = 1 : dialog "終わりますか？", 2,"強制終了対策": if stat = 7 : stop ; Windows の強制終了を食い止める。
+	if wparam = wid_secret_key {
+		gsel wid_secret_key, -1 : return
+	}
+	if wparam = wid_exit || wparam = wid_exit_save : return
+	if mode = 0 && wparam != wid_split_edit : gsel wparam : esr ,1 : gsel wparam, -1 : return
+	if mode = 1 && wparam != wid_tab_edit   : gsel wparam : esr ,1 : gsel wparam, -1 : return
+	;/* (外すとき)
+	;/*
+	gsel wid_exit,1
+	redraw 2
+	esr
+	pos 20,30
+	font_gui
+	mes "変更を保存しますか？"
+	objmode objmode_guifont
+	objsize 110, 27, 30
+	pos 30,50
+	
+	button gosub "保存する",*exit_save
+	button gosub "保存せず終了",*go_end
+	button "キャンセル",*sleep
+	objmode objmode_usefont
+	redraw 1
+	gosub *waitstay
+	;*/
+	return
+	
+*exit_save
+	gsel wid_exit_save,1
+	redraw 2
+	esr
+	
+	pos 20,30
+	objsize 60, 20, 20
+	font_gui
+	mes "どの部分を保存しますか？"
+	
+; ロードとほぼ同じ
+	routine = *E_save
+	SetButton 100, 50
+	
+	pos 20,130
+	objsize 70,25
+	button gosub "完全保存",*E_Vsv ; Vsave
+	button goto "考え直す", *sleep
+	button gosub "終了する",*go_end
+	
+	redraw 1
+	gosub *waitstay
+	return "ON"
+	
+*E_save
+	n = stat
+	dialog "txt", 17
+	if stat = 1 : notesel edit(n) : notesave refstr
+	return
+	
+*E_Vsv
+	dialog "pf", 17, "ﾊﾟｰﾌｪｸﾄ ﾌｧｲﾙ"	; セーブするファイルを選択させる
+	if stat = 0 : return			; 選択されなかったら戻る。
+	file_Ext = getpath(refstr, 2)	; 拡張子を取得。拡張子には「.(ドット)」も含まれる
+	; 拡張子がpfでない場合、pfに修整
+	if file_Ext = "" {
+		file_Ext = ".pf"
+	} else {
+		sdim file_Ext, 24
+	}
+	
+	if file_Ext !=".pf" and file_Ext != "" {
+		dialog "ファイルが違います\n やり直してください", 2, "エラー"
+		return
+	}
+	
+	savedl = ""+refstr+""+file_Ext	; セーブファイル情報
+	if stat = 1 : gosub *LVarSave ; セーブ
+	
+	sdim savedl, 510				; 変数リセット
+	sdim file_Ext, 24				; 変数リセット
+	return
+		
+*go_end
+	if new_end = 1 : new_end = 0 : return "ON"
+	end
+	
+; 動作無し #########################################################################################
+*sleep
+	faceup 1, 1
+	redraw 2
+	
+	repeat count_boxes
+		if file(cnt) = "" : file(cnt) = "無題"
+	loop
+	
+	gsel wid_exit, 0 : esr : gsel wid_exit, -1
+	gsel wid_secret_key, 0 : esr : gsel wid_secret_key, -1
+	gsel wid_exit_save, 0 : esr : gsel wid_exit_save, -1
+	
+	; 一時保持用変数をリセット
+	; スイッチをリセット
+	ResetSwitch
+	
+	faceup 1
+	redraw 1
+	stop
+	
+; 秘密コマンド##################################################################
+*srt
+	return

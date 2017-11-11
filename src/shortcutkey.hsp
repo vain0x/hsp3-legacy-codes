@@ -1,0 +1,123 @@
+*l_onkey
+; タブンカツ・テキスト・エディタ.hsp のショートカットキー
+	if ginfo_act = 1 or ginfo_act = 4 or ginfo_act = 5 : return
+	if iparam = 27 : end	; Esc
+	
+	if mode = 1 {
+		gosub *Bkey
+			return
+	}
+	getkey keycode,16		; Shift チェック
+	stick subcode, 64  		; Ctrl チェック
+	if subcode = 64 {
+			if keycode = 1 {	; Ctrl + Shift
+				if iparam = 66 : gosub *changer
+				if iparam = 67 : gosub *Current_Change
+				if iparam = 77 : gosub *printmes
+				if iparam = 83 : gosub *OverWriteSave
+				if iparam = 87 : wc = 1 : gosub *changer
+					return
+			}
+		if iparam = 65 : dialog "Ctrl+A", 0, "KeyGet" ; A
+		if iparam = 66 : dialog "Ctrl+B", 0, "KeyGet" ; B
+		if iparam = 67 : dialog "Ctrl+C", 0, "KeyGet" ; C
+		if iparam = 68 : dialog "Ctrl+D", 0, "KeyGet" ; D
+		if iparam = 69 : dialog "Ctrl+E", 0, "KeyGet" ; E
+		if iparam = 70 : gosub *font_edit ;: dialog "Ctrl+F", 0, "KeyGet" ; F
+		if iparam = 71 : gosub *Graft ;: dialog "Ctrl+G", 0, "KeyGet" ; G
+		if iparam = 72 : dialog "Ctrl+H", 0, "KeyGet" ; H
+		if iparam = 73 : dialog "Ctrl+I", 0, "KeyGet" ; I
+		if iparam = 74 : dialog "Ctrl+J", 0, "KeyGet" ; J
+		if iparam = 75 : dialog "Ctrl+K", 0, "KeyGet" ; K
+		if iparam = 76 : dialog "Ctrl+L", 0, "KeyGet" ; L
+		if iparam = 77 : dialog "Ctrl+M", 0, "KeyGet" ; M
+		if iparam = 78 : gosub *NewEditor : goto *sleep;: dialog "Ctrl+N", 0, "KeyGet" ; N 
+		if iparam = 79 : gosub *l_window_open_file ;: dialog "Ctrl+O", 0, "KeyGet" ; O
+		if iparam = 80 : dialog "Ctrl+P", 0, "KeyGet" ; P
+		if iparam = 81 : dialog "Ctrl+Q", 0, "KeyGet" ; Q
+		if iparam = 82 : gosub *MiGiHaShi_Select ;: dialog "Ctrl+R", 0, "KeyGet" ; R
+		if iparam = 83 : gosub *l_window_close ;: dialog "Ctrl+S", 0, "KeyGet" ; S
+		if iparam = 84 : gosub *Tabkey_Long ;: dialog "Ctrl+T", 0, "KeyGet" ; T
+		if iparam = 85 : dialog "Ctrl+U", 0, "KeyGet" ; U
+		if iparam = 86 : dialog "Ctrl+V", 0, "KeyGet" ; V
+		if iparam = 87 : dialog "Ctrl+W", 0, "KeyGet" ; W
+		if iparam = 88 : gosub *srt ;: dialog "Ctrl+X", 0, "KeyGet" ; X
+		if iparam = 89 : dialog "Ctrl+Y", 0, "KeyGet" ; Y
+		if lparam = 2883585 : dialog "Ctrl+Z", 0, "Keyget" ; Z
+		
+			return
+	}
+	; ファンクション(F)キー 112(F1) ～ 123(F12)まで
+		if wparam = 112 : gosub *help_print ;: dialog " F1", 0, "ファンクションキー"
+		if wparam = 113 : gosub *Tab_or_Bunkatsu ;: dialog " F2", 0, "ファンクションキー"
+		if wparam = 114 : gosub *Bunkatsu ;: dialog " F3", 0, "ファンクションキー"
+		if wparam = 115 : gosub *Blance_Change ;: dialog " F4", 0, "ファンクションキー"
+		if wparam = 116 : dialog " F5" , 0, "ファンクションキー"
+		if wparam = 117 : dialog " F6" , 0, "ファンクションキー"
+		if wparam = 118 : dialog " F7" , 0, "ファンクションキー"
+		if wparam = 119 : dialog " F8" , 0, "ファンクションキー"
+		if wparam = 120 : dialog " F9" , 0, "ファンクションキー"
+		if wparam = 121 : dialog " F10", 0, "ファンクションキー"
+		if wparam = 122 : gosub *First_File;: dialog " F11", 0, "ファンクションキー"
+		if wparam = 123 : if secret_open >= 1 : gosub *version : else : dialog " F12", 0, "ファンクションキー"
+		
+	
+	return ; 最終
+	
+*Bkey
+	getkey keycode,16		; Shift チェック
+	stick subcode, 64  		; Ctrl チェック
+	if subcode = 64 {
+			if keycode = 1 {	; Ctrl + Shift
+				;if iparam = 66 : gosub *changer
+				if iparam = 67 : gosub *Current_Change
+				if iparam = 77 : gosub *printmes
+				if iparam = 83 : gosub *OverWriteSave
+				;if iparam = 87 : wc = 1 : gosub *changer
+					return
+			}
+		if iparam = 65 : dialog "Ctrl+A", 0, "KeyGet" ; A
+		if iparam = 66 : dialog "Ctrl+B", 0, "KeyGet" ; B
+		if iparam = 67 : dialog "Ctrl+C", 0, "KeyGet" ; C
+		if iparam = 68 : dialog "Ctrl+D", 0, "KeyGet" ; D
+		if iparam = 69 : dialog "Ctrl+E", 0, "KeyGet" ; E
+		if iparam = 70 : gosub *font_edit ;: dialog "Ctrl+F", 0, "KeyGet" ; F
+		if iparam = 71 : gosub *Graft ;: dialog "Ctrl+G", 0, "KeyGet" ; G
+		if iparam = 72 : dialog "Ctrl+H", 0, "KeyGet" ; H
+		if iparam = 73 : dialog "Ctrl+I", 0, "KeyGet" ; I
+		if iparam = 74 : dialog "Ctrl+J", 0, "KeyGet" ; J
+		if iparam = 75 : dialog "Ctrl+K", 0, "KeyGet" ; K
+		if iparam = 76 : dialog "Ctrl+L", 0, "KeyGet" ; L
+		if iparam = 77 : dialog "Ctrl+M", 0, "KeyGet" ; M
+		if iparam = 78 : gosub *NewEditor : goto *sleep;: dialog "Ctrl+N", 0, "KeyGet" ; N 
+		if iparam = 79 : gosub *l_window_open_file ;: dialog "Ctrl+O", 0, "KeyGet" ; O
+		if iparam = 80 : dialog "Ctrl+P", 0, "KeyGet" ; P
+		if iparam = 81 : dialog "Ctrl+Q", 0, "KeyGet" ; Q
+		if iparam = 82 : gosub *MiGiHaShi_Select ;: dialog "Ctrl+R", 0, "KeyGet" ; R
+		if iparam = 83 : gosub *l_window_close ;: dialog "Ctrl+S", 0, "KeyGet" ; S
+		if iparam = 84 : gosub *Tabkey_Long ;: dialog "Ctrl+T", 0, "KeyGet" ; T
+		if iparam = 85 : dialog "Ctrl+U", 0, "KeyGet" ; U
+		if iparam = 86 : dialog "Ctrl+V", 0, "KeyGet" ; V
+		if iparam = 87 : dialog "Ctrl+W", 0, "KeyGet" ; W
+		if iparam = 88 : gosub *srt ;: dialog "Ctrl+X", 0, "KeyGet" ; X
+		if iparam = 89 : dialog "Ctrl+Y", 0, "KeyGet" ; Y
+		if lparam = 2883585 : dialog "Ctrl+Z", 0, "Keyget" ; Z
+		
+			return
+	}
+	; ファンクション(F)キー 112(F1) ～ 123(F12)まで
+		if wparam = 112 : gosub *help_print ;: dialog " F1", 0, "ファンクションキー"
+		if wparam = 113 : gosub *Tab_or_Bunkatsu ;: dialog " F2", 0, "ファンクションキー"
+		if wparam = 114 : dialog " F3", 0, "ファンクションキー" ; gosub *Bunkatsu 
+		if wparam = 115 : dialog " F4", 0, "ファンクションキー" ; gosub *Blance_Change
+		if wparam = 116 : dialog " F5" , 0, "ファンクションキー"
+		if wparam = 117 : dialog " F6" , 0, "ファンクションキー"
+		if wparam = 118 : dialog " F7" , 0, "ファンクションキー"
+		if wparam = 119 : dialog " F8" , 0, "ファンクションキー"
+		if wparam = 120 : dialog " F9" , 0, "ファンクションキー"
+		if wparam = 121 : dialog " F10", 0, "ファンクションキー"
+		if wparam = 122 : gosub *First_File;: dialog " F11", 0, "ファンクションキー"
+		if wparam = 123 : if secret_open >= 1 : gosub *version : else : dialog " F12", 0, "ファンクションキー"
+		
+	
+	return ; 最終

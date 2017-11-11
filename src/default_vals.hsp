@@ -1,0 +1,144 @@
+; 擬似変数リスト
+; 定義 ( ～_set は、入力(orコンボ)ボックスの状態を表す。)
+
+*l_var_reset
+	; global
+	sdim ms, 1024, 50, 20, 5, 5		; メモ変数
+	dim mi, 100, 50, 20, 5			; メモ変数
+	sdim nomal, 512						; 初期設定ファイル名
+	sdim file, 128, count_boxes					; ファイル名
+	sdim edit, 500000, count_boxes				; テキストデータ
+	dim hMain, count_boxes						; 箱のハンドル
+	sdim box_symbol, , count_boxes				; 箱の印。" ← ↑ "etc...
+	
+	sdim savedl, 510					; セーブ時に使う
+	;routine	; SetButton の gosub するラベル
+	
+	; 箱のサイズ
+	dim sizex, count_boxes : dim sizex_set, count_boxes		; 箱の横幅
+	dim sizey, 3 : dim sizey_set, 3		; 箱の縦幅
+	dim hBlance, 9				; 箱サイズ編集用の Input Box のハンドル
+	
+	; 移植
+	dim graft_info, 4			; 移植設定のコンボボックスの状態用。0から1に送り、2が移植モード、3が残すかどうか。
+	graft_info = -1, -1, -1, 0	; ↑の初期値
+	sdim edit_buf, 500000, 2	; 交換をするとき、一時的にeditの内容を溜めておく変数
+	dim edit_long, 2		; 追加するとき、そのすぐ下までのオフセット値をstrlen関数で溜めておく変数。0が元、1が先。
+	
+	; フォント
+	dim fontname, count_boxes						; テキストフォントのコンボボックスでの設定用
+		dim fontname_set, count_boxes
+	dim fontselect, count_boxes, 2				; フォントスタイル(0は太字と斜体、1は下線と打ち消し線)
+		dim fontselect_set, count_boxes, 2
+	dim fontstile, count_boxes					; 実際に使用するフォントのスタイル
+	dim fontsize, count_boxes						; フォントの大きさ
+		dim fontsize_set, count_boxes
+	sdim fontmode, 30, count_boxes				; テキストフォント
+	
+	; 右端で折り返す
+	dim MiGiHaShi, count_boxes					; 右端で折り返す
+	dim MiGi_set, count_boxes						; 右端で折り返す ON/OFF の設定
+	
+	; 書式
+	
+	; 秘密
+	secret_open = 0						; 秘密コマンド解錠度(0～4)
+
+	; 色
+	dim wr, count_boxes : dim wg, count_boxes : dim wb, count_boxes		; 箱の文字色
+	dim br, count_boxes : dim bg, count_boxes : dim bb, count_boxes		; 箱の背景色
+		; インプットボックスの状態
+	dim wr_set, count_boxes : dim wg_set, count_boxes : dim wb_set, count_boxes	; 箱の文字色
+	dim br_set, count_boxes : dim bg_set, count_boxes : dim bb_set, count_boxes	; 箱の背景色
+		; インプットボックスのID
+	dim clIDr, count_boxes
+	dim clIDg, count_boxes
+	dim clIDb, count_boxes
+	
+	; _____
+	sdim secret, 64, 5	; パスワード入力ボックスの内容
+	dim hsecret, 5		; ↑のオブジェクトハンドル
+	secret_open = 0		; 解錠度
+	
+	; 代入---------------------------------------------------------------------------------------------------------
+	repeat count_boxes
+	file(cnt) = "無題"
+	loop
+	
+	number = 4
+	boxs = 4							; 箱の複数形 BOXeS から
+	box_special = 0						; 普通分割か特殊分割かを設定するコンボボックスの状態
+	box_symbol = " ← ↑ ", " ← ← ", " ← ↓ ", " → ↑ ", " → → ", " → ↓ "
+	
+	; サイズ
+	sizex = 500, 300, 800, 0, 800, 0	; 起動時のサイズ
+	sizey = 320, 180, 160				; 同上
+	
+	sizex_set = 500, 300, 800, 0, 800, 0
+	sizey_set = 320, 180, 160
+	
+	; 新規
+	sdim ownpath, 256					; [新ワリガキ]のための変数。自身のファイルパスを格納するため
+	#ifdef _debug
+		ownpath = dir_cur + "/.."
+	#else
+		ownpath = dir_exe
+	#endif
+	
+	; セーブ&ロード関連
+	n = 0 								; note の略。略しすぎにご注意
+	sdim file_Ext, 24					; extention(拡張子)を一時保存するためのもの
+	sdim Current_File, 510				; 指定ファイル。上書き先
+	Current_Box = 0						; 指定ボックス。上書きに使う箱。初期は0 ( ← ↑ )
+	sdim savedl, 510					; セーブするファイルのディレクトリ情報。＋ファイル名
+	
+	; 検索関連
+	sdim SearchWord, 1024				; 検索する単語
+	sdim ChangedWord, 1024				; 置換した後の単語
+	Position = 0						; 検索した単語の前のインデックス
+	LastStr = 0							; 検索した単語の後ろのインデックス
+	
+	; 初期フォント
+	repeat count_boxes
+	fontname(cnt) = 0					; 0 = "ＭＳ ゴシック", 1 = "MS 明朝"
+	fontmode(cnt) = "ＭＳ ゴシック"		; 各ボックスごとにフォント変更させるため
+	fontsize(cnt) = 15					; 文字サイズ	font のp2
+	fontselect(cnt,0) = 0				; 文字スタイル	font のp3
+	fontselect(cnt,1) = 0				; 文字スタイル2
+		fontname_set(cnt) = 1
+		fontsize_set(cnt) = 15
+		fontselect_set(cnt,0) = 0
+		fontselect_set(cnt,1) = -1
+	loop
+	
+	; タブ長さ調整
+	Tabsize = 8 						; タブの大きさ
+	tabstops = 0 						; ???
+	
+	; 右端で折り返す
+	MiGiHaShi = 1, 1, 1, 1, 1, 5		; 右端のこと。右端で折り返す 場合は1、横スクロールバーを使用する場合は5。
+	MiGi_set  = 1, 1, 1, 1, 1, 0		; 右端で折り返すのON/OFFチェックボックスを全部ONにする。
+	
+	; 初期色
+	repeat count_boxes
+	br(cnt) = 255	; 背景色 255 = 白
+	bg(cnt) = 255
+	bb(cnt) = 255
+		; 内容色
+	br_set(cnt) = 255	; 背景色 255 = 白
+	bg_set(cnt) = 255
+	bb_set(cnt) = 255
+	loop
+	
+; スイッチ------------------------------------------------------------------------------------------------------
+	mode = 0		; 分割タイプ。0 が分割で、1 がタブ。0 を推奨ｗ
+	TBC = 0			; TabBoxCanger タブの箱のナンバー。描くたびに一増やし、最後にリセットする。
+	makeonly = 0 	; エディットボックスを再描画するときにのみ使用
+	btw	= 0			; Box of TWo special swich の略
+	bju = 0			; Box of four JU-gata swich の略
+	bmonly = 0		; back color Brush Make ONLY の略
+	wc = 0			; Word Color type の略 0は背景色、1だと文字色
+	new_end = 0		; NEW END　[新規]の時に終了セーブを行うために使用
+	secret_time_sw=0; SECRET TIME SWitch 秘密コマンドの回数で、0なら window ID 4 に描画。
+	return
+	
