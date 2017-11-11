@@ -1,0 +1,205 @@
+#ifndef IG_MODULE_TRAYICON_HSP
+#define IG_MODULE_TRAYICON_HSP
+
+/*
+%dll
+trayicon.hsp
+%note
+参考: 月影とも氏のタスクトレイアイコンモジュール <http://tu3.jp/0108>
+%group
+タスクトレイアイコン操作命令
+%*/
+
+#module trayicon
+
+#define WM_TRAYEVENTSTART 0x0900
+#define MAX_ICONS 16 // アイコンの最大数
+
+#define NIF_MESSAGE	0x0001
+#define NIF_ICON	0x0002
+#define NIF_TIP		0x0004
+#define NIF_STATE   0x0008
+#define NIF_INFO    0x0010
+#const  NIF_DEFAULT (NIF_MESSAGE | NIF_ICON | NIF_TIP) // このモジュールで使うフラグ
+
+#define NIIF_NONE    0x0000
+#define NIIF_INFO    0x0001
+#define NIIF_WARNING 0x0002
+#define NIIF_ERROR   0x0003
+#define NIIF_USER    0x0004
+#define NIIF_NO_SOUND           0x0010
+#define NIIF_LARGE_ICON         0x0020
+#define NIIF_RESPECT_QUIET_TIME 0x0080
+
+#define NIM_ADD		0x000
+#define NIM_MODIFY	0x001
+#define NIM_DELETE	0x002
+
+#define ERROR_TIMEOUT 1460
+
+#uselib "kernel32.dll"
+#func   GetModuleFileName@trayicon "GetModuleFileNameA" nullptr, prefstr, int
+#cfunc  GetLastError@trayicon      "GetLastError"
+
+#uselib "shell32.dll"
+#func   ExtractIconEx@trayicon    "ExtractIconExA"    sptr, int, nullptr, var, int
+#func   Shell_NotifyIcon@trayicon "Shell_NotifyIconA" int, int
+
+#uselib "user32.dll"
+#func   DestroyIcon@trayicon "DestroyIcon" int
+
+#ifdef _DEBUG // 警告避け
+	dim hIcon
+	dim bmscr
+	sdim stt_icon_file
+	dim stt_popup_span
+#endif
+
+#define global CreateTrayIcon trayicon_create
+#define global DestroyTrayIcon trayicon_destroy
+#define global PopupBalloonTip trayicon_popup
+#define global SetTrayIconFile trayicon_set_icon_file
+
+//------------------------------------------------
+// 開始時
+//------------------------------------------------
+#deffunc _init@trayicon
+	mref       bmscr, 96
+	stt_hwnd = bmscr(13)
+	dim hIcon, MAX_ICONS
+	trayicon_set_icon_file ""
+	trayicon_set_popup_span 30000
+	return
+	
+//------------------------------------------------
+// 終了時
+//------------------------------------------------
+#deffunc _term@trayicon onexit
+	foreach hIcon
+		if ( hIcon(cnt) ) { trayicon_destroy cnt }
+	loop
+	return
+	
+/*
+%index
+trayicon_create
+タスクトレイアイコンを作る
+%prm
+tooltip, icon_index, id_icon
+tooltip: ツールチップに表示する文字列。最大63バイト。
+icon_index: trayicon_set_file で指定されたファイルの、何番目のアイコンを使うか。
+id_icon: アイコンの管理ID
+%inst
+id_icon は、trayicon モジュールがアイコンを区別するための番号。ユーザが #enum などを使って 0 から順番につけること。
+
+アイコンに関する通知はラベル *OnTrayIconEvent@ に送信される。このラベルがないとコンパイルエラーになるので注意。
+%*/
+#deffunc trayicon_create str tooltip, int icon_index, int icon_id, \
+	local success, local nfid_flags
+	
+	oncmd gosub *OnTrayIconEvent@, WM_TRAYEVENTSTART
+	
+	if ( hIcon(icon_id) ) { trayicon_destroy icon_id }
+	
+	// ファイルからアイコンを1個取り出す
+	ExtractIconEx stt_icon_file, icon_index, hIcon(icon_id), 1
+	
+	// NOTIFYICONDATA 構造体
+	dim nfid, 88 / 4
+	//     sizeof(_), hWindow,  idIcon,  Flag,        MsgID,             hIcon
+	nfid = 88,        stt_hwnd, icon_id, NIF_DEFAULT, WM_TRAYEVENTSTART, hIcon(icon_id)
+	poke nfid, 4 * 6, tooltip
+	
+	Shell_NotifyIcon NIM_ADD, varptr(nfid)
+	return
+	
+/*
+%index
+trayicon_destroy
+タスクトレイアイコンを削除する
+%prm
+icon_id
+icon_id: アイコンの管理ID
+*/
+#deffunc trayicon_destroy int icon_id
+	if ( hIcon(icon_id) == 0 ) { return }
+	
+	// アイコンをタスクトレイから除去
+	dim nfid, 88 / 4 // NOTIFYICONDATA 構造体
+	nfid = 88, hwnd, icon_id
+	Shell_NotifyIcon NIM_DELETE, varptr(nfid)
+	
+	// アイコンハンドルを破棄
+	DestroyIcon hIcon(icon_id)
+	hIcon(icon_id) = 0
+	return
+	
+/*
+%index
+trayicon_popup
+タスクトレイアイコンからバルーンチップをポップアップする
+%prm
+caption, text, icon_type, icon_id
+caption: バルーンチップのタイトル部の文字列。最大63バイト。
+text:    バルーンチップの本文。最大255バイト。
+icon_type: バルーンにつけるアイコンの種類。(NIIF_*)
+icon_id: アイコンの管理ID
+%inst
+icon_type は以下の通り。@trayicon をつける必要がある。
+html{
+<table>
+<tr><td>NIIF_NONE</td><td>(なし)</td></tr>
+<tr><td>NIIF_INFO</td><td>情報 (i)</td></tr>
+<tr><td>NIIF_WARNING</td><td>警告 (!)</td></tr>
+<tr><td>NIIF_ERROR</td><td>エラー (X)</td></tr>
+</table>
+}html
+%portinfo
+Windows Me/2000/XP のみで有効。98SE以前では実行しても何も起こらなさそう。
+%*/
+#deffunc trayicon_popup str caption, str text, int icon_type, int icon_id
+	dim  nfid,  488 / 4
+		 nfid = 488, stt_hwnd, icon_id, 0x0010
+	poke nfid,  4 * 40, text
+		 nfid(104) = stt_popup_span
+	poke nfid,  4 * 105, caption
+		 nfid(121) = icon_type
+	
+	Shell_NotifyIcon NIM_MODIFY, varptr(nfid)
+	return
+	
+/*
+%index
+trayicon_set_popup_span
+トレイアイコンのバルーンの表示時間を設定する
+%prm
+span
+span: 表示時間 (ミリ秒)
+%*/
+#deffunc trayicon_set_popup_span int span
+	stt_popup_span = span
+	return
+
+/*
+%index
+trayicon_set_icon_file
+アイコンを持つファイルを選択する
+%prm
+file_path
+file_path: ファイルパス ("" なら実行ファイル自身)
+%*/
+#deffunc trayicon_set_icon_file str file_path 
+	sdim stt_icon_file, (260 + 1) // MAX_PATH
+	if ( file_path == "" ) {
+		GetModuleFileName 260
+		stt_icon_file = refstr
+	} else {
+		stt_icon_file = file_path
+	}
+	return
+	
+#global
+
+	_init@trayicon
+
+#endif
