@@ -1,0 +1,73 @@
+#ifndef ig_dirlist_rec_hsp
+#define ig_dirlist_rec_hsp
+
+#module
+/**
+%index
+ファイルを再帰的に列挙する
+
+%prm
+paths, filemask
+paths: ファイルパスが代入される配列変数
+file_mask: ファイルマスク
+return stat: みつかったファイルの個数
+
+%inst
+カレントディレクトリ以下にあるファイルのパスを列挙する。
+出力されるパスは、カレントディレクトリからの相対パスとなる。
+
+dirlist と同様、名前が file_mask に適合するファイルだけが列挙される。
+ディレクトリの検索時はファイルマスクとして "*" を使う。
+%href
+dirlist
+%*/
+#deffunc dirlist_rec array paths, str file_mask, \
+	local paths_len, \
+	local dir, \
+	local dir_stk, \
+	local dir_stk_len, \
+	local path, \
+	local path_note, \
+	local path_note_index, \
+	local subdir, \
+	local subdir_note, \
+	local subdir_note_index
+
+	if ( vartype(paths) != 2 ) { sdim paths }
+	repeat
+		//次に探すべきディレクトリ
+		if (cnt == 0) {
+			dir = ""
+		} else {
+			if ( dir_stk_len == 0 ) { break }
+			dir = dir_stk(dir_stk_len - 1) + "\\"
+			dir_stk_len --
+		}
+
+		//ファイルを探す
+		path_note_index = 0
+		dirlist path_note, dir + file_mask, 3
+		repeat stat
+			getstr path, path_note, path_note_index
+			path_note_index += strsize
+
+			paths(paths_len) += dir + path
+			paths_len ++
+		loop
+
+		//サブディレクトリを探す
+		subdir_note_index = 0
+		dirlist subdir_note, dir + "*", 5
+		repeat stat
+			getstr subdir, subdir_note, subdir_note_index
+			subdir_note_index += strsize
+
+			//探すべきディレクトリの一覧に追加する
+			dir_stk(dir_stk_len) = dir + subdir
+			dir_stk_len ++
+		loop
+	loop
+	return paths_len
+#global
+
+#endif
