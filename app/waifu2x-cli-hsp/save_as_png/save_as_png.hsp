@@ -1,0 +1,60 @@
+#packopt name "save_as_png"
+#packopt hide 1
+
+#include "Mo/LexCmdline.as"
+
+#module
+
+#include "imgctl3/imgctl3.as"
+
+#deffunc save_as_png int idw, str file_path, str dest_path,  \
+	local hDib
+	
+	gsel idw
+	picload file_path
+	
+	DCtoDIB hdc, 0, 0, ginfo_winx, ginfo_winy
+	hDib = stat
+	if ( hDib == 0 ) { return 0 }
+	
+	DIBtoPNG dest_path, hDib, 0
+	
+	DeleteDIB hDib
+	return 1
+	
+#global
+
+#module
+#deffunc get_argv array argv, str cmdline
+	LexCmdline argv, 2, cmdline
+	switch ( stat )
+		case 2: swbreak
+		case 1:
+			argv(1) = getpath(argv(0), 1) + ".png"
+			swbreak
+		default:
+			return
+	swend
+	return
+	
+#deffunc app_main  \
+	local argv
+	
+	if ( dir_cmdline == "" ) {
+#ifdef _debug
+		get_argv argv, "\"" + dir_cur + "/sample.jpg \""
+#else
+		return
+#endif
+	} else {
+		get_argv argv, dir_cmdline
+	}
+	buffer 1
+	save_as_png 1, argv(0), argv(1)
+	
+	assert
+	return
+#global
+
+	app_main
+	end

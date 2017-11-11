@@ -1,0 +1,182 @@
+
+//ref: http://hsp.tv/play/pforum.php?mode=all&num=70011
+
+#packopt name "waifu2x"
+
+#include "uedai_userdef/all.hsp"
+#include "Mo/hsp3cl.as"
+
+#ifdef _DEBUG
+ #undef end
+ #define global end(%1 = 0) print "END(" + (%1) + ")! " + __HERE__ : assert : stop
+#endif
+
+#module
+
+#uselib "w2xc/w2xc.dll"
+;DLLの初期化(第一引数が0ならCPU処理、1ならGPU処理)
+#cfunc w2xconv_init       "w2xconv_init"          int,  int, int
+;モデルデータの読み込み
+#func w2xconv_load_models "w2xconv_load_models"   sptr, str
+;DLLの終了処理
+#func w2xconv_fini "w2xconv_fini"                 sptr
+;ファイルの変換処理
+#func w2xconv_convert_file "w2xconv_convert_file" sptr, str, str, int, double, int
+
+#deffunc waifu2x_init
+	conv = w2xconv_init(1, 0, 0)
+	//w2xconv_load_models conv, "w2xc/models_rgb"
+	w2xconv_load_models conv, "w2xc/models"
+	if(stat < 0) {
+		print "Failed loading model data."
+		end
+	}
+	is_initialized = true
+	return
+	
+#deffunc waifu2x_term onexit
+	if ( is_initialized ) {
+		print "Finalizing..."
+		w2xconv_fini conv
+	}
+	return
+	
+#deffunc waifu2x_conv str dst_path, str src_path, \
+	int denoise_level, double scale, int block_size
+	
+	if ( is_initialized == false ) { waifu2x_init }
+	
+	w2xconv_convert_file conv, dst_path, src_path, denoise_level, scale, block_size
+	return stat
+	
+#global
+
+#module
+
+#deffunc app_init
+	print "Initializing..."
+	waifu2x_init
+	print "Ready. Input file path to convert, or 'quit'."
+	
+	tmp_file_path = dir_exe2 + "\\_t.png"
+	denoise_level = 1			;デノイズレベル(0～2)
+	scale = 2.0					;拡大率(1.0で等倍)
+	block_size = 128			;ブロックサイズ
+	return
+	
+#deffunc app_term onexit
+	delfile_if_exists tmp_file_path
+	return
+	
+#deffunc app_main \
+	local command
+	
+	app_init
+	repeat
+		console_read_line_v command, 260
+		proc_command command
+		await
+	loop
+	assert
+	end : end
+	
+#deffunc proc_command var command, \
+	local src_path, local dst_path, \
+	local commands, local single_command, local index, local value
+
+	switch (command)
+		case "quit":
+		case "exit":
+			end : end
+			
+		case "wait":
+			await 10000
+			swbreak
+			
+		case "block_size":
+			value = console_read_int()
+			if ( value > 0 ) {
+				print "" + block_size + " -> " + value
+			} else {
+				print block_size
+			}
+			block_size = value
+			swbreak
+			
+		case "scale":
+			value = console_read_double()
+			if ( 0 < value && value < 2.1 ) {
+				print "" + scale + " -> " + value
+			} else {
+				print scale
+			}
+			scale = value
+			swbreak
+			
+		case "denoise_level":
+			value = console_read_int()
+			if ( 0 <= value && value <= 2 ) {
+				print "" + denoise_level + " -> " + value
+			} else {
+				print denoise_level
+			}
+			denoise_level = value
+			swbreak
+			
+		case "multi":
+			console_read_contents_v commands, 260 * 32
+			repeat
+				getstr single_command, commands, index : index += strsize
+				if ( strsize == 0 ) { break }
+				proc_command single_command
+			loop
+			swbreak
+			
+		default:
+			dup src_path, command
+			dst_path = getpath(src_path, getpath_filename) + "_2x" + getpath(src_path, getpath_ext)
+			
+			convert_file_format src_path
+			if ( stat == 0 ) { swbreak }
+			
+			print "Converting..."
+			waifu2x_conv dst_path, src_path, denoise_level, scale, block_size
+			if ( stat >= 0 ) {
+				print "Completed."
+			} else {
+				print "fatal: 変換に失敗しました。"
+			}
+			swbreak
+	swend
+	return
+	
+#deffunc convert_file_format var src_path,  \
+	local ok
+	
+	switch ( getpath(src_path, getpath_ext) )
+		case ".png": swbreak
+		case ".jpg": case ".bmp": case ".gif": case ".tga":
+			tmp_path = dir_exe2 + "\\_t.png"
+			exec strf("save_as_png \"%s\" \"%s\"", src_path, tmp_file_path)
+			src_path = tmp_file_path
+			
+			ok = false
+			repeat 1000
+				await 100
+				exist tmp_file_path
+				if ( strsize >= 0 ) { ok = true : break }
+			loop
+			if ( ok == false ) {
+				print "fatal: save_as_png が完了していません。"
+				return false
+			}
+			swbreak
+		default:
+			print "fatal: 不明な拡張子です。"
+			return false
+	swend
+	return true
+	
+#global
+
+	app_main
