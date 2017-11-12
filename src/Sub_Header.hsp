@@ -34,7 +34,7 @@
 #func   global DragFinish		"DragFinish"		int
 #define global WM_DROPFILES		0x0233
 
-#uselib "OleDragDrop.dll"
+#uselib "lib/OleDragDrop/OleDragDrop.dll"
 #func   global OLE_IDropTarget_RegisterDragDrop "OLE_IDropTarget_RegisterDragDrop" int,int,int,int
 #func   global OLE_IDropTarget_RevokeDragDrop   "OLE_IDropTarget_RevokeDragDrop"   int
 

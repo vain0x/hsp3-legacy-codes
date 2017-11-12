@@ -1,0 +1,25 @@
+
+// バージョン情報
+1 VERSIONINFO LOADONCALL MOVEABLE
+FILEVERSION	1,00,0,0
+PRODUCTVERSION	1,00,0,0
+FILEOS		VOS__WINDOWS32
+FILETYPE	VFT_DLL
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "041103A4" // 言語=日本語(0x0411) およびキャラクタセット=SJIS(0x03a4)
+    BEGIN
+      VALUE "Comments",		"OLEのドラッグ&ドロップをCのみで行うためのDLL\0"
+      VALUE "FileDescription",	"OLEドラッグ&ドロップ対応DLL\0"
+      VALUE "FileVersion",	"1.00\0"
+      VALUE "InternalName",	"OleDragDrop\0"
+      VALUE "LegalCopyright",	"Copyright (C) 2002 PATA (Original source by nakka)\0"
+      VALUE "OriginalFilename", "OleDragDrop.DLL\0"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN                               //  Language    |    Translation
+    VALUE "Translation", 0x0411, 932  // Japanese     | Shift-JIS X-0208
+  END
+END
