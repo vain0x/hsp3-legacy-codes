@@ -1,0 +1,328 @@
+// X Eaters
+
+// 唯食者たちにえさをやろう！
+// でも、彼らは自分の好みのえさしか食べない。
+// 間違えたら怒られるぞ。
+// しかも、彼らは特に気まぐれさん達。
+// 好みがコロッと変わっちゃうときもあるよ。
+
+#packopt name "XEaters"
+#packopt hide 1
+
+#define global true 1
+#define global false 0
+
+#define global ctype RGB(%1 = 0, %2 = 0, %3 = 0) \
+	((%1) & 0xFF) | ((%2) & 0xFF) << 8 | (((%3) & 0xFF) << 16)
+
+#define WINX 320
+#define WINY 240
+
+#define MAX_XEATERS 4
+#define MAX_CHARGE_FOOD 12
+
+#define HEIGHT_FOOD 5
+
+#module
+#defcfunc randomColorref
+	return RGB(127 * rnd(3), 127 * rnd(3), 127 * rnd(3))
+	
+#deffunc color32 int cref
+	color (cref & 0xFF), (cref >> 8) & 0xFF, (cref >> 16) & 0xFF
+	return
+#global
+
+	gosub *initialize
+*main
+	gosub *SetVariables
+	gosub *SetWindowForTitle
+	
+	gsel 0, 1
+	
+	// Enter キーを待つループ
+	repeat
+		getkey bEnter, 13
+		if ( bEnter ) { bEnter = false : break }
+		await 64
+	loop
+	
+*mainlp
+	// メインループ
+	repeat
+		if ( (cnt \ gameSpeed) == 0 ) {		// 何回かに一回だけ
+;			logmes "eat"
+			gosub *Eat						// 食べる処理
+			if ( bGameOver ) { break }
+		}
+		
+		gosub *CheckKeyDown				// キー入力受付
+		gosub *RedrawMain				// 再描画
+		
+		await 17
+		cntMLp ++
+	loop
+	
+	// ゲーム終了
+	redraw 2
+	color : boxf : color 255
+	font "", 56
+	pos 20, 40 : mes "Game Over...\n   "+ strf("%3d", score)
+	redraw 1
+	
+	font "", 28
+	color 192, 192, 192
+	pos 25, 180 : mes "Press [F2] to continue..."
+	
+	sysfont 0
+	
+	// [F2] 待ちループ
+	repeat
+		getkey bF2, 0x71
+		if ( bF2 ) { bF2 = false : break }
+		await 27
+	loop
+	
+	goto *main
+	
+//##############################################################################
+//        サブルーチン群
+//##############################################################################
+// 初期化
+*initialize
+;	randomize 18
+	randomize
+	randomize rnd(0xFFFF)
+	
+	screen 0, WINX, WINY, 2
+	title "XEaters ～ 唯食者たち ～"
+	return
+	
+// 変数を用意する
+*SetVariables
+;	dim       crefType,  MAX_XEATERS
+	dim       cidXEater, MAX_XEATERS
+	dim       cidFood,   MAX_CHARGE_FOOD
+;	QueueInit crefFood
+	dim iFood					// cidFood から取り出す要素番号
+	dim score
+	dim cntMLp
+	dim bGameOver
+	dim targetEaterID			// えさやり対象の生物のID
+	
+	eatingID  = -1
+	gameSpeed = 32
+	crefType  = RGB(255, 0, 0), RGB(0, 255, 0), RGB(0, 0, 255), RGB(255, 255, 255)
+	numDummy  = 6
+	
+	repeat MAX_XEATERS : cidXEater(cnt) = cnt : loop
+	
+	gosub *SetDefaultFood
+	return
+	
+// 再描画
+*RedrawMain
+	redraw 2
+	
+	gosub *DrawBackground	// 背景
+	gosub *DrawMembers		// 唯食者たち
+	gosub *DrawFood			// えさ
+	gosub *DrawScore		// カウンタ
+	
+	redraw 1
+	return
+	
+// キー入力を受け付ける
+*CheckKeyDown
+	stick keydown
+	if ( keydown & 2 ) { targetEaterID = limit(targetEaterID - 1, 0, MAX_XEATERS - 1) }
+	if ( keydown & 8 ) { targetEaterID = limit(targetEaterID + 1, 0, MAX_XEATERS - 1) }
+	
+	return
+	
+// 食べる
+*Eat
+	if ( cidFood(iFood) >= 0 ) {		// 有効なアイテム
+		
+		// 違ったらダメ！
+		if ( cidFood(iFood) != cidXEater(targetEaterID) ) {
+			bGameOver = true
+			
+		} else {
+			score ++
+			eatingID = targetEaterID
+			
+			// 食べたら、位置が変わるかもしれない
+			if ( rnd(16) == 0 ) {
+				gosub *ShuffleXEaterPosition
+				gosub *SetBreakTime
+				
+			// 好みが変わるかもしれない
+			} else : if ( rnd(24) == 0 ) {
+				gosub *ChangeBaseColorOne
+				gosub *SetBreakTime
+				
+			// 全員変わるかもしれない
+			} else : if ( rnd(32) == 0 ) {
+				gosub *ChangeBaseColorAll
+				gosub *SetBreakTime
+			}
+		}
+		
+	}
+	
+	// えさを補給する
+	gosub *AddNewFood
+	return
+	
+// タイトル画面を用意する
+*SetWindowForTitle
+	redraw 2
+	
+	font "", 43
+	color : boxf
+	color ,  255 : pos  20, 20 : mes "XEaters"
+	font "", 28
+	color ,, 255 : pos 100, 68 : mes "～唯食者たち～"
+	
+	color 192, 192
+	pos 22, 180 : mes "Press [Enter] to Begin!"
+	
+	sysfont 0
+	color 255
+	pos 30, 130 : mes "Rule"
+	color 128, 255, 192
+	pos 80, 120 : mes "↑ Up"
+	pos 80, 140 : mes "↓ Down"
+	
+	redraw 1
+	return
+	
+//##############################################################################
+//        ミニ・サブルーチン群
+//##############################################################################
+// メイン画面の背景を描画する
+*DrawBackground
+	
+	color : boxf
+	color 192, 192, 192 : boxf 0, WINY - 30, WINX, WINY
+	color 255, 255, 255
+	
+	return
+	
+// 唯食者たちを描画する
+*DrawMembers
+	
+	repeat MAX_XEATERS
+		color32 crefType( cidXEater(cnt) )
+		
+		y = 15 + 50 * cnt
+		circle 20, y, 20 + 32, y + 32
+		
+		color
+		pos 24, 18 + 50 * cnt : mes "- -"
+		if ( eatingID == cnt ) {
+			pos 32, 34 + 50 * cnt : mes  "~"
+		} else {
+			pos 32, 26 + 50 * cnt : mes  "o"
+		}
+	loop
+	
+	return
+	
+// えさを描画
+*DrawFood
+	// 管を描画する
+	color 192, 192, 225
+	repeat 2
+		y = 33 + 50 * targetEaterID + (cnt * (HEIGHT_FOOD + 2))
+		line 38, y, WINX, y
+	loop
+	
+	// えさを描画
+	y = 34 + 50 * targetEaterID
+	
+	repeat MAX_CHARGE_FOOD
+		
+		tempID = (iFood + cnt) \ MAX_CHARGE_FOOD
+		
+		// 無効なえさを無視する
+		if ( cidFood(tempID) < 0 ) { continue }
+		
+		// 色のえさ
+		color32 crefType( cidFood(tempID) )
+		x = 95 + cnt * gameSpeed * 2 - (cntMLp \ gameSpeed) * 2
+		boxf x, y, x + gameSpeed - 8, y + HEIGHT_FOOD
+	loop
+	
+	return
+	
+// スコアを描画
+*DrawScore
+	color
+	pos WINX - 120, WINY - 25 : mes strf("score : %3d", score)
+	return
+	
+// えさを追加する
+*AddNewFood
+	
+	// 食べることの出来る唯食者のIDで選ぶ ( 負数ならなし )
+	eaterID_NewFood = rnd(MAX_XEATERS + numDummy) - numDummy
+	
+	if ( eaterID_NewFood >= 0 ) {	// 正常な場合のみ
+		cidNewFood = cidXEater(eaterID_NewFood)
+	} else {
+		cidNewFood = -1				// なし
+	}
+	
+;	logmes "add new food : "+ cidNewFood
+	
+	cidFood(iFood) = cidNewFood
+	iFood ++
+	
+	if ( iFood == MAX_CHARGE_FOOD ) {	// 一周したら
+		iFood = 0
+		if ( numDummy ) { numDummy -- }	// 空白出現率を減少させる
+	}
+	return
+	
+// えさをデフォルトの状態にする
+*SetDefaultFood
+	repeat  4 : cidFood(cnt) = -1 : loop	// 前の方を休憩時間とする
+	iFood = 4
+	repeat MAX_CHARGE_FOOD - 4
+		gosub *AddNewFood					// えさをランダムに追加する( 追加というか、変更 )
+	loop
+	iFood = 0
+	return
+	
+// 休憩時間を若干いれる
+*SetBreakTime
+	repeat 3
+		cidFood((iFood + cnt) \ MAX_CHARGE_FOOD) = -1
+	loop
+	return
+	
+// 唯食者の立ち位置を変える( シャッフル )
+*ShuffleXEaterPosition
+	repeat MAX_XEATERS
+		tempID            = rnd(MAX_XEATERS)
+		cidTemp           = cidXEater(tempID)
+		cidXEater(tempID) = cidXEater(cnt)
+		cidXEater(cnt)    = cidTemp
+	loop
+	return
+	
+// 唯食者のベース好みを変える
+*ChangeBaseColorOne
+	crefType(targetEaterID) = randomColorref()
+	return
+	
+// ベース色をすべて変更する
+*ChangeBaseColorAll
+	repeat MAX_XEATERS
+		crefType(cnt) = randomColorref()
+	loop
+	return
+	
+
+

@@ -1,0 +1,920 @@
+// X Eaters Object-Oriented 風
+
+// 唯食者たちにえさをやろう！
+// でも、彼らは自分の好みのえさしか食べない。
+// 間違えたら怒られるぞ。
+// しかも、彼らは特に気まぐれさん達。
+// 好みがコロッと変わっちゃうときもあるよ。
+
+// 問題
+// * OOPらしさがない
+
+;	#define global _RUNMODE_HSPTV_
+
+#ifdef _RUNMODE_HSPTV_
+ #include "hsptv.as"
+#else
+ #packopt name "XEaters"
+ #packopt hide 1
+ #define hsptv_up(%1,%2,%3)         logmes "hsptv に送信"
+ #define hsptv_getrank(%1,%2,%3,%4) logmes "ランキング取得" : dim %1 : sdim %2 : sdim %3
+#endif
+
+// 定数
+#define global WINX 640
+#define global WINY 480
+
+#define global MAX_XEATERS 4
+#define global MAX_RANK    15
+
+#enum WINMODE_NONE = 0
+#enum WINMODE_TITLE
+#enum WINMODE_RANKING
+#enum WINMODE_GAME
+#enum WINMODE_GAMEOVER
+#enum WINMODE_INPUT_RANKDATA
+
+#enum global IDW_MAIN = 0
+#enum global IDW_RANKIN
+
+#define global xeaters _stt_xeaters_instance@	// MCXEaters のインスタンス
+
+#define global SetNormalFont font msgothic, 28
+
+#ifdef _RUNMODE_HSPTV_
+ #define global ActivateMainWindow gsel
+#else
+ #define global ActivateMainWindow gsel , 1
+#endif
+
+// マクロ
+#define global color_gray(%1=192) hsvcolor ,, (%1)
+#define global color_white(%1)    pget 0xFFFE	// hsvcolor ,, 255; 白いと思われる座標
+
+#ifdef __UserDefHeader__
+ #undef color32
+#else
+ #define global true    1
+ #define global false   0
+ #define global success 1
+ #define global failure 0
+ #define global ctype cwhich_int(%1,%2,%3) ( ((%2) * ((%1) != 0)) | ((%3) * ((%1) == 0)) )
+#endif
+
+//##############################################################################
+//      XEaters
+//##############################################################################
+#module MCXEaters mXEaters, mfood, mcrefType, mIdTarget, mIdEating, mfoodSpeed, mfoodSpan, mscore, mbGameOver
+; mcntXEaters
+
+// 定数
+#define FOOD_SPEED_ONI  6		// 鬼モード
+
+#const  DEFAULT_FOOD_SPAN  135
+#define DEFAULT_FOOD_SPEED 2
+
+#define DEFAULT_SCORE 0
+#define PENALTY_SCORE 4			// ゴミでない餌を弾いたときのペナルティ減点
+
+// その他
+#deffunc color32 int cref
+	color cref & 0xFF, ( cref >> 8 ) & 0xFF, ( cref >> 16 ) & 0xFF
+	return
+	
+//------------------------------------------------
+// コンストラクタ
+//------------------------------------------------
+#deffunc XEaters_new array mv
+	newmod mv, MCXEaters@
+	return
+	
+#modinit
+	dim mbGameOver
+	dim mIdTarget		// 餌やり対象の XEaterId
+	
+	mIdEating   = -1	// もぐもぐしている XEater Id
+	mcrefType   = 0x0000FF, 0x00FF00, 0xFF0000, 0xFFFFFF
+	mfoodSpeed  = DEFAULT_FOOD_SPEED
+	mfoodSpan   = DEFAULT_FOOD_SPAN
+	mscore      = DEFAULT_SCORE
+	
+	repeat MAX_XEATERS
+		XEater_new    mXEaters     , cnt
+		XEater_setCId mXEaters(cnt), cnt
+	loop
+	
+	Food_new mFood
+	
+	return
+	
+//------------------------------------------------
+// デストラクタ
+//------------------------------------------------
+#define global XEaters_delete delmod
+
+//------------------------------------------------
+// XEater インスタンスへの参照を得る
+//------------------------------------------------
+#define global ctype XEaters_getXEater(%1,%2) XEaters_getXEater_var@MCXEaters(XEaters_getXEater_core(%1,%2))
+#modcfunc XEaters_getXEater_core int xid
+	dup   XEaters_getXEater_var, mXEaters(xid)
+	return 0
+	
+//------------------------------------------------
+// 餌を移動させる
+// @ 食事をし、かつそれに成功したら真
+//------------------------------------------------
+#modfunc XEaters_move
+	Food_move mfood, mfoodSpeed
+	
+	// 食事判定
+	if ( Food_canEat(mfood) ) {
+		XEaters_eat thismod
+		
+		if ( stat == failure ) {
+			XEaters_gameover thismod
+		} else {
+			// 得点として加算
+			XEaters_incScore thismod
+		}
+	}
+	return
+	
+//------------------------------------------------
+// 餌を食べさせる
+//------------------------------------------------
+#modfunc XEaters_eat  local tempCId, local tempCRef
+	
+	// ゴミ餌を食べると失敗
+	if ( Food_isDustFood( mfood ) ) {
+		return failure
+	}
+	
+	tempCId  = Food_getCIdNowFood( mfood )
+	tempCRef = mcrefType( tempCId )
+	
+	// XEater に食べさせる
+	XEater_eat mXEaters(mIdTarget), tempCRef
+	if ( stat == failure ) {
+		return failure
+	}
+	
+	mIdEating = mIdTarget
+	
+	Food_makeNewFood    mfood		// 餌を補充する
+	XEaters_eventHappen thismod		// なにかのイベントが起きるかもしれない
+	if ( stat ) {					// なにかが起こった
+		Food_setBreakTime mfood
+	}
+	
+	return success
+	
+//------------------------------------------------
+// 何らかのイベントが起きる？
+//------------------------------------------------
+#modfunc XEaters_eventHappen
+	
+	// ゲーム速度が上がるかもしれない
+	if ( mfoodSpeed >= FOOD_SPEED_ONI ) : if ( rnd(128) == 0 ) {
+		XEaters_speedUp thismod
+		return true
+	}
+	
+	if ( mscore != 0 && mscore \ (mfoodSpeed * mfoodSpeed * mfoodSpeed) == 0 ) {
+		XEaters_speedUp thismod
+		return true
+		
+	// 位置が変わるかもしれない
+	} else : if ( rnd(32) == 0 ) {
+		XEaters_shufflePosition thismod
+		
+	// 好みが変わるかもしれない
+	} else : if ( rnd(32) == 0 ) {
+		XEaters_changeBaseColor thismod, mIdTarget
+		
+	// 全員の好みが変わるかもしれない
+	} else : if ( rnd(48) == 0 ) {
+		XEaters_changeBaseColorAll thismod
+		
+	// なにも起こらない
+	} else {
+		return false
+	}
+	
+	return true
+	
+//------------------------------------------------
+// 速度を上げる
+//------------------------------------------------
+#modfunc XEaters_speedUp
+	mfoodSpeed ++
+;	mfoodSpan = 32 * mfoodSpeed
+	return
+	
+//------------------------------------------------
+// 唯食者の立ち位置を変える( 好みの色シャッフル )
+//------------------------------------------------
+#modfunc XEaters_shufflePosition
+	repeat MAX_XEATERS
+		XEater_swapCId mXEaters( rnd(MAX_XEATERS) ), mXEaters(cnt)
+	loop
+	return
+	
+//------------------------------------------------
+// 唯食者のベース好みを変える
+//------------------------------------------------
+#modfunc XEaters_changeBaseColor int id
+	mcrefType( mIdTarget ) = GetRandomColorref()
+	return
+	
+//------------------------------------------------
+// ベース色をすべて変更する
+//------------------------------------------------
+#modfunc XEaters_changeBaseColorAll
+	repeat MAX_XEATERS
+		XEaters_changeBaseColor thismod, cnt
+	loop
+	return
+	
+//------------------------------------------------
+// 餌を弾く
+//------------------------------------------------
+#modfunc XEaters_destroyFood
+	Food_destroy mfood
+	if ( stat == failure ) {
+		XEaters_minusScore thismod, PENALTY_SCORE
+	}
+	return
+	
+//------------------------------------------------
+// 餌やり対象
+//------------------------------------------------
+#modfunc XEaters_targetMove int n,  local idTargetNext
+	mIdTarget = limit( mIdTarget + n, 0, MAX_XEATERS - 1 )
+	return
+	
+#define global XEaters_targetUp(%1)   XEaters_targetMove %1, 0 -1
+#define global XEaters_targetDown(%1) XEaters_targetMove %1, 1
+
+#modcfunc XEaters_getIdTarget
+	return mIdTarget
+	
+//------------------------------------------------
+// 食事中の XEater Id
+//------------------------------------------------
+#modcfunc XEaters_getIdEating
+	return mIdEating
+	
+//------------------------------------------------
+// 餌の移動速度・距離
+//------------------------------------------------
+#modcfunc XEaters_getFoodSpeed
+	return mfoodSpeed
+	
+#modcfunc XEaters_getFoodSpan
+	return mfoodSpan
+	
+//------------------------------------------------
+// CId -> CRef
+//------------------------------------------------
+#modcfunc XEaters_getCRefFromCId int cid
+	return mcrefType(cid)
+	
+//------------------------------------------------
+// ゲームオーバー
+//------------------------------------------------
+#modfunc XEaters_gameover
+	mbGameOver ++	// mbGameOver = true
+	return
+	
+#modcfunc XEaters_isGameOver
+	return mbGameOver
+	
+//------------------------------------------------
+// スコア
+//------------------------------------------------
+#modfunc XEaters_incScore
+	mscore ++
+	return
+	
+#modcfunc XEaters_getScore
+	return mscore
+	
+#modfunc XEaters_minusScore int n
+	mscore -= n
+	if ( mscore < 0 ) {
+		XEaters_gameover thismod
+	}
+	return
+	
+//------------------------------------------------
+// 描画
+//------------------------------------------------
+#modfunc XEaters_draw
+	redraw 2
+	
+	XEaters_drawBackground thismod
+	XEaters_drawXEaters    thismod
+	XEaters_drawScore      thismod
+	
+	Food_draw mfood
+	
+	redraw
+	return
+	
+//------------------------------------------------
+// 唯食者たちの描画
+//------------------------------------------------
+#modfunc XEaters_drawXEaters
+	repeat MAX_XEATERS
+		XEater_draw mXEaters(cnt)
+	loop
+	return
+	
+//------------------------------------------------
+// メイン画面の背景を描画する
+//------------------------------------------------
+#const LowerFramePosY (WINY - 60)
+
+#modfunc XEaters_drawBackground
+	
+	color : boxf
+	color_gray : boxf , LowerFramePosY;, WINX, WINY
+	color_white
+	
+	return
+	
+//------------------------------------------------
+// スコアを描画
+//------------------------------------------------
+#const ScorePosX (WINX - 240)
+#const ScorePosY (WINY -  45)
+#modfunc XEaters_drawScore
+	color
+	pos ScorePosX, ScorePosY 
+#ifdef _DEBUG
+	mes strf("Lv%d : S %3d", mfoodSpeed, mscore)
+#else
+	mes strf("Score : %3d", mscore)
+#endif
+	return
+	
+#global
+
+//##############################################################################
+//      XEater
+//##############################################################################
+#module MCXEater mXId, mCId
+
+//------------------------------------------------
+// コンストラクタ
+//------------------------------------------------
+#deffunc XEater_new array mv, int xid
+	newmod mv, MCXEater@, xid
+	return
+	
+#modinit int xid
+	mXId = xid
+	dim mCId
+	return
+	
+//------------------------------------------------
+// デストラクタ
+//------------------------------------------------
+#define global XEater_delete delmod
+
+;#modterm
+;	return
+	
+//------------------------------------------------
+// 好みの色のId
+//------------------------------------------------
+#modfunc  XEater_setCId int cid
+	mCId = cid
+	return
+	
+#modcfunc XEater_getCId
+	return mCId
+	
+#modfunc XEater_swapCId var mv_xeater,  local tempCId
+	tempCId = XEater_getCId(mv_xeater)
+	XEater_setCId mv_xeater, mCId		// XEater_setCId mv_xeater, XEater_getCId(thismod)
+	mCId    = tempCId					// XEater_setCId   thismod, tempCId
+	return
+	
+//------------------------------------------------
+// 餌を食べる
+//------------------------------------------------
+#modfunc XEater_eat int crefFood
+	
+	// 好みでない色 => 失敗
+	if ( crefFood != XEaters_getCRefFromCId( xeaters, mCId ) ) {
+		return failure
+	}
+	
+	return success
+	
+//------------------------------------------------
+// 描画
+//------------------------------------------------
+#modfunc XEater_draw  local y, local xid_mul_100
+	xid_mul_100 = mXId * 100
+	
+	color32 XEaters_getCRefFromCId( xeaters, mCId )
+	
+	y = 30 + xid_mul_100
+	circle 40, y, 104, y + 64
+	
+	color
+	pos 50, 36 + xid_mul_100 : mes "- -"
+	
+	if ( XEaters_getIdEating(xeaters) == mXId ) {
+		pos 64, 68 + xid_mul_100 : mes  "~"
+	} else {
+		pos 64, 56 + xid_mul_100 : mes  "o"
+	}
+	
+	return
+	
+#global
+
+//##############################################################################
+//      Food モジュールクラス
+//##############################################################################
+#module MCFood mcidFood, mposFood, miFood, miBefFood, miNxtFood
+
+#const  MAX_FOOD_CHARGE 8
+#const  MAX_FOOD_CHARGE_sub_1 ( MAX_FOOD_CHARGE - 1 )
+#enum   FOOD_DUST = 0x00FF
+
+#const FOOD_SPEED_BASE 4
+#const FOOD_SPEED_SPAN 1
+#const FOOD_POS_CLOSEST 320
+
+#define ctype IsEatenPos(%1) %1 <= 0
+#define ctype IsDustFood(%1) %1 == FOOD_DUST
+
+//------------------------------------------------
+// コンストラクタ
+//------------------------------------------------
+#deffunc Food_new array mv
+	newmod mv, MCFood@
+	return
+	
+#modinit
+	dim mcidFood, MAX_FOOD_CHARGE
+	dim mposFood, MAX_FOOD_CHARGE
+	
+	// 餌リストをデフォルトの状態にする
+	miBefFood = MAX_FOOD_CHARGE_sub_1
+	miFood    = 0
+	miNxtFood = 1
+	
+	mposFood(miBefFood) = FOOD_POS_CLOSEST
+	
+	repeat MAX_FOOD_CHARGE
+		Food_makeNewFood thismod		// 餌を補充
+	loop
+	
+	return
+	
+//------------------------------------------------
+// デストラクタ
+//------------------------------------------------
+#define global Food_delete delmod
+
+//------------------------------------------------
+// 餌の補充
+//------------------------------------------------
+#modfunc Food_makeNewFood  local tempId, local tempCId, local foodSpan
+	
+	// 食べることの出来る唯食者のIdで選ぶ ( 負数ならなし )
+	tempId = rnd( MAX_XEATERS )
+	
+	// ゴミ餌を発生させる
+	if ( rnd(24) == 0 ) {
+		tempCId = FOOD_DUST
+		
+	// 正常な場合
+	} else {
+		tempCId = XEater_getCId( XEaters_getXEater(xeaters, tempId) )
+	}
+	
+	foodSpan         = XEaters_getFoodSpan(xeaters)
+	mcidFood(miFood) = tempCId
+	mposFood(miFood) = mposFood(miBefFood) + foodSpan * ( rnd( abs(XEaters_getFoodSpeed(xeaters) - FOOD_SPEED_BASE) + 1) + 1 )
+	
+	// miFood を進める
+	miBefFood = miFood
+	miFood    = miNxtFood
+	miNxtFood ++
+	if ( miNxtFood >= MAX_FOOD_CHARGE ) {
+		dim miNxtFood		// miNxtFood = 0
+	}
+	
+	return
+	
+//------------------------------------------------
+// 休憩時間をいれる
+//------------------------------------------------
+#modfunc Food_setBreakTime
+	repeat
+		if ( Food_getPosNowFood(thismod) < FOOD_POS_CLOSEST ) {
+			Food_makeNewFood thismod
+		} else {
+			break
+		}
+	loop
+	return
+	
+//------------------------------------------------
+// 餌を弾く
+//------------------------------------------------
+#modfunc Food_destroy
+	// ゴミ餌
+	if ( IsDustFood( mcidFood(miFood) ) ) {
+		Food_makeNewFood thismod
+		return success
+		
+	// 通常の餌
+	} else {
+		return failure
+	}
+	
+//------------------------------------------------
+// 移動させる
+//------------------------------------------------
+#modfunc Food_move int foodSpeed
+	repeat MAX_FOOD_CHARGE
+		mposFood(cnt) -= foodSpeed	;FOOD_SPEED_SPAN
+	loop
+	return
+	
+//------------------------------------------------
+// 当たり判定
+//------------------------------------------------
+#modcfunc Food_canEat
+	return IsEatenPos( mposFood(miFood) )
+	
+//------------------------------------------------
+// 現在の餌
+//------------------------------------------------
+#modcfunc Food_getCIdNowFood
+	return mcidFood(miFood)
+	
+#modcfunc Food_getPosNowFood
+	return mposFood(miFood)
+	
+#modcfunc Food_isDustFood
+	return IsDustFood( mcidFood(miFood) )	// IsDustFood( Food_getCIdNowFood(thismod) )
+	
+//------------------------------------------------
+// 描画
+//------------------------------------------------
+#const HEIGHT_FOOD 10
+#const HEIGHT_FOODPIPE (HEIGHT_FOOD + 2)
+#define color_dust color_gray
+
+#modfunc Food_draw  local x, local y, local id_target, local tempCId
+	id_target = XEaters_getIdTarget(xeaters)
+	
+	// 管を描画する
+	gosub *LFood_drawPipe
+	
+	// えさを描画
+	y = 67 + 100 * id_target
+	
+	repeat MAX_FOOD_CHARGE
+		
+		tempCId = mcidFood(cnt)
+		
+		x = mposFood(cnt) + 64		// 64 := XEater の口のＸ座標
+	//	if ( x > WINX ) { continue }
+		
+		// ゴミ餌
+		if ( IsDustFood(tempCId) ) {
+			color_dust
+			repeat 2
+				circle x, y, x + 28, y + HEIGHT_FOOD + 1
+				x += 16
+			loop
+			
+		// 餌
+		} else {
+			color32 XEaters_getCRefFromCId( xeaters, tempCId )
+			boxf x, y, x + 48, y + HEIGHT_FOOD
+		}
+	loop
+	
+	return
+	
+*LFood_drawPipe
+	color 192, 192, 225
+	repeat 2
+		y = 66 + (100 * id_target) + (cnt * HEIGHT_FOODPIPE)
+		line 74, y, WINX, y
+	loop
+	return
+	
+#global
+
+//##############################################################################
+//      カラー・テーブル
+//##############################################################################
+#module mod_clrtable
+
+//------------------------------------------------
+// 色バリエーション・テーブルの初期化
+//------------------------------------------------
+#deffunc _init@mod_clrtable
+;	clrVariation = 0xFF0000, 0x00FF00, 0x0000FF, 0xFFFF00, 0xFF00FF, 0x00FFFF, 0xFFFFFF, 0xAA0000, 0x00AA00, 0x0000AA, 0xAAAA00, 0xAA00AA, 0x00AAAA, 0xAAAAAA, 0xFFAA00, 0xAAFF00, 0xAA00FF, 0xFFFFAA, 0xFFAAFF, 0xAAFFFF, 0xFF00AA, 0x00AAFF
+	clrVariation = 0xFF0000, 0x00FF00, 0xFFFF00, 0x0000FF, 0xFF00FF, 0x00FFFF, 0xEEEEEE, 0xBB0000, 0x00BB00, 0xBBBB00, 0x0000BB, 0x8000BB, 0x00BBBB, 0xBBBBBB, 0xAAFF00, 0xFFFF99, 0xAA00FF, 0xFFAAFF, 0x99FFFF, 0x808080, 0xFF00AA, 0x0077AA, 0xFF8060, 0x00AAFF
+	cntClrVariation = length(clrVariation)
+	return
+	
+//------------------------------------------------
+// 色テーブルからランダムに1つ取り出す
+//------------------------------------------------
+#defcfunc getRandomColorref
+	return clrVariation( rnd(cntClrVariation) )
+	
+#global
+_init@mod_clrtable
+
+//##############################################################################
+//                グローバル空間
+//##############################################################################
+*main
+	gosub *LInitialize
+	gosub *LSetWindowForTitle
+	
+	ActivateMainWindow
+	onkey *LKey
+	stop
+	
+// メインループ
+*mainlp
+	winmode = WINMODE_GAME
+	onkey false
+	
+	gosub *LSetVariable
+	
+	repeat
+		if ( ginfo_act < 0 ) { await 34 : continue }
+		
+		XEaters_move xeaters		// 餌を動かす
+		gosub *LCheckKeyDown		// キー入力受付
+		XEaters_draw xeaters		// 再描画
+		if ( XEaters_isGameOver(xeaters) ) { break }
+		
+		await 17
+	loop
+	
+	// ゲーム終了
+	gosub *LSetWindowForGameOver
+	onkey *LKey
+	
+	// ランクインしたかどうかを調べる
+	gosub *LCheckRankin
+	
+	stop
+	
+*LKey
+	bEnter = ( iparam == 13 )
+	
+	if ( winmode == WINMODE_TITLE ) {
+		if ( bEnter ) {
+			goto *mainlp
+			
+		} else : if ( wparam == 0x7B ) {	// F12
+			gosub *LSetWindowForRanking
+		}
+		
+	} else : if ( winmode == WINMODE_RANKING && bEnter ) {
+		gosub *LSetWindowForTitle
+		
+	} else : if ( winmode == WINMODE_GAMEOVER && bEnter ) {
+		goto *main
+		
+	} else : if ( winmode == WINMODE_INPUT_RANKDATA && bEnter ) {
+		gosub *LUpRankData
+	}
+	stop
+	
+//##############################################################################
+//        サブルーチン群
+//##############################################################################
+//------------------------------------------------
+// 初期化
+//------------------------------------------------
+*LInitialize
+	randomize
+	
+;	gosub *LSetVariable		// ゲーム開始直前に発生する
+	gosub *LSetWindow
+	return
+	
+//------------------------------------------------
+// 変数を初期化する
+//------------------------------------------------
+*LSetVariable
+;	sdim comment			// ランキング・コメント
+	dim  rankScore
+	sdim rankName
+	sdim rankComment
+	
+	winmode = WINMODE_TITLE
+	
+	dim xeaters
+	XEaters_new xeaters
+	return
+	
+//------------------------------------------------
+// ウィンドウの準備
+//------------------------------------------------
+#const POSX_WINDOW_RANKIN (WINX / 2 - 100)
+#const POSY_WINDOW_RANKIN (WINY / 2 -  40)
+*LSetWindow
+	//------------------------
+	// メイン
+	//------------------------
+#ifndef _RUNMODE_HSPTV_
+	gsel , -1
+	screen IDW_MAIN, WINX, WINY, 2
+	title "XEaters ～ 唯食者たち ～"
+#endif
+	
+	//------------------------
+	// Ranking Data 入力
+	//------------------------
+	sdim comment			// ランキング・コメント
+	
+	screen IDW_RANKIN, 200, 80, 14, POSX_WINDOW_RANKIN, POSY_WINDOW_RANKIN
+	title "XEaters - Rankin"
+	syscolor 15 : boxf : color
+	
+	objsize 60, 20
+	pos  60,  50 : button gosub "ＯＫ",       *LUpRankData
+	pos 130,  50 : button gosub "キャンセル", *LCancelRankData
+	
+	objmode 2
+	pos  10,  20 : input comment, 180, 25, 24
+	
+	sysfont 17
+	pos   5,   5 : mes "コメントを入力してください。"
+	
+	// 操作先をメインに移動させる
+	ActivateMainWindow
+	return
+	
+//------------------------------------------------
+// キー入力を受け付ける
+//------------------------------------------------
+*LCheckKeyDown
+	stick keydown
+	if ( keydown & 2 ) { XEaters_targetUp   xeaters }
+	if ( keydown & 8 ) { XEaters_targetDown xeaters }
+	
+	// ゴミ餌を弾く
+	if ( keydown & 16 ) {
+		XEaters_destroyFood xeaters
+	}
+	return
+	
+//##########################################################
+//        タイトル画面状態
+//##########################################################
+//------------------------------------------------
+// タイトル画面を用意する
+//------------------------------------------------
+*LSetWindowForTitle
+	winmode = WINMODE_TITLE
+	redraw 2
+	
+	font "", 86
+	color : boxf
+	color ,  255 : pos  40,  40 : mes "XEaters"
+	font "", 56
+	color ,, 255 : pos 200, 136 : mes "～唯食者たち～"
+	
+	color 192, 192
+	pos 44, 360 : mes "Press [Enter] to begin!"
+	
+	SetNormalFont
+	pos 100, 440 : mes "Press [F12] to see ranking."
+	
+	color 255
+	pos 60, 260 : mes "Rule"
+	
+	color 128, 255, 192
+	pos 140, 250 : mes "↑ Up\n↓ Down"
+	
+	redraw
+	return
+	
+//##########################################################
+//        ゲームオーバー画面状態
+//##########################################################
+//------------------------------------------------
+// ゲームオーバー画面
+//------------------------------------------------
+*LSetWindowForGameOver
+	winmode = WINMODE_GAMEOVER
+	
+	redraw 2
+	color : boxf : color 255
+	font "", 112
+	pos 40, 80 : mes strf("Game Over...\n   %3d", XEaters_getScore(xeaters))
+	
+	font "", 50
+	color_gray 192
+	pos 50, 360 : mes "Press [Enter] to continue..."
+	
+	redraw
+	return
+	
+//##########################################################
+//        ランキング関係
+//##########################################################
+//------------------------------------------------
+// ランキング画面
+//------------------------------------------------
+#const HSVCOLOR_H_FRAME (360 / MAX_RANK)
+#const FONT_POINT_RANKDATA (WINY - 80) / MAX_RANK
+*LSetWindowForRanking
+	winmode = WINMODE_RANKING
+	hsptv_up -1, ""				// 最新データの取得
+	redraw 2
+	
+	color : boxf : color_white
+	
+	font msgothic, FONT_POINT_RANKDATA
+	pos 20, 10 : mes "Ranking"
+	pos 30, 40
+	
+	repeat MAX_RANK
+		hsvcolor HSVCOLOR_H_FRAME * cnt, 255, 255
+		hsptv_getrank rankScore, rankName, rankComment, cnt
+		mes strf("#%2d [%3d] %12s < %s", cnt + 1, rankScore, rankName, rankComment)
+	loop
+	
+	SetNormalFont
+	color_gray 192
+	pos 100, 440 : mes "Press [Enter] to back."
+	
+	redraw
+	return
+	
+//------------------------------------------------
+// ランクインしたかどうかを調べる
+//------------------------------------------------
+*LCheckRankin
+	hsptv_up -1, ""						// 最新データの取得
+	finallyScore = XEaters_getScore(xeaters)
+	
+	repeat MAX_RANK
+		hsptv_getrank rankScore, rankName, rankComment, cnt
+		if ( rankScore <= finallyScore ) {
+			rank = cnt
+			gosub *LInputRankData
+			break
+		}
+	loop
+	return
+	
+//------------------------------------------------
+// ランキング入力画面
+//------------------------------------------------
+*LInputRankData
+	winmode = WINMODE_INPUT_RANKDATA
+	gsel IDW_RANKIN : title strf("XEaters - Rank(%2d)", rank + 1)
+	gsel IDW_RANKIN, 1
+	return
+	
+//------------------------------------------------
+// ランキングを入力する
+//------------------------------------------------
+*LUpRankData
+	hsptv_up finallyScore, comment
+	
+	gosub *LHideRankingWindow		// メイン画面をトップに押しだし、ランキング入力画面を隠す
+	gosub *LSetWindowForRanking		// ランキング画面に移動
+	return
+	
+//------------------------------------------------
+// ランキング入力を拒否する
+//------------------------------------------------
+*LCancelRankData
+	gosub *LHideRankingWindow
+	
+	winmode = WINMODE_GAMEOVER
+	return
+	
+//------------------------------------------------
+// ランキング入力画面を隠す
+//------------------------------------------------
+*LHideRankingWindow
+	gsel IDW_RANKIN, -1
+	ActivateMainWindow
+	return
+	
