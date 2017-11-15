@@ -1,0 +1,703 @@
+// 定義をリストアップ
+
+#packopt name "deflister"
+#packopt hide    1
+#packopt orgpath 1
+
+#runtime "hsp3mt"
+
+#include "hsp_green/src/all.hsp"
+#include "hspmath.as"
+#include "hsedsdk.as"
+#include "Mo/DialogEx.as"
+#include "Mo/flexFrame.as"
+#include "Mo/GetFontOfHSP.as"
+#include "Mo/hsedutil.as"
+#include "Mo/IsMouseButtonSwapped.as"
+#include "Mo/SysCursor.as"
+#include "Mo/SplitterSimple.as"
+#include "Mo/LexCmdline.as"
+#include "Mo/Lvmod.as"
+#include "Mo/mutex.as"
+#include "Mo/ini.hsp"
+
+#include "hsplex/src/HspIdenter.hsp"
+#include "deflister.as"
+
+*main
+	gosub *LInitialize		// 初期化
+	gosub *LProcCmdline		// コマンドラインを処理する
+	gosub *LClearVariable	// 変数の初期化
+	gosub *LSetWindow		// スクリーンを作成
+	
+	gosub *LGetTargetFilePath		// 対象ファイルのパスを取得
+	gosub *LUpdateDefinitionList	// 定義リストの更新
+	gosub *LUpdateListview			// リストビューの更新
+	
+	gsel IDW_MAIN
+		oncmd gosub *OnSize       , 0x0005		// WM_SIZE        (サイズが変更された)
+		oncmd gosub *OnSizing     , 0x0214		// WM_SIZING      (サイズが変更されている)
+		oncmd gosub *OnNotify     , 0x004E		// WM_NOTIFY
+		oncmd gosub *OnCommand    , 0x0111		// WM_COMMAND
+		
+		oncmd gosub *OnAlreadyUsed, UWM_ALREADY_USED	// 二重起動された
+		
+		SplitterSimple_Init
+		SplitterSimple_SetWhetherDraggingJudge *LIsMouseOnSplitter
+		SplitterSimple_SetMoveHander           *OnSplitterMove
+		SplitterSimple_SetDefaultWindowCommand
+		
+	onexit  goto *LExit			// 終了時
+	onerror goto *LError		// エラー発生時
+	
+	gsel IDW_MAIN, 1
+	stop
+	
+*LExit
+	gosub *LWriteSetOfEnd		// 終了時の設定を書き込む
+	gosub *LSettleProgram		// 後始末
+	oncmd   false
+	onexit  false
+	onerror false
+	PostMessage hwnd, 0x0010, 0, 0
+	return
+	
+//------------------------------------------------
+// エラー発生時
+//------------------------------------------------
+*LError
+	onerror false			// 無限割り込みを防ぐ
+	gosub *LSettleProgram
+	end : end
+	
+//------------------------------------------------
+// 後始末
+//------------------------------------------------
+*LSettleProgram
+	DeleteFont hFont
+	CloseMutex
+	if ( peek(curdir) ) { chdir curdir }						// カレントポジションを起動時のモノに戻す
+	if ( bHsed )        { delfile_if_exists HSED_TEMPFILE } // 一時ファイルの削除
+	return
+	
+//------------------------------------------------
+// 設定を保存する
+//------------------------------------------------
+*LWriteSetOfEnd
+	GetClientRect hwnd, varptr(rc)
+	
+	ini_puti cfg, "Window", "cx", rc(2) - rc(0)
+	ini_puti cfg, "Window", "cy", rc(3) - rc(1)
+	ini_puti cfg, "Window", "px", rc(0)
+	ini_puti cfg, "Window", "py", rc(1)
+	
+	ini_puti cfg, "Editbox", "Height",            heightEdit
+	ini_puti cfg, "Editbox", "cntShowLineBefore", cntShowLineBefore
+	
+	return
+	
+//------------------------------------------------
+// 初期化ルーチン
+//------------------------------------------------
+*LInitialize
+	gsel 0, -1
+	
+	// カレントディレクトリを取得する
+	sdim curdir, MAX_PATH
+	     curdir = dirinfo(0)
+	
+	// 一意な文字列メッセージを作成しておく
+	UWM_ALREADY_USED = RegisterWindowMessage("deflister::UWM_ALREADY_USED")
+	
+	// 二重起動を防ぐ
+	if ( IsUsedByMutex("deflister::mutex") ) {
+		sendmsg 0xFFFF, UWM_ALREADY_USED	// 二重起動が発生したことを知らせる
+		end : end							// 強制終了
+	}
+	return
+	
+//------------------------------------------------
+// コマンドラインを処理する
+//------------------------------------------------
+*LProcCmdline
+	LexCmdline cmdopt, 1	;, "hsed"
+	cntCmdopt = stat
+	
+	// 通常の起動
+	if ( cntCmdopt == 0 ) {
+		FileSelDlg "HSP3 Script File (*.hsp;*.as)@*.hsp;*.as;hsptmp@すべてのファイル (*.*)@*.*@", NULL, false, (OFN_HIDEREADONLY | OFN_NOCHANGEDIR | OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NONETWORKBUTTON)
+;		dialog "hsp;*.as", 16, "HSP3 Script File"
+		if ( stat == 0 ) { end }
+		cmdopt(0) = refstr
+		
+	// hsed からの外部ツール呼び出し
+	} else : if ( cmdopt(0) == "hsed" ) {
+		bHsed = true
+		
+		// hsed があるかチェック
+		hsed_exist
+		if ( stat == false ) { dialog "外部エラー\nhsed3.exe が起動されていません。", 1, "deflister" : end }
+		
+	// コマンドライン付き呼び出し
+	} else {
+		exist cmdopt(0)
+		if ( strsize < 0 ) { dialog "外部エラー\n指定されたファイルがありません。", 1, "deflister" : end }
+	}
+	
+	return
+	
+//------------------------------------------------
+// 変数の初期化
+//------------------------------------------------
+*LClearVariable
+	ini_new cfg, STR_INIPATH
+	
+	// GUI部分に用いる変数
+	dim  rc, 4
+	dim  infScript, 2
+	dim  infBtns, 2, 2			// 各種ボタン
+	dim  infLv, 2
+	dim  iLv
+	dim  iDL					// Index of Active Definition List
+	heightEdit        = ini_geti(cfg, "Editbox", "Height", 100)
+	cntShowLineBefore = ini_geti(cfg, "EditBox", "cntShowLineBefore", 1)
+	dim  infFind,  2			// 検索窓
+	sdim strFind,  320
+	
+	// 選択状態にある項目の各データ
+	sdim script, 0x1FFF			// スクリプト表示部分のバッファ
+	dim  deflistLn				// 定義がある行番号
+	sdim deflistIdent			// 定義される識別子
+	dim  deflistType			// 定義される種類
+	sdim deflistScope			// 定義されるスコープ
+	dim  deflistCount			// 定義の数
+	dim  deflistItemTop			// 定義の項目番号の先頭
+	sdim stype
+	
+	sdim filepath, MAX_PATH
+	sdim filename, MAX_PATH
+	
+	declvar identer
+	newmod identer, MCHspIdenter
+	
+	// ini からデータロード
+	sFormatLineNumber = ini_gets(cfg, "String", "FormatLineNumber", "%3d|")
+	
+	bInclude    = ini_geti(cfg, "Opt", "bInclude",    false)
+	bCustomDraw = ini_geti(cfg, "Opt", "bCustomDraw", true)
+	bColoringByIdentType = ini_geti(cfg, "Opt", "bColoringByIdentType", false)
+	
+	// listview
+	if ( bCustomDraw ) {
+		// 既定色
+		ini_getArray cfg, lvClrTx, "Color", "Lv.Text" : lvClrTxCnt = length(lvClrTx)	// 文字色
+		ini_getArray cfg, lvClrBg, "Color", "Lv.Back" : lvClrBgCnt = length(lvClrBg)	// 背景色
+		
+		// 識別子タイプごとの色分け
+		if ( bColoringByIdentType ) {
+			stmp = ini_gets(cfg, "Color", "Lv.Id.$idtypelist") : split@hsp stmp, ",", idtypelist
+			stmp = ini_gets(cfg, "Color", "Lv.Id.$keylist")    : split@hsp stmp, ",", keylist
+			foreach keylist
+				lvClrTxId(cnt) = ini_geti(cfg, "Color", "Lv.Text.Id." + keylist(cnt), (-1))
+				lvClrBgId(cnt) = ini_geti(cfg, "Color", "Lv.Back.Id." + keylist(cnt), (-1))
+			loop
+		}
+	}
+	
+	// search path
+	if ( bInclude ) {
+		// common
+		pathToCommon = ini_gets( cfg, "Env", "CommonPath", "" )
+		
+		if ( pathToCommon == "" && bHsed ) {
+			gosub *LGetCommonPath				// hsed のパスから逆算して求まる
+			if ( pathToCommon == "" ) { ini_puts cfg, "Env", "CommonPath", pathToCommon }
+		}
+		
+		hspIdenter_appendSearchPath identer, pathToCommon
+		
+		// others
+		hspIdenter_appendSearchPath identer, ini_gets( cfg, "Env", "IncludePath", "" )
+	}
+	
+	return
+	
+//------------------------------------------------
+// ウィンドウの準備
+// 
+// @ オブジェクトの位置と大きさは、*OnSize で整えるので、気にせず配置する。
+//------------------------------------------------
+*LSetWindowginfo_dispx
+	winsize(0) = ini_geti(cfg, "Window", "cx", 380)
+	winsize(1) = ini_geti(cfg, "Window", "cy", 360)
+	
+	screen IDW_MAIN, ginfo_dispx, ginfo_dispy, 2 + 8, ,, winsize(0), winsize(1)
+		title "deflister"
+		SetStyle hwnd, -16, 0x40000		// 可変枠
+		syscolor 15 : boxf : color
+		
+		// Script-Viewer
+		font ini_gets(cfg, "Editbox", "FontFamily", msgothic), ini_geti(cfg, "Editbox", "FontSize", 12)
+		objmode 2
+		mesbox script, ginfo_dispx, ginfo_dispy, 4 : infScript = objinfo_hwnd(stat), stat
+		
+		tabstops = (12 + 1) / 4 * 4						// (fontpt + 1) / 4 * tabsize
+		sendmsg infScript, 0x00CB, 1, varptr(tabstops)	// EM_SETTABSTOPS
+		
+		// 検索窓
+		input strFind, 240, 20 : infFind = objinfo_hwnd(stat), stat
+		
+		objmode 1
+		
+		// Deflist-Viewer
+		CreateListview mLv, ginfo_dispx, ginfo_dispy, (0x0001 | 0x0004 | 0x0008 | 0x8000)
+		infLv = objinfo_hwnd(stat), stat
+		
+		gosub *LLvInitialize
+		
+		// ボタン
+		objsize 80, 25
+		button gosub "移動", *LBtnJump  : infBtns(0, 0) = objinfo_hwnd(stat), stat : EnableWindow infBtns(0, 0), bHsed
+		button gosub "更新", *LBtnRenew : infBtns(0, 1) = objinfo_hwnd(stat), stat
+		
+	gosub *OnSize
+	
+	return
+	
+//------------------------------------------------
+// リストビューを初期化
+//------------------------------------------------
+*LLvInitialize
+	SetStyle   infLv, -20, 0x0200		// 枠
+	LvSetExStyle mLv, 0x0001 | 0x0020
+	
+	// カラムを追加
+	LvInsertColumn mLv, "行",       0, 0, 0
+	LvInsertColumn mLv, "識別子",   1, 0, 1
+	LvInsertColumn mLv, "種類",     2, 0, 2
+	LvInsertColumn mLv, "範囲",     3, 0, 3
+	LvInsertColumn mLv, "ファイル", 4, 0, 4
+	
+	// ▲▼マークを表示
+;	LvSetSortMark mLv, 0, 1
+;	lvSortdir = 1
+;	lvSortcol = 0
+	
+	// フォントの変更
+	ChangeControlFont infLv, ini_gets(cfg, "Listview", "FontFamily", msgothic), ini_geti(cfg, "Listview", "FontSize", 13)
+	hFont = stat
+	
+	if ( bCustomDraw ) {
+		LvUseCustomMode mLv		// カスタムドローをする
+	}
+	
+	return
+	
+//------------------------------------------------
+// 識別子が選択された
+// 
+// @ iLv は与えられる
+//------------------------------------------------
+*LLvSelectedIdent
+	if ( bInclude ) {
+		
+		// どのファイルにある宣言か調べる
+		bSelected = false
+		foreach deflistItemTop
+			if ( in_interval( iLv, deflistItemTop(cnt), deflistItemTop(cnt) + hspDeflister_getCount( mdeflist(cnt) ) ) ) {
+				iDL       = cnt
+				bSelected = true
+				gosub *LResetScriptBox
+				break
+			}
+		loop
+		if ( bSelected == false ) { return }
+		
+	} else {
+		// 指定したファイルにある宣言かどうか調べる
+		if ( in_interval( iLv, 0, hspDeflister_getCount( mdeflist(iDL) ) ) == false ) { return }
+	}
+	// 位置を保存
+	posLn = hspDeflister_getLn( mdeflist(iDL), iLv - deflistItemTop(iDL) )
+	
+	// 宣言の位置までスクロールする ( p2: SB_VERT )
+	ScrollWindow infScript, 1, major_i(0, posLn - cntShowLineBefore)
+	
+	return
+	
+//------------------------------------------------
+// common フォルダのパスを取得する
+//------------------------------------------------
+*LGetCommonPath
+	if ( bHsed ) {
+		// hsed のフルパスに common をくっつける
+		pathToCommon = getpath( hsed_GetHsedPath(), 32 ) + "common"
+	}
+	return
+	
+//------------------------------------------------
+// 対象のスクリプトのパスを取得する
+//------------------------------------------------
+*LGetTargetFilePath
+	if ( bHsed ) {
+		filepath(0) = HSED_TEMPFILE			// フルパス
+		filepath(1) = "userdef.as"
+		hsed_GetActText script				// アクティブな Footy のテキストを取得
+		bsave filepath, script				// 一時ファイルを作る
+		
+	} else {
+		GetFullPathName cmdopt, filepath	// フルパスとして取得する
+	}
+	return
+	
+//------------------------------------------------
+// 定義リストを更新する
+//------------------------------------------------
+*LUpdateDefinitionList
+	if ( bInclude ) {
+		
+		// 検索パスに追加
+		hspIdenter_appendSearchPath identer, getpath(filepath, 32)
+		
+		// 再帰的に定義リストを作成
+		hspIdenter_collectDefs identer, mdeflist, filepath
+		
+	} else {
+		notesel script
+		noteload filepath
+		noteunsel
+		
+		// 定義リストを作成する
+		hspDeflister_new mdeflist, filepath, script
+		
+	}
+	
+	// スクリプト・ボックスの内容を更新
+	gosub *LResetScriptBox
+	
+	// 位置を設定
+	posLn = 0
+	return
+	
+//------------------------------------------------
+// スクリプト・ボックスを更新する
+//------------------------------------------------
+*LResetScriptBox
+	hspDeflister_getScript mdeflist(iDL), script
+	
+	// 行番号を埋め込む
+	SetLinenum script, script, sFormatLineNumber
+	
+	// スクリプトを更新
+	objprm infScript(1), script
+	return
+	
+//------------------------------------------------
+// リストをリセットする
+//------------------------------------------------
+*LResetListview
+	// すべて除去
+	LvDeleteAll mLv
+	return
+	
+//------------------------------------------------
+// リストを更新する
+//------------------------------------------------
+*LUpdateListview
+	
+	sendmsg infLv, 0x000B, false, 0		// WM_SETREDRAW
+	
+	if ( bInclude ) {
+		// すべてのファイルの宣言を一気に追加する
+		old_iDL = iDL
+		iLvItem = -1
+		foreach mdeflist
+			iDL = cnt
+			deflistItemTop(cnt) = iLvItem + 1	// 前の周の iLvItem の次に挿入されるハズ
+			
+			gosub *LAddItemsToListview
+			
+		loop
+		iDL = old_iDL
+		
+	} else {
+		// 宣言を追加
+		gosub *LAddItemsToListview
+	}
+	
+	// カラムの幅を適正にする
+	repeat 5
+		sendmsg infLv, 0x101E, cnt, -2	// LVM_SETCOLUMNWIDTH::lp = LVSCW_AUTOSIZE_USEHEADER
+	loop
+	
+	// 更新再開
+	sendmsg infLv, 0x000B, true, 0		// WM_SETREDRAW
+	return
+	
+//------------------------------------------------
+// リストビューに項目を追加する
+//------------------------------------------------
+*LAddItemsToListview
+	// 項目をすべて追加
+	filename     = hspDeflister_getFileName( mdeflist(iDL) )
+	deflistCount = hspDeflister_getCount   ( mdeflist(iDL) )
+	
+	if ( deflistCount <= 0 ) { return }
+	
+	repeat deflistCount
+		hspDeflister_get mdeflist(iDL), cnt, deflistIdent, deflistLn, deflistType, deflistScope
+		stype = MakeDefTypeString( deflistType )
+		
+		LvInsertItem  mLv, strf("%d", deflistLn) : iLvItem = stat
+		LvSetSub      mLv,   deflistIdent, iLvItem, 1
+		LvSetSub      mLv,          stype, iLvItem, 2
+		LvSetSub      mLv,   deflistScope, iLvItem, 3
+		LvSetSub      mLv,       filename, iLvItem, 4
+		
+		if ( bCustomDraw ) {
+			crefTx = lvClrTx(iLvItem \ lvClrTxCnt)
+			crefBg = lvClrBg(iLvItem \ lvClrBgCnt)
+			
+			// 識別子タイプによって色分けする
+			if ( bColoringByIdentType ) {
+				foreach idtypelist
+					if ( idtypelist(cnt) == stype ) {
+						if ( lvClrTxId(cnt) >= 0 ) { crefTx = lvClrTxId(cnt) }
+						if ( lvClrBgId(cnt) >= 0 ) { crefBg = lvClrBgId(cnt) }
+						break
+					}
+				loop
+			}
+			
+			LvCtTextColor mLv, iLvItem, crefTx
+			LvCtBackColor mLv, iLvItem, crefBg
+		}
+	loop
+	return
+	
+//------------------------------------------------
+// ジャンプする
+//------------------------------------------------
+*LBtnJump
+	if ( bHsed == false ) {
+		dialog "hsed3 からの呼び出しではありません。", 1, "deflister"
+		return
+	}
+	
+	if ( bInclude ) {
+		// 他のファイルならだめ
+		if ( in_interval(iLv, 0, hspDeflister_getCount( mDeflist(0) )) == false ) {
+			dialog "#include 先のファイルにはジャンプできません。", 1, "deflister"
+			return
+		}
+	}
+	
+	gsel IDW_MAIN, -1		// 動きが軽快なように見せる
+	
+	// 指定行に移動( hsed の行番号は 1 ベース )
+	hsed_setCaretLine hsed_activeFootyID(), hspDeflister_getLn( mdeflist(iDL), iLv - deflistItemTop(iDL) ) + 1
+	
+	// 終了する
+	PostMessage hwnd, 0x0010, 0, 0
+	return
+	
+//------------------------------------------------
+// いろいろ更新する
+//------------------------------------------------
+*LBtnRenew
+	foreach mdeflist
+		hspDeflister_delete mdeflist(cnt)
+	loop
+	
+	gosub *LGetTargetFilePath
+	gosub *LUpdateDefinitionList
+	gosub *LResetListview
+	gosub *LUpdateListview
+	return
+	
+//------------------------------------------------
+// 二重起動が発生した
+//------------------------------------------------
+*OnAlreadyUsed
+	gsel IDW_MAIN, 2
+	gsel IDW_MAIN, 1
+	return
+	
+//------------------------------------------------
+// ウィンドウのサイズが変わった
+//------------------------------------------------
+*OnSize
+	MoveWindow infScript, 5,  5             , ginfo_winx - 10, heightEdit, true
+	MoveWindow infLv,     5, 10 + heightEdit, ginfo_winx - 10, ginfo_winy - (heightEdit + 30 + 20), true
+	MoveWindow infFind,   5, ginfo_winy - 30 ,            240, 20, true
+	
+	repeat length2(infBtns)
+		MoveWindow infBtns(0, cnt), ginfo_winx - (85 * (cnt + 1)), ginfo_winy - 30, 80, 25, true
+	loop
+	return
+	
+//------------------------------------------------
+// サイズが変更されている
+//------------------------------------------------
+*OnSizing
+	OnSizingToFlexFrame 240, 200
+	return
+	
+//------------------------------------------------
+// コントロールの割り込み
+//------------------------------------------------
+*OnNotify
+	dupptr nmhdr, lparam, 12
+	
+	if ( nmhdr(0) == infLv ) {
+		
+		// NM_CUSTOMDRAW (これはカスタムドローの処理)
+		if ( bCustomDraw && nmhdr(2) == (-12) ) {
+			
+			if ( LvIsCustom( mLv ) ) {
+				dupptr NMLVCUSTOMDRAW, lparam, 60		// NMLVCUSTOMDRAW 構造体
+				
+				if ( NMLVCUSTOMDRAW(3) == 0x0001 ) {	// CDDS_REPAINT (描画サイクルの前)
+					return 0x0020						// CDRF_NOTIFYITEMDRAW (アイテムの描画処理を親に通知)
+				}
+				
+				if ( NMLVCUSTOMDRAW(3) == 0x10001 ) {	// CDDS_ITEMREPAINT (描画前)
+					NMLVCUSTOMDRAW(12) = LvTextColor(mLv, NMLVCUSTOMDRAW(9))	// 文字色
+					NMLVCUSTOMDRAW(13) = LvBackColor(mLv, NMLVCUSTOMDRAW(9))	// 背景色
+					return 0x0002
+				}
+			}
+		}
+		
+		// カラムがクリックされた
+		if ( nmhdr(2) == 0xFFFFFF94 ) {				// LVN_COLUMNCLICK
+			dupptr   NMLISTVIEW, lparam, 12 + 32		// NMLISTVIEW 構造体
+			lviCol = NMLISTVIEW(4)						// クリックされたカラムのインデックス
+			if ( lviCol == lvSortcol ) {				// マークつきカラムなら
+				lvSortdir *= -1								// 逆向きにする
+			} else {									// 違ったら
+				lvSortdir = 1								// 正方向に向かせる
+			}
+			// アイコンを設定( ソートされる )
+			lvSortcol = lviCol
+			LvSetSortMark mLv, lvSortcol, lvSortdir
+			
+		// 項目の状態が変わった
+		} else : if ( nmhdr(2) == -101 ) {			// LVN_ITEMCHANGED
+			dupptr NMLISTVIEW, lparam, 12 + 32			// NMLISTVIEW 構造体
+			iLv  = NMLISTVIEW(3)						// NMLISTVIEW::iItem
+			if ( NMLISTVIEW(5) & 0x02 ) {				// NMLISTVIEW::uNewState & LVIS_SELECTED
+				gosub *LLvSelectedIdent					// 選択された
+			}
+			
+		// 項目がアクティブ化した( Enter やＷクリック )
+		} else : if ( nmhdr(2) == -114 ) {			// LVN_ITEMACTIVATE
+			if ( bHsed ) { gosub *LBtnJump }
+		}
+		
+	// 検索窓
+	} else : if ( nmhdr(0) == infFind(0) ) {
+		// [Enter]
+		if ( nmhdr(2) == -4 ) {
+			gosub *LFindNext
+		}
+	}
+	return
+	
+//------------------------------------------------
+// コントロールの割り込み (Command)
+//------------------------------------------------
+*OnCommand
+	// 検索窓
+	if ( lparam == infFind(0) ) {
+		// EN_CHANGE (内容が変更された)
+		if ( HIWORD(wparam) == 0x0300 ) {
+			gosub *LFindNext
+		}
+	}
+	return
+	
+//------------------------------------------------
+// マウスがスプリッター上にある
+//------------------------------------------------
+*LIsMouseOnSplitter
+	return in_rect( mousex2, mousey2, 5, 5 + heightEdit, ginfo_winx - 10, 10 + heightEdit )
+	
+//------------------------------------------------
+// 仮想スプリッタが動いた
+//------------------------------------------------
+*OnSplitterMove
+	// stat: スプリッタの変位量
+	
+	heightEdit += stat
+	gosub *OnSize
+	return
+	
+//##############################################################################
+//        検索関係
+//##############################################################################
+//------------------------------------------------
+// 次を検索
+// 
+// @global: iLv, strFind
+//------------------------------------------------
+*LFindNext
+	if ( strFind == "" ) { return }
+	
+	if ( bInclude ) {
+		// iLv → last まで検索
+		repeat length(mdeflist), iDL
+			
+			for i, 0, hspDeflister_getCount(mdeflist(cnt))
+				if ( cnt == iDL ) : if ( i + deflistItemTop(cnt) <= iLv ) { _continue }
+				
+				gosub *LFindNextImpl
+				if ( stat ) { break }
+			next
+			
+		loop
+		
+		if ( iFound >= 0 ) { return }
+		
+		// first → iLv まで検索
+		repeat iDL
+			for i, 0, hspDeflister_getCount(mdeflist(cnt))
+				if ( i + deflistItemTop(cnt) >= iLv ) { break }
+				
+				gosub *LFindNextImpl
+				if ( stat ) { break }
+			next
+		loop
+		
+	} else {
+		repeat 1, iDL		// cnt = iDL とする
+			i = iLv + 1		// iLv → delistCound → 0 → iLv
+			while
+				if ( i == deflistCount ) { i = 0 }	// 選択項目(iLv)より下になければ、上に戻る
+				if ( i == iLv ) { break }			// 検索終了
+				
+				gosub *LFindNextImpl
+				if ( stat ) { break }
+				
+				i ++
+			wend
+		loop
+	}
+	
+	return
+	
+*LFindNextImpl
+	// @ deflist(cnt) の [i] の識別子と検索文字列が一致するか調べ、
+	// @	一致すればそれを選択
+	
+	ident  = hspDeflister_getIdent( mdeflist(cnt), i )
+	iFound = instr( ident, , strFind )
+	if ( iFound >= 0 ) {
+		iLv = i
+		iDL = cnt
+		gosub *LLvSelectedIdent		// 選択させる
+		return 1
+	}
+	
+	return 0
+	

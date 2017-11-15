@@ -1,0 +1,223 @@
+// Word Flasher
+
+#define global Str_AppName "Word Flasher"
+
+#packopt name Str_AppName
+#packopt hide 1
+
+#include "hsp_green/src/all.hsp"
+#include "abdata/abdata/all.hsp"
+#include "hspini/ini.hsp"
+#include "Mo/SearchFileEx.as"
+#include "Mo/MCMultiString.as"
+#include "Mo/mod_xrnd.as"
+
+#uselib "user32.dll"
+#func   global SetWindowLong  "SetWindowLongA" int,int,int
+#cfunc  global GetWindowLong  "GetWindowLongA" int,int
+#func   global PostMessage    "PostMessageA"   int,int,int,sptr
+
+#define Str_IniName "wf.ini"
+#enum global IDW_Main = 0
+
+*main
+	gosub *LInitialize
+	gosub *LShowWindow
+	
+	goto *mainlp
+	
+*mainlp
+	// 単語を表示する順番
+	xrnd listIdx, cntWords
+	
+	// 単語を一通り表示する
+	repeat cntWords
+		curData = list_get( database, listIdx(cnt) )
+		curWord = pair_getLhs(curData)
+		curText = pair_getRhs(curData)
+		gosub *LRedraw
+		
+		await (span + 1)
+	loop
+	
+	await 10
+	
+	goto *mainlp
+	
+*LInitialize
+	gsel 0, -1
+	randomize
+	
+	gosub *LInitScreen
+	gosub *LLoadSetting
+	gosub *LLoadWordlist
+	gosub *LCreateDatabase
+	
+	// 単語がないと error
+	if ( cntWords == 0 ) {
+		dialog "単語が一つも登録されていません！", 1, Str_AppName
+		end
+	}
+	
+	// ハンドラの登録
+	onexit gosub *LOnExit
+	
+	return
+	
+*LOnExit
+	onexit false
+	
+	ini_puti ini, "Window", "px", ginfo_wx1
+	ini_puti ini, "Window", "py", ginfo_wy1
+	ini_puti ini, "Window", "cx", ginfo_winx
+	ini_puti ini, "Window", "cy", ginfo_winy
+	
+	PostMessage hwnd, 0x0010, 0, 0
+	return
+	
+//##############################################################################
+//                  データ処理
+//##############################################################################
+*LLoadSetting
+	ini_new ini, dir_exe2 + "/" + Str_IniName
+	
+	span       = ini_geti(ini, "Option", "span")
+	fontFamily = ini_gets(ini, "Option", "fontFamily")
+	fontSize   = ini_geti(ini, "Option", "fontSize")
+	
+	winPos     = ini_geti(ini, "Window", "px"), ini_geti(ini, "Window", "py")
+	winSize    = ini_geti(ini, "Window", "cx"), ini_geti(ini, "Window", "cy")
+	
+	return
+	
+*LLoadWordlist
+	srcKeylist = ini_gets(ini, "Filelist", ".keylist")
+	pathSearch = ini_gets(ini, "Filelist", ".path")		// 追加の検索対象
+	
+	unor_new dictlist			// ( ファイルパス → 辞書( 単語 → データ ) )
+	MStr_new keylist			// (tmp) キーリスト
+	MStr_new filelist			// (tmp) ファイル名のリスト
+	MStr_new wordlist			// (tmp) ファイルから読んだ文字列、改行区切り
+	MStr_new dataSplitter		// (tmp) タブ区切りテキストを分解する
+	
+	MStr_chainSplitString keylist, srcKeylist, ","
+	
+	repeat MStr_size(keylist) 
+		MStr_getv keylist, key, cnt
+		srcFilelist = ini_gets(ini, "Filelist", key)
+		expath      = ini_gets(ini, "Filelist", key + ".path")		// このキーのファイル群の検索時にのみ使う、フォルダのリスト
+		
+		MStr_clear            filelist
+		MStr_chainSplitString filelist, srcFilelist, ","
+		
+		repeat MStr_size(filelist)
+			MStr_getv filelist, fname, cnt
+			
+			// ファイルを検索
+			SearchFileEx expath + ";" + pathSearch, fname
+			fname = refstr
+			
+			exist fname
+			if ( strsize < 0 ) {
+				ini_puts ini, "Error", fname, "can't be found."		// エラーを書いておく
+				continue
+			}
+			
+			// 辞書データを解析
+			MStr_clear wordlist
+			MStr_load  wordlist, fname, "\n"
+		;	MStr_sort  wordlist
+			tmpDict = new_unor()				// 単語 → データ
+			repeat MStr_size(wordlist)
+				MStr_clear            dataSplitter
+				MStr_chainSplitString dataSplitter, MStr_get(wordlist, cnt), "\t"
+				if ( MStr_size(dataSplitter) < 2 ) { assert : continue }
+				unor_add tmpDict, MStr_get(dataSplitter, 0), stresc( MStr_get(dataSplitter, 1) )	// データの方は esc する
+			loop
+			
+			// 辞書リストに追加
+			unor_add dictlist, fname, tmpDict
+			
+		loop
+		
+	loop
+	
+	return
+	
+//------------------------------------------------
+// 再構築
+//------------------------------------------------
+*LCreateDatabase
+	list_new database			// 辞書データベース (各要素は pair<単語, 文章>; 単語には辞書名が付属する
+	
+	IterateBegin dictlist, unor, fname
+		tmpDict = unor_get(dictlist, fname)
+		
+		// 辞書内の各単語を database に追加
+		IterateBegin tmpDict, unor, it
+			word = it + " (in " + getpath(fname, 1 + 8) + ")"
+			data = unor_get(tmpDict, it)
+			list_add database, new_pair( word, data )
+		IterateEnd
+		
+;		unor_delete tmpDict		// 廃棄
+		
+	IterateEnd
+	
+;	unor_delete dictlist		// 廃棄
+	
+	cntWords = list_size( database )
+	
+	return
+	
+#module
+
+//------------------------------------------------
+// 文字列エスケープ
+//------------------------------------------------
+#defcfunc stresc str src_,  local src
+	src = src_
+	strrep src, "\\n", "\n"
+	strrep src, "\\t", "\t"
+	strrep src, "\\\\", "\\"
+	return src
+	
+#global
+
+//##############################################################################
+//                  GUI処理
+//##############################################################################
+//------------------------------------------------
+// ウィンドウを準備する
+//------------------------------------------------
+*LInitScreen
+	screen IDW_Main, ,, (screen_hide | screen_tool), ,, ginfo_dispx, ginfo_dispy
+		title Str_AppName
+		;SetStyle hwnd, -16, 0x40000		// 可変枠
+		
+	return
+	
+*LShowWindow
+	gsel IDW_Main, 2
+		width winSize(0), winSize(1), winPos(0), winPos(1)
+		font fontFamily, fontSize
+		
+	return
+	
+//------------------------------------------------
+// 描画 (メイン)
+// 
+// @global: curWord (単語), curText (描画する説明文)
+//------------------------------------------------
+*LRedraw
+	title curWord + " - " + Str_AppName
+	
+	redraw 2
+	
+	color 255, 255, 255 : boxf : color
+	pos 5, 5 : mes curText
+	
+	redraw 1
+	
+	return
+	

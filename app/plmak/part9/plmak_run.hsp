@@ -1,0 +1,85 @@
+// plmak - run
+
+#ifndef IG_PLMAK_RUN_HSP
+#define IG_PLMAK_RUN_HSP
+
+// 実行 (runtime)
+// @ plmac を解析して、実際に処理を行う。
+
+//#include "abdata/abdata/all.as"
+#include "MCPlmakVM.hsp"
+
+#module m_plmak_run
+
+#include "plmak_inh.hsp"
+#include "plmac_const.hsp"
+
+//------------------------------------------------
+// 実行
+// 
+// @prm code: plmac
+//------------------------------------------------
+#deffunc plmak_run var result, var plmac,  local vm, local errcode
+	
+	pvm_new vm, plmac
+	pvm_run vm, result
+	errcode = stat
+	
+	// デバッグ出力
+#ifdef _plmak_DebugOut
+//*
+	logmes "＠実行"
+	logmes "err: " + GetRunErrStr(errcode)
+	logmes "result:"
+	repeat list_size(result)
+		logmes "\t#" + cnt + ": " + list_get(result, cnt)
+	loop
+	logmes ""
+//*/
+#endif
+	
+	return errcode
+	
+//------------------------------------------------
+// エラー時の文字列
+//------------------------------------------------
+#defcfunc GetRunErrStr int error
+	switch ( error )
+		case RunErr_None:         return "(正常)"
+		case RunErr_Unknown:      return "謎のエラー"
+		case RunErr_DivByZero:    return "零除算エラー"
+		case RunErr_StkUnderFlow: return "スタックアンダーフロー"
+		default:
+			return "(謎のエラー)"
+	swend
+	
+#global
+
+//##############################################################################
+//                サンプル・スクリプト
+//##############################################################################
+#if 0
+
+#include "plmak_lex.hsp"
+#include "plmak_enc.hsp"
+#include "plmak_prs.hsp"
+#include "plmak_cmp.hsp"
+
+	script = "1 + 2 * 3 - 4_5 % 6"
+	
+	// ビルド
+	plmak_lex tklist_lex, script     : if ( stat ) { mes GetLxErrStr(stat)  : stop }
+	plmak_enc tklist_enc, tklist_lex : if ( stat ) { mes GetEncErrStr(stat) : stop }
+	plmak_prs stxtree,    tklist_enc : if ( stat ) { mes GetPrsErrStr(stat) : stop }
+	plmak_cmp plmac,      stxtree    : if ( stat ) { mes GetCmpErrStr(stat) : stop }
+	
+	// 実行
+	plmak_run plmac, result
+	
+	stop
+	
+#endif
+
+#endif
+
+

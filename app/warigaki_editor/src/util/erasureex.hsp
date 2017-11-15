@@ -1,0 +1,11 @@
+#module "erasureEx"
+	#deffunc esr int p1, int p2
+	if p1 = 0 : x = 15 : else : x = 3
+	if p2 != 0 : redraw 2
+	syscolor x : boxf			; 塗りつぶし
+	color 0, 0, 0				; 描画色リセット
+	clrobj						; オブジェクト全消し
+	pos 0, 0					; カレントポジション リセット
+	if p2 != 0 : redraw 1
+		return
+#global

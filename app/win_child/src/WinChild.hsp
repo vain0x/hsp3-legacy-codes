@@ -1,0 +1,413 @@
+// 無理矢理子ウィンドウにする
+
+// @ ウィンドウ上で Ctrl + Shift + Enter を押すと捕獲する。
+// @ 子ウィンドウは捕獲できない( 当然だが )
+// @ 内部ウィンドウは削除不可。
+// @ メインが消えると解放されるが、すべて削除される。
+
+// 既知のバグ：
+// ＊解放後にメニューバーが表示されない
+
+#include "user_header.as"
+#include "Mo/CreateChildWindow.as"
+#include "Mo/MCTab.as"
+#include "Mo/mod_window.as"
+#include "Mo/priority.as"
+#include "Mo/trayicon.as"
+
+#uselib "user32.dll"
+#func   PostMessage     "PostMessageA"    int,int,int,sptr
+#cfunc  FindWindow      "FindWindowA"     sptr,sptr
+#func   SetParent       "SetParent"       int,int
+#func   SetWindowPos    "SetWindowPos"    int,int,int,int,int,int,int
+#func   SetWindowLong   "SetWindowLongA"  int,int,int
+#cfunc  GetWindowLong   "GetWindowLongA"  int,int
+#func   GetWindowRect   "GetWindowRect"   int,int
+#func   GetClientRect   "GetClientRect"   int,int
+#func   MoveWindow      "MoveWindow"      int,int,int,int,int,int
+#func   ShowWindow      "ShowWindow"      int,int
+#cfunc  IsZoomed "IsZoomed" int
+#cfunc  IsIconic "IsIconic" int
+#cfunc  IsWindow "IsWindow" int
+#cfunc  IsChild  "IsChild"  int
+#cfunc  GetSystemMetrics "GetSystemMetrics" int
+
+//#define MODE_SHOW_INFO	// ウィンドウ情報表示モード
+//#define MODE_NEGATOR	// ウィンドウ抹殺モード
+#ifdef MODE_NEGATOR
+ #define STR_APPNAME "WinNegator"
+#else
+ #define STR_APPNAME "WinChild"
+#endif
+
+#define SW_HIDE 0
+#define SW_SHOWNORMAL 2
+#define SW_SHOW 5
+#define SW_SHOWNA  8
+#define SW_RESTORE 9
+
+#define WS_CHILD 0x40000000
+#define WS_POPUP 0x80000000
+
+#enum IDW_Main = 0		// メイン
+#enum IDW_TaskBar
+#enum IDW_FindWinTitle
+#enum IDW_MAX			// ここまで
+#enum IDW_TabTop		// ここからタブ項目
+
+#enum IDI_Main = 0
+
+#define CY_SMCAPTION ( GetSystemMetrics(49) + 6 )
+#define CX_TASKBAR 32
+
+#define Check_IsWindow(%1) if ( IsWindow(%1) == false ) { %1 = NULL }
+
+#packopt name STR_APPNAME
+#packopt hide 1
+
+//------------------------------------------------
+// 前処理
+//------------------------------------------------
+*LBeginning
+	gsel IDW_Main, -1
+	gosub *LSetVariable		// グローバル変数を初期化
+	gosub *LSetWindow		// ウィンドウを準備
+	gosub *LSetInterrupt	// 割り込み設定
+	gsel IDW_Main, 1
+	
+#ifdef MODE_SHOW_INFO
+	gsel IDW_FindWinTitle, 2
+#endif
+	
+	goto *LMainLoop
+	
+//------------------------------------------------
+// メイン・ループ
+//------------------------------------------------
+*LMainLoop
+	if ( bIconic ) { wait 1000 : goto *LMainLoop }
+	
+	gosub *LGetPointWinData				// カーソル下のウィンドウの情報を得る
+	gosub *LCheckKey					// キー入力のチェック
+	
+#ifdef MODE_SHOW_INFO
+	if ( (cnt \ 6) == 0 ) {
+		redraw 2
+		gosub *LRedraw_FindWinTitle		// ウィンドウ情報を描画
+		redraw 1
+	}
+#endif
+	
+	wait 2
+	goto *LMainLoop
+	
+//------------------------------------------------
+// 変数の準備
+//------------------------------------------------
+*LSetVariable
+	dim rc, 4
+	dim rcWin, 4
+	
+	// ウィンドウ情報
+	cntWin = 0
+	dim  hWindow, 10
+	sdim sClsName,  320
+	sdim sWinTitle, 320
+	dim  hWinPos,  10		// 座標
+	dim  hWinSize, 10		// 大きさ
+	dim  hWinStyle,   10	// ウィンドウ・スタイル
+	dim  hWinExStyle, 10	// 拡張ウィンドウ・スタイル
+	
+	return
+	
+//------------------------------------------------
+// ウィンドウの準備
+//------------------------------------------------
+*LSetWindow
+	screen IDW_Main, ginfo(20), ginfo(21), 2 + 16, (ginfo(20) - 640) / 2, (ginfo(21) - 480) / 2, 640, 480
+	title STR_APPNAME
+		whMain = hwnd
+		SetWindowLong hwnd, -16, GetWindowLong(hwnd, -16) | 0x00040000 | 0x00010000
+		
+		pos 0, 0
+		tab_new mTab, 640, 480, IDW_TabTop, TCS_FOCUSNEVER
+		hTab = tab_hwnd(mTab)
+		
+/*
+	CreateChildWindow whMain, IDW_TaskBar, CX_TASKBAR, ginfo(21), 32
+	title STR_APPNAME +" Flame"
+		width CX_TASKBAR, 640, 0, 0
+		whTaskbar = hwnd
+		syscolor 15 : boxf : color
+		line CX_TASKBAR - 1, -1, CX_TASKBAR - 1, ginfo(21)
+//*/
+	
+#ifdef MODE_SHOW_INFO
+	screen IDW_FindWinTitle, 480, 40, 2, 60, 60, 240,40
+	title STR_APPNAME +" - Find WinTitle"
+		font msgothic, 12
+#endif
+	
+	return
+	
+//------------------------------------------------
+// 割り込みを設定する
+//------------------------------------------------
+*LSetInterrupt
+	onexit gosub *OnExitProc
+	
+	gsel IDW_Main
+		oncmd gosub *OnSize,   0x0005		// WM_SIZE
+		oncmd gosub *OnNotify, 0x004E		// WM_NOTIFY
+	return
+	
+//------------------------------------------------
+// マウスポインタがあるウィンドウの情報を取得する
+//------------------------------------------------
+*LGetPointWinData
+	GetWindowDataFromPoint ginfo_mx, ginfo_my, sClsName, sWinTitle
+	return
+	
+#ifdef MODE_SHOW_INFO
+//------------------------------------------------
+// IDW_FindWinTitle を再描画する
+//------------------------------------------------
+*LRedraw_FindWinTitle
+	gsel IDW_FindWinTitle
+		syscolor 15 : boxf : color
+		pos 5,  5 : mes "ClsName  : "+ sClsName
+		pos 5, 20 : mes "WinTitle : "+ sWinTitle
+	
+	return
+#endif
+
+//------------------------------------------------
+// キー入力を検知する
+//------------------------------------------------
+*LCheckKey
+	getkey bKeyShift, 16
+	getkey bKeyCtrl,  17
+	
+	if ( bKeyCtrl && bKeyShift ) {
+		stick stkKey, , false
+		if ( stkKey & 32 ) {		// Ctrl + Shift + Enter
+			gosub *LMakeChild		// 捕獲
+		}
+	}
+	return
+	
+//------------------------------------------------
+// ウィンドウを捕獲する (子ウィンドウにする)
+//------------------------------------------------
+*LMakeChild
+	
+	// WinChild のウィンドウはダメ
+	if ( instr(sWinTitle, , STR_APPNAME) >= 0 ) {
+		dialog STR_APPNAME +" のウィンドウは子ウィンドウにできません。", 1, STR_APPNAME
+		return
+	}
+	
+	hWindow(cntWin) = FindWindow( sClsName, sWinTitle )
+	if ( hWindow(cntWin) ) {
+		
+		// 子ウィンドウ or ウィンドウでない => 捕獲失敗
+		if ( IsChild( hWindow(cntWin) ) || IsWindow( hWindow(cntWin) ) == false ) {
+			dialog "ポップアップ・ウィンドウのみ捕獲できます。", 1, STR_APPNAME
+			return
+		}
+		
+		// 新しいタブを追加 (右側)
+		tab_insert mTab, sWinTitle, cntWin : idxItem = stat
+		
+		// 通常サイズに戻す
+		Window_Restore hWindow(cntWin)
+		
+		// 捕獲時の座標を保存
+		GetWindowRect hWindow(cntWin), varptr(rcWin)
+		hWinPos (cntWin) = MAKELONG( rcWin(0), rcWin(1) )
+		hWinSize(cntWin) = MAKELONG( rcWin(2) - rcWin(0), rcWin(3) - rcWin(1) )
+		
+		// ウィンドウ・スタイルを保存
+		hWinStyle  (cntWin) = GetWindowLong( hWindow(cntWin), -16 )
+		hWinExStyle(cntWin) = GetWindowLong( hWindow(cntWin), -20 )
+		
+		// 子ウィンドウ化
+		ShowWindow      hWindow(cntWin), SW_HIDE
+		SetWindowLong   hWindow(cntWin), -20,      hWinExStyle(cntWin) | 0x80
+		SetWindowLong   hWindow(cntWin), -16, BITOFF(hWinStyle(cntWin) | WS_CHILD, WS_POPUP | 0x00040000 | 0x00C00000)
+		SetWindowPos    hWindow(cntWin), 0, 0, 0, 0, 0, (0x0001 | 0x0002 | 0x0004 | 0x0040)
+		EnableWindowBtn hWindow(cntWin), false
+		SetParent       hWindow(cntWin), hwnd
+		hWinOldParent(cntWin) = stat		// 以前の親ウィンドウ
+		MoveWindow      hWindow(cntWin), 0, 0, ginfo(12), ginfo(13);-2, - CY_SMCAPTION, ginfo(12) + 2, ginfo(13) + CY_SMCAPTION;/*CX_TASKBAR +*/ cntWin * 20, cntWin * 40, 580, 420
+		ShowWindow      hWindow(cntWin), SW_SHOWNA
+		
+		cntWin ++
+		tab_show mTab, idxItem
+		gsel IDW_TabTop + tab_idxToWId(mTab, idxItem), 1
+		gsel IDW_Main, 1
+	}
+	return
+	
+//------------------------------------------------
+// 終了時
+//------------------------------------------------
+*OnExitProc
+	if ( wparam != IDW_Main ) {
+		gsel wparam, -1
+		gsel IDW_Main, 1
+		return
+	}
+	
+	// すべて独立させる
+#ifndef MODE_NEGATOR
+	repeat cntWin
+		if ( hWindow(cnt) ) {
+			Check_IsWindow hWindow(cnt) : if ( hWindow(cnt) == NULL ) { continue }
+			
+			// 最大化状態は解除しておく
+			if ( IsZoomed(hWindow(cnt)) ) {
+				Window_Restore hWindow(cnt)
+			}
+			
+			ShowWindow      hWindow(cnt), SW_HIDE
+		;	ResetSystemMenu hWindow(cnt)
+			MoveWindow      hWindow(cnt), LOWORD( hWinPos(cnt) ), HIWORD( hWinPos(cnt) ), LOWORD( hWinSize(cnt) ), HIWORD( hWinSize(cnt) )
+			SetWindowLong   hWindow(cnt), -16,   hWinStyle(cnt)
+			SetWindowLong   hWindow(cnt), -20, hWinExStyle(cnt)
+			SetParent       hWindow(cnt), hWinOldParent(cnt)
+		;	EnableWindowBtn hWindow(cnt), true
+			ShowWindow      hWindow(cnt), SW_SHOWNA
+			
+			PostMessage     hWindow(cnt), 0x0010, 0, 0	// WM_CLOSE (終了させる)
+			hWindow(cnt) = 0
+		}
+	loop
+	cntWin = 0
+#endif
+	
+	end : end
+	
+//------------------------------------------------
+// ウィンドウサイズが変化した
+//------------------------------------------------
+*OnSize
+	if ( wparam == 1 ) {			// SIZE_MINIMIZED ( 最小化された )
+		gosub *LHideIntoTray		// タスクトレイに格納
+		return
+	}
+	
+	if ( (wparam == 0 || wparam == 2) == false ) { return }
+	
+	if ( bIconic ) {				// 最小化されていたら
+		gosub *LShowFromTray		// タスクトレイから戻る
+	;	return
+	}
+	
+;	logmes "OnSize!"
+	
+	// タブのサイズを直す
+	gosub *LResizeTab
+	return
+	
+*LResizeTab
+	MoveWindow hTab, 2, 0, LOWORD(lparam), HIWORD(lparam)
+	
+	tab_getFittingPageRect mTab, rc
+	
+	repeat cntWin
+		Check_IsWindow hWindow(cnt) : if ( hWindow(cnt) == NULL ) { continue }
+		
+		gsel IDW_TabTop + cnt
+		MoveWindow         hwnd, 0, 20, rc(2) - rc(0) + 4, rc(3) - rc(1) + 4
+		MoveWindow hWindow(cnt), 0,  0, rc(2) - rc(0) + 4, rc(3) - rc(1) + 4
+	loop
+	
+	return
+	
+//------------------------------------------------
+// コントロールからの通知
+//------------------------------------------------
+*OnNotify
+	dupptr nmhdr, lparam, 12	// NMHDR 構造体
+	
+	if ( nmhdr(0) == hTab ) {
+		
+		// 選択項目の変更
+		if ( nmhdr(2) == -551 ) {
+			tab_showActive mTab
+		}
+		
+	}
+	return
+	
+//------------------------------------------------
+// トレイアイコンからの通知
+//------------------------------------------------
+*OnTrayIconEvent@
+	idIcon = wparam
+	switch ( lparam )
+		case 0x0202		// 左::解放
+		case 0x0205		// 右::解放
+			gosub *LShowFromTray
+			sendmsg whMain, 0x0112, 0xF120, 0		// 元に戻す (WM_SIZE が起こる)
+			swbreak
+	swend
+	return
+	
+//------------------------------------------------
+// タスクトレイへ格納
+//------------------------------------------------
+*LHideIntoTray
+	if ( bIconic ) { return }				// 既に常駐しているか、常駐が禁止されている
+	
+	gsel IDW_Main, -1
+	CreateTrayIcon "WinChild", , IDI_Main	// アイコン作成
+	SetStyle whMain, -20, 0x00000080		// ツールウィンドウにし、タスクバーから排除
+	bIconic = true
+	
+	IdlePriority							// 優先度クラスを最低にする
+	return
+	
+//------------------------------------------------
+// タスクトレイから復帰
+//------------------------------------------------
+*LShowFromTray
+	if ( bIconic == false ) { return }		// 今は常駐していない
+	bIconic = false
+	
+	NormalPriority							// 優先度クラスを戻す
+	gsel IDW_Main
+	SetStyle whMain, -20, , 0x00000080		// ツールウィンドウ解除
+	gsel IDW_Main, 2						// MainWindow を公開 (一時的に最前面)
+	DestroyTrayIcon IDI_Main				// アイコン削除
+	
+;	gosub *LResizeTab
+	
+	gsel IDW_Main, 1
+	return
+	
+#module
+
+#uselib "user32.dll"
+#cfunc  WindowFromPoint "WindowFromPoint" int,int
+#func   GetWindowText   "GetWindowTextA"  int,sptr,int
+#func   GetClassName    "GetClassNameA"   int,sptr,int
+
+//------------------------------------------------
+// ある1点のウィンドウ情報を取得する
+//------------------------------------------------
+#deffunc GetWindowDataFromPoint int px, int py, var vClsName, var vWinTitle,  local hWinTmp
+	memexpand vClsName,   320 - 1
+	memexpand vWinTitle,  320 - 1
+	
+	hWinTmp = WindowFromPoint( ginfo_mx, ginfo_my )
+	if ( hWinTmp ) {
+		GetClassName  hWinTmp, varptr(vClsName),  320
+		GetWindowText hWinTmp, varptr(vWinTitle), 320
+		return true
+	}
+	
+	return false		// 失敗
+	
+#global

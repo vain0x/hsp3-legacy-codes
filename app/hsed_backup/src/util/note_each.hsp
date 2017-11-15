@@ -1,0 +1,35 @@
+#ifndef        IG_NOTE_EACH_HSP
+#define global IG_NOTE_EACH_HSP
+
+#ifndef _empty
+ #define global _empty//
+#endif
+
+/*
+%index
+note_each
+区切り文字列を項目ごとに反復する
+%prm
+iter, self, delimiter, max_len
+iter: 各要素が代入される変数
+src:  元の文字列
+delimiter ['\n']: 区切り文字
+max_len   [1024]: 最大文字数
+%inst
+内部的には repeat-loop なので、cnt, break, continue が使える。
+%sample
+	dirlist paths, "*"
+	note_each path, paths
+		mes path
+	note_each_end
+%*/
+#define global note_each(%1, %2, %3 = _empty, %4 = _empty) %tnote_each \
+	%i = 0 :\
+	repeat :\
+		getstr %1, %2, %p, %3, %4 : %p += strsize :\
+		if ( strsize == 0 ) { break } :\
+		//
+
+#define global note_each_end %tnote_each loop  %o0
+
+#endif

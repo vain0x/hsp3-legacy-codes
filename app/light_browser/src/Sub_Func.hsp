@@ -1,0 +1,103 @@
+// LightBrowser - Func
+
+// 汎用モジュール
+
+#module
+#define mTab mTab@
+
+// アクティブなタブを作成
+#define global NewTabActive(%1=BLANK)_NewTabActive %1
+#deffunc _NewTabActive str p1, local tabindex
+	gsel wID_Main, 1					// メインに設定しなければいけない
+	NewTab p1							// 追加
+	tabindex = stat						// タブインデックスが返る
+	if ( tabindex < 0 ) { return -1 }	// 負数なら失敗
+	ShowTab mTab, tabindex				// アクティブにする
+;	SetTabStr TS( UseTS@tm )			// タイトル文字列を変更
+	return tabindex						// インデックスをそのまま返す
+	
+#undef    getkey
+#defcfunc getkey int p1, local nRet
+	getkey@hsp nRet, p1
+	return nRet
+
+#deffunc StrDel var self, int i, int n
+	poke self, i, strmid(self, i + n, strlen(self) - (i + n))
+	return
+	
+// Favorite Menu を作成
+#deffunc PerthFavorite int hMenu, str p2, local hSubMenu, local buf, local tmp, local path, local i, local len
+	sdim buf, 1024
+	sdim path, 512
+	sdim tmp , 512
+	dim  len, 2
+	
+	exist  p2
+	if ( strsize == -1 ) { return -1 }
+	len(1) = strsize
+	notesel buf
+	noteload p2
+	noteunsel
+	
+	do
+		// 次のコードを取得
+		getstr tmp, buf, i, '\n', 511		// 一行だけ切り取る
+		i  += strsize + 1					// インデックス値を進める
+		len = strsize + 1					// 長さ
+		if ( tmp == "" ) { _continue }		// 無視する
+		
+		// 解析する
+		if ( wpeek(tmp, 0) == 0x3A46 ) {	// "F:"
+			StrDel tmp, 0, 2				// 前の部分を削除
+			len -= 2						// 長さ減少
+			
+			// フォルダを開く
+			getstr path, tmp, 0, '|'		// パス部分を切り出す
+			path = "Favorite/"+ path
+			if ( direxist( path ) ) {		// あるなら
+				hSubMenu = CreatePopupMenu()
+				AppendMenu hMenu, 0x10, hSubMenu, strmid(tmp, strsize, len - strsize )
+				
+				memexpand AddressList@, iCMD + strsize + 2
+				poke      AddressList@, iCMD, "F:"+ path +"\n"
+				iCMD += strsize
+				nCMD ++
+				
+				// 解析させる
+				PerthFavorite hSubMenu, path +"/Favorite.lbf"
+				
+			} else {
+				mkdir path
+				bsave path +"/Favorite.lbf", tmp, 0	// 空
+			}
+		} elsif ( wPeek(tmp) == 0x2D2D ) {	// --
+			// セパレータ
+			AddSeparator hMenu
+			
+		} else {
+			// 追加
+			getstr path, tmp, 0, '|'
+			AppendMenu hMenu, 0, nCMD, strmid( tmp, strsize, len - strsize )
+			memexpand AddressList@, iCMD + strsize + 2
+			poke      AddressList@, iCMD, path +"\n"
+			iCMD += strsize
+			nCMD ++
+		}
+	until ( i >= len(1) )
+	return
+	
+#deffunc CreateFavoriteMenu var hMenu, local root
+	
+	hMenu = CreatePopupMenu()
+	nCMD  = 1
+	iCMD  = 0
+	
+	// root から順に解析していく
+	PerthFavorite hMenu, "Favorite/Favorite.lbf"
+	AddSeparator  hMenu
+	AppendMenu    hMenu, CMD_ZERO, 0, "再構成する"
+	
+	return 0
+	
+#global
+

@@ -1,0 +1,469 @@
+#ifndef IG_ZEOPLAYER_BATTLE_AS
+#define IG_ZEOPLAYER_BATTLE_AS
+
+//###########################################################
+//        描画命令
+//###########################################################
+// カードテンポラリへの描画をメインに写す
+#define DrawCardCommit gsel /*wID_Main*/: gcopy wID_CardTemp,  ,, SizeX_Card, SizeY_Card
+
+// カード裏面
+#define DrawCardBack   gcopy wID_CardBack,  ,,  SizeX_Card, SizeY_Card
+
+// 棺桶カード
+#define DrawCardCoffin gcopy wID_CardCoffin,  ,,  SizeX_Card, SizeY_Card
+	
+//-------------------------------------------------
+// カード描画
+//-------------------------------------------------
+#define DrawBlueCard(%1) DrawCard (%1) /*, ID_YOU*/
+#define DrawRedCard(%1) DrawCard (%1), ID_EMY
+
+#deffunc DrawCard int idCard, int idPl
+	assert CardId_isValid(idCard)
+	assert PlayerId_isValid(idPl)
+	//戦闘カードか、生きているカードしか描画しないはず
+	assert (statuses(StatusId_HP, idCard, idPl) > 0 || idCard == combatCard(idPl))
+	
+	gsel wID_CardTemp
+	
+	//ベタ塗り
+	if (idPl) { color 200 } else { color , 200, 255 }
+	boxf
+	
+	//能力欄
+	if (idPl) { color 255, 120, 120 } else { color 175, 238, 255 }
+	boxf PosX1_CardName, PosY1_CardName, PosX2_CardName, PosY2_CardName
+	boxf PosX1_CardAbility, PosY1_CardAbility1, PosX2_CardAbility, PosY2_CardAbility1
+	boxf PosX1_CardAbility, PosY1_CardAbility2, PosX2_CardAbility, PosY2_CardAbility2
+	
+	color
+	font msgothic, 12, font_bold
+	//カード名
+	#const PosX1_CardNameText (PosX1_CardName + 2)
+	#const PosY1_CardNameText (PosY1_CardName + 2)
+	pos PosX1_CardNameText, PosY1_CardNameText : mes cardname(idCard, idPl)
+	
+	#ifdef CMPOPT_FULLVER
+	//外枠
+	boxl , ,  SizeX_CardMinus1, SizeY_CardMinus1
+	#endif //defined(CMPOPT_FULLVER)
+	
+	//能力
+	font msgothic, 12
+	repeat 2
+		#const PosX1_CardAbilityText  (PosX1_CardAbility  + 2)
+		#const PosY1_CardAbility1Text (PosY1_CardAbility1 + 1)
+		pos PosX1_CardAbilityText, PosY1_CardAbility1 + (cnt * ShiftY_CardAbility)
+		mes abilities(idCard, idPl, cnt)
+	loop
+	
+	//ステータス欄
+	#define ctype IsThisCardOnCombatAndFaster ((ourStatuses(StatusId_SP) - emyStatuses(StatusId_SP)) * (1 - idPl * 2) > 0)
+	#define ColorHighlight(%1=255) hsvcolor ,,(%1)
+	#define ColorHighlightStatusIf(%1) ColorHighlight(255 * (%1))
+	repeat StatusId_Max
+		//ハイライト
+		#ifdef CMPOPT_FULLVER
+		color
+		if (combatCard(idPl) == idCard) {
+			//SP: 相手が存在し、相手より確実に早ければ、ハイライトする
+			if (cnt == StatusId_SP && combatCard(idPl ^ 1) != CardId_Invalid) {
+				ColorHighlightStatusIf( IsThisCardOnCombatAndFaster() )
+			//AT,IG: 確実に選ばれる戦闘方式なら、ハイライトする
+			} elsif (cnt >= StatusId_AT) {
+				assert ( cnt == StatusId_AT || cnt == StatusId_IG )
+				ColorHighlightStatusIf( StatusId_AT + combatStyle(idPl) == cnt )
+			}
+		}
+		#endif //defined(CMPOPT_FULLVER)
+		
+		#const ShiftY_CardStatus_Half (ShiftY_CardStatus >> 1)
+		#define _posX (PosX1_CardHP_Text + (cnt & 1) * ShiftX_CardStatus)
+		#define _posY (PosY1_CardHP_Text + (cnt & 2) * ShiftY_CardStatus_Half)
+		pos _posX, _posY
+		mes strf("%s%4d", statusNames(cnt), statuses(cnt, idCard, idPl))
+		#undef _posX
+		#undef _posY
+	loop
+	
+	DrawCardCommit
+	return
+	
+//-------------------------------------------------
+// 戦闘画面の描画
+//-------------------------------------------------
+*RedrawMain
+	redraw redraw_off
+	
+	// 背景で塗りつぶす
+	pos 0, 0 : gcopy wID_TitleBg/*wID_BattleBg*/, ,, WIN_SIZEX, WIN_SIZEY
+	
+	// 互いの手札と戦闘カード
+	repeat Count_CardsInDeck
+		_posY = PosY1_BothHandCard(cnt) //描画 Y 座標
+		
+		_idCard = cnt
+		repeat 2
+			//#define _posX ( (cnt == 0) * (PosX1_OurHandCard + (_bCombatCard * ShiftX_OurCombatCard)) \
+			//              + (cnt == 1) * (PosX1_EmyHandCard + (_bCombatCard * ShiftX_EmyCombatCard)) )
+			#const PosX1_OurCombatCard (PosX1_OurHandCard + ShiftX_OurCombatCard)
+			#const PosX1_EmyCombatCard (PosX1_EmyHandCard + ShiftX_EmyCombatCard)
+			#const ShiftX_EmyHandCardFromOurHandCard     (PosX1_EmyHandCard   - PosX1_OurHandCard)
+			#const ShiftX_EmyCombatCardFromOurCombatCard (PosX1_EmyCombatCard - PosX1_OurCombatCard)
+			
+			if ( _idCard == combatCard(cnt) ) {
+				//戦闘カード
+				_posX = PosX1_OurCombatCard + (cnt * ShiftX_EmyCombatCardFromOurCombatCard)
+				pos _posX, _posY
+				
+				//影をつける {
+					hsvcolor ,, 128
+					#const SizeX_CardPlus3 SizeX_Card + 3
+					#const SizeY_CardPlus3 SizeY_Card + 3
+					boxf _posX + 3, _posY + 3,  _posX + SizeX_CardPlus3, _posY + SizeY_CardPlus3
+				//}
+				DrawCard _idCard, cnt
+			} else {
+				//手札カード
+				pos PosX1_OurHandCard + (cnt * ShiftX_EmyHandCardFromOurHandCard), _posY
+				if (statuses(StatusId_HP, _idCard, cnt) > 0) {
+					if (cnt) {
+						DrawCardBack //敵の手札は裏向き
+					} else {
+						DrawBlueCard _idCard
+					}
+				} else {
+					DrawCardCoffin
+				}
+			}
+		loop
+	loop
+	redraw
+	return
+	
+//-------------------------------------------------
+// メインウィンドウを戦闘画面用にする
+//-------------------------------------------------
+#define ResetMainWindowForGame \
+	clrobj ObjId_TitleButtons, :\
+	//
+	
+//###########################################################
+//        ゲーム中の動作
+//###########################################################
+//-------------------------------------------------
+// 戦闘カードを変更する命令
+//-------------------------------------------------
+#deffunc SummonCard int idPl, int idCard
+	assert (combatCard(idPl) == CardId_Invalid)
+	assert (statuses(StatusId_HP, idCard, idPl) > 0)
+	assert (heads(idPl) > 0)
+	
+	combatCard(idPl) = idCard
+	heads(idPl) --		// 頭数を減らす
+	combatStyle(idPl) = CombatStyle_Invalid	// 技使用状況をリセット
+	
+	AddGameLog playerName(idPl) + "は「" + cardname(idCard, idPl) + "」を召喚。"
+	return
+	
+//-------------------------------------------------
+// 自分 -> 次のカードを選択する
+//-------------------------------------------------
+*W_SelectCard
+	AddGameLog "召喚するカードを選んでください……"
+	
+	#const SizeY_CardSelectButton SizeY_CardName + 5
+	#const PosX1_CardSelectButton PosX1_OurHandCard + PosX1_CardName
+	#const ObjId_CardSelectButtonFirst 1
+	
+	objsize SizeX_CardName, SizeY_CardSelectButton : objmode objmode_guifont
+	repeat Count_CardsInDeck
+		// 押したボタンの ID 値が *Decide_CardIntoPlay の stat 値になる
+		if ( statuses(StatusId_HP, cnt /*, w*/) <= 0 ) {
+			PutDummyObject
+		} else {
+			//カード名と被る位置に選択ボタンを置く
+			pos PosX1_CardSelectButton, PosY1_BothHandCard(cnt) + PosY1_CardName
+			button gosub cardname(cnt /*, w*/), *Decide_CardIntoPlay
+		}
+		assert (stat == ObjId_CardSelectButtonFirst + cnt)
+	loop
+	
+	gosub *RedrawMain
+	WaitUntilItBecomesTrue(bDecided)
+	return
+	
+// 召喚するカードを決めたとき
+*Decide_CardIntoPlay
+	assert (bDecided == false)
+	bDecided ++
+	
+	SummonCard /*ID_YOU*/, (stat - ObjId_CardSelectButtonFirst)
+	//戦闘カードのステータスのクローンを作る
+	dup ourStatuses, statuses(StatusId_None, ourCombatCard /*, w*/)
+	
+	//カード選択ボタンを消去
+	clrobj ObjId_CardSelectButtonFirst//, ObjId_CardSelectButtonFirst + Count_CardsInDeck
+	return
+	
+//-------------------------------------------------
+// 相手 -> 次に場に出すカードを選ぶ
+// 
+// スピードが上回っているか、次の攻撃を耐えられて、
+//	なおかつ相手を倒せる技を持つカードのうち、
+//	その技の威力が最小のものを出す。なければランダム。
+//-------------------------------------------------
+*E_SelectCard
+	//選択結果
+	_idCard = CardId_Invalid
+	
+	// 自分側の攻撃方法が未定 => ゲームの開始時の選択 (こちら側のカードの情報を使ってはいけない)
+	if ( ourCombatStyle == CombatStyle_Invalid ) {
+		// ランダム
+	} else {
+		//自分側が次に与えるダメージ量
+		#define _ourCombatStatus ourStatuses(StatusId_AT + ourCombatStyle)
+		assert  _ourCombatStatus == cond_i(combatStyle(w), statuses(StatusId_IG, ourCombatCard, w), statuses(StatusId_AT, ourCombatCard, w))
+		
+		_emyNextDamage = 0x7FFF  // 番兵値
+		repeat Count_CardsInDeck
+			dup    emyStatuses, statuses(StatusId_None, cnt, e)
+			assert emyStatuses == emyStatuses(StatusId_HP)
+			assert ourStatuses == ourStatuses(StatusId_HP)
+			
+			//確実に先制できるか、または攻撃を耐えられるか？、つまり無駄死しないことが条件
+			if ( (emyStatuses/*hp*/ > 0 && emyStatuses(StatusId_SP) > ourStatuses(StatusId_SP)) || emyStatuses/*hp*/ > _ourCombatStatus ) {
+				//物理で相手を倒せて、さらに現在の候補より省エネか
+				_at_cnt_e = emyStatuses(StatusId_AT)
+				if ( _at_cnt_e >= ourStatuses/*hp*/ && _emyNextDamage >= _at_cnt_e ) {
+					_idCard = cnt : _emyNextDamage = _at_cnt_e
+				}
+				//魔法で相手を倒せて、さらに現在の候補より省エネか
+				_ig_cnt_e = emyStatuses(StatusId_IG)
+				if ( _ig_cnt_e >= ourStatuses/*hp*/ && _emyNextDamage >= _ig_cnt_e ) {
+					_idCard = cnt : _emyNextDamage = _ig_cnt_e
+				}
+			}
+		loop
+	}
+	
+	// 思考ルーチンが答えを出さなかったらランダムに選ぶ
+	if ( _idCard == CardId_Invalid ) {
+		eternal_begin
+			_idCard = rnd(5)
+		eternal_while (statuses(StatusId_HP, _idCard, e) <= 0)
+	}
+	
+	//召喚
+	SummonCard e, _idCard
+	
+	//戦闘カードのステータスのクローンを作る
+	dup emyStatuses, statuses(StatusId_None, emyCombatCard, e)
+	
+	gosub *RedrawMain
+	return
+
+//-------------------------------------------------
+// どちらの方が早いかを判定する
+// 敵のほうが早ければ敵が、そうでなければ自分が先攻
+// メインループしか呼ばれないのでマクロ
+//-------------------------------------------------
+#define JudgeSPD(%1) \
+	%1 = ( (ourStatuses(StatusId_SP)  - emyStatuses(StatusId_SP)) < 0 )
+
+//-------------------------------------------------
+// 自分 -> 攻撃方法の選択
+//-------------------------------------------------
+*W_SelectWayToAttack
+	//「物理攻撃」「魔法攻撃」ボタンを配置
+	objsize SizeX_ButtonOnBattle, SizeY_ButtonOnBattle
+	objmode objmode_usefont : font_forButtonOnBattle
+	
+	#const ShiftY_ButtonOnBattle (PosY1_ButtonOnBattle2 - PosY1_ButtonOnBattle1)
+	repeat 2
+		pos PosX1_ButtonOnBattle, PosY1_ButtonOnBattle1 + (cnt * ShiftY_ButtonOnBattle)
+		//前に物理で攻撃していれば、今は IG であり、そのときは物理攻撃ボタンを出さない
+		//前に魔法で攻撃していれば、今は AT であり、そのときは魔法攻撃ボタンを出さない
+		if ( ourCombatStyle != (1 - cnt) ) {
+			button gosub combatStyle_text(cnt) + "攻撃！", *Decide_WayToAttack
+			assert (stat == ObjId_PhysicsButton + cnt)
+		} else {
+			PutDummyObject
+		}
+	loop
+	
+	gosub *RedrawMain
+	WaitUntilItBecomesTrue(bDecided)
+	return
+	
+//-------------------------------------------------
+// 自分 -> 攻撃方法の選択を決定する
+//-------------------------------------------------
+*Decide_WayToAttack
+	assert (bDecided == false)
+	bDecided ++
+	ourCombatStyle = CombatStyle_IgIf(stat != ObjId_PhysicsButton)	// 魔法を押したら魔法攻撃
+	
+	//戦闘方式ボタンを消す
+	assert (ObjId_MagicalButton == ObjId_PhysicsButton + 1)
+	clrobj ObjId_PhysicsButton//, objIdAttackByPhysics + 1; objIdAttackByMagic
+	return
+	
+//-------------------------------------------------
+// 相手 -> 攻撃方法を決定する
+//
+// どちらでも殺せて、INTの方が小さいなら、魔法。
+// どちらかでは殺せなくて、INTの方が大きいなら、魔法。
+//-------------------------------------------------
+*E_SelectWayToAttack
+	if (emyCombatStyle == CombatStyle_Invalid) {
+		#define _cond ( (  ourStatuses/*hp*/ <= emyStatuses(StatusId_AT)   \
+		                && ourStatuses/*hp*/ <= emyStatuses(StatusId_IG) ) \
+		              ^ (emyStatuses(StatusId_AT) < emyStatuses(StatusId_IG))  )
+		emyCombatStyle = CombatStyle_IgIf(_cond)
+		#undef _cond
+	}
+	return
+	
+//-------------------------------------------------
+// 戦闘
+// @global idAttackPlayer: 攻撃プレイヤー
+// @return 後攻側の戦闘が行われるなら真
+//-------------------------------------------------
+*LCombat
+	assert PlayerId_isValid(idAttackPlayer)
+	assert combatStyle(idAttackPlayer) != CombatStyle_Invalid
+	
+	idDefencePlayer = (idAttackPlayer ^ 1)
+	AddGameLog playerName(idAttackPlayer) + "の「" + cardname(combatCard(idAttackPlayer), idAttackPlayer) + "」による" + combatStyle_text(combatStyle(idAttackPlayer)) + "攻撃！" 
+	
+	// ダメージを与える
+	_amountOfDamage = statuses(StatusId_AT + combatStyle(idAttackPlayer), combatCard(idAttackPlayer), idAttackPlayer)
+	if (_amountOfDamage) {
+		//ダメージを受けた後のhp残量
+		#define _dealtHP statuses(StatusId_HP, combatCard(idDefencePlayer), idDefencePlayer)
+		setease _dealtHP, (_dealtHP - _amountOfDamage), ease_cubic_inout
+		
+		#const Count_DamageDealingFrames 30
+		#const Count_DamageDealingFramesMinus1 Count_DamageDealingFrames-1
+		repeat Count_DamageDealingFrames
+			_dealtHP = getease(cnt, Count_DamageDealingFramesMinus1)
+			gosub *RedrawMain
+			await 20
+		loop
+	}
+	
+	// 攻撃終了
+	//gosub *RedrawMain
+	wait WaitTimeForWhile
+	
+	// 攻撃方法を反転する
+	combatStyle(idAttackPlayer) ^= 1
+	
+	// 戦闘後の死亡判定
+	if ( statuses(StatusId_HP, combatCard(idDefencePlayer), idDefencePlayer) <= 0 ) {
+		// idAttackPlayer の攻撃によって相手 idDefencePlayer のキャラが死亡した
+		AddGameLog playerName(idDefencePlayer) + "の「" + cardname(combatCard(idDefencePlayer), idDefencePlayer) + "」は倒れた。"
+		
+		combatCard(idDefencePlayer) = CardId_Invalid // 退場
+		assert (heads(idDefencePlayer) >= 0)
+		if (    heads(idDefencePlayer) /* > 0 */ ) {
+			// 次のカードを召喚
+			on idDefencePlayer gosub *W_SelectCard, *E_SelectCard
+		} else {
+			// 手札がなければ負け
+			idWinner = idAttackPlayer : gosub *LGameEnd
+		}
+		return false
+	}
+	return true
+	
+//-------------------------------------------------
+// ゲーム決着
+// @global idWinner : 勝者
+//-------------------------------------------------
+*LGameEnd
+	assert PlayerId_isValid(idWinner)
+	gosub *RedrawMain
+	
+	// 勝敗を影つきででかでかと表示
+	_msg = "You win...", "You lose..."
+	redraw redraw_off
+	repeat 2
+		font msgothic, 90, (font_italic * (1 - cnt)) //影は斜体
+		#ifdef CMPOPT_FULLVER
+		if (cnt) { if (idWinner) { color ,, 255 } else { color 255 } } else { color }
+		#endif //defined(CMPOPT_FULLVER)
+		if (idWinner) { color ,, cnt * 255 } else { color cnt * 255 }
+		pos 100, 125 + (2 * cnt) : mes _msg(idWinner)
+	loop
+	redraw
+	AddGameLog _msg(idWinner)
+	
+	//タイトル画面に戻るボタン
+	#ifdef CMPOPT_FULLVER
+	#const SizeY_ButtonOnButtle_Twice SizeY_ButtonOnBattle * 2
+	objsize SizeX_ButtonOnBattle, SizeY_ButtonOnButtle_Twice
+	objmode objmode_usefont : font_forButtonOnBattle
+	pos PosX1_ButtonOnBattle, PosY1_ButtonOnBattle1
+	button "戻る", *LContinue
+	#endif //defined(CMPOPT_FULLVER)
+	return
+	
+//-------------------------------------------------
+// CPU戦
+//-------------------------------------------------
+*LGameStart
+	//互いのデッキを開く
+	#ifdef _debug
+		//デバッグのため自動でデッキを開く
+		repeat 2
+			idActivePlayer = cnt : _path = PathToDeck("Sample0")
+			gosub *LLoadDeck
+		loop
+		idActivePlayer = ID_YOU
+	#else
+		//双方のデッキを開く
+		assert (idActivePlayer == ID_YOU)
+		if (ourDeckPath == "") { gosub *LOpenDeck }
+		
+		idActivePlayer ++ : assert (idActivePlayer == ID_EMY)
+		gosub *LOpenDeck
+	#endif
+	
+	//ゲーム開始前の処理
+	assert (ourDeckPath != "" && emyDeckPath != "")
+	assert (ginfo_sel == wID_Main)
+	ResetGameStatusVariables
+	ResetMainWindowForGame
+	
+	AddGameLog "バトルスタート！"
+	gosub *W_SelectCard
+	gosub *E_SelectCard
+	//goto *LGameMainLoop
+	
+//ゲームのメインループ
+//再描画→判定→戦闘→死亡確認
+*LGameMainLoop
+	if (PlayerId_isValid(idWinner)) { return }
+	
+	//先攻、後攻、の判定を行う
+	JudgeSPD idAttackPlayer
+	
+	//それぞれ攻撃方法を選択する
+	gosub *W_SelectWayToAttack
+	gosub *E_SelectWayToAttack
+	
+	//先攻、後攻、の順に戦闘を行う
+	gosub *LCombat
+	if (stat) {
+		//先後交代
+		idAttackPlayer ^= 1
+		gosub *LCombat
+	}
+	
+	//次のターンへ
+	goto *LGameMainLoop
+	
+#endif

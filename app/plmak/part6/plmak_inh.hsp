@@ -1,0 +1,117 @@
+// plmak - private header
+
+#ifndef IG_PLMAK_PRIVATE_HEADER_HSP
+#define IG_PLMAK_PRIVATE_HEADER_HSP
+
+#define _plmak_DebugOut
+
+#define success 0
+#define failure -1
+
+#ifdef _plmak_local_DebugOut	// 各モジュールごとに出力・非出力の制御を行う
+ #define dbgout(%1) logmes str(%1)
+#else
+ #define dbgout(%1) :
+#endif
+
+/*
+#ifdef _DEBUG
+ #define global ctype dbgpair(%1, %2) ( {"(%1,%2) = ("} + (%1) + ", " + (%2) + ")" )
+#else
+ #define global ctype dbgpair(%1, %2) ""
+#endif
+//*/
+
+//------------------------------------------------
+// Error on 字句解析
+//------------------------------------------------
+#enum LxErr_None = 0
+#enum LxErr_UnknownChar		// 謎の文字
+#enum LxErr_Max
+
+//------------------------------------------------
+// Error on 符号化
+//------------------------------------------------
+#enum EncErr_None = 0
+;#enum EncErr_		// 
+#enum EncErr_Max
+
+//------------------------------------------------
+// Error on 構文解析
+//------------------------------------------------
+#enum PrsErr_None = 0
+#enum PrsErr_SyntaxSttm		// 文法エラー (Sttm)
+#enum PrsErr_SyntaxExpr		// 文法エラー (Expr)
+#enum PrsErr_Paren			// 丸括弧のエラー (対応がとれていないなど)
+;#enum PrsErr_		// 
+#enum PrsErr_Max
+
+//------------------------------------------------
+// Error on コンパイル
+//------------------------------------------------
+#enum CmpErr_None = 0
+#enum CmpErr_SyntaxSttm		// 文法エラー (Sttm)
+#enum CmpErr_SyntaxExpr		// 文法エラー (Expr)
+;#enum CmpErr_		// 
+#enum CmpErr_Max
+
+//------------------------------------------------
+// 字句タイプ (lex)
+//------------------------------------------------
+#enum LxTkType_None = 0
+#enum LxTkType_Int			// 整数
+#enum LxTkType_Operator		// 二項演算子
+#enum LxTkType_ParenL		// '('
+#enum LxTkType_ParenR		// ')'
+#enum LxTkType_Comma		// カンマ
+#enum LxTkType_Splitter		// 文区切り
+#enum LxTkType_Term			// 終端
+#enum LxTkType_Max
+#enum LxTkType_Error = (-1)	// 負数は全部エラー扱い
+
+#define ctype isExprSplitter(%1) ( (%1) == LxTkType_ParenR || (%1) == LxTkType_Comma || (%1) == LxTkType_Splitter || (%1) == LxTkType_Term )
+
+//------------------------------------------------
+// 演算子タイプ (lex)
+//------------------------------------------------
+#enum LxOpType_None = 0
+#enum LxOpType_Add			// +
+#enum LxOpType_Sub			// -
+#enum LxOpType_Mul			// *
+#enum LxOpType_Div			// /
+#enum LxOpType_Mod			// %
+#enum LxOpType_Max
+
+//------------------------------------------------
+// 文タイプ
+//------------------------------------------------
+#enum SttmType_None = 0
+#enum SttmType_Expr			// 式文
+#enum SttmType_Max
+;#enum SttmType_			// 
+
+//------------------------------------------------
+// 構文木ノードタイプ
+//------------------------------------------------
+#enum PrsNodeType_None = 0
+#enum PrsNodeType_SttmVoid		// 空文 (不要)
+#enum PrsNodeType_SttmExpr		// 式文
+#enum PrsNodeType_Expr			// 式
+#enum PrsNodeType_OpBin			// 
+#enum PrsNodeType_ValInt		// 
+#enum PrsNodeType_Max
+;#enum PrsNodeType_			// 
+
+//------------------------------------------------
+// 演算子タイプ
+//------------------------------------------------
+#enum BinOp_None = 0
+#enum BinOp_Add					// (bin-op)
+#enum BinOp_Sub
+#enum BinOp_Mul
+#enum BinOp_Div
+#enum BinOp_Mod
+#enum BinOp_Max
+;#enum BinOp_
+
+#endif

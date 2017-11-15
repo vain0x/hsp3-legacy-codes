@@ -1,0 +1,80 @@
+// plmak - prs
+
+#ifndef IG_PLMAK_PARSE_HSP
+#define IG_PLMAK_PARSE_HSP
+
+// 構文解析 (parsing)
+// @ 字句列から文法を読み取り、文法的に再構成する。
+
+#include "abdata/abdata/all.as"
+#include "MCParser.hsp"
+
+#module m_plmak_prs
+
+#include "plmak_inh.hsp"
+
+//------------------------------------------------
+// 構文解析
+// 
+// @prm stxtree:    構文木
+// @prm tklist_enc: 符号化-字句リスト
+//------------------------------------------------
+#deffunc plmak_prs var stxtree, array tklist_enc,  local parser
+	
+	prs_new parser, tklist_enc
+	if ( stat ) { return stat }
+	
+	prs_getSyntaxTree parser, stxtree
+	
+	// デバッグ出力
+#ifdef _plmak_DebugOut
+	logmes "＠構文解析"
+	prs_dbglog parser
+	logmes ""
+#endif
+	
+	return 0
+	
+//------------------------------------------------
+// エラー時の文字列
+//------------------------------------------------
+#defcfunc GetPrsErrStr int errcode
+	switch ( errcode )
+		case PrsErr_None:       return "(正常)"
+		case PrsErr_SyntaxSttm:	return "文法エラー (文)"
+		case PrsErr_SyntaxExpr:	return "文法エラー (式)"
+		case PrsErr_Paren:      return "丸括弧のエラー"
+		default:
+			return "(謎のエラー)"
+	swend
+	
+#global
+
+//##############################################################################
+//                サンプル・スクリプト
+//##############################################################################
+#if 0
+
+#include "plmak_lex.hsp"
+#include "plmak_enc.hsp"
+
+	script = "1 + 2 * 3 - 4_5 % 6"
+	
+	plmak_lex tklist_lex, script     : if ( stat ) { mes GetLxErrStr(stat)  : stop }
+	plmak_enc tklist_enc, tklist_lex : if ( stat ) { mes GetEncErrStr(stat) : stop }
+	plmak_prs    stxtree, tklist_enc : if ( stat ) { mes GetPrsErrStr(stat) : stop }
+	
+	//
+	script = "(1 + 2) * 3"
+	
+	plmak_lex tklist_lex, script     : if ( stat ) { mes GetLxErrStr(stat)  : stop }
+	plmak_enc tklist_enc, tklist_lex : if ( stat ) { mes GetEncErrStr(stat) : stop }
+	plmak_prs    stxtree, tklist_enc : if ( stat ) { mes GetPrsErrStr(stat) : stop }
+	
+	stop
+	
+#endif
+
+#endif
+
+

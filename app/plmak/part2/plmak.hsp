@@ -1,0 +1,56 @@
+// plmak - interface
+
+#ifndef IG_PLMAK_INTERFACE_HSP
+#define IG_PLMAK_INTERFACE_HSP
+
+#include "plmak_lex.hsp"
+#include "plmak_enc.hsp"
+
+#module plmak
+
+//------------------------------------------------
+// ビルド
+// 
+// @prm output : 出力用変数 (形式は未定)
+// @prm script : スクリプト
+// @return : 0 => 成功, other => 失敗
+//------------------------------------------------
+#deffunc plmak_build array output, str script,  local tklist_lex, local tklist_enc
+	plmak_lex tklist_lex, script
+	if ( stat ) {
+		logmes "[Error]: lex に失敗した ∵" + GetLxErrStr(stat)
+		return -1
+	}
+	
+	plmak_enc tklist_enc, tklist_lex
+	if ( stat ) {
+		logmes "[Error] enc に失敗した ∵" + GetEncErrStr(stat)
+		return -1
+	}
+	
+	//
+	return 0
+	
+//------------------------------------------------
+// 実行
+// 
+// @prm ;
+//------------------------------------------------
+#deffunc plmak_run
+//	dummy
+	return
+	
+#global
+
+//##############################################################################
+//                サンプル・スクリプト
+//##############################################################################
+#if 0
+
+	plmak_build result, "\t1 + 2 * 3"
+	
+	stop
+	
+#endif
+
+#endif

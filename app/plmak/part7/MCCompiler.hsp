@@ -1,0 +1,285 @@
+// plmak - MC Compiler
+
+#ifndef IG_PLMAK_MODULECLASS_COMPILER_HSP
+#define IG_PLMAK_MODULECLASS_COMPILER_HSP
+
+#include "abdata/abdata/all.as"
+
+//##############################################################################
+//                  定義部 : MCCompiler
+//##############################################################################
+#module MCCompiler mCode, mTree
+
+#define _plmak_local_DebugOut
+#include "plmak_inh.hsp"
+#include "plmac_const.hsp"
+
+#define mCurNode  stack_peek(mNodeStk)
+#define _nextType ( prs_nextType(thismod) )
+#define _nextVal  ( prs_nextVal (thismod) )
+#define ChkErr    if ( stat ) { return stat }
+
+//##########################################################
+//        構築・解体
+//##########################################################
+#define global cmp_new(%1)    newmod %1, MCCompiler@
+#define global cmp_delete(%1) delmod %1
+
+//------------------------------------------------
+// 構築
+//------------------------------------------------
+#modinit
+	return
+	
+//------------------------------------------------
+// 解体
+//------------------------------------------------
+#modterm
+	return
+	
+//##########################################################
+//        取得系
+//##########################################################
+//------------------------------------------------
+// 
+//------------------------------------------------
+
+//##########################################################
+//        設定系
+//##########################################################
+//------------------------------------------------
+// 
+//------------------------------------------------
+
+//##########################################################
+//        コンパイル系
+//##########################################################
+//------------------------------------------------
+// コンパイル (EntryPoint)
+//------------------------------------------------
+#modfunc cmp_compile var plmac, var stxtree,  local idx, local node
+	plmac = new_list()
+	dup mCode, plmac
+	dup mTree, stxtree
+	
+	stack_push  mNodeStk, mTree		// 最初のノードは mTree となる
+	stack_clear mCalcStk
+	
+	// 文リスト
+	idx = 0
+	while ( idx < list_size(mTree) )
+		node = list_get(mTree, idx + 1)
+		cmp_sttm thismod, list_get(mTree, idx + 0), node : ChkErr
+		idx += 2					// <PrsNodeType_*, node> でペアなので
+	wend
+	
+	// 終了コード(quit)を自動挿入
+	cmp_putcode thismod, PlmacCmd_Quit, stt_zero@
+	return 0
+	
+//++++++++++++++++++++++++++++++++++++++++++++++++
+//        文
+//++++++++++++++++++++++++++++++++++++++++++++++++
+//------------------------------------------------
+// 文
+//------------------------------------------------
+#modfunc cmp_sttm int type, var node
+	dbgout "cmp sttm.begin"
+	
+	switch ( type )
+		case PrsNodeType_SttmVoid: swbreak		// ignore (空文)
+		case PrsNodeType_SttmExpr:				// 式文
+			cmp_expr thismod, node
+			swbreak
+			
+		default:
+			return CmpErr_Unknown
+	swend
+	
+	dbgout "cmp sttm.end"
+	return 0
+	
+//++++++++++++++++++++++++++++++++++++++++++++++++
+//        式
+//++++++++++++++++++++++++++++++++++++++++++++++++
+//------------------------------------------------
+// 式 (一般)
+//------------------------------------------------
+#modfunc cmp_expr var nodeExpr,   local chdNode
+	dbgout "cmp expr.begin()"
+	
+	chdNode = list_get(nodeExpr, 1)
+	cmp_expr_impl thismod, chdNode		// トラバース開始
+	
+	dbgout "cmp expr.end()"
+	return 0
+	
+//------------------------------------------------
+// 式 (一般; impl)
+//------------------------------------------------
+#modfunc cmp_expr_impl var node,  local chd, local val
+	
+	switch ( list_get(node, 0) )
+		// 整数
+		case PrsNodeType_ValInt:
+			val = list_get(node, 1)
+			cmp_putcode thismod, PlmacCmd_Push, val
+			swbreak
+			
+		// 式
+		case PrsNodeType_Expr:
+			chd = list_get(node, 1)
+			dbgout "cmp expr( " + chd + " )"
+			cmp_expr_impl thismod, chd
+			swbreak
+			
+		// 単項演算式
+		case PrsNodeType_OpUni:
+			dbgout "cmp uni(operand)"
+			chd = list_get(node, 2)
+			cmp_expr_impl thismod, chd
+			
+			// 演算コードの追加
+			val = GetUniOpCmd( list_get(node, 1) )
+			cmp_putcode thismod, val, stt_zero@
+			
+			dbgout "cmp uni(op: " + val + ")"
+			swbreak
+			
+		// 二項演算式
+		case PrsNodeType_OpBin:
+			dbgout "cmp bin(lhs)"
+			chd = list_get(node, 2)		// lhs
+			cmp_expr_impl thismod, chd
+			
+			dbgout "cmp bin(rhs)"
+			chd = list_get(node, 3)		// rhs
+			cmp_expr_impl thismod, chd
+			
+			// 演算コードの追加 (トラバースの post-proc)
+			val = GetBinOpCmd( list_get(node, 1) )
+			cmp_putcode thismod, val, stt_zero@
+			dbgout "cmp bin(op: " + val + ")"
+			swbreak
+			
+	swend
+	
+	return 0
+	
+//------------------------------------------------
+// 単項演算コマンドを取得
+//------------------------------------------------
+#defcfunc GetUniOpCmd int optype
+	switch ( optype )
+		case UniOp_Plus:  return PlmacCmd_Plus
+		case UniOp_Minus: return PlmacCmd_Minus
+		default:
+			return -1
+	swend
+	
+//------------------------------------------------
+// 二項演算コマンドを取得
+//------------------------------------------------
+#defcfunc GetBinOpCmd int optype
+	switch ( optype )
+		case BinOp_Add: return PlmacCmd_Add
+		case BinOp_Sub: return PlmacCmd_Sub
+		case BinOp_Mul: return PlmacCmd_Mul
+		case BinOp_Div: return PlmacCmd_Div
+		case BinOp_Mod: return PlmacCmd_Mod
+		default:
+			return -1
+	swend
+	
+//++++++++++++++++++++++++++++++++++++++++++++++++
+//        その他
+//++++++++++++++++++++++++++++++++++++++++++++++++
+//------------------------------------------------
+// コードの追加
+//------------------------------------------------
+#modfunc cmp_putcode int cmd, var value
+	list_add mCode, cmd
+	list_add mCode, value
+	dbgout "put: cmd<" + cmd + ">( " + value + " )"
+	return
+	
+//##########################################################
+//        動作系
+//##########################################################
+//------------------------------------------------
+// 
+//------------------------------------------------
+
+//##########################################################
+//        統一関数
+//##########################################################
+//------------------------------------------------
+// 
+//------------------------------------------------
+
+//##########################################################
+//        その他
+//##########################################################
+//------------------------------------------------
+// 
+//------------------------------------------------
+
+//##########################################################
+//        デバッグ用
+//##########################################################
+#ifdef _DEBUG
+
+//------------------------------------------------
+// デバッグ出力
+//------------------------------------------------
+#define global cmp_dbglog(%1) cmp_dbglog_ %1, "%1"
+#modfunc cmp_dbglog_ str _ident,  local ident, local idx
+	ident = _ident
+	
+	logmes "[" + strtrim(ident, 0, ' ') + "] dbglog"
+	
+	repeat (list_size(mCode) / 2)
+		idx = cnt * 2
+		cmp_dbglog_impl thismod, idx
+	loop
+	
+	return
+	
+#modfunc cmp_dbglog_impl int idx,  local cmdstr, local arg
+	arg    = list_get(mCode, idx + 1)
+	cmdstr = st_cmdstr( list_get(mCode, idx) )
+	len    = strlen(cmdstr)
+	
+	if ( peek(cmdstr, len - 1) == '+' ) {
+		logmes strmid(cmdstr, 0, len - 1) + " " + arg
+	} else {
+		logmes cmdstr
+	}
+	
+	return
+	
+#deffunc cmp_dbglog_init
+	st_cmdstr = "(none)", "quit+", "push+", "pop", "plus", "minus", "add", "sub", "mul", "div", "mod", "(err)"
+	return
+	
+#else
+
+#define global cmp_dbglog(%1)  :
+#define global cmp_dbglog_init /* empty */
+
+#endif
+
+#global
+
+	cmp_dbglog_init
+
+//##############################################################################
+//                サンプル・スクリプト
+//##############################################################################
+#if 0
+
+	stop
+	
+#endif
+
+#endif

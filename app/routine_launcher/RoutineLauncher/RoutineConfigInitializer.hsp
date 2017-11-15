@@ -1,0 +1,85 @@
+// ルーチン設定初期化プログラム
+
+#include "uedai_userdef/all.hsp"
+
+#define global Str_AppName "RoutineConfigInitializer"
+#packopt name Str_AppName
+#packopt hide true
+
+#include "hpi/sqle/sqlele.as"
+
+*main
+	gsel 0, -1
+	
+	exist "routine.db"
+	if ( strsize > 0 ) {
+		dialog "データベース「routine.db」は既存です。初期化しますか？", 2, Str_AppName
+		if ( stat == 7 ) { end : end }
+		delfile "routine.db"
+	;	dialog "受理されました。", 0, StrAppName
+	}
+	
+	sql_open "routine.db"
+	gosub *LInitConfig
+	sql_close
+	end : end
+	
+*LInitConfig
+	
+	// テーブル生成
+	tmp = {"
+		CREATE TABLE TSchedule (
+			Id   INTEGER PRIMARY KEY,
+			Name TEXT,
+			Link TEXT,
+			Args TEXT,
+			Path TEXT,
+			Mode INTEGER DEFAULT 16,
+			Time TEXT    DEFAULT '00:00:00',
+			Days TEXT    DEFAULT '日月火水木金土',
+			Cnt  INTEGER DEFAULT -1
+		)
+	"}
+	
+	sql_q tmp
+	sql_q "SELECT * From TSchedule", schedule
+	
+	sql_q "CREATE TABLE TFailure (Id INTEGER PRIMARY KEY, Pred BOOLEAN DEFAULT FALSE)"
+	sql_q "CREATE TABLE TConfig  (Id INTEGER PRIMARY KEY, Key, Value)"
+	
+	sql_q "BEGIN"
+	
+	// for manager
+	category = "Window"
+	keys = "ClientSize.X", "ClientSize.Y", "Pos.X", "Pos.Y"
+	vals = 768,            320,            100,     100
+	foreach keys
+		keys(cnt) = category + "." + keys(cnt)
+		sql_q "INSERT INTO TConfig(Key, Value) VALUES(" + prm_text(keys(cnt)) + ", " + prm_i(vals(cnt)) + ")"
+	loop
+	
+	keys = "Font.Family", "Font.Size", msgothic
+	vals = 13
+	sql_q "INSERT INTO TConfig(Key, Value) VALUES(" + prm_text(keys(0)) + ", " + prm_text(keys(2)) + ")"
+	sql_q "INSERT INTO TConfig(Key, Value) VALUES(" + prm_text(keys(1))   + ", " + prm_i(vals) + ")"
+	
+	category = "Listview.Column"
+	keys = sql_collist(",", schedule)
+	split keys, ",", keys
+	
+	foreach keys
+		tmp = category + "." + keys(cnt) + ".Text"
+		sql_q "INSERT INTO TConfig(Key, Value) VALUES(" + prm_text(tmp) + ", " + prm_text(keys(cnt)) + ")"
+	loop
+	
+	vals = 768 / length(keys)		// カラムの幅 (均等配分)
+	foreach keys
+		tmp  = category + "." + keys(cnt) + ".Size"
+		sql_q "INSERT INTO TConfig(Key, Value) VALUES(" + prm_text(tmp) + ", " + prm_i(vals) + ")"
+	loop
+	
+	sql_q "COMMIT"
+	
+	return
+	
+

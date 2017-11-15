@@ -1,0 +1,36 @@
+#include "../StrBuilder.hsp"
+
+// サンプル
+
+	mes "StrBuilder sample"
+	
+	// StrBuilder インスタンス sb を構築
+	StrBuilder_new sb
+	
+	// *_append thismod, str : 文字列 str を末尾に連結する
+	StrBuilder_append sb, "Hello, world!\n"
+	
+	// *_append_v thismod, var : 文字列変数 var の内容を末尾に連結する (add より速い)
+	sGreet = "Good Evening, world!\n"
+	StrBuilder_append_v sb, sGreet
+	
+	// *_copy_to thismod, var : 内容を文字列型変数 var に書き込む
+	StrBuilder_copy_to sb, buf
+	mes buf
+	
+	// *_erase_back thismod, N : 末尾の N バイトを取り除く
+	StrBuilder_erase_back sb, 8
+	StrBuilder_append sb, "you!"
+	
+	StrBuilder_print sb
+	stop
+	
+#module
+
+// *_print thismod : 内容を mes する
+#deffunc StrBuilder_print var self,  local buf
+	StrBuilder_dup self, buf
+	mes buf
+	return
+
+#global

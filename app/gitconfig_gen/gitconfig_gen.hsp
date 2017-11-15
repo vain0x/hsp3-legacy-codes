@@ -1,0 +1,168 @@
+
+#define global app_name "gitconfig_gen"
+#packopt name app_name
+#packopt hide 1
+
+	gsel , -1
+	user_name = sysinfo(1)
+	home_dir = "C:\\Users\\" + user_name
+	git_dir = "C:\\Program Files\\Git"
+	gitconfig_path = home_dir + "\\.gitconfig"
+	sdim mail_addr
+	sdim editor_path
+	sdim gitconfig_text
+	gosub *l_init_screen
+	stop
+	
+*l_init_screen
+	title app_name
+	width 370, 250
+	hsvcolor , , 245 : boxf : color
+	
+	font msgothic, 12
+	objmode objmode_usefont
+	objsize 24, 24
+	
+	pos 10, 10
+	mes "ユーザ名 (必須、半角のみ、公開されます、変更可):"
+	input user_name, 200, 24
+	
+	pos 10, 60
+	mes "メールアドレス (必須、公開されます、変更可):"
+	input mail_addr, 200, 24
+	
+	pos 10, 110
+	mes "エディタ(GreenPad等)の実行ファイル(exe)の位置 (必須):"
+	input editor_path, 320, 24
+	oid_editor_path = stat
+	
+	pos ginfo_winx - 35, 120
+	button gosub "...", *l_find_editor
+	
+	pos 10, 160
+	mes "Gitのフォルダの位置 (任意):"
+	input git_dir, 320, 25
+	oid_git_dir = stat
+	
+	objsize 120, 24
+	pos ginfo_winx - 130, ginfo_winy - 34
+	button gosub "完了", *l_complete
+	
+	gsel , 1
+	return
+	
+*l_find_editor
+	dialog "exe", 16, "テキストエディタ"
+	if (stat == 0) { return }
+	editor_path = refstr
+	objprm oid_editor_path, editor_path
+	return
+	
+*l_complete
+	gosub *l_gen_ssh_key
+	gosub *l_gen_config
+	return
+	
+*l_gen_ssh_key
+	if ( dir_exists(git_dir) == 0 ) { return }
+	
+	// make .ssh dir
+	ssh_dir = home_dir + "\\.ssh"
+	;if ( dir_exists(ssh_dir) == 0 ) {
+	;	mkdir ssh_dir
+	;}
+	
+	// run ssh-keygen
+	ssh_keygen_path = git_dir + "\\usr\\bin\\ssh-keygen.exe"
+	exist ssh_keygen_path
+	if ( strsize > 0 ) {
+		exist ssh_dir + "\\id_rsa"
+		if ( strsize < 0 ) {
+			dialog "SSHキーの生成を行います。コンソール画面が表示されるので、Enterキーを数回押してください。", 0, app_name
+			exec ssh_keygen_path
+			dialog "SSHキーの生成が完了しました。", 0, app_name
+		}
+	}
+	return
+
+*l_gen_config
+	user_name = strtrim(user_name, 0, ' ')
+	mail_addr = strtrim(mail_addr, 0, ' ')
+	
+	if ( user_name == "" || mail_addr == "" ) {
+		dialog "ユーザ名、アドレスは必須です。", 1, app_name
+		return
+	}
+	
+	if ( str_is_name_like(user_name) == 0 ) {
+		dialog "ユーザ名は半角のみにすべきです。", 1, app_name
+		return
+	}
+	
+	strrep editor_path, "\\", "/"
+	exist editor_path
+	if ( strsize < 0 ) {
+		dialog "テキストエディタが見つかりません。", 1, app_name
+		return
+	}
+	
+	gosub *l_make_config_text
+	exist gitconfig_path
+	if ( strsize > 0 ) {
+		dialog "Git の設定ファイルがすでにあります。上書きしますか？", 2
+		if ( stat != 6 ) { return }
+	}
+	notesel gitconfig_text
+	notesave gitconfig_path
+	noteunsel
+	dialog "設定ファイルの作成に成功しました。", 0, app_name
+	return
+
+*l_make_config_text
+	gitconfig_text = {"
+[user]
+	\tname = '"} + user_name + {"'
+	\temail = '"} + mail_addr + {"'
+[core]
+	\teditor = '"} + editor_path + {"'
+	\tautocrlf = true
+	\tquotepath = false
+[push]
+	\tdefault = simple
+[alias]
+	\tgit = !git
+	\tco = checkout
+	\tcob = checkout -b
+	\ta = add
+	\tci = commit --verbose
+	\tb = branch --verbose
+	\ts = status --short --branch
+	\tdi = diff
+	\trb = rebase
+	\trbi = rebase --interactive
+	\tmg = merge --edit
+	"}
+	return
+
+#module
+
+#defcfunc dir_exists str path,  local dummy
+	dirlist dummy, path, 5
+	return (stat > 0)
+
+#defcfunc char_is_alphanum int ch
+	return ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z') || ('0' <= ch && ch <= '9')
+
+#defcfunc char_is_name_like int ch
+	return char_is_alphanum(ch) || ch == ' ' || ch == '_' || ch == '@'
+
+#defcfunc str_is_name_like var s,  local ok
+	ok = 1
+	repeat strlen(s)
+		if (char_is_name_like(peek(s, cnt)) == 0) {
+			ok = 0 : break
+		}
+	loop
+	return ok
+
+#global

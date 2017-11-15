@@ -1,0 +1,242 @@
+// plmak - lex
+
+#ifndef IG_PLMAK_LEX_HSP
+#define IG_PLMAK_LEX_HSP
+
+// 字句解析
+// @ スクリプトを受け取り、文字列を字句に分解する。
+// @ 出力 tklist_lex の説明：
+// @	(0) : 字句を表現する文字列のリスト。スクリプトから抜粋
+// @	(1) : ↑の字句の種類を表すリスト。
+
+#include "abdata/abdata/all.as"
+
+#module m_plmak_lex
+
+#include "plmak_inh.hsp"
+#include "plmak_ctype.hsp"
+
+// @static var lxerr	// 最後に起きたエラーの LxErr_* を持つ変数
+
+//------------------------------------------------
+// 字句解析
+// 
+// @prm tklist_lex : 字句リスト
+// @prm script     : スクリプト文字列
+//------------------------------------------------
+#deffunc plmak_lex array tklist, str script_,  local script, local idx, local lenSrc, local tkstr, local tklen, local tktype
+	script = script_
+	idx    = 0
+	lenSrc = strlen(script)
+	
+	lxerr  = LxErr_None
+	
+	dim tklist
+	repeat 2 : tklist(cnt) = new_list() : loop
+	
+	// 字句ごとに分解する
+	repeat
+	;	if ( idx >= lenSrc ) { break }	// 終了
+		
+		// 次の字句を取り出す
+		plmak_lex_getTokenNext script, idx, tkstr
+		tktype = stat
+	;	logmes dbgpair( tkstr, tklen )
+		if ( tktype == LxTkType_Error ) { break }
+		
+		// 字句リストに追加
+		list_add tklist(0), tkstr
+		list_add tklist(1), tktype
+		
+		idx += strlen(tkstr)
+		if ( tktype == LxTkType_Term ) { break }
+	loop
+	
+	if ( lxerr ) { return lxerr }
+	
+	// デバッグ出力
+#ifdef _plmak_DebugOut
+	logmes "＠スクリプト\n" + script + "\n"
+	logmes "＠字句解析"
+	repeat List_size( tklist(0) )
+		tkstr  = List_get(tklist(0), cnt)
+		tktype = List_get(tklist(1), cnt)
+		logmes "#" + cnt + " " + dbgpair(tkstr, tktype)
+	loop
+	logmes ""
+#endif
+	
+	return 0
+	
+//------------------------------------------------
+// 次のトークンを取り出す
+//------------------------------------------------
+#define SkipBlank idx += CntSpaces( script, idx )
+
+#deffunc plmak_lex_getTokenNext var script, var idx, var tkstr,  local c
+
+	// 空白を飛ばす
+	gosub *LSkipBlank_in_getTokenNext
+	
+;	c = peek( script, idx )
+	
+	if ( isNull(c) ) { tkstr = "" : return LxTkType_Term }
+	
+	// 10進数
+	if ( isDigit(c) ) {
+		tkstr = plmak_cutToken_numeric( script, idx, 10 )
+		return LxTkType_Int
+		
+	// その他 ( 演算子、記号 )
+	} else  {
+		switch ( c )
+			case '+': case '-': case '*': case '/': case '%':
+				tkstr = strmid( script, idx, 1 )
+				return LxTkType_Operator
+				
+			case '(': tkstr = "(" : return LxTkType_ParenL
+			case ')': tkstr = ")" : return LxTkType_ParenR
+				
+				/*
+			case ':':
+				if ( peek(script, idx + 1) == '=' ) {
+					tkstr = ":="
+					return LxTkType_Operator
+				}
+				swbreak
+				//*/
+				
+		;	case ',': tkstr = "," : return LxTkType_Comma
+		;	case ';': tkstr = ';' : return LxTkType_Splitter
+			
+			default:
+				lxerr = LxErr_UnknownChar
+				return LxTkType_Error
+		swend
+	}
+	
+	return LxTkType_Error
+	
+*LSkipBlank_in_getTokenNext
+	repeat
+		c = peek(script, idx)
+		if ( isBlank(c) == false ) { break }
+		idx ++
+	loop
+	return
+	
+//------------------------------------------------
+// 範囲の違う「トークン」を切り出して返す
+// 
+// @ ident も numeric もこのマクロから生成できるが、
+// @	とてもわかりにくいので生書きした。
+//------------------------------------------------
+/*
+#define FTM_cutToken(%1, %2 = 0) \
+	i = iOffset						:\
+	repeat							:\
+		c = peek( sSrc, i )			:\
+		if ( (%1) == false || c == 0 ) { break } \
+		if (%2) { i ++ }			\
+		i ++						:\
+	loop							:\
+	return strmid( sSrc, iOffset, i - iOffset )
+//*/
+	
+//------------------------------------------------
+// 識別子を切り出して返す
+//------------------------------------------------
+#defcfunc plmak_cutToken_ident var sSrc, int iOffset
+	i = iOffset
+	repeat
+		c = peek( sSrc, i )
+		if ( ( isIdent(c) || isSJIS1st(c) ) == false || c == 0 ) { break }
+		if ( isSJIS1st(c) ) { i ++ }
+		i ++
+	loop
+	return strmid( sSrc, iOffset, i - iOffset )
+	
+//------------------------------------------------
+// 数字列<radix>を切り出して返す
+// 
+// @! 2 <= N <= 32
+//------------------------------------------------
+#defcfunc plmak_cutToken_numeric var sSrc, int iOffset, int radix
+	i = iOffset
+	repeat
+		c = peek( sSrc, i )
+		if ( ( isNumeric(c, radix) || c == '_' ) == false || c == 0 ) { break }
+		i ++
+	loop
+	return strmid( sSrc, iOffset, i - iOffset )
+	
+//------------------------------------------------
+// 数字列を切り出して返す
+//------------------------------------------------
+#define global ctype plmak_cutToken_dgt(%1, %2 = 0) plmak_cutToken_numeric((%1), (%2), 10)
+#define global ctype plmak_cutToken_hex(%1, %2 = 0) plmak_cutToken_numeric((%1), (%2), 16)
+#define global ctype plmak_cutToken_bin(%1, %2 = 0) plmak_cutToken_numeric((%1), (%2),  2)
+
+//------------------------------------------------
+// 演算子
+//------------------------------------------------
+
+//##############################################################################
+//        字句タイプ判定
+//##############################################################################
+
+//------------------------------------------------
+// (radix)進記数法で使用できる文字か
+// 
+// @! 2 <= N <= 32
+//------------------------------------------------
+#defcfunc isNumeric int sSrc, int radix
+	if ( ( 2 <= radix && radix <= 32 ) == false || ( isDigit(sSrc) == false && isAlpha(sSrc) == false ) ) {
+		return false
+	}
+	
+	// 小文字にする
+	if ( isAlphaUp(sSrc) ) {
+		c = sSrc - 'A' + 'a'
+	} else {
+		c = sSrc
+	}
+	
+	// 10進数までなら数字のみ使う
+	if ( radix <= 10 ) {
+		return ( radix > (c - '0') )
+		
+	// それ以上ならアルファベットも使う
+	} else {
+		return ( radix > (c - 'a' + 10) )
+	}
+;	return
+	
+//##############################################################################
+//        エラー文字列
+//##############################################################################
+//------------------------------------------------
+// エラー情報を取得
+//------------------------------------------------
+#defcfunc GetLxErrStr int error
+	switch ( error )
+		case LxErr_None:        return "(正常)"
+		case LxErr_UnknownChar: return "解釈できない文字があった"
+		default:
+			return "(謎のエラー)"
+	swend
+	
+#global
+
+//##############################################################################
+//                サンプル・スクリプト
+//##############################################################################
+#if 0
+
+	plmak_lex tklist, "\t42 + 1_2_3 / + *"
+	plmak_lex tklist, "(1 + 2) * 3"
+	stop
+	
+#endif
+
+#endif

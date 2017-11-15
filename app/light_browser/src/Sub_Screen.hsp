@@ -1,0 +1,71 @@
+// LightBrowser - Screen
+
+*CreateMainWindow
+	// RECT を読み込む
+	Rect(0)    = int( IniLoad("Window", "left"  ) ) : Rect(0) = Rect(0) * (Rect(0) > 0)
+	Rect(1)    = int( IniLoad("Window", "top"   ) ) : Rect(1) = Rect(1) * (Rect(1) > 0)
+	NowSize(0) = int( IniLoad("Window", "SizeX" ) )
+	NowSize(1) = int( IniLoad("Window", "SizeY" ) )
+	
+	screen wID_Main, ginfo(20), ginfo(21), 2, Rect(0), Rect(1), NowSize(0), NowSize(1)
+	hMain =  hwnd
+	SetStyle hwnd, -16, 0x00040000 | 0x00010000		// ウィンドウ可変 ＆ 最大化Box
+	
+	syscolor 15 : boxf : color
+	
+	// オブジェクトを設置
+	objmode 2, 0
+	pos   1,  1 : input  address, ginfo(12) -   2, 24 : oID_Address = stat
+	pos 325, 25 : input FindText, ginfo(12) - 326, 24 : oID_Google  = stat
+	hAddress = objinfo(oID_Address, 2)
+	hGoogle  = objinfo(oID_Google , 2)
+	
+	objmode 1, 1 : objsize 80, 23
+	pos   1, 25 : button gosub "戻る", *GoBack
+	pos  82, 25 : button gosub "進む", *GoForward
+	pos 163, 25 : button gosub "新規タブ", *OpenTab
+	pos 244, 25 : button gosub "タブ削除", *CloseTab
+	
+	// タブコントロール
+	pos   1,  BarHeight
+	CreateTab mTab, ginfo(12), ginfo(13) - BarHeight, wID_TabStart
+	hTab = stat
+	return
+	
+*OpenTab	// タブを開く
+	if ( getkey(16) ) {		// Shift が押されていたら、コピーして開く
+		NewTabActive GetAddress( actTS )
+	} else {
+		NewTabActive		// 空白を開く
+	}
+	if ( stat < 0 ) { return -1 }
+	gsel wID_Main, 1
+	return 0
+	
+*CloseTab	// タブを閉じる
+	DeleteTab mTab, actwin
+	ShowTab   mTab, actwin -1	// 前のタブをアクティブにする
+	SetTabStr actTS				// タイトル文字列を変更
+	
+	// タブがあるかどうか調べる
+	sendmsg hTab, 0x1304, 0, 0		// TCM_GETITEMCOUNT
+	if ( stat <= 0 ) {
+		gsel wID_TabStart, -1		// 無ければ消す
+	}
+	return
+	
+//######## メニュー作成 ########################################################
+
+#enum CMD_NONE = 0		// なにもしない
+#enum CMD_RETURN		// 元の大きさに戻す
+#enum CMD_QUIT			// 終了
+
+*CreateShortMenu
+	hTrayMenu = CreatePopupMenu()
+		AppendMenu hTrayMenu, 0, CMD_RETURN, "復元(&R)"
+		AppendMenu hTrayMenu, 0, CMD_QUIT,   "ブラウザの終了(&Q)"
+		AddSeparator hTrayMenu				//──────
+		AppendMenu hTrayMenu, 0, CMD_NONE,   "なにもしない"
+	
+	return
+	

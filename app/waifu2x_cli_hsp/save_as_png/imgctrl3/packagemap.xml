@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fileset>
+
+<file>
+   <path>imgctl3.as</path>
+   <type>HSP</type>
+</file>
+<file>
+   <path>imgctl3_sample1.hsp</path>
+   <type>HSP</type>
+</file>
+<file>
+   <path>imgctl3_sample2.hsp</path>
+   <type>HSP</type>
+</file>
+<file>
+   <path>imgctl3_sample3.hsp</path>
+   <type>HSP</type>
+</file>
+
+</fileset>

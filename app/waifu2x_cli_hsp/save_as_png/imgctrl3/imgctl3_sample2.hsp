@@ -1,0 +1,110 @@
+/*--------------------------------------------------------------------
+	imgctl.dll Sapmle Code for HSP3 (2006/10/14)
+	by Kpan
+	http://lhsp.s206.xrea.com/
+
+	imgctl.dll
+	by ルーチェ (ruche)
+	http://www.ruche-home.net/
+
+	HSPのPCKFILE機能を使って実行ファイルに埋め込んだPNGファイルを
+	表示するサンプルです。実行ファイル自動作成より実行ファイルを
+	生成してください。(PNGファイルは用意していません。)
+--------------------------------------------------------------------*/
+
+;	PACKFILE機能
+#epack "sample.png"
+
+
+#include "imgctl3.as"
+
+
+/*--------------------------------------------------------------------
+	Windows API
+--------------------------------------------------------------------*/
+#uselib "user32"
+#cfunc GetSystemMenu "GetSystemMenu" int, nullptr
+#func InsertMenu "InsertMenuA" int, int, int, int, str
+
+#define ctype LOWORD(%1) (%1 & $FFFF)
+
+
+/*--------------------------------------------------------------------
+	メイン
+--------------------------------------------------------------------*/
+	title "imgctl.dll Sapmle Code for HSP3"
+
+;	imgctl.dll ファイルの確認
+	exist "imgctl.dll"
+	if strsize = -1 : dialog "imgctl.dll ファイルが見つかりません。", 1, "エラー" : end
+
+;	ウィンドウメッセージ
+	onexit *exit
+	oncmd gosub *syscommand, $112
+
+;	バージョン情報用システムメニュー
+	hSystemMenu = GetSystemMenu (hwnd)
+		InsertMenu hSystemMenu, 0, $400, 1, "バージョン情報(&A)..."
+		InsertMenu hSystemMenu, 1, $400 | $800, , ""
+
+	button "表示", *load
+
+	stop
+
+
+/*--------------------------------------------------------------------
+	WM_SYSCOMMAND (バージョン情報表示)
+--------------------------------------------------------------------*/
+*syscommand
+	if wparam = 1 {
+		ImgctlVersion
+		version = LOWORD (stat)
+		dialog "\nimgctl.dll Sapmle Code for HSP3\nCopyright (C) 2006 Kpan\n\nimgctl.dll v"+version / 100+"."+version \ 100+"\nby ルーチェ (ruche)", , "バージョン情報"
+	}
+	return
+
+
+/*--------------------------------------------------------------------
+	画像読み込み
+--------------------------------------------------------------------*/
+*load
+;	ファイルサイズを取得
+	exist "sample.png"
+	if strsize = -1 : dialog "ファイルが見つかりません。", 1, "エラー" : stop
+	filesize = strsize
+
+;	メモリ上に読み込み
+	sdim filebuf, filesize
+	bload "sample.png", filebuf
+
+;	直前のDIBデータハンドルを開放
+	if hDib != 0 : DeleteDIB hDib
+
+;	メモリ上の画像データからDIBデータハンドルを取得
+	MtoDIB varptr (filebuf), filesize
+	hDib = stat
+
+;	画像情報(画像サイズ)を取得
+	dim BITMAPINFOHEADER, 10
+	HeadDIB hDib, varptr (BITMAPINFOHEADER)
+
+;	ちょっくら画像サイズを１/２
+	imagesize.0 = BITMAPINFOHEADER.1 / 2
+	imagesize.1 = BITMAPINFOHEADER.2 / 2
+	ResizeDIB hDib, imagesize.0, imagesize.1
+
+;	自ウィンドウに描画
+	DIBtoDC hdc, 0, 40, imagesize.0, imagesize.1, hDib, 0, 0, $CC0020
+	redraw
+
+	stop
+
+
+/*--------------------------------------------------------------------
+	終了
+--------------------------------------------------------------------*/
+*exit
+;	DIBデータハンドルを開放
+	if hDib != 0 : DeleteDIB hDib
+
+	end

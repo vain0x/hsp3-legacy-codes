@@ -1,0 +1,657 @@
+// X Eaters
+
+// ショート用
+
+// 唯食者たちにえさをやろう！
+// でも、彼らは自分の好みのえさしか食べない。
+// 間違えたら怒られるぞ。
+// しかも、彼らは特に気まぐれさん達。
+// 好みがコロッと変わっちゃうときもあるよ。
+
+;#packopt name "XEaters"
+;#packopt hide 1
+
+#if 0
+ #include "hsptv.as"
+#else
+ #define hsptv_up(%1,%2,%3)         logmes "hsptv に送信"
+ #define hsptv_getrank(%1,%2,%3,%4) logmes "ランキング取得" : dim %1 : sdim %2 : sdim %3
+#endif
+
+// 定数
+#const WINX 640
+#const WINY 480
+
+#const MAX_XEATERS     4
+#const MAX_CHARGE_FOOD 5
+#const MAX_RANK        15
+
+#const SPEED_FOOD_SPAN 1		// 餌が1フレームで移動する距離
+
+#const FOODPOS_DEFAULT  WINX / 2
+#const FOODSPAN_DEFAULT WINX / 5
+#const FOODSPEED_DEFAULT 2
+
+#const HEIGHT_FOOD 10
+
+#enum WINMODE_NONE = 0
+#enum WINMODE_TITLE
+#enum WINMODE_RANKING
+#enum WINMODE_GAME
+#enum WINMODE_GAMEOVER
+#enum WINMODE_INPUT_RANKDATA
+
+#enum FOOD_DUST = 0xF0000000	// ゴミ餌
+
+#define SetColor_dust color 0xCC, 0xCC, 0xCC
+
+//------------------------------------------------
+// 座標やサイズの定数
+//------------------------------------------------
+#const POSX_XEATER_MOUSE 64
+
+//------------------------------------------------
+// ウィンドウId の定数
+//------------------------------------------------
+#enum IDW_MAIN = 0
+#enum IDW_RANKIN
+
+//------------------------------------------------
+// マクロ
+//------------------------------------------------
+#define SetNormalFont font msgothic, 28
+
+#ifndef __UserDefHeader__
+ #const true  1
+ #const false 0
+ #const success 1
+ #const failure 0
+ #define color32(%1) color (%1) & 0xFF, ( (%1) >> 8 ) & 0xFF, ( (%1) >> 16 ) & 0xFF
+#endif
+
+#define ctype IsEatenPos(%1) %1 <= 0
+#define ctype IsDustFood(%1) %1 == FOOD_DUST
+
+#undef if
+#define global ctype if(%1) if@hsp %1
+
+//##############################################################################
+//                メイン・ルーチン
+//##############################################################################
+;	repeat MAX_RANK
+;		hsptv_up cnt, "", 0x1000
+;	loop
+	
+	gosub *LColors_init@
+	gosub *LInitialize
+	
+*main
+	gosub *LSetVariables
+	gosub *LSetWindowForTitle
+	
+	gsel , 1
+	onkey *LKey
+	stop
+	
+//------------------------------------------------
+// キー入力ハンドラ
+//------------------------------------------------
+*LKey
+	if ( winmode == WINMODE_TITLE ) {
+		if ( iparam == 13 ) {				// Enter
+			goto *mainlp
+			
+		} else : if ( wparam == 0x7B ) {	// F12
+			gosub *LSetWindowForRanking
+		}
+		
+	} else : if ( winmode == WINMODE_RANKING ) {
+		if ( iparam == 13 ) {				// Enter
+			gosub *LSetWindowForTitle
+		}
+		
+	} else : if ( winmode == WINMODE_GAMEOVER ) {
+		if ( iparam == 13 ) {				// Enter
+			goto *main
+		}
+	}
+	stop
+	
+//------------------------------------------------
+// メインループ
+//------------------------------------------------
+*mainlp
+	winmode = WINMODE_GAME
+	onkey false
+	
+;	repeat 2
+;		gosub *LGameSpeedUp
+;	loop
+	
+	repeat
+		repeat
+			if ( ginfo(2) >= 0 ) { break }
+			await 34
+		loop
+		
+		repeat foodSpeed
+			gosub *LMoveFood			// 餌を動かす
+		loop
+		
+		gosub *LRedrawMain			// 再描画
+		gosub *LCheckKeyDown		// キー入力受付
+		if ( bGameOver ) { break }
+		
+		await 17
+	loop
+	
+	// ゲーム終了
+	gosub *LSetWindowForGameOver
+	onkey *LKey
+	
+	// ランクインしたかどうかを調べる
+	hsptv_up -1, ""						// 最新データの取得
+	repeat MAX_RANK
+		hsptv_getrank rankScore, rankName, rankComment, cnt
+		if ( rankScore <= score ) {
+			rank = cnt
+			gosub *LInputRankData
+			break
+		}
+	loop
+	
+	stop
+	
+//##############################################################################
+//        サブルーチン群
+//##############################################################################
+//------------------------------------------------
+// 初期化
+//------------------------------------------------
+*LInitialize
+	randomize
+	
+	// ランキングデータ入力画面
+	sdim comment			// ランキング・コメント
+	
+	screen IDW_RANKIN, 200, 80, 14, ginfo(12) / 2 - 100, ginfo(13) / 2 - 40
+	title "XEaters - Rankin"
+	syscolor 15 : boxf : color
+	
+	objsize 60, 20
+	pos  60,  50 : button gosub "ＯＫ",       *LUpRankData
+	pos 130,  50 : button gosub "キャンセル", *LCancelRankData
+	
+	objmode 2
+	pos  10,  20 : input comment, 180, 25, 24
+	
+	sysfont 17
+	pos   5,   5 : mes "コメントを入力してください。"
+	
+	// メイン画面
+;	screen IDW_MAIN, WINX, WINY, 2
+	gsel , -1
+	title "XEaters ～ 唯食者たち ～"
+	return
+	
+//------------------------------------------------
+// 変数を用意する
+//------------------------------------------------
+*LSetVariables
+;	dim crefType,  MAX_XEATERS
+	dim cidXEater, MAX_XEATERS
+	dim cidFood,   MAX_CHARGE_FOOD
+	dim posFood,   MAX_CHARGE_FOOD
+;	dim spdFood,   MAX_CHARGE_FOOD
+	dim iFood				// 現在の餌番号
+	dim iBefFood			// 前の餌番号
+	dim iNxtFood			// 次の餌番号
+	dim score
+	dim bGameOver
+	dim targetEaterId		// えさやり対象の生物の Id
+;	sdim comment			// ランキング・コメント
+	dim  rankScore
+	sdim rankName
+	sdim rankComment
+	
+	eatingID   = -1			// もぐもぐしている XEater Id
+	crefType   = 0x0000FF, 0x00FF00, 0xFF0000, 0xFFFFFF	// RGB(255, 0, 0), RGB(0, 255, 0), RGB(0, 0, 255), RGB(255, 255, 255)
+	winmode    = WINMODE_TITLE
+	foodSpeed  = FOODSPEED_DEFAULT
+	foodSpan   = FOODSPAN_DEFAULT
+	
+	repeat MAX_XEATERS
+		cidXEater(cnt) = cnt
+	loop
+	
+	gosub *LSetDefaultFood
+	return
+	
+//------------------------------------------------
+// 再描画
+//------------------------------------------------
+*LRedrawMain
+	redraw 2
+	
+	gosub *LDrawBackground	// 背景
+	gosub *LDrawMembers		// 唯食者たち
+	gosub *LDrawFood		// えさ
+	gosub *LDrawScore		// カウンタ
+	
+	redraw 1
+	return
+	
+//------------------------------------------------
+// キー入力を受け付ける
+//------------------------------------------------
+#const MAX_XEATERS_minus_1 MAX_XEATERS - 1
+*LCheckKeyDown
+	stick keydown
+	if ( keydown & 2 ) { targetEaterId = limit(targetEaterId - 1, 0, MAX_XEATERS_minus_1) }
+	if ( keydown & 8 ) { targetEaterId = limit(targetEaterId + 1, 0, MAX_XEATERS_minus_1) }
+	
+	// ゴミ餌を弾く
+	if ( keydown & 16 ) {
+		if ( IsDustFood( cidFood(iFood) ) ) {
+			gosub *LAddNewFood
+			
+		// 有効な餌を弾こうとした => 失敗
+		} else {
+;			bGameOver = true
+			score -= 4
+		}
+	}
+	return
+	
+//------------------------------------------------
+// タイトル画面を用意する
+//------------------------------------------------
+*LSetWindowForTitle
+	winmode = WINMODE_TITLE
+	redraw 2
+	
+	font "", 86
+	color : boxf
+	color ,  255 : pos  40,  40 : mes "XEaters"
+	font "", 56
+	color ,, 255 : pos 200, 136 : mes "～唯食者たち～"
+	
+	color 192, 192
+	pos 44, 360 : mes "Press [Enter] to begin!"
+	
+	SetNormalFont; , 8
+	pos 100, 440 : mes "Press [F12] to see ranking."
+	
+;	SetNormalFont
+	color 255
+	pos 60, 260 : mes "Rule"
+	
+	color 128, 255, 192
+	pos 140, 250 : mes "↑ Up"
+/*	pos 160, 280:*/mes "↓ Down"
+	
+	redraw 1
+	return
+	
+//------------------------------------------------
+// ゲームオーバー画面
+//------------------------------------------------
+*LSetWindowForGameOver
+	winmode = WINMODE_GAMEOVER
+	
+	redraw 2
+	color : boxf : color 255
+	font "", 112
+	pos 40, 80 : mes strf("Game Over...\n   %3d", score)
+	
+	font "", 50
+	color 192, 192, 192
+	pos 50, 360 : mes "Press [Enter] to continue..."
+	
+	redraw 1
+	return
+	
+//------------------------------------------------
+// ランキング画面
+//------------------------------------------------
+#const HSVCOLOR_H_FRAME (360 / MAX_RANK)
+*LSetWindowForRanking
+	winmode = WINMODE_RANKING
+	hsptv_up -1, ""				// 最新データの取得
+	redraw 2
+	
+	color : boxf : color 255, 255, 255
+	
+;	SetNormalFont
+	font msgothic, (WINY - 80) / MAX_RANK
+	pos 20, 10 : mes "Ranking"
+	pos 30, 40
+	
+	repeat MAX_RANK
+		hsvcolor HSVCOLOR_H_FRAME * cnt, 255, 255
+		hsptv_getrank rankScore, rankName, rankComment, cnt
+		mes strf("#%2d [%3d] %12s < %s", cnt + 1, rankScore, rankName, rankComment)
+	loop
+	
+	SetNormalFont
+	color 192, 192, 192
+	pos 100, ginfo_cy + 10
+	mes "Press [Enter] to back."
+	
+	redraw 1
+	return
+	
+//------------------------------------------------
+// ランキング入力画面
+//------------------------------------------------
+*LInputRankData
+	winmode = WINMODE_INPUT_RANKDATA
+	gsel IDW_RANKIN : title strf("XEaters - Rank(%2d)", rank + 1)
+	gsel IDW_RANKIN, 1
+	return
+	
+//------------------------------------------------
+// ランキングを入力する
+//------------------------------------------------
+*LUpRankData
+	hsptv_up score, comment
+	
+	gosub *LShowMainWindow			// メイン画面をトップに押しだし、ランキング入力画面を隠す
+	gosub *LSetVariables			// 変数の値を初期化
+	gosub *LSetWindowForRanking		// タイトル画面に移動
+	return
+	
+//------------------------------------------------
+// ランキング入力を拒否する
+//------------------------------------------------
+*LCancelRankData
+	gosub *LShowMainWindow
+	
+	winmode = WINMODE_GAMEOVER
+	return
+	
+//------------------------------------------------
+// メイン画面をトップに押し出す
+//------------------------------------------------
+*LShowMainWindow
+	gsel IDW_RANKIN, -1
+	gsel , 1
+	return
+	
+//##############################################################################
+//        ミニ・サブルーチン群
+//##############################################################################
+//------------------------------------------------
+// 餌を移動させる
+//------------------------------------------------
+*LMoveFood
+	repeat MAX_CHARGE_FOOD
+		posFood(cnt) -= SPEED_FOOD_SPAN	; * spdFood(cnt)
+	loop
+	
+	// 当たり判定
+	if ( IsEatenPos( posFood(iFood) ) ) {
+		gosub *LEat
+		
+		if ( stat == failure ) {
+			bGameOver = true
+		}
+	}
+	return
+	
+//------------------------------------------------
+// 餌を食べさせる
+//------------------------------------------------
+*LEat
+	tempCId = cidFood(iFood)
+	
+	// ゴミ餌を食べると失敗
+	if ( IsDustFood( tempCId ) ) {
+		return failure
+	}
+	
+	tempCRef = crefType( tempCId )
+	
+	// 好みでない色 or ゴミなら失敗
+	if ( tempCRef != crefType( cidXEater(targetEaterId) ) ) {
+		return failure
+		
+	// 成功
+	} else {
+		eatingID = targetEaterId
+		score ++
+	}
+	
+	gosub *LAddNewFood
+	gosub *LEventHappen
+	if ( stat ) {		// なにかが起こった
+		gosub *LSetBreakTime
+	}
+	
+	return success
+	
+//------------------------------------------------
+// 何らかのイベントが起きる？
+//------------------------------------------------
+*LEventHappen
+	// (score によっては) ゲーム速度が上がるかもしれない
+	if ( score \ 10 == 0 && rnd(foodSpeed) == 0 ) {
+		gosub *LFoodSpeedUp
+;		return false
+		
+	// 位置が変わるかもしれない
+	} else : if ( rnd(24) == 0 ) {
+		gosub *LShuffleXEaterPosition
+		
+	// 好みが変わるかもしれない
+	} else : if ( rnd(32) == 0 ) {
+		gosub *LChangeBaseColorOne
+		
+	// 全員の好みが変わるかもしれない
+	} else : if ( rnd(64) == 0 ) {
+		gosub *LChangeBaseColorAll
+		
+	// なにも起こらない
+	} else {
+		return false
+	}
+	
+	return true
+	
+//------------------------------------------------
+// メイン画面の背景を描画する
+//------------------------------------------------
+#const LowerFramePosY WINY - 60
+*LDrawBackground
+	
+	color : boxf
+	color 192, 192, 192 : boxf , LowerFramePosY;, WINX, WINY
+	color 255, 255, 255
+	
+	return
+	
+//------------------------------------------------
+// 唯食者たちを描画する
+//------------------------------------------------
+*LDrawMembers
+	repeat MAX_XEATERS
+		cnt_mul_100 = 100 * cnt
+		
+		color32 crefType( cidXEater(cnt) )
+		
+		y = 30 + cnt_mul_100
+		circle 40, y, 104, y + 64
+		
+		color
+		pos 50, 36 + cnt_mul_100 : mes "- -"
+		if ( eatingID == cnt ) {
+			pos POSX_XEATER_MOUSE, 68 + cnt_mul_100 : mes  "~"
+		} else {
+			pos POSX_XEATER_MOUSE, 56 + cnt_mul_100 : mes  "o"
+		}
+	loop
+	
+	return
+	
+//------------------------------------------------
+// 餌を描画
+//------------------------------------------------
+#const HEIGHT_FOODPIPE (HEIGHT_FOOD + 2)
+*LDrawFood
+	// 管を描画する
+	color 192, 192, 225
+	repeat 2
+		y = 66 + 100 * targetEaterId + (cnt * HEIGHT_FOODPIPE)
+		line 74, y, WINX, y
+	loop
+	
+	// えさを描画
+	y = 67 + 100 * targetEaterId
+	
+	repeat MAX_CHARGE_FOOD
+		
+		tempId  = cnt
+		tempCId = cidFood(tempId)
+		
+		x = posFood( tempId ) + POSX_XEATER_MOUSE
+		if ( x > WINX ) {
+			continue
+		}
+		
+		// ゴミ餌
+		if ( IsDustFood(tempCId) ) {
+			SetColor_dust
+			repeat 2
+				circle x, y, x + 28, y + HEIGHT_FOOD + 1
+				x += 16
+			loop
+			
+		// 餌
+		} else {
+			color32 crefType( tempCId )
+			boxf x , y, x + 48, y + HEIGHT_FOOD
+		}
+	loop
+	
+	return
+	
+//------------------------------------------------
+// スコアを描画
+//------------------------------------------------
+#const ScorePosX (WINX - 240)
+#const ScorePosY (WINY -  45)
+*LDrawScore
+	color
+	pos ScorePosX, ScorePosY : mes strf("score : %3d", score)
+	return
+	
+//------------------------------------------------
+// えさを追加する
+//------------------------------------------------
+*LAddNewFood
+	
+	// 食べることの出来る唯食者のIdで選ぶ ( 負数ならなし )
+	tempId = rnd(MAX_XEATERS)
+	
+	// ゴミ餌を発生させる
+	if ( rnd(24) == 0 ) {
+		tempCId = FOOD_DUST
+		
+	// 正常な場合
+	} else {
+		tempCId = cidXEater(tempId)
+	}
+	
+;	spdFood(iFood) = foodSpeed
+	cidFood(iFood) = tempCId
+	posFood(iFood) = posFood(iBefFood) + foodSpan + rnd( foodSpan * rnd(foodSpeed) + 1 )
+	
+	// 次の餌をアクティブにする
+	iBefFood = iFood
+	iFood    = iNxtFood
+	iNxtFood ++
+	if ( iNxtFood >= MAX_CHARGE_FOOD ) {
+		iNxtFood = 0
+	}
+	return
+	
+//------------------------------------------------
+// えさをデフォルトの状態にする
+//------------------------------------------------
+*LSetDefaultFood
+;	dim iFood
+	iBefFood = MAX_CHARGE_FOOD - 1
+	iFood    = 0
+	iNxtFood = 1
+	
+	posFood(iBefFood) = FOODPOS_DEFAULT
+	
+	repeat MAX_CHARGE_FOOD
+		gosub *LAddNewFood			// えさをランダムに追加する( 追加というか、変更 )
+	loop
+	return
+	
+//------------------------------------------------
+// 休憩時間をいれる
+//------------------------------------------------
+*LSetBreakTime
+	repeat 2
+		gosub *LAddNewFood
+	loop
+	return
+	
+//------------------------------------------------
+// 唯食者の立ち位置を変える( シャッフル )
+//------------------------------------------------
+*LShuffleXEaterPosition
+	repeat MAX_XEATERS
+		tempId            = rnd(MAX_XEATERS)
+		tempCId           = cidXEater(tempId)
+		cidXEater(tempId) = cidXEater(cnt)
+		cidXEater(cnt)    = tempCId
+	loop
+	return
+	
+//------------------------------------------------
+// 唯食者のベース好みを変える
+//------------------------------------------------
+*LChangeBaseColorOne
+	gosub *LRandomColorref
+	crefType(targetEaterId) = stat
+	return
+	
+//------------------------------------------------
+// ベース色をすべて変更する
+//------------------------------------------------
+*LChangeBaseColorAll
+	repeat MAX_XEATERS
+		gosub *LRandomColorref
+		crefType(cnt) = stat
+	loop
+	return
+	
+//------------------------------------------------
+// 速度を上げる
+//------------------------------------------------
+*LFoodSpeedUp
+	foodSpeed ++
+	foodSpan += 10 * foodSpeed
+	return
+	
+//##############################################################################
+//      カラー・テーブル
+//##############################################################################
+//------------------------------------------------
+// 色バリエーション・テーブルの初期化
+//------------------------------------------------
+*LColors_init
+	clrVariation = 0xFF0000, 0x00FF00, 0x0000FF, 0xFFFF00, 0xFF00FF, 0x00FFFF, 0xFFFFFF, 0xAA0000, 0x00AA00, 0x0000AA, 0xAAAA00, 0xAA00AA, 0x00AAAA, 0xAAAAAA, 0xFFAA00, 0xAAFF00, 0xAA00FF, 0xFFFFAA, 0xFFAAFF, 0xAAFFFF, 0xFF00AA, 0x00AAFF
+	cntClrVariation = length(clrVariation)
+	return
+	
+//------------------------------------------------
+// 色テーブルからランダムに1つ取り出す
+//------------------------------------------------
+*LRandomColorref
+	return clrVariation( rnd(cntClrVariation) )
+	

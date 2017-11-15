@@ -1,0 +1,127 @@
+// Zplayer - Header
+
+#ifndef IG_ZEOPLAYER_HEADER_AS
+#define IG_ZEOPLAYER_HEADER_AS
+
+// ゲーム用の定数群
+#const global w		0		// 味方
+#const global e		1		// 敵
+#define global ID_YOU	w	// 味方
+#define global ID_EMY	e	// 敵
+
+// 戦闘カードのステータス参照マクロ
+#define global ourDeckPath deckpath;(0)
+#define global emyDeckPath deckpath(1)
+#define global ourCombatStyle combatStyle;(w)
+#define global emyCombatStyle combatStyle(e)
+#define global ourCombatCard combatCard;(w)
+#define global emyCombatCard combatCard(e)
+
+// statements for short
+#define color_graylight hsvcolor ,, 200
+#define color_graydark  hsvcolor ,, 64
+#define color_white hsvcolor ,, 255
+
+//無限ループ
+#define global eternal_begin %teternalloop *%i
+#define global eternal_end %teternalloop goto *%o
+#define global eternal_while(%1) %teternalloop if (%1) { goto *%o }
+
+//ある変数が真になるまで待機する
+#define ctype WaitUntilItBecomesTrue(%1) assert((%1) == false) : eternal_begin : await 7 : eternal_while ((%1) == false) : assert ((%1) == 1) :  %1 --
+
+#const WaitTimeForWhile 60
+
+//ダミーオブジェクト
+//オブジェクトIDの連番を保つため
+#define global PutDummyObject input __dummy@, 0, 0
+
+//Window ID
+#const global wID_Main       0   // メイン画面
+#const global wID_TitleBg    1   // メイン背景
+#const global wID_BattleBg   2   // 小戦闘背景(680*650)
+#const global wID_CardTemp   3   // カード描画用
+#const global wID_CardBack   4   // カード裏面
+#const global wID_CardCoffin 5   // 棺桶
+;#const global wID_wCardPic	 5   // カードの画像
+;#const global wID_eCardPic	(wID_wCardPic + Count_CardsInDeck)
+
+//ウィンドウサイズ (HSPTV用に固定)
+#define global WIN_SIZEX 640
+#define global WIN_SIZEY 480
+
+//ウィンドウのレイアウト
+#const ObjId_GameLogBox 0
+#const SizeX_GameLogBox (WIN_SIZEX - 180)
+#const SizeY_GameLogBox 70
+#const PosX1_GameLogBox 0
+#const PosY1_GameLogBox (WIN_SIZEY - SizeY_GameLogBox)
+
+// カードのレイアウト
+#const SizeX_Card 141// 外枠を含む
+#const SizeY_Card 56
+#const SizeX_CardMinus1 SizeX_Card - 1 //外枠線を描くときの座標指定
+#const SizeY_CardMinus1 SizeY_Card - 1
+
+#const FontSize_CardText 12
+#const Width_CardPadding 3
+#const Width_CardFrame 3// 枠の太さ
+#const SizeX_CardName (SizeX_Card - Width_CardFrame * 2)
+#const SizeY_CardName 15
+#const PosX1_CardName (Width_CardFrame)
+#const PosY1_CardName (Width_CardFrame)
+#const PosX2_CardName (PosX1_CardName + SizeX_CardName)
+#const PosY2_CardName (PosY1_CardName + SizeY_CardName)
+#const SizeX_CardStatus 46
+#const ShiftX_CardStatus SizeX_CardStatus + Width_CardPadding
+#const ShiftY_CardStatus FontSize_CardText + Width_CardPadding
+#const PosX1_CardHP 4 + Width_CardFrame
+#const PosY1_CardHP (PosY2_CardName + Width_CardPadding)
+#const PosX1_CardSP (PosX1_CardHP + ShiftX_CardStatus)
+#const PosY1_CardSP (PosY1_CardHP)
+#const PosX1_CardAT (PosX1_CardHP)
+#const PosY1_CardAT (PosY1_CardHP + ShiftY_CardStatus)
+#const PosX1_CardIG (PosX1_CardSP)
+#const PosY1_CardIG (PosY1_CardAT)
+#const PosX1_CardHP_Text (PosX1_CardHP + 2)
+#const PosY1_CardHP_Text (PosY1_CardHP + 2)
+#const SizeX_CardAbility 30
+#const SizeY_CardAbility FontSize_CardText + 1
+#const PosX1_CardAbility (PosX1_CardSP + ShiftX_CardStatus)
+#const PosX2_CardAbility (PosX1_CardAbility + SizeX_CardAbility)
+#const PosY1_CardAbility1 (PosY1_CardHP)
+#const PosY2_CardAbility1 (PosY1_CardAbility1 + SizeY_CardAbility)
+#const PosY1_CardAbility2 (PosY1_CardAbility1 + SizeY_CardAbility + Width_CardPadding)
+#const PosY2_CardAbility2 (PosY1_CardAbility2 + SizeY_CardAbility)
+#const ShiftY_CardAbility (PosY1_CardAbility2 - PosY1_CardAbility1)
+
+// 手札の位置
+#define ctype PosY1_BothHandCard(%1) (20 + (SizeY_Card + 13) * %1)// 戦場にある n 番目のカードのY座標
+#const PosX1_OurHandCard 20
+#const ShiftX_OurCombatCard PosX1_OurHandCard + SizeX_Card //味方のカードの戦場に出ている場合のシフト量
+#const PosX1_EmyHandCard WIN_SIZEX - (SizeX_Card + 20)
+#const ShiftX_EmyCombatCard (-SizeX_Card)
+
+//タイトル画面のボタン
+#const Count_TitleButtons 3
+#const PosX1_TitleButtons 200
+#const PosY1_TitleButtons 170
+#const ObjId_TitleButtons 1//タイトル画面
+
+//戦闘画面のボタン
+#const SizeX_ButtonOnBattle (WIN_SIZEX - SizeX_GameLogBox)
+#const SizeY_ButtonOnBattle 35  //= (SizeY_GameLogBox / 2)
+#const PosX1_ButtonOnBattle PosX1_GameLogBox + SizeX_GameLogBox
+#const PosY1_ButtonOnBattle1 PosY1_GameLogBox
+#const PosY1_ButtonOnBattle2 (PosY1_ButtonOnBattle1 + SizeY_ButtonOnBattle)
+#define font_forButtonOnBattle font msgothic, 26
+
+#const ObjId_PhysicsButton 1// 戦闘画面
+#const ObjId_MagicalButton 2
+
+#define zeofive_ "ZeoFive"
+
+//コンパイルオプション
+#define CMPOPT_FULLVER // 完全版
+
+#endif

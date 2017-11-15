@@ -1,0 +1,323 @@
+#ifndef        ig_hsp_green_commands_hsp
+#define global ig_hsp_green_commands_hsp
+
+#define global null 0
+#ifndef true
+ #define global true    1
+ #define global false   0
+#endif
+
+
+#define global ctype is_true(%1) (((%1) ^ 0) != 0)
+#define global ctype is_false(%1) (((%1) ^ 0) == 0)
+
+
+#define global __HERE__ ("#" + __LINE__ + " " + __FILE__)
+
+
+#define global MAX_PATH 260
+
+
+#define global ctype MAKELONG(%1, %2) \
+	(LOWORD(%1) | (LOWORD(%2) << 16))
+
+#define global ctype MAKELONG4(%1 = 0, %2 = 0, %3 = 0, %4 = 0) \
+	MAKELONG(MAKEWORD((%1), (%2)), MAKEWORD((%3), (%4)))
+
+#define global ctype HIWORD(%1) LOWORD((%1) >> 16)
+#define global ctype LOWORD(%1) ((%1) & 0xFFFF)
+
+
+#define global ctype MAKEWORD(%1, %2) (LOBYTE(%1) | LOBYTE(%2) << 8)
+#define global ctype HIBYTE(%1)       LOBYTE((%1) >> 8)
+#define global ctype LOBYTE(%1)       ((%1) & 0xFF)
+#define global ctype byte_at(%1, %2)  LOBYTE((%1) >> ((%2) * 8))
+
+
+#define global ctype pow_2(%1)          (1 << (%1))
+#define global ctype bit_sub(%1, %2)    ((%1) & bit_complement(%2))
+#define global ctype bit_complement(%1) ((%1) ^ -1)
+#define global ctype bit_at(%1, %2)     (((%1) >> (%2)) & 1)
+
+
+#module
+#defcfunc int_from_signed_short int x
+	assert HIWORD(x) == 0
+	if ( x & 0x8000 ) { return 0 - (((%1) ^ 0xFFFF) - 1) }
+	return x
+#global
+
+
+#define global unless(%1) if is_false(%1)
+
+
+#define global elsif else : if
+
+
+#define global ignore(%1) _tmp_var(__ignored_result) = (%1)
+
+
+#ifdef _debug
+	#define global declvar(%1) if (0) { dim %1 }
+#else
+	#define global declvar(%1) :
+#endif
+#define global assert_unreachable assert false
+#define global assert_sentinel assert_unreachable
+
+
+#define global if_init \
+	%tif_init %i0 \
+	declvar _tmp_var(%p)     :\
+	unless ( _tmp_var(%p) )  :\
+		_tmp_var(%p) = true  :\
+	%o0
+
+
+#module
+#defcfunc compare_v var lhs, var rhs,  \
+	local vtype
+
+	vtype = vartype(lhs)
+	assert vtype == vartype(rhs)
+	assert vtype != vartype_struct && vtype != vartype_comobj
+	if ( vtype == vartype_int ) {
+		return lhs - rhs
+
+	} elsif ( vtype == vartype_double ) {
+		if ( absf(lhs - rhs) < 1e-9 ) {
+			return 0
+		} elsif ( lhs < rhs ) {
+			return -1
+		} else {
+			return 1
+		}
+
+	} elsif ( vtype == vartype_label ) {
+		return lpeek(lhs) - lpeek(rhs)
+	}
+	return lhs != rhs
+#global
+
+
+#module
+#defcfunc major_s str lhs, str rhs
+	if ((lhs != rhs) < 0) { return rhs } else { return lhs }
+#global
+#module
+#defcfunc minor_s str lhs, str rhs
+	if ((lhs != rhs) > 0) { return rhs } else { return lhs }
+#global
+#module
+#defcfunc major_d double lhs, double rhs
+	if (lhs < rhs) { return rhs } else { return lhs }
+#global
+#module
+#defcfunc minor_d double lhs, double rhs
+	if (lhs > rhs) { return rhs } else { return lhs }
+#global
+#module
+#defcfunc major_i int lhs, int rhs
+	if (lhs < rhs) { return rhs } else { return lhs }
+#global
+#module
+#defcfunc minor_i int lhs, int rhs
+	if (lhs > rhs) { return rhs } else { return lhs }
+#global
+
+
+#module
+#defcfunc cond_i int cond, int x, int y
+	if (cond) { return x } else { return y }
+#global
+
+#module
+#define global ctype cond_d(%1, %2 = 0, %3 = 0) cond_d__(%1, %2, %3)
+#defcfunc cond_d__ int cond, double x, double y
+	if (cond) { return x } else { return y }
+#global
+
+#module
+#define global ctype cond_s(%1, %2 = "", %3 = "") cond_s__(%1, %2, %3)
+#defcfunc cond_s__ int cond, str x, str y
+	if (cond) { return x } else { return y }
+#global
+
+
+#define global ctype ref_expr_tmpl_1(%1, %2 = _empty) %t__ref \
+	_tmp_var(%i)( %1(%2,_tmp_var(%o)) )
+
+#define global ctype ref_expr_tmpl_2(%1, %2 = _empty, %3 = _empty) %t__ref \
+	_tmp_var(%i)( %1(%2,_tmp_var(%o),%3) )
+
+#define global ctype ref_expr_tmpl_3(%1, %2 = _empty, %3 = _empty, %4 = _empty) %t__ref \
+	_tmp_var(%i)( %1(%2,_tmp_var(%o),%3,%4) )
+
+#define global ctype ref_expr_tmpl_4(%1, %2 = _empty, %3 = _empty, %4 = _empty, %5 = _empty) %t__ref \
+	_tmp_var(%i)( %1(%2,_tmp_var(%o),%3,%4,%5) )
+
+#define global ctype ref_expr_tmpl_5(%1, %2 = _empty, %3 = _empty, %4 = _empty, %5 = _empty, %6 = _empty) %t__ref \
+	_tmp_var(%i)( %1(%2,_tmp_var(%o),%3,%4,%5,%6) )
+
+#define global ctype ref_expr_tmpl_8(%1, %2 = _empty, %3 = _empty, %4 = _empty, %5 = _empty, %6 = _empty, %7 = _empty, %8 = _empty, %9 = _empty) %t__ref \
+	_tmp_var(%i)( %1(%2,_tmp_var(%o),%3,%4,%5,%6,%7,%8,%9) )
+
+
+#define global ctype ref_xT_tmpl__(%1, %2) %tref %i0 \
+	declvar %1                :\
+	declvar _tmp_var(%p)    :\
+	%1(_tmp_var(%p)) = (%2) :\
+	_tmp_var(%p) ++         :\
+	return _tmp_var(%p) - 1 :\
+	%o0
+
+#module
+#define global ctype ref_xs(%1) \
+	stt_ref_xs@__tmp(ref_xs__@__tmp(%1))
+
+#defcfunc ref_xs__@__tmp str value
+	ref_xT_tmpl__(stt_ref_xs@__tmp, value)
+#global
+
+#module
+#define global ctype ref_xd(%1) \
+	stt_ref_xd@__tmp(ref_xd__@__tmp(%1))
+
+#defcfunc ref_xd__@__tmp double value
+	ref_xT_tmpl__(stt_ref_xd@__tmp, value)
+#global
+
+#module
+#define global ctype ref_xi(%1) \
+	stt_ref_xi@__tmp(ref_xi__@__tmp(%1))
+
+#defcfunc ref_xi__@__tmp int value
+	ref_xT_tmpl__(stt_ref_xi@__tmp, value)
+#global
+
+#module
+#define global ctype ref_xsa8(%1 = "", %2 = "", %3 = "", %4 = "", %5 = "", %6 = "", %7 = "", %8 = "") \
+	ref_expr_tmpl_8(ref_xsa8__, %1, %2, %3, %4, %5, %6, %7, %8)
+
+#defcfunc ref_xsa8__ str v0, array ref, str v1, str v2, str v3, str v4, str v5, str v6, str v7
+	ref = v0, v1, v2, v3, v4, v5, v6, v7
+	return 0
+#global
+
+#module
+#define global ctype ref_xda8(%1 = 0, %2 = 0, %3 = 0, %4 = 0, %5 = 0, %6 = 0, %7 = 0, %8 = 0) \
+	ref_expr_tmpl_8(ref_xda8__, %1, %2, %3, %4, %5, %6, %7, %8)
+
+#defcfunc ref_xda8__ double v0, array ref, double v1, double v2, double v3, double v4, double v5, double v6, double v7
+	ref = v0, v1, v2, v3, v4, v5, v6, v7
+	return 0
+#global
+
+#module
+#define global ctype ref_xia8(%1 = 0, %2 = 0, %3 = 0, %4 = 0, %5 = 0, %6 = 0, %7 = 0, %8 = 0) \
+	ref_expr_tmpl_8(ref_xia8__, %1, %2, %3, %4, %5, %6, %7, %8)
+
+#defcfunc ref_xia8__ int v0, array ref, int v1, int v2, int v3, int v4, int v5, int v6, int v7
+	ref = v0, v1, v2, v3, v4, v5, v6, v7
+	return 0
+#global
+
+#module
+#define global ctype ref_xia_iota(%1) \
+	stt_ref_xia_iota@__tmp(ref_xia_iota__(%1))
+
+#defcfunc ref_xia_iota__ int len
+	repeat len : stt_ref_xia_iota@__tmp(cnt) = cnt : loop
+	return 0
+#global
+
+
+#module
+#define global ctype ref_xva_replicate(%1, %2) \
+	ref_expr_tmpl_2(ref_xva_replicate__, %1, %2)
+
+#defcfunc ref_xva_replicate__ var value, array ref, int len
+	assert len >= 1
+	repeat len : ref(cnt) = value : loop
+	return 0
+#global
+
+
+#module
+#defcfunc in_interval int x, int first, int last
+	return (first <= x && x < last)
+#global
+
+
+#module
+#defcfunc in_rect int px, int py, int x1, int y1, int x2, int y2
+	return (x1 <= px && px <= x2) && (y1 <= py && py <= y2)
+#global
+
+
+#define global mousex2 \
+	(ginfo_mx - (ginfo_wx1 + (ginfo_sizex - ginfo_winx) / 2))
+
+
+#define global mousey2 \
+	(ginfo_my - (ginfo_wy1 + (ginfo_sizey - ginfo_winy) - (ginfo_sizex - ginfo_winx) / 2))
+
+
+#define global ctype RGB(%1 = 0, %2 = 0, %3 = 0) \
+	MAKELONG4((%1), (%2), (%3), 0)
+
+
+#module
+#deffunc color32 int cref
+	color byte_at(cref, 0), byte_at(cref, 1), byte_at(cref, 2)
+	return
+#global
+
+
+#define global ginfo_rgb RGB(ginfo_r, ginfo_g, ginfo_b)
+
+
+#ifdef _DEBUG
+ #define global dir_exe2 dir_exe2@__tmp
+	dir_exe2 = dir_cur
+#else //defined(_DEBUG)
+ #define global dir_exe2 dir_exe
+#endif //defined(_DEBUG)
+
+
+#define global delfile delete
+
+
+#module
+#deffunc delfile_if_exists str path
+	exist path
+	if ( strsize >= 0 ) { delfile path }
+	return
+#global
+
+
+#module
+#defcfunc dir_exists str path,  local dummy
+	dirlist dummy, path, 5
+	return (stat > 0)
+#global
+
+
+#module
+#deffunc mkdir_unless_exists str path,  local dummy
+	dirlist dummy, path, 5
+	if ( stat == 0 ) { mkdir path }
+	return
+#global
+
+
+#ifdef _DEBUG
+#module
+#deffunc delete_hsp_temporary_files__ onexit
+	delfile_if_exists "obj"
+	delfile_if_exists "hsptmp"
+	return
+#global
+#endif //defined(_DEBUG)
+
+#endif

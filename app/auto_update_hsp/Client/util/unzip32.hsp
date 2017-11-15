@@ -1,0 +1,18 @@
+
+#ifndef IG_UNZIP32_HSP
+#define IG_UNZIP32_HSP
+
+#module
+
+#uselib "unzip32.dll"
+#func UnZip_ "UnZip" nullptr, str, int, int
+
+#deffunc unzip str path, str dest
+	if ( varptr(UnZip_) == 0 ) { return -1 }
+	
+	UnZip_ "\"" + path + "\" \"" + dest + "\""
+	return
+
+#global
+
+#endif

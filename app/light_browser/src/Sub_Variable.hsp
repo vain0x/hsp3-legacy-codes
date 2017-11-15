@@ -1,0 +1,30 @@
+// LightBrowser - Variable
+
+*SetVariable
+	// global
+	dim flags, 1						// フラグ
+	dim Rect , 4						// RECT 構造体
+	dim Rect2, 4
+	
+	// screen
+	dim hMain,   1						// メインウィンドウのハンドル
+	dim NowSize, 2						// スクリーンのサイズ
+	
+	dim objID, 2						// オブジェクトID
+	dim objHwnd, 2						// ハンドル
+	sdim address, 512					// アドレス
+		 address = "http://"
+	sdim FindText, 512
+		 FindText = "Google 検索"
+	
+	// tab
+	dimtype TS, vartype("struct"), 1	// Tabs のモジュール変数
+	
+	// お気に入り
+	sdim AddressList, 1024
+	
+	// その他
+	dim  hPopMenu, 2
+	
+	return
+	

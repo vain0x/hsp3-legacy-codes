@@ -1,0 +1,60 @@
+#ifndef IG_HEADER_HSP
+#define IG_HEADER_HSP
+
+#include "hspinet.as"
+#include "mod_regexp.as"
+#include "util/MCIni.as"
+#include "util/dirlist_rec.hsp"
+#include "util/mkdir_rec.hsp"
+#include "util/unzip32.hsp"
+
+#module
+
+#deffunc rmdir str path
+	exec "cmd /K \"rmdir /S /Q \"" + path + "\"\""
+	return
+
+#deffunc copy_file str path_src, str path_dst
+	mkdir_rec getpath(path_dst, 32) //ディレクトリのみ
+
+#if __DRY_RUN
+	logmes "bcopy " + path_src + "\t\t-> " + path_dst
+#else
+	bcopy path_src, path_dst
+#endif
+	return
+	
+#defcfunc path_flatten str _path,  local path
+	path = _path
+	strrep path, "/", "-$-"
+	return path
+	
+#defcfunc is_ignored str path, array paths_ignored,  \
+	local ms, local result
+	
+	result = false
+	foreach paths_ignored
+		matches ms, path, paths_ignored(cnt), , true //最初の結果だけ取得する
+		if ( stat > 0 ) { result = true : break }
+	loop
+	return result
+	
+#defcfunc arrayStr_find_index array self, str value,  \
+	local lb, local ub, local mid, local cmp
+	
+	lb = 0 : ub = length(self)
+	repeat
+		if ( ub - lb <= 1 ) { break }
+		mid = lb + (ub - lb) / 2
+		cmp = (self(mid) != value)
+		if ( cmp <= 0 ) { lb = mid } else { ub = mid }
+	loop
+	if ( self(lb) == value ) {
+		return lb
+	} else {
+		return -1
+	}
+	
+#global
+
+#endif

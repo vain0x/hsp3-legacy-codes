@@ -1,0 +1,112 @@
+
+	言語風計算機を作ってみようぜ #1
+	
+	plmak ( Programing Language MAKing test )
+
+お久しぶりです、上大です。
+今回は、HSPでプログラミング言語……というか、文字列計算機を作ってみようと思います。要するに、StrCalc の作り直しです。
+
+ひとまず、機能の少ない状態で作成し、後々拡張を加えていこうと思いますので、言語仕様は次のようになります。
+	
+	スクリプト
+		0個以上の文を並べた物。文と文の間には ';' が必須。
+	文は空っぽでも良い。
+	
+	文
+		文は以下の内のどれかである。
+		
+		- 空文
+			空っぽからなる文。
+			動作：(なし)
+			
+		- 式文
+			1つの式のみからなる文。
+			動作：その式を評価する。
+			
+	式
+		1つの演算子とその演算数の組み合わせ。または1つのリテラル。
+		演算数は式でも良い。
+	
+…… 要するに、式が書けるだけ (酷)。変数や関数、制御構造すらないなんて……。
+
+※スクリプトには、拙作モジュール abdata を利用します。参照：<a>「abdata」</a>
+
+
+
+字句解析
+
+今回の言語の処理は、少しずつ段階的に行うことにします。そこで、まず最初にすることは、字句解析 (lexical analyze) という処理です。ここでは、1つの文字列(スクリプト)を、トークン(token)という最小単位に分解します。トークンは、日本語や英語でいう「単語(word)」にあたるものです。例えば、こんな感じ：
+
+	入力：
+		" 5  12 + 34 6 *  "
+	
+	出力：
+		"5"	: 整数
+		"12"	: 整数
+		"+"	: 演算子
+		"34"	: 整数
+		"6"	: 整数
+		"*"	: 演算子
+	
+5 や 12 などの整数、+ や * などの演算子が、1つ1つのトークンです。トークンは、あとで処理しやすくするために、簡単に種類分けをしておきます。
+※この段階では文法を考えないので、上記の様な変な式でも、エラーを吐きません。
+では、字句解析を行う命令を書いていきましょう。
+
+
+<pre class="hsp">
+<span class="comment">// plmak_lex.as</span>
+
+<span class="comment">// @ 字句解析</span>
+
+<span class="preproc">#include</span> <span class="string">&quot;abdata/list.as&quot;</span>
+
+<span class="preproc">#module</span>
+
+<span class="comment">//------------------------------------------------</span>
+<span class="comment">// 字句解析</span>
+<span class="comment">// </span>
+<span class="comment">// @prm tklist: 字句リスト (出力)</span>
+<span class="comment">// @prm script: スクリプト文字列</span>
+<span class="comment">//------------------------------------------------</span>
+<span class="preproc">#deffunc</span> plmak_lex <span class="ppword">array</span> tklist, <span class="ppword">str</span> script_,  <span class="ppword">local</span> script, <span class="ppword">local</span> idx, <span class="ppword">local</span> lenSrc, <span class="ppword">local</span> tkstr, <span class="ppword">local</span> tklen, <span class="ppword">local</span> tktype
+	script = script_
+	
+	<span class="comment">// 未作成</span>
+	
+	<span class="statement">return</span>
+
+<span class="preproc">#global</span>
+</pre>
+
+トークンは、「次のトークンを取り出す」命令を呼び出し続けて、文字列を切るという方法を取ります。
+
+＠プロット
+
+仕様策定
+	sttm
+		: arg
+	arg
+		: expr
+		
+	expr
+		: expr_add
+		
+	expr_add
+		: expr_mul
+		| expr_add ('+' | '-') expr_mul
+		
+	expr_mul
+		: expr_uni
+		| expr_mul ('*' | '/' | '%') expr_uni
+		
+	expr_uni
+		: '(' expr ')'
+		| literal_int
+		
+＠字句解析
+
+
+
+
+
+

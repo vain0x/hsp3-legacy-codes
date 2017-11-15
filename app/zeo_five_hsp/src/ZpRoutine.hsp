@@ -1,0 +1,105 @@
+#ifndef IG_ZEOPLAYER_ROUTINE_AS
+#define IG_ZEOPLAYER_ROUTINE_AS
+
+//-------------------------------------------------
+// タイトル画面の構築
+//-------------------------------------------------
+#define SetTitleWindow \
+	objsize 120, 30 : objmode objmode_guifont                    :\
+	pos PosX1_TitleButton0, PosY1_TitleButtons                   :\
+	button gosub "デッキを開く", *LOpenDeck                      :\
+	assert (stat == ObjId_TitleButtons + 0)                      :\
+	pos PosX1_TitleButton1, PosY1_TitleButtons                   :\
+	button gosub "CPU戦", *LGameStart                            :\
+	assert (stat == ObjId_TitleButtons + 1)                      :\
+	pos PosX1_TitleButton2, PosY1_TitleButtons                   :\
+	button gosub "ルール", *LRule                                :\
+	assert (stat == ObjId_TitleButtons + 2)                      :\
+	//
+	
+#const PosX1_TitleButton0 (PosX1_TitleButtons + (130 * 0))
+#const PosX1_TitleButton1 (PosX1_TitleButtons + (130 * 1))
+#const PosX1_TitleButton2 (PosX1_TitleButtons + (130 * 2))
+
+/*
+#define SetTitleWindow \
+	objsize 120, 30 : objmode objmode_guifont                    :\
+	_titleButtonsText = "デッキを開く", "CPU戦", "ルール"        :\
+	repeat 3                                                     :\
+		pos PosX1_TitleButtons + (130 * cnt), PosY1_TitleButtons :\
+		button gosub _titleButtonsText(cnt), *LTitleButtons      :\
+		assert (stat == ObjId_TitleButtons + cnt)                :\
+	loop :
+
+//タイトルボタンの行き先
+*LTitleButtons
+	on (stat - ObjId_TitleButtons) goto *LOpenDeck, *LGameStart, *LRule
+//*/
+
+//-------------------------------------------------
+// トップ画面の描画
+// あとボタンがある
+//-------------------------------------------------
+*LRedrawTitle
+	assert (ginfo_sel == wID_Main)
+	redraw redraw_off
+	pos 0, 0 : gcopy wID_TitleBg,  , ,  WIN_SIZEX, WIN_SIZEY
+	
+	// タイトルをでかでかと描画
+	font msgothic, 120 : color
+	pos 190, 40 : mes zeofive_
+	
+	// デッキのカードを並べる
+	repeat Count_CardsInDeck
+		pos PosX1_OurHandCard, PosY1_BothHandCard(cnt)
+		if (ourDeckPath != "") { DrawBlueCard cnt } else { DrawCardBack }
+	loop
+	redraw
+	return
+	
+//###########################################################
+//        タイトル画面の挙動
+//###########################################################
+
+#ifdef CMPOPT_FULLVER
+*LContinue
+	dim idActivePlayer
+	assert (idActivePlayer == ID_YOU)
+	
+	if (ourDeckPath != "") {
+		//ゲーム中のステータス変化を直すためにデッキをリロード
+		_path = ourDeckPath
+		gosub *LLoadDeck
+	}
+	
+	assert (ObjId_GameLogBox + 1) == 1
+	clrobj 1,
+	goto *Top
+#endif //defined(CMPOPT_FULLVER)
+
+//-------------------------------------------------
+// デッキを開く
+//-------------------------------------------------
+*LOpenDeck
+	gosub *LOpenDeckWithDialog
+	gosub *LRedrawTitle
+	return
+
+//-------------------------------------------------
+// デッキ編集モード
+//-------------------------------------------------
+;*LDeckEditMode
+;	dialog "未実装"
+;	return
+
+*LRule
+	exec ownpath + "/docs/index.html", exec_application
+	return
+	
+//コード短縮のため、サブルーチンジャンプもrepeat-loopもすべて無視して止まる
+#deffunc ErrorOnTitle str errtext
+	dialog errtext, dialog_warn, zeofive_
+	gosub *LRedrawTitle
+	stop
+	
+#endif

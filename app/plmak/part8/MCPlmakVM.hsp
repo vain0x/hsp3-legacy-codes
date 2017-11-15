@@ -1,0 +1,255 @@
+// plmak - Virtual Machine (pvm)
+
+#ifndef IG_MODULECLASS_PLMAK_VIRTUAL_MACHINE_HSP
+#define IG_MODULECLASS_PLMAK_VIRTUAL_MACHINE_HSP
+
+#include "abdata/abdata/all.as"
+
+//##############################################################################
+//                  定義部 : MCPlmakVM
+//##############################################################################
+#module MCPlmakVM mCode, mStk, mRunMode, mErr
+
+#include "plmac_const.hsp"
+
+//------------------------------------------------
+// 真理値・成敗値・NULL値
+//------------------------------------------------
+#define true    1
+#define false   0
+#define success 1
+#define failure 0
+#define NULL    0
+
+//##########################################################
+//        構築・解体
+//##########################################################
+#define global pvm_new(%1, %2) newmod %1, MCPlmakVM@, %2
+#define global pvm_delete(%1) delmod %1
+
+//------------------------------------------------
+// 構築
+//------------------------------------------------
+#modinit array plmac
+	dup mCode, plmac
+	stack_new mStk
+	pvm_clear thismod
+	return
+	
+//------------------------------------------------
+// 解体
+//------------------------------------------------
+#modterm
+	return
+	
+//##########################################################
+//        取得系
+//##########################################################
+//------------------------------------------------
+// 
+//------------------------------------------------
+
+//##########################################################
+//        設定系
+//##########################################################
+//------------------------------------------------
+// 初期化
+//------------------------------------------------
+#modfunc pvm_clear
+	stack_clear mStk
+	mRunMode = RunMode_None
+	mErr     = RunErr_None
+	return
+	
+//##########################################################
+//        動作系
+//##########################################################
+//------------------------------------------------
+// コードを実行する
+//------------------------------------------------
+#modfunc pvm_run var result,  local pc, local errcode
+	mRunMode = RunMode_Run
+	pc = 0
+	
+	repeat
+		pvm_proc thismod, pc
+		
+		if ( isRunModeExit(mRunMode) ) {
+			break
+		}
+		
+		pc += 2
+	loop
+	
+	errcode  = mErr
+	mRunMode = RunMode_None
+	mErr     = RunErr_None
+	
+	// 返値を設定する (スタック上の余りを、配列にして result に突っ込む)
+	if ( stack_empty(mStk) ) {
+		result = nullList
+	} else {
+		result = new_list()
+		repeat stack_size(mStk)
+			list_add result, stack_pop( mStk )
+		loop
+		list_reverse result		// 順序が逆になっているので
+	}
+	
+	return mErr
+	
+//------------------------------------------------
+// 指定位置のコードを処理する
+//------------------------------------------------
+#modfunc pvm_proc int idx,  local cmd
+	cmd = list_get(mCode, idx)
+	
+	switch ( cmd )
+		case PlmacCmd_Quit:
+			if ( list_get(mCode, idx + 1) == 0 ) {
+				mRunMode = RunMode_Quit
+			} else {
+				mRunMode = RunMode_Abort
+			}
+			swbreak
+			
+		case PlmacCmd_Push:		// push (value)
+			stack_push mStk, list_get(mCode, idx + 1)
+			swbreak
+			
+		case PlmacCmd_Pop:		// pop
+			Stack_remove mStk
+			swbreak
+			
+		// 単項演算
+		case PlmacCmd_Plus:		// (+)
+		case PlmacCmd_Minus:	// (-)
+			pvm_opUni thismod, cmd
+			swbreak
+			
+		// 二項演算
+		case PlmacCmd_Add:		// (+)
+		case PlmacCmd_Sub:		// (-)
+		case PlmacCmd_Mul:		// (*)
+		case PlmacCmd_Div:		// (/)
+		case PlmacCmd_Mod:		// (%)
+			pvm_opBin thismod, cmd
+			swbreak
+			
+		case PlmacCmd_None:
+		default:
+		//	do nothing;
+			swbreak
+	swend
+	
+	return
+	
+//------------------------------------------------
+// 単項演算
+//------------------------------------------------
+#modfunc pvm_opUni int cmd,  local expr
+	if ( stack_size(mStk) < 1 ) {
+		pvm_puterr thismod, RunErr_StkUnderflow
+		return
+	}
+	
+	stack_popv mStk, expr
+	switch ( cmd )
+		case PlmacCmd_Plus: swbreak
+		case PlmacCmd_Minus: expr = -expr : swbreak
+	swend
+	stack_pushv mStk, expr
+	return
+	
+//------------------------------------------------
+// 二項演算
+//------------------------------------------------
+#modfunc pvm_opBin int cmd,  local lhs, local rhs
+	if ( stack_size(mStk) < 2 ) {
+		pvm_puterr thismod, RunErr_StkUnderflow
+		return
+	}
+	
+	stack_popv mStk, rhs
+	stack_popv mStk, lhs
+	
+	switch ( cmd )
+		case PlmacCmd_Add: lhs += rhs : swbreak
+		case PlmacCmd_Sub: lhs -= rhs : swbreak
+		case PlmacCmd_Mul: lhs *= rhs : swbreak
+		case PlmacCmd_Div:
+		case PlmacCmd_Mod:
+			if ( rhs == 0 ) {	// 零除算エラー
+				pvm_puterr thismod, RunErr_DivByZero
+				return
+			}
+			if ( cmd == PlmacCmd_Div ) {
+				lhs /= rhs
+			} else {
+				lhs \= rhs
+			}
+			swbreak
+	swend
+	
+	stack_pushv mStk, lhs
+	return
+	
+//##########################################################
+//        統一関数
+//##########################################################
+//------------------------------------------------
+// 
+//------------------------------------------------
+
+//##########################################################
+//        その他
+//##########################################################
+//------------------------------------------------
+// エラーを起こす
+//------------------------------------------------
+#modfunc pvm_puterr int errcode
+	mErr     = errcode
+	mRunMode = RunMode_Err
+	return
+	
+#global
+
+//##############################################################################
+//                サンプル・スクリプト
+//##############################################################################
+#if 0
+
+#include "plmac_const.hsp"
+
+#module
+
+#deffunc put_code var plmac, int cmd, int prm
+	list_add plmac, cmd
+	list_add plmac, prm
+	return
+	
+#global
+
+	// "1 + (2 * 3)", 則: 1 2 3 * +
+	list_new plmac
+	put_code plmac, PlmacCmd_Push, 1
+	put_code plmac, PlmacCmd_Push, 2
+	put_code plmac, PlmacCmd_Push, 3
+	put_code plmac, PlmacCmd_Mul
+	put_code plmac, PlmacCmd_Add
+	put_code plmac, PlmacCmd_Quit, 0
+	
+	// 実行
+	pvm_new vm, plmac
+	pvm_run vm, result
+	
+	// 返値の表示
+	repeat list_size(result)
+		mes strf("#%d: " + list_get(result, cnt), cnt)
+	loop
+	
+	stop
+	
+#endif
+
+#endif

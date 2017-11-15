@@ -1,0 +1,24 @@
+#ifndef IG_EASY_HASH_FUNCTION_HSP
+#define IG_EASY_HASH_FUNCTION_HSP
+
+// テキトーなハッシュ関数
+
+#module easyhash_mod
+
+#defcfunc EasyHash str p1, int p2, int p3, local hashmax
+	if ( p2 == 0 ) { len     = strlen(p1) } else { len     = p2 }
+	if ( p3 <= 0 ) { hashmax = 0x7FFFFFFF } else { hashmax = p3 }
+	
+	sdim text, len + 1
+	text = p1
+	hash = len << 1
+	
+	repeat len
+		c     = peek(text, cnt)
+		hash += c << cnt - (c & 1)
+	loop
+	return hash \ hashmax
+	
+#global
+
+#endif

@@ -1,0 +1,46 @@
+
+#include "hsedsdk.as"
+#include "util/path_flatten.hsp"
+
+#define global cfg cfg_global@
+
+#module
+
+#deffunc verify_hsed_exists
+	
+	hsed_exist
+	if ( stat == false ) { end }
+	return
+	
+#deffunc mkdir_if_able str dir
+	if ( dir_exists(dir) == false ) {
+		mkdir dir
+	}
+	return
+	
+#defcfunc str_begins_with var s, str prefix
+	return strmid(s, 0, strlen(prefix)) == prefix
+	
+#defcfunc getpath_without_ext str _path,  local path, local ext
+	path = _path
+	ext = getpath(path, getpath_ext)
+	poke path, strlen(path) - strlen(ext), 0
+	return path
+	
+#defcfunc string_now
+	return strf("%04d-%02d-%02d=%02d-%02d-%02d", gettime_year, gettime_month, gettime_mday, gettime_hour, gettime_min, gettime_sec)
+	
+#defcfunc dir_baks
+	return dir_exe2 + "\\_bak"
+	
+#deffunc regularize_path var path, int id_tab
+	
+	if ( path == "" ) { //–¢•Û‘¶ƒ^ƒu
+		path = strf("_%02d.hsp", id_tab)
+	}
+	return
+	
+#defcfunc bakdir_from_path_tar str path_tar
+	return dir_baks() + "/" + path_flatten(path_tar)
+	
+#global

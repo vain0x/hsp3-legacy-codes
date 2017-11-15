@@ -1,0 +1,46 @@
+
+#include "ini.hsp"
+
+	// 開く ini ファイルを相対パスまたは絶対パスで指定します。なかったら作成します。
+	ini_new cfg, "C:/appdata.ini"
+	
+	//--------------------------------------------
+	// 読み込みのサンプル
+	
+	// [appdata] のキー x の値(整数値)を取り出す
+	x = ini_geti( cfg, "appdata", "x" )
+	mes "x = " + x
+	
+	//--------------------------------------------
+	// 書き込みのサンプル
+	
+	// [appdata] のキー WinX に ginfo_winx の値を書き込む
+	ini_puti cfg, "appdata", "WinX", ginfo_winx
+	ini_puti cfg, "appdata", "WinY", ginfo_winy
+	
+	// 文字列を書き込む
+	ini_puts cfg, "appdata", "Text", "Hello, world!"
+	
+	// double値を書き込む
+	ini_putd cfg, "constant", "pi", M_PI
+	
+	//--------------------------------------------
+	// 配列の読み書き
+	
+	// srcArr を書き込む
+	srcArr = 1, 2, 3, 4, 5
+	ini_putArray cfg, "array", "test", srcArr
+	
+	// dstArr に読み込む
+	ini_getArray cfg, dstArr, "Array", "test"
+	repeat stat
+		mes "test#" + cnt + " = " + dstArr(cnt)
+	loop
+	
+	//--------------------------------------------
+	// デバッグ用の出力命令を試す
+	
+	// logmes に全ての情報が書き出される
+	ini_dbglog cfg
+	
+	stop

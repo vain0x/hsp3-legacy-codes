@@ -1,0 +1,152 @@
+@(CLRTS)
+@//-------- タグ -------------------------------------------
+@(CIDPD)OPERATORS,ANGLE_BRACKET,SPACE,TAB,
+@(CFLAG)NON_CS
+
+@(LEVEL)2
+@(KYOKA)1000000
+
+@//(INPUT)HTML_tag.clrtxtdef
+
+@//---- ブロック要素のタグ -------------
+@//(COLOR)HTMLblocktag
+@(COLOR)HTMLinlinetag
+div
+
+@// 基本HTML系
+@(ENTRY)html,head,body,title,link,meta,base,
+@(ENTRY)frameset,frame,iframe,noframes,
+
+@// 文章構成系
+@(ENTRY)h1,h2,h3,h4,h5,h6,p,pre,blockquote,
+@(ENTRY)table,tr,caption,colgroupe,col,thead,tfoot,tbody,
+@(ENTRY)ul,ol,li,dl,dt,dd,
+
+@// 画面装飾系
+@(ENTRY)hr,basefont,img,area,marquee,
+@(ENTRY)form,input,textarea,select,option,optgroup,button,label,fieldset,legend,
+
+@// others
+@(ENTRY)style,script,noscript,bgsound,embed,noembed,object,applet,param,
+
+@//---- インライン要素のタグ -----------
+@(COLOR)HTMLinlinetag
+span
+
+@// 画面制御系
+@(ENTRY)br,nobr,wbr,map,
+@(ENTRY)th,td,
+
+@// 文章の論理的な意味づけ
+@(ENTRY)a,sup,sub,bdo,
+@(ENTRY)tt,em,strong,ins,del,
+@(ENTRY)ruby,rb,rt,rp,
+@(ENTRY)code,kbd,samp,var,dfn,address,
+@(ENTRY)q,cite,
+
+@//---- 非推奨タグ ---------------------
+@(COLOR)HTMLnonRcdtag
+
+@// BLOCK
+@(ENTRY)center,plaintext,listing,
+
+@// INLINE
+@(ENTRY)font,b,bold,i,italic,u,under,s,strike,big,small,
+
+@//-------- 属性 -------------------------------------------
+@(COLOR)HTMLelement
+@(LEVEL)3
+@(CIDPD)OPERATORS,ANGLE_BRACKET,SPACE,TAB,
+
+@//(INPUT)HTML_attr.clrtxtdef
+
+@// IE限定
+@(ENTRY)scroll,topmargin,rightmargin,leftmargin,bottommargin,bgproperties,
+
+@// 基本HTML系
+@(ENTRY)bgcolor,background,text,link,vlink,alink,
+@(ENTRY)type,rel,rev,hreflang,charset,media,http-equiv,content,
+
+@// 画面制御系
+@(ENTRY)align,noshade,clear,
+@(ENTRY)type,start,value,
+@(ENTRY)src,alt,border,usemap,shape,coords,nonhref,tabindex,
+@(ENTRY)cols,rows,frameborder,FrameSpacing,scrolling,marginwidth,marginheight,noresize,
+@(ENTRY)action,method,accept,accept-charset,enctype,disabled,checked,maxlength,ismap,readonly,wrap,multiple,label,selected,for,
+
+@// 文字装飾系
+@(ENTRY)size,color,face,dateTime,
+@(ENTRY)behavior,direction,scrollamount,scrolldelay,truespeed,loop,
+@(ENTRY)href,target,name,accesskey,
+@(ENTRY)bordercolor,bordercolorlight,bordercolordark,cellpadding,cellspacing,width,height,summary,frame,rules,valign,colspan,rowspan,nowrap,span,
+
+@// その他
+@(ENTRY)language,charset,defer,data,classid,codebase,standby,
+
+@// 共通属性
+@(ENTRY)class,id,style,lang,dir,title,
+
+@//---- イベント属性 -------------------
+@(COLOR)HTMLelement_event
+@//(LEVEL)3	// element と同じレベル
+
+@// すべてに適用可能
+@(ENTRY)onclick,ondblclick,onmousedown,onmouseup,onmouseover,onmousemove,onmouseout,onkeypress,onkeydown,onkeyup,
+
+@// 一部に適用可能
+@(ENTRY)onload,onunload,onfocus,onblur,onsubmit,onreset,onselect,onchange,
+
+@//-------- その他 -----------------------------------------
+
+@//---- タグ内記号 ---------------------
+@(CIDPD)ALLOW_ALL
+@(LEVEL)5
+@(CFLAG)NONE
+@(KYOKA)1000000
+
+@//(CCREF)00014803425    // RGB(225,225,225)
+@//(CTYPE)WORD
+@//=
+
+@// パラメータ
+@(CTYPE)MULTI_BETWEEN
+@(COLOR)HTMLprm
+=" "
+=' '
+
+@// コメント
+@(COLOR)HTMLcomment
+@(LEVEL)5
+@(KYOKA)0001
+<!-- -->
+
+@// タグ用の括弧
+@(KYOKA)0001
+
+@// ドキュメント宣言
+@(LEVEL)7
+@(CFLAG)HEAD
+@(COLOR)DOCTYPE_tag
+<!DOCTYPE >
+
+@// HTMLタグ
+@(LEVEL)6
+@(CFLAG)NONE
+@(COLOR)HTMLtag1
+< >
+@(COLOR)HTMLtag2
+</ >
+
+@//-------- ドキュメント宣言 -------------------------------
+@(LEVEL)8
+@(KYOKA)10000000
+@(CTYPE)WORD
+@(CIDPD)BRACKETS,ANSI_SIGNS,SPACE,TAB,
+
+@(COLOR)DOCTYPE_prm
+@(ENTRY)HTML,html,PUBLIC,
+
+@// パラメータ
+@(CTYPE)MULTI_BETWEEN
+@(COLOR)DOCTYPE_dtd
+" "
