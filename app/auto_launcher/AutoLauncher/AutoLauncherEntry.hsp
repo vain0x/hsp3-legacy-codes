@@ -1,0 +1,21 @@
+#packopt name "AutoLauncherEntry"
+#packopt hide 1
+
+#include "Mo/MCIni.as"
+
+	cmd = dir_cmdline
+	if (cmd == "") {
+		dialog "*", 16, "EntryFile"
+		if ( stat == 0 ) { end }
+		cmd = refstr
+	}
+	
+	exist cmd
+	if ( strsize == -1 ) { end }
+	
+	ini_new cfg, dir_exe + "/AutoLauncher.ini"
+	count = ini_geti(cfg, "Data", "CountEntries")
+	
+	ini_puts cfg, "Entry", strf("%02d", count), cmd
+	ini_puts cfg, "Data", "CountEntries", count + 1
+	end : end

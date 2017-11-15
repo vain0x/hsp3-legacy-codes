@@ -1,0 +1,36 @@
+
+#packopt name "AutoLauncherRegister"
+#packopt hide 1
+
+#runtime "hsp3cl"
+#include "hspext.as"
+
+#define global exec_file_name "AutoLauncher.exe"
+#define global link_file_name (exec_file_name + ".lnk")
+
+	dir_startup = dirinfo(0x10007) // ユーザのスタートアップ
+	
+	chdir dir_startup
+	dirlist list, link_file_name, 0
+	
+	if ( stat == 0 ) {
+		dialog "スタートアップに設定しますか？", 2, "確認"
+		if (stat == 7) { goto *LExit }
+		
+		fxlink exec_file_name, dir_exe + "/" + exec_file_name
+		if ( stat ) {
+			dialog "スタートアップの設定に失敗しました。\n\"" + exec_file_name + "\"がフォルダ [" + dir_exe + "] にあることを確認してください。", 1, "エラー"
+		} else {
+			dialog "スタートアップの設定が完了しました。"
+		}
+		
+	} else {
+		dialog "スタートアップを解除しますか？", 2, "確認"
+		if (stat == 7) { goto *LExit }
+		
+		delete dir_startup  + "/" + link_file_name
+		dialog "スタートアップを解除しました。"
+	}
+	
+*LExit
+	end : end
