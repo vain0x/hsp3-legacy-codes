@@ -1,0 +1,151 @@
+#ifndef ig_font_from_hsp_hsp
+#define ig_font_from_hsp_hsp
+
+/*
+HSP の font 命令を利用してフォントオブジェクトを作成するモジュール
+
+参考: http://chokuto.ifdef.jp/urawaza/setfont.html
+
+%port
+Windows GUI 32bit版限定
+%*/
+
+#module __font_from_hsp
+
+#uselib "gdi32.dll"
+#func   CreateFontIndirect@__font_from_hsp "CreateFontIndirectA" int
+#func   GetObject@__font_from_hsp    "GetObjectA"   int,int,int
+#func   DeleteObject@__font_from_hsp "DeleteObject" int
+
+#ifdef _debug
+	dim stt_font_handles_
+	dim stt_font_handles_len_
+#endif
+
+/*
+%index
+font_get_current_logfont
+現在のLOGFONT構造体を取得
+%prm
+array lf: LOGFONT構造体をコピーする配列変数
+%inst
+カレントウィンドウに設定されている font の LOGFONT 構造体を lf にコピーする。
+%*/
+#deffunc font_get_current_logfont array lf,  \
+	local bmscr
+
+	dim lf, 15
+	mref bmscr, 67
+	GetObject bmscr(38), 60, varptr(lf)
+	return
+	
+/*
+%index
+font_get_current_setting
+現在のフォント設定を取得
+%prm
+face, pt, style
+face: フォント名が代入される文字列型変数
+pt: フォントサイズが代入される変数
+style: フォントスタイルが代入される変数
+%inst
+font 命令に指定されたパラメータを取得する。
+%*/
+#deffunc font_get_current_setting var face, var pt, var style,  \
+	local lf
+	
+	if ( vartype(face) != 2 ) { sdim face }
+	
+	font_get_current_logfont lf
+	getstr face, lf(7)
+	pt = (lf(0) ^ 0xFFFFFFFF) + 1
+	
+	style = 0
+	style |= (  lf(4) >= 700             ) << 0	// Bold
+	style |= ( (lf(5) & 0x000000FF) != 0 ) << 1	// Italic
+	style |= ( (lf(5) & 0x0000FF00) != 0 ) << 2	// UnderLine
+	style |= ( (lf(5) & 0x00FF0000) != 0 ) << 3	// StrikeLine
+	style |= ( (lf(6) & 0x00040000) != 0 ) << 4	// AntiAlias
+	return
+	
+/*
+%index
+font_from_hsp
+フォントオブジェクトの作成
+%prm
+(face, pt, size)
+return: フォントハンドル
+%inst
+新しいフォントオブジェクトを作成して、そのハンドルを返す。
+パラメータは font 命令と同一。
+
+返却されたフォントオブジェクトは自動的に破棄される。DeleteObject に渡してはいけない。
+%*/
+#defcfunc font_from_hsp str face, int pt, int style,  \
+	local face_bak, local pt_bak, local style_bak,  \
+	local lf, local h_font
+	
+	// Backup
+	font_get_current_setting face_bak, pt_bak, style_bak
+	
+	// Create new font
+	font face, pt, style
+	font_get_current_logfont lf
+	CreateFontIndirect varptr(lf)
+	h_font = stat
+	
+	font_delete_on_exit h_font
+	
+	// Restore
+	font face_bak, pt_bak, style_bak
+	return h_font
+	
+/*
+%index
+objfont
+コントロールのフォントを変更
+%prm
+h_control, face, pt, style
+h_control: 対象のコントロールのハンドル
+face, pt, style: font 命令と同じ
+return: 作成されたフォントハンドル
+%inst
+コントロールのフォントを変更する。
+
+返却されたフォントオブジェクトは自動的に破棄される。DeleteObject に渡してはいけない。
+%*/
+#define global objfont(%1, %2, %3, %4 = 0, %5 = 1) \
+	objfont_ %1, %2, %3, %4, %5
+
+#deffunc objfont_ int h_control, str face, int pt, int style, int refresh,  \
+	local h_font
+	
+	h_font = font_from_hsp(face, pt, style)
+	// WM_SETFONT
+	sendmsg h_control, 0x0030, h_font, refresh
+	return h_font
+
+/*
+%index
+font_delete_on_exit
+フォントオブジェクトを解放予約
+%prm
+h_font
+%inst
+指定されたフォントをプログラム終了時に解放(DeleteObject)する。
+%*/
+#deffunc font_delete_on_exit int h_font
+	stt_font_handles_(stt_font_handles_len_) = h_font
+	stt_font_handles_len_ ++
+	return
+	
+#deffunc font_delete_all_ onexit
+	repeat stt_font_handles_len_
+		DeleteObject stt_font_handles_(cnt)
+	loop
+	stt_font_handles_len_ = 0
+	return
+	
+#global
+
+#endif

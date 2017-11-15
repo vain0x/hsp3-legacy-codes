@@ -1,0 +1,46 @@
+// ウィンドウからフォント情報を取得するサンプル
+
+#include "../font_from_hsp.hsp"
+
+	repeat 2
+		screen cnt, 320, 240, , cnt * 320, 0
+		title "Window #" + cnt
+		
+		// ウィンドウにそれぞれ異なるフォントを設定
+		if (cnt == 0) {
+			font msgothic, 12, 1 // 太字
+		} else {
+			font "游ゴシック", 14, 2 // 斜体
+		}
+	loop
+	
+	onclick gosub *LFontSwap
+	
+	repeat
+		repeat 2
+			gsel cnt
+			redraw 0
+			hsvcolor ,, 255 : boxf
+			color
+			
+			pos 0, 0
+			mes "画面をクリックするとフォントが交換されます"
+			mes strf("これはウィンドウID %d", cnt)
+			redraw
+		loop
+		
+		await 17
+	loop
+	stop
+	
+*LFontSwap
+	sdim face, , 2
+	repeat 2
+		gsel cnt
+		font_get_current_setting face(cnt), pt(cnt), style(cnt)
+	loop
+	repeat 2
+		gsel cnt
+		font face(1 - cnt), pt(1 - cnt), style(1 - cnt)
+	loop
+	return
