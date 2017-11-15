@@ -1,0 +1,73 @@
+// plmak - run
+
+#ifndef IG_PLMAK_RUN_HSP
+#define IG_PLMAK_RUN_HSP
+
+// 実行 (runtime)
+// @ plmac を解析して、実際に処理を行う。
+
+//#include "abdata/abdata/all.as"
+#include "MCPlmacVM.hsp"
+
+#module m_plmak_run
+
+#include "plmak_inh.hsp"
+
+//------------------------------------------------
+// 実行
+// 
+// @prm code: plmac
+//------------------------------------------------
+#deffunc plmak_run array plmac,  local vm, local result
+	
+	pvm_new vm, plmac(0)
+	pvm_run vm, result
+	
+	// デバッグ出力
+#ifdef _plmak_DebugOut
+/*
+	logmes "＠実行"
+	repeat
+		logmes
+	loop
+	logmes ""
+//*/
+#endif
+	
+	return 0
+	
+//------------------------------------------------
+// エラー時の文字列
+//------------------------------------------------
+#defcfunc GetRunErrStr int error
+	switch ( error )
+		case RunErr_None:         return "(正常)"
+		case RunErr_Unknown:      return "謎のエラー"
+		case RunErr_DivByZero:    return "零除算エラー"
+		case RunErr_StkUnderFlow: return "スタックアンダーフロー"
+		default:
+			return "(謎のエラー)"
+	swend
+	
+#global
+
+//##############################################################################
+//                サンプル・スクリプト
+//##############################################################################
+#if 0
+
+#include "plmak_lex.hsp"
+#include "plmak_enc.hsp"
+
+	plmak_lex tklist_lex, "\t42 + 1_2_3 / + *"
+	plmak_enc tklist_enc, tklist_lex
+	plmak_prs stxtree, tklist_enc
+	
+	plmak_run //
+	stop
+	
+#endif
+
+#endif
+
+

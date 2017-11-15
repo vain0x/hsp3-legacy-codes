@@ -1,0 +1,145 @@
+// plmak - enc
+
+#ifndef IG_PLMAK_ENC_HSP
+#define IG_PLMAK_ENC_HSP
+
+// 符号化(encoding)
+// @ 字句列を整数値で表現するようにする。
+// @ 出力配列 tklist_enc の説明：
+// @	(0) : list<int> 具体的な内容を表す
+// @	(1) : list<int> 字句の種類を表す。LxTkType_*
+// @	(2) : list<str> 文字列データの集合。文字列が必要になったら使う。
+
+#include "abdata/abdata/all.as"
+
+#module m_plmak_enc
+
+#include "plmak_inh.hsp"
+#include "plmak_ctype.hsp"
+
+//------------------------------------------------
+// 符号化
+// 
+// @prm tklist_enc: 符号化-字句リスト
+// @prm tklist_lex: 文字列-字句リスト
+//------------------------------------------------
+#deffunc plmak_enc array tklist_enc, array tklist_lex,  local idx, local tkstr, local tkval, local tktype
+	
+	idx = 0
+	
+	dim tklist_enc
+	repeat 3 : tklist_enc(cnt) = new_list() : loop
+	
+	// 字句ごとに分解する
+	repeat
+		
+		// 次の字句を処理する
+		plmak_enc_procNextToken tklist_lex, idx, tkval, tktype
+		if ( tktype < 0 ) { break }		// エラー終了
+		
+		// 字句リストに追加
+		list_add tklist_enc(0), tkval
+		list_add tklist_enc(1), tktype
+		
+		idx ++
+		if ( tktype == LxTkType_Term ) { break }
+		
+	loop
+	
+	if ( encerr ) { return encerr }
+	
+	// デバッグ出力
+#ifdef _plmak_DebugOut
+	logmes "＠符号化"
+	repeat List_size( tklist_enc(0) )
+		tkstr  = List_get(tklist_lex(0), cnt)
+		tkval  = List_get(tklist_enc(0), cnt)
+		tktype = List_get(tklist_enc(1), cnt)
+		logmes strf( "#%d (str, val, type) = (%s, %d, %d)", cnt, tkstr, tkval, tktype )
+	loop
+	logmes ""
+#endif
+	
+	return 0
+	
+//------------------------------------------------
+// 次のトークンを処理する
+// 
+// @prm tkval : 符号化後の整数値
+// @return    : 符号化後の tktype 、変更しないときは 0
+//------------------------------------------------
+#deffunc plmak_enc_procNextToken array tklist_lex, var idx, var tkval, var tktype,  local tkstr
+	
+	tkstr  = List_get( tklist_lex(0), idx )		// 次の字句の文字列
+	tktype = List_get( tklist_lex(1), idx )		// 次の字句のタイプ
+	
+	switch ( tktype )
+		case LxTkType_None: swbreak
+		case LxTkType_Int:
+			tkval = GetIntFromNumeric( strtrim( tkstr, 3, '_' ) )
+			return
+			
+		case LxTkType_Operator:
+			tkval = GetLxOpType( tkstr )		// 演算子の文字列 → LxOpType_* へ変換
+			return
+			
+		case LxTkType_Comma:
+		case LxTkType_Splitter:
+		case LxTkType_Term:
+			tkval = 0
+			return
+	swend
+	
+	return
+	
+//------------------------------------------------
+// 変換: numeric string -> int
+// 
+// @ 後々 16 進数リテラルとか扱うときのために
+//------------------------------------------------
+#defcfunc GetIntFromNumeric str s_,  local s, local radix
+	s = s_
+	
+	return int( s )
+	
+//------------------------------------------------
+// 演算子タイプ(lex)を得る
+//------------------------------------------------
+#defcfunc GetLxOpType str s
+	switch ( s )
+		case "+" : return LxOpType_Add
+		case "-" : return LxOpType_Sub
+		case "*" : return LxOpType_Mul
+		case "/" : return LxOpType_Div
+		case "%" : return LxOpType_Mod
+	swend
+	return LxOpType_Error
+	
+//------------------------------------------------
+// エラー時の文字列
+//------------------------------------------------
+#defcfunc GetEncErrStr int error
+	switch ( error )
+		case EncErr_None: return "(正常)"
+		default:
+			return "(謎のエラー)"
+	swend
+	
+#global
+
+//##############################################################################
+//                サンプル・スクリプト
+//##############################################################################
+#if 0
+
+#include "plmak_lex.hsp"
+
+	plmak_lex tklist_lex, "\t42 + 1_2_3 / + *"
+	plmak_enc tklist_enc, tklist_lex
+	stop
+	
+#endif
+
+#endif
+
+
