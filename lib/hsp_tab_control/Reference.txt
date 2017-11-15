@@ -1,0 +1,189 @@
+タブコントロール操作モジュール
+	Tabmod.as
+
+著作：上大
+
+Kpan さんが Let's HSP! で公開されているサンプルを参考に組み立てました。
+誠にありがとうございました。
+サンプルのコメントとか、ほぼ引用です。
+
+サンプルの為に、ちょくとさん作の treeicon.bmp が添付されています。
+また、BitmapMaker.as も、ちょくとのページからの引用です。
+ありがたく使いましょう。
+
+/******** ミニ・リファレンス **************************************************
+|*
+|* CreateTab modvar, width, height, StartTabID, WindowStyle = 0, fReverse = false
+|*		タブコントロールを設置します。
+|*		HSPのカレントポジションを使用します。
+|*		これで使用したモジュール変数は、この後出てくる
+|*		すべての命令・関数の modvar で使用してください。
+|*		fReverse は、タブインデックスを反対にするオプションです。
+|*		( 現在未対応 )
+|*		真にした場合、右が 0 になります。
+|*		生成したコントロールのハンドルが stat に格納されます。
+|*
+|* InstertTab modvar, TabStr, InsPos
+|*		タブつまみを挿入します。文字列は "TabStr" です。
+|*		InsPos は、左から数えたタブインデックス ( TabIndex, 0から )
+|*		で、指定された場合は、その位置につまみを挿入します。
+|*		省略や、負数 (マイナス) の時は、最後に追加します。
+|*		使用するウィンドウID ( WindowID ) は、指定できません。
+|*		挿入した位置が stat に格納されます。
+|*		stat が負数の場合、何らかのエラーがあったことを示します。
+|*
+|* DeleteTab modvar, TabIndex
+|*		TabIndex のつまみを削除します。
+|*		必須ではありません。
+|*
+|* AdjustWindowRect modvar, TabIndex
+|*		指定された  TabIndex に割り当てられている
+|*		ウィンドウを、適切な大きさに変更します。
+|*		WM_SIZE を受け取った時などに使用してください。
+|*		stat に、新しいサイズを格納した RECT 構造体の
+|*		ポインタが返ります。
+|*		ただし、いつデータが変更されるか分からないので、
+|*		使うなら、すぐにコピーしてください。
+|*
+|* ChangeTab modvar
+|*		タブの指定を更新します。
+|*		stat にアクティブな TabIndex を格納します。
+|*		この命令を使わない限り、選択できません。
+|*		詳しくはサンプルの *Notify 参照。
+|*
+|* ShowTab modvar, TabIndex 
+|*		スクリプト側から、タブつまみを選択します。
+|*		このとき、WM_NOTIFY(0x004E) が発生します。
+|*		stat に、選択したつまみに割り当てられている
+|*		WindowID を返します。(相対値)
+|*
+|* SetTabStrItem modvar, TabIndex, TabStr
+|*		つまみの文字列を変更します。
+|*
+|* GetTabStrItem( modvar, TabIndex, MaxLen = 511 )
+|*		つまみの文字列を取得します。
+|*		MaxLen は、取得する文字列の最大の長さです。
+|*		省略したら、511 になります。
+|*		NULL 終端文字コード分は、内部で勝手に確保してくれます。
+|*
+|* SetTabImageList modvar, hImgList
+|*		イメージリストをセットします。
+|*		hImgList に、イメージリストのハンドルを指定してください。
+|*		stat には、以前セットされていたイメージリストの
+|*		ハンドルが返ります。セットされていなかった場合、
+|*		0 が返ります。
+|*
+|* GetTabImageList( modvar )
+|*		セットされているイメージリストのハンドルが返ります。
+|*
+|* SetTabImage modvar, TabIndex, iImgIndex
+|*		タブつまみにイメージを設定します。
+|*		iImgIndex に、イメージリストのインデックスを
+|*		指定してください。
+|*		取り除くときは、-1 にしてください。
+|*		成功すると真が、失敗すると偽が stat に返ります。
+|*
+|* ChangeTabStrFont modvar, FontName, FontSize, FontStyle
+|*		タブつまみの文字列のフォントを変更します。
+|*		modvar 以外、標準の font 命令と同じです。
+|*
+|* NumberOfTabInPoint modvar, px, py
+|*		スクリーン座標 (px, py) にタブつまみがあるなら、
+|*		そのつまみのインデックスを返します。
+|*		無ければ負数を返します。
+|*
+|* SetTabPadding modvar, width, height
+|*		タブつまみの中の空白サイズを設定します。
+|*		解除するときは 0, 0 にしてください。
+|*
+|* SetMinTabWidth modvar, width
+|*		タブつまみの最小幅を設定します。
+|*
+|* TabIntSet modvar, TabIndex, value
+|*		関連intを設定します。
+|*		__USE_TAB_INT__ が定義されているときのみ
+|*		使用できます。
+|*
+|* TabInt( modvar, TabIndex )
+|*		TabIndex に関連づけられている関連intを取得します。
+|*		__USE_TAB_INT__ が定義されているときのみ
+|*		使用できます。
+|*
+|*-------- 内部参照関数 --------------------------
+|*
+|* GetTabHandle( modvar )
+|*		タブコントロールのハンドルを返します。
+|*		しかし、可能な限り、アプリケーション側の変数で
+|*		管理するようにしてください。
+|*
+|* GetTabNum( modvar )
+|*		つまみの数を返します。
+|*
+|* ActTabIndex( modvar )
+|*		アクティブ( 選択状態 ) の TabIndex を返します。
+|*
+|* ActTabWinID( modvar )
+|*		アクティブなタブが使っている WindowID を返します(相対値)。
+|*
+|* ItoW( modvar, TabIndex )
+|*		TabIndex "が" 使用している WindowID を返します(相対値)。
+|*
+|* WtoI( modvar, RelWindowID )
+|*		WindowID "を" 使用している TabIndex を返します。
+|*		相対値で指定してください。
+|*		(Rel [Relative] = 相対的)
+|*		I … tabIndex
+|*		W … Windowid
+|*
+|* IsReverse( modvar )
+|*		リバースモードかどうかを取得します。
+|*		真ならリバースです。
+|*
+.*****************************************************************************/
+
+☆用語集
+※つまみ
+	タブ項目、タブアイテムのことです。
+	「つまみ」という呼び方は非公式です。
+	おそらく、「Item」が標準です。(もしくは TabItem, TabControl Item )
+
+※相対的WindowID ( RelativeWindowID )
+	CreateTab の StartTabID を 0 とする値です。
+	相対値 + StartTabID で、実際の WindowID を求めることが出来ます。
+
+☆更新履歴
+2008 08/23(土) 23:22
+　・定義部を完全にした
+　・変数名のスペルミスを修正
+　・命令・関数の追加 (主要部分ではない)
+　　+ NumberOfTabInPoint 関数
+　　+ SetTabPadding 命令
+　　+ SetMinTabWidth 命令
+　・サンプルを修正
+　　　ショートカットメニューをポップアップをログ表示する
+
+2008 05/25(日)  3:05
+　・SetTabStr のパラメータを調整 ( TabIndex と TabStr を交換 )
+　・TabInt 機能を作成
+　・複数行 ( TCS_MULTILINE ) に対応
+　　　行が増えても、ウィンドウのサイズが変わらないために、
+　　　バーの上にウィンドウが被さる不具合を修整
+　・定義部のコメントを補完
+　・プラグイン「exporter」を全く使わないように変更
+　　　ArrayExpand をモジュール内で定義
+　・命令・関数の再編 (主要部分は変更無し)
+　　+ AdjustWindowRect命令
+　　+ SetTabImageList命令
+　　+ GetTabImageList関数
+　　+ SetTabImage 命令
+　　+ ChangeTabStrFont命令
+　　+ GetTabHandle関数
+　　+ GetTabNum   関数
+　　+ ActTabWinID 関数
+　　- dupActIndex 命令 ( ActTabIndex() を使用してください )
+　　- dupActWinID 命令 ( ActTabWinID() を使用してください )
+
+2008 05/08(木) 23:07
+　・初公開
+
+2008.5.8.23.07.Thursday
