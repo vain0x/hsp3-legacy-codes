@@ -1,0 +1,66 @@
+#ifndef ig_hsp_lex_common_hsp
+#define ig_hsp_lex_common_hsp
+
+#include "ctype.hsp"
+
+#define true  1
+#define false 0
+#define MAX_PATH 260
+
+#define ctype MAKELONG(%1, %2) \
+	((%1) & 0xFFFF | ((%2) << 16) & 0xFFFF)
+	
+#define ctype MAKELONG4(%1 = 0, %2 = 0, %3 = 0, %4 = 0) \
+	MAKELONG(MAKEWORD((%1), (%2)), MAKEWORD((%3), (%4)))
+
+#define ctype MAKEWORD(%1, %2) ((%1) & 0xFF | ((%2) << 8) & 0xFF)
+
+#define Max_TextLen 0x2FFFF
+
+#define ctype IsTkTypeIdent(%1) ( (%1) == TkType_Ident || (%1) == TkTypeEx_Var || IsTkTypeReserved(%1) )
+#define ctype IsTkTypeReserved(%1) ( (%1) == TkType_Keyword || (%1) == TkTypeEx_Sttm || (%1) == TkTypeEx_Func || (%1) == TkTypeEx_Sysvar || (%1) == TkTypeEx_Macro || (%1) == TkTypeEx_PPWord )
+
+//------------------------------------------------
+// トークンの種類
+//------------------------------------------------
+#enum TkType_Error = (-1)
+#enum TkType_None  = 0
+#enum TkType_End   = 0			// : 改行 { } 終端 など、文の終端となるもの
+#enum TkType_Blank				// 空白
+#enum TkType_Operator			// + - * / \ & | ^ = < >
+#enum TkType_ParenL				// (
+#enum TkType_ParenR				// )
+#enum TkType_MacroPrm			// マクロパラメータ( %1 %2 %3 etc... )
+#enum TkType_MacroSP			// 特殊展開マクロ ( %t, %i etc... )
+#enum TkType_Numeric				// 0123456789. $E0F %0 0xFF 0b11
+#enum TkType_String				// "string\n\t\\"
+#enum TkType_Char				// 'x'
+#enum TkType_Label				// *main
+#enum TkType_PreProc			// #enum ...etc
+#enum TkType_PreProcDisable		// # から始まるがプリプロセッサ命令ではない
+#enum TkType_Keyword			// 識別子 (キーワード) (命令、関数、…)
+#enum TkType_Var				// 識別子 (変数)
+#enum TkType_Ident				// 識別子 (具体的には不明)
+#enum TkType_Comment			// コメント
+#enum TkType_Comma				// ,
+#enum TkType_Period				// .
+#enum TkType_Scope				// @スコープ
+#enum TkType_EscLineFeed		// 改行回避 (行末の\)
+#enum TkType_Any				// なにか
+#enum TkTypeEx_Cmd
+#enum TkTypeEx_PreProc
+#enum TkTypeEx_Sttm				// 標準命令
+#enum TkTypeEx_Func				// 標準関数
+#enum TkTypeEx_Sysvar			// 標準システム変数
+#enum TkTypeEx_Macro			// 標準マクロ
+#enum TkTypeEx_PPWord			// プリプロセッサ行キーワード
+#enum TkTypeEx_Const			// 定数
+#enum TkTypeEx_DefSttm			// ユーザ定義命令
+#enum TkTypeEx_DefFunc			// ユーザ定義関数
+#enum TkTypeEx_DllFunc			// Dll関数 (命令形式含む)
+#enum TkTypeEx_IFace			// インターフェース
+#enum TkTypeEx_ModName			// モジュール名 (スコープ名)
+#enum TkTypeEx_Var				// 変数
+#enum TkType_MAX
+
+#endif
