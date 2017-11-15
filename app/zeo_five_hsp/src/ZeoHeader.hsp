@@ -1,0 +1,80 @@
+// ZeoFive - Header (Core)
+
+#ifndef IG_ZEOFIVE_CORE_HEADER_AS
+#define IG_ZEOFIVE_CORE_HEADER_AS
+
+#define global ZEO_VERSION_M 1
+#define global ZEO_VERSION_L 00
+#define global ZEO_BETAVER   2
+#define global ZEO_ISBETA    true
+
+#if ZEO_ISBETA
+ #define global ZEO_BETA_STR ("beta" + ZEO_BETAVER)
+#else
+ #define global ZEO_BETA_STR ""
+#endif
+
+#define global ZEO_APPNAME "ZeoFive"
+
+#define global Str_GameName ZEO_APPNAME
+#define global Size_ZeoDeck 1540
+
+// フォルダ構造
+#define global PathToSingleCards (ownpath +"/singles.zeo_c")
+#define global PathToList (ownpath + "/decks/list.zeo_l")
+#define global PathToNewDeck PathToDeck(DeckName)
+#define global ctype PathToDeck(%1) (ownpath +"/decks/" + (%1) +".zeo_d")
+#define global ctype PathToPic(%1) (ownpath + "/pics/" + (%1))
+
+#define global PathToOnceCards PathToSingleCards
+#define global PathToDeckList PathToList
+
+//------------------------------------------------
+// パラメータ
+//------------------------------------------------
+#define global Count_CardsInDeck 5
+#define global Count_Players 2
+
+#const CardId_Invalid 33
+#const PlayerId_Invalid 33
+#define ctype CardId_isValid(%1) ((%1) != CardId_Invalid)
+#define ctype PlayerId_isValid(%1) ((%1) != PlayerId_Invalid)
+
+#define global PrmValue_Max 200
+#define global PrmValue_Sum 200
+#define global MAX_PRM 200
+
+// ステータスの Id
+#enum global StatusId_None = 0
+#enum global StatusId_HP = 0
+#enum global StatusId_SP
+#enum global StatusId_AT
+#enum global StatusId_IG
+#enum global StatusId_Max
+
+/*
+// 戦闘パラメータの Id ( PrmID_* とリンクする )
+#enum global CombatPrmId_HP  = PrmId_HP
+#enum global CombatPrmId_Spd
+#enum global CombatPrmId_Atk
+#enum global CombatPrmId_Int
+#enum global CombatPrmId_Max
+
+// パラメータに関するエラー定数
+#enum global PrmErr_None = 0
+#enum global PrmErr_InvalidValue	// 値が異常なパラメータがある
+#enum global PrmErr_InvalidCls		// 異常なクラスに属する
+#enum global PrmErr_InvalidSum		// 戦闘パラメータの総和がおかしい
+#enum global PrmErr_EmptyName		// 名前が空っぽ
+#enum global PrmErr_InvalidName		// 名前が異常
+#enum global PrmErr_InvlidPath		// 異常なファイルパス
+#enum global PrmErr_Max
+//*/
+
+// 戦闘方式
+#const global combatStyle_Invalid 0x7E
+#const global CombatStyle_At 0
+#const global CombatStyle_Ig 1
+#define ctype CombatStyle_IgIf(%1) ((%1))
+
+#endif
