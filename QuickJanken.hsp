@@ -28,6 +28,13 @@
 // ƒ‚ƒWƒ…[ƒ‹
 #module
 
+#defcfunc cwhich_int int condition, int then_value, int else_value
+	if (condition) {
+		return then_value
+	} else {
+		return else_value
+	}
+	
 // ğŒ‚Ì•¶š—ñ‚ğæ“¾‚·‚é
 #defcfunc GetConditionString int p1
 	switch ( p1 \ 3 )
