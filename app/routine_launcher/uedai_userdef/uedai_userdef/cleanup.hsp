@@ -1,0 +1,15 @@
+#ifndef        IG_UEDAI_CLEANUP_HSP
+#define global IG_UEDAI_CLEANUP_HSP
+
+#module 
+
+#ifdef _DEBUG
+#deffunc delete_hsp_temporary_files@__uedai onexit
+	delfile_if_exists "obj"
+	delfile_if_exists "hsptmp"
+	return
+#endif //defined(_DEBUG)
+
+#global
+
+#endif
