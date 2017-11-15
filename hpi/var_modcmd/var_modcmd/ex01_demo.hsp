@@ -1,0 +1,51 @@
+// ex01
+
+#include "var_modcmd.as"
+
+#module
+
+// ユーザ定義命令
+#deffunc mysttm
+	mes "hello world!"
+	return "hello world!"
+	
+// ユーザ定義関数
+#defcfunc myfunc int n
+	mes "myfunc(" + n + ")"
+	return n
+	
+#global
+
+	// 命令
+	s = modcmdOf(mysttm)
+	modcmdCall s		// 命令実行
+	
+	// 関数
+	f = modcmdOf(myfunc)
+	
+	mes "f(10) #=> " + f(10)
+	mes "modcmdCall(f, 10) #=> " + modcmdCall(f, 11)
+	mes "f() #=> " + f()	// 引数省略
+	
+	// modcmd 型変数の取り扱い
+	f = 0					// 添字を付けなければ呼び出しは起こらない
+;	f(modcmd_nocall) = 0	// 呼び出しが起こらないことを明示する特殊記法
+	
+	// modcmd 型配列変数
+	// →通常の配列としても使えるが、添字では呼び出せなくなる。
+	//   配列の要素を実行したいときは、modcmdCall を使う。
+	g = modcmdOf(mysttm), modcmdOf(myfunc)
+	g_1 = g(1)
+	mes "modcmdCall(g(1), 1) #=> " + modcmdCall(g(1), 1)
+	
+	// 比較
+	// →同じコマンドを指しているか否かを判定する。
+	mes "g(0) == g(1)    #=> " + (g(0) == g(1))
+	mes "g(1) == myfunc  #=> " + (g(1) == modcmdOf(myfunc))
+	
+	// 初期値＝無効値
+	modcmd z		// f を modcmd 型として初期化
+;	modcmdCall z	// エラー「配列・関数として使用できない型です」
+	
+	stop
+	

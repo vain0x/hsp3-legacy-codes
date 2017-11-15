@@ -1,0 +1,28 @@
+// いろいろ
+
+#include "valptr.as"
+
+	#define DATA "Hello, world!"
+;	#define DATA M_PI
+;	#define DATA 42
+
+	// func valtype( value ) -> int : value の型を返す。vartype() と違い、変数でなくてもよい。
+	mes "valtype(DATA) = " + valtype(DATA)
+	
+	// func new_valptr( value... ) -> int : value と同値な値へのポインタを得る
+	valptr = new_valptr(DATA)
+	
+	// sttm valptr_get dst, valptr : valptr が表す値を変数 dst に代入する
+	valptr_get val1, valptr
+	
+	// func valptr_get( valptr, idx ) -> some : valptr が表す値を返す。返値が有効か否かは型による。
+	val2 = valptr_get(valptr)
+	
+	mes "if ( sttm == func ) = " + (val1 == val2)	// sttm でも func でも同じ値
+	
+	if ( 2 <= vartype(val1) && vartype(val2) <= 4 ) {
+		mes val1
+		mes val2
+	}
+	
+	stop

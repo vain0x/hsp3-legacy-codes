@@ -1,0 +1,20 @@
+// ex04
+
+#include "opex.hsp"
+
+// assign( var, values... )
+// @ v = values... と同じことをする。
+// @ 関数形式の場合、変数 v に代入された最後の値を返す。
+
+// exprs( exprs... )
+// @ 引数を左から順番に評価し、最後の引数を返す。
+// @ Ｃ言語などでいう , 演算子の関数版。
+	
+	mes exprs( assign(a, 0, 1, 2, 3, 4), length(a) )
+;⇔	a = 0, 1, 2, 3, 4 : mes length(a)
+	
+	repeat length(a)
+		mes "a[" + cnt + "] = " + a(cnt)
+	loop
+	
+	stop

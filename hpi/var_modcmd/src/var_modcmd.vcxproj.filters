@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ヘッダー ファイル">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="リソース ファイル">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="application">
+      <UniqueIdentifier>{74c3a7ee-72e7-404a-9353-f92c40600e7f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\hspsdk">
+      <UniqueIdentifier>{85f93bc8-b146-4697-ba28-cc6d40078370}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\hpimod">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="cmd_modcmd.cpp">
+      <Filter>application</Filter>
+    </ClCompile>
+    <ClCompile Include="iface_modcmd.cpp">
+      <Filter>application</Filter>
+    </ClCompile>
+    <ClCompile Include="vt_modcmd.cpp">
+      <Filter>application</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hpimod\hpimod\mod_makepval.cpp">
+      <Filter>ヘッダー ファイル\hpimod</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hpimod\hpimod\mod_moddata.cpp">
+      <Filter>ヘッダー ファイル\hpimod</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hpimod\hpimod\mod_varutil.cpp">
+      <Filter>ヘッダー ファイル\hpimod</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hpimod\hpimod\mod_argGetter.cpp">
+      <Filter>ヘッダー ファイル\hpimod</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hpimod\hspsdk\hsp3plugin.cpp">
+      <Filter>ヘッダー ファイル\hspsdk</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cmd_modcmd.h">
+      <Filter>application</Filter>
+    </ClInclude>
+    <ClInclude Include="iface_modcmd.h">
+      <Filter>application</Filter>
+    </ClInclude>
+    <ClInclude Include="vt_modcmd.h">
+      <Filter>application</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\hpimod\mod_makepval.h">
+      <Filter>ヘッダー ファイル\hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\hpimod\mod_moddata.h">
+      <Filter>ヘッダー ファイル\hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\hpimod\mod_varutil.h">
+      <Filter>ヘッダー ファイル\hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\hpimod\hsp3plugin_custom.h">
+      <Filter>ヘッダー ファイル\hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\hpimod\mod_argGetter.h">
+      <Filter>ヘッダー ファイル\hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\hspsdk\hsp3plugin.h">
+      <Filter>ヘッダー ファイル\hspsdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\hspsdk\hsp3struct.h">
+      <Filter>ヘッダー ファイル\hspsdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\hspsdk\hspvar_core.h">
+      <Filter>ヘッダー ファイル\hspsdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\hspsdk\hspwnd.h">
+      <Filter>ヘッダー ファイル\hspsdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\hspsdk\hsp3debug.h">
+      <Filter>ヘッダー ファイル\hspsdk</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\hpimod\basis.h">
+      <Filter>ヘッダー ファイル\hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\hpimod\vartype_traits.h">
+      <Filter>ヘッダー ファイル\hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\hpimod\reffuncResult.h">
+      <Filter>ヘッダー ファイル\hpimod</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hpimod\hpimod\cmdfuncTemplate.h">
+      <Filter>ヘッダー ファイル\hpimod</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

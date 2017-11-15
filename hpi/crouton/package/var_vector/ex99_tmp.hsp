@@ -1,0 +1,53 @@
+// ex99 : temporary test
+
+#include "var_vector.as"
+
+	v = vector( 0, 1, 2, 3, 4, 5 )
+	
+	w = vector( "a", "b", "c" )
+	
+	VectorReplace v, 3, -1, w
+	stop
+	
+	v = vector( 0, 1, 2, 3, 4, 5 )
+	
+	w = vector( "a", "b", "c" )
+	
+	x = VectorReplace(v, 3, -1, w)
+	mes VectorJoin(x)
+	stop
+	
+	w = VectorSlice( v, 3, -1 )
+	mes VectorJoin( w, ", " )
+	x = vectorAt( vectorSlice(w, 1, 3), 1 )
+	mes x
+	
+/*
+	v = vector(1, 2, 3)
+	w = v
+	
+	VectorInsert w(0), 10
+	
+	w(1) = vector( 1.5, 2, 2.5 )
+	VectorClone w(1), u
+	
+	stop
+
+/*
+
+	v = vector( 1, 2, 3 )
+	
+	x = VectorSlice(v, 0, 1) + VectorSlice(v, 1, 2) + VectorSlice(v, 2, 3)
+	
+	stop
+	
+	arr = 1, 2, 3
+	v1 = vector_from_array( arr )		// vector Å© array
+	v2 = vector_reserved( 1 )			// vector
+	v3 = v2
+	
+	v2(0) = "Hello, world!"
+	v2(1) = 32
+	
+	stop
+	

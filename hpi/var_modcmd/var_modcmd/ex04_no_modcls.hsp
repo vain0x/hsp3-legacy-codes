@@ -1,0 +1,16 @@
+
+#include "var_modcmd.as"
+
+// モジュール名は modcmdOf の対象に取れない
+// 当たり前だけど……
+
+#module point x_
+#modinit int x
+	x_ = x
+	return
+#global
+
+	newmod p, point, 1
+	
+	f = modcmdOf(point)	// エラー「パラメータの型が違います」
+	stop

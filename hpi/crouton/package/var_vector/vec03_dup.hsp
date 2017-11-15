@@ -1,0 +1,47 @@
+#include "../crouton.as"
+
+// vector の複製と、「ディープな」操作
+
+	v = vector(0, 1, 2, 3, 4, 5)
+	
+// 複製(duplicate)
+
+// 関数：VectorDup(vec, iBgn, iEnd)
+// vec の [iBgn, iEnd) 部分と「同じ値を持つ」新しい vector を得る。
+// (iBgn, iEnd) の省略は、VectorSlice のときと同じ。
+
+	u = VectorDup(v)
+	repeat 6
+		mes strf("u(%d) = %d : v(%d) = %d", cnt, u(cnt), cnt, v(cnt))
+		assert (u(cnt) == v(cnt))
+	loop
+	mes
+	
+// 「同じ値を持つ」という言葉の意味
+// VectorSlice とは異なり、VectorDup が返す vector は、
+// 元の vector と異なる内部変数を持つ。
+	
+	v(2) = "v[two]"
+	mes "v(2) = " + v(2) + "\t// 代入"
+	mes "u(2) = " + u(2)
+	assert (u(2) == 2)
+	
+// 内部変数が配列変数なら、配列まるごとコピーする。
+// つまり、同じ配列型を持ち、それぞれの値をコピーする。
+	
+	v(0, 0) = "a", "b"
+	v0 = VectorDup(v, 0, 1)
+	
+	mes "v0 = array(\"" + v0(0, 0) + "\", \"" + v0(0, 1) + "\")"
+	assert (v0(0, 1) == "b")
+	
+// ディープ操作
+
+// 命令：VectorChain vec1, vec2, iBgn, iEnd
+// vec2 の [iBgn, iEnd) 部分の複製を、vec1 に連結する。
+// vec1 += VectorDup(vec2, iBgn, iEnd) とだいたい同じ。
+
+	
+	
+	mes "以上"
+	stop

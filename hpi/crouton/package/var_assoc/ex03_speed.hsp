@@ -1,0 +1,65 @@
+// ex03 : 実行速度(読み書き)
+
+#include "var_assoc.as"
+
+// @ WrapCall を使っている場合は切っておく。
+// @from: http://hsp.tv/play/pforum.php?mode=all&num=39714
+
+//------------------
+	#include "d3m.hsp"
+	#define global N 100000;0
+
+#module m_A f
+	
+	#modinit int _size
+		dim f, _size
+	return
+	
+	#modcfunc get_a_f int i0
+	return f(i0)
+	
+	#modfunc set_a_f int i0, int i1
+		f(i0) = i1
+	return
+	
+	#modfunc get_a_Address var o
+		dup o, f
+	return
+	
+#global
+	
+#define speed_test(%1, %2, %3 = process, %4 = N) \
+	start = d3timer()			:\
+		repeat (%4) : %3 : loop		:\
+	time = d3timer() - start	:\
+	mes "" + (%1) + "(" + (%2) + ")：" + time //
+//------------------
+
+	mes "N = " + N
+	
+	// 書き込みテスト
+	dim variable, N
+	newmod module, m_A, N
+	get_a_Address module, f
+	assoc m1
+	assoc m2
+	AssocDim m2("_"), vartype("int"), N
+	
+	#define set_to_mod set_a_f module, cnt, rnd(100)		// 書き込み用コマンド
+	
+	speed_test "書込", "普通の変数",             variable(cnt) = rnd(100)
+	speed_test "書込", "モジュールへ命令で",     set_to_mod
+	speed_test "書込", "モジュールへアドレスで", f(cnt)      = rnd(100)
+	speed_test "書込", "assoc (1/10)",          m1(str(cnt)) = rnd(100),  N/10
+	speed_test "書込", "assoc 内部変数",        m2("_", cnt) = rnd(100)
+	
+	// 読み出しテスト
+	speed_test "読出", "普通の変数",                k = variable(cnt)
+	speed_test "読出", "モジュールから関数で",      k = get_a_f( module, cnt )
+	speed_test "読出", "モジュールからアドレスで",  k = f(cnt)
+	speed_test "読出", "assoc (1/10)",              k = m1(str(cnt)),  N/10
+	speed_test "読出", "assoc 内部変数",            k = m2("_", cnt)
+	
+	mes "ok"
+	stop
+

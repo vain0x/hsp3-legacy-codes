@@ -1,0 +1,29 @@
+// ex02
+
+#include "opex.hsp"
+
+// 多数比較
+
+// eq_and( val, ... )
+// @ val に等しくない値が一つでもあれば false を返す。
+
+// eq_or( val, ... )
+// @ val に等しい値が一つでもあれば true を返す。
+	
+	repeat 127
+		if ( eq_or( cnt, 'x', 'o', 'd', 'b', 't', 'v' ) ) {
+			mes strf("%c", cnt)
+		}
+	loop
+	
+	randomize
+	repeat 5
+		count = 0
+		repeat 10
+			if ( eq_and( rnd(3), rnd(3), rnd(3) ) ) {
+				count ++
+			}
+		loop
+		mes "count = " + count
+	loop
+	
