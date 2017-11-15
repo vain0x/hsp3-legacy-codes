@@ -1,0 +1,297 @@
+// LightBrowser - Main
+
+// 軽量ブラウザ "LightBrowser"
+
+#packopt name "LightBrowser.exe"
+#packopt hide 1
+
+#define __USE_TABINT__				// Tabmod の関連intを使用する
+
+#include "hsp_green/src/all.hsp"
+#include "util/userdef.hsp"
+#include "util/MenuBarAPI.as"
+#include "util/ini.as"
+#include "util/Priority.as"
+#include "util/Tabmod.as"
+#include "util/TrayIcon.hsp"
+
+goto *StartOfScript
+#include "Sub_Header.hsp"				// ヘッダ
+#include "Sub_Tabs.hsp"					// タブモジュール
+#include "Sub_Func.hsp"					// 汎用命令
+#include "Sub_Variable.hsp"				// 変数宣言
+#include "Sub_Screen.hsp"				// ウィンドウ作成
+//##################################################################################################
+*StartOfScript
+	SetIniName "./lbConfig.ini"
+	
+	gosub *SetVariable				// 変数を宣言
+	gosub *CreateMainWindow			// ウィンドウ作成
+	gosub *CreateShortMenu			// メニュー作成
+	CreateFavoriteMenu hFvrtMenu	// お気に入りを構成
+	
+	SetTitle ""
+	NewTab IniLoad("Window", "StartUp", 512)
+	
+	gsel wID_Main, 1
+	
+	// 登録
+	oncmd gosub *Notify,    0x004E		// WM_NOTIFY ( タブコントロールから送られる )
+	oncmd gosub *Resize,    0x0005		// WM_RESIZE ( サイズ変更 )
+	oncmd gosub *ShortMenu, 0x007B		// WM_CONTEXTMENU
+	onkey gosub *Key					// キー入力
+	onexit goto *exit
+	
+	// ドロップ受付にする
+	oncmd gosub *DragDrop, UM_OLEDD		// ドラッグ＆ドロップ受付
+	dim num, 2 : num = 1, 15			// cFormat
+	OLE_IDropTarget_RegisterDragDrop hMain , UM_OLEDD, varptr(num), length(num)
+	dim num, 1
+	stop
+	
+*exit
+	gosub *SaveIniFile			// INI に書き込む
+	
+	if ( hTrayMenu ) { DestroyMenu hTrayMenu }
+	if ( hFvrtMenu ) { DestroyMenu hFvrtMenu }
+	
+	end : end
+	
+//######## サブルーチン ############################################################################
+*RedrawMain	// 再描画
+	
+	gsel wID_Main, 0
+	NowSize = ginfo(12), ginfo(13)
+	
+	// バーのサイズを直す
+	MoveWindow hAddress,   1,  1, ginfo(12) -   2, 24	// アドレスバー
+	MoveWindow hGoogle , 325, 25, ginfo(12) - 326, 24	// 検索バー
+	
+	// タブのサイズを直す
+	MoveWindow    hTab, 0, BarHeight, NowSize(0), NowSize(1) - BarHeight, 1
+	GetClientRect hTab,          varptr( Rect )
+	sendmsg       hTab, 0x1328,, varptr( Rect )
+	
+	// タブの内側の bgscr のサイズを直す
+	foreach TS
+		gsel wID_TabStart + GetWinID(TS.cnt), 0
+		MoveWindow          hwnd, Rect(0), Rect(1), Rect(2) - Rect(0) +1, Rect(3) - Rect(1) +1, 1
+		MoveWindow objinfo(0, 2),       0,       0, Rect(2) - Rect(0) +1, Rect(3) - Rect(1) +1, 1
+	loop
+	
+	gsel wID_Main, 1
+	return
+	
+//######## タスクトレイ関係 ####################################################
+*OnTrayIconEvent	// トレイのアイコンが操作された
+	
+	if ( lParam == 0x0201 ) {			// 正側で押下
+		// 左右どちらかのクリック
+		sendmsg hMain, 0x0112, 0xF120, 0	// 元に戻す (WM_SIZE が起こる)
+		
+	} elsif ( lParam == 0x0204 ) {		// 逆側で押下
+		// メニューをポップアップする
+		SetForegroundWindow hMain				// 最前面にしておく ( PopupMenu が消えなくなるのを防ぐ )
+		TrackPopupMenuEx hTrayMenu, 0x0180, ginfo(0), ginfo(1), hMain, NULL
+		if ( stat == CMD_ZERO ) { return }
+		
+		switch (stat)		// CMD が代入されている
+		case CMD_RETURN
+			sendmsg     hMain, 0x0112, 0xF120, 0	// 元に戻す (WM_SIZE が起こる)
+			swbreak
+			
+		case CMD_QUIT
+			PostMessage hMain, 0x0010, 0, 0			// WM_CLOSE (終わる) ( × SendMessage )
+			swbreak
+		swend
+	}
+	return
+	
+*GoToTray			// TaskTray に格納
+	if ( fIconic || fNotUseTray ) { return }	// 既に常駐しているか、常駐が禁止されている
+	
+	CreateTrayIcon "LightBrowser"				// アイコン作成
+	FlagSw flags, fICON, True					// 最小化フラグを立てる
+	gsel wID_Main, -1							// MainWindow を見えなくする
+	SetStyle hMain, -20, 0x00000080, 0			// ツールウィンドウにし、タスクバーから排除
+	IdlePriority								// アイドル状態にする
+	return
+	
+*BackFromTray		// TaskTray から帰還
+	if ( fIconic == False || fNotUseTray ) { return }	// 今は常駐していない
+	
+	gsel wID_Main, -1							// 一時的に隠す
+	NormalPriority								// 元の優先度に戻す
+	SetStyle hMain, -20, 0, 0x00000080			// ツールウィンドウ解除
+	gsel wID_Main, 2							// MainWindow を公開 (一時的に最前面)
+	FlagSw flags, fICON, False					// 最小化フラグをおろす
+	DestroyTrayIcon								// アイコン削除
+	
+	if ( fZoomed ) {
+		MoveWindow hMain, 0, 0, ginfo(20), ginfo(21), 1		// 大きさを修正
+	}
+	
+	gosub *RedrawMain							// 再描画
+	gsel wID_TabStart + actWID, 0
+	objsel 0									// axobj をアクティブにする
+	gsel wID_Main, 1							// メインウィンドウ
+	return
+	
+//######## サイズ変更 ##########################################################
+*Resize				// メイン画面のサイズ変更
+	if (wParam == 1) {				// SIZE_MINIMIZED ( 最小化された )
+		goto *GoToTray				// タスクトレイに格納 ( *GoToTray で return : fZoomed を落とさない為 )
+	} elsif ( fIconic ) {			// 最小化されていたら
+		goto *BackFromTray			// タスクトレイから戻る
+	}
+	if ( wParam == 2 ) {			// SIZE_MAXIMIZEED ( 最大化された )
+		FlagSw flags, fZOOM, True	// 最大化フラグを立てる
+	} elsif ( fZoomed ) {			//
+		FlagSw flags, fZOOM, False	// 最大化フラグを落とす
+	}
+	//---- 通常 ----
+	NowSize = GetLow(lParam), GetHigh(lParam)
+	gosub *ReDrawMain		// 再描画
+	gsel wID_Main, 1
+	return
+	
+//######## キー ################################################################
+#define ctype KEYCODE_FUNCTION(%1=1) (111+(%1))
+*Key
+	if ( ginfo(3) != wID_Main ) { gsel wID_Main, 1 }
+	
+	switch ( iParam )
+	case 13				// Enter
+		objsel -1
+		num = stat
+		if ( stat == oID_Address ) { 			// アドレスバー
+			if ( getkey(16) ) { NewTabActive }	// Shift キー
+			gosub *GoAddress					// ジャンプ
+			
+		} elsif ( stat == oID_Google  ) {		// Google 検索バー
+			if ( getkey(16) ) { NewTabActive }	// Shift キー
+			gosub *Search						// 実行する
+		}
+		swbreak
+		
+	case 8				// BackSpace
+	;	objsel -1
+	;	if ( stat == -1 ) {			// axobj がフォーカス
+	;		goto *GoBack			// バックする
+	;	}
+		swbreak
+	swend
+	
+	switch ( wParam )
+	case KEYCODE_FUNCTION(5)	// F5
+		goto *GoAddress				// 再読込するだけ
+		swbreak
+	swend
+	return
+	
+*Search		// Google 検索
+	address = GoogleStr +""+ FindText
+	gosub *GoAddress
+	return
+	
+//######## ショートカット・メニュー ############################################
+#define global ctype inRECT(%1=RECT,%2=mousex,%3=mousey) ( boxin((%1(0)), (%1(1)), (%1(2)), (%1(3)), (%2), (%3)) )
+*ShortMenu			// ショートカット・メニュー
+	dim num, 4
+	GetWindowRect hTab, varptr( Rect )	// Tab の Rect を取得
+	
+	// Tab の中なら ( axobj の中では無効なので、実際はタブバーの部分のみ )
+	if inRECT( Rect, ginfo(0), ginfo(1) ) {
+		
+		// お気に入りをポップアップする
+		TrackPopupMenuEx hFvrtMenu, 0x0180, ginfo(0) + 10, ginfo(1) + 10, hMain, NULL
+		cID = stat			// CMD
+		
+		// CMD_ZERO は再構成
+		if ( cID == CMD_ZERO ) {
+			
+			// 破棄する
+			if ( hFvrtMenu ) { DestroyMenu hFvrtMenu }
+			
+			// 作成し直す
+			CreateFavoriteMenu hFvrtMenu
+			
+		} else {
+			
+			// "Favorite" からアドレスを読み出す
+			notesel AddressList			// リスト
+			noteget address, cID - 1	// cID が行数 + 1 になっている
+			noteunsel
+			if ( getkey(16) ) {			// Shift
+				NewTabActive			// 新タブ
+				if (stat < 0) : return	// エラー
+			}
+			goto *GoAddress				// ジャンプ
+		}
+	}
+	return
+	
+//######## ドラッグ＆ドロップ ##################################################
+*DragDrop
+	dupptr IDROPTARGET_NOTIFY, lParam, 24
+	if (wParam == 0) {
+		// ドラッグイン
+		switch IDROPTARGET_NOTIFY(3)
+			case  1 : IDROPTARGET_NOTIFY(1) = 5 : swbreak	// テキスト  COPY | LINK 可
+			case 15 : IDROPTARGET_NOTIFY(1) = 5 : swbreak	// ファイル  COPY 可
+			default : IDROPTARGET_NOTIFY(1) = 0 : swbreak	// その他    不可
+		swend
+	} elsif (wParam == 3) {
+		// ドロップ
+		sdim buf, 1024
+		switch IDROPTARGET_NOTIFY(3)
+			case 1		// 文章
+				GlobalLock IDROPTARGET_NOTIFY(4)	//
+				lstrcpyn varptr(buf), stat, 1024	// 文字列ポインタが返ってくる
+				
+				GlobalUnlock IDROPTARGET_NOTIFY(4)	//
+				
+				gsel wID_Main, 0
+				objprm oID_Address, buf				// アドレスバーを書き換える
+				swbreak
+			case 15		// ファイル
+				DragQueryFile IDROPTARGET_NOTIFY(4), 0, varptr(buf), 1024
+				NewTabActive
+				if ( stat >= 0 ) {
+					JumpUrl actTS, "file://"+ buf
+				}
+				swbreak
+			// その他 : ドロップ拒否データ
+		swend
+	}
+	sdim buf, 0
+	return
+	
+//######## COM 関係のルーチン ##################################################
+*GoAddress		// アドレス指定ジャンプ
+	JumpUrl actTS, address
+;	DupAx actTS, tmpAx
+;	tmpAx -> "Navigate" address
+	return
+	
+*GoForward		// 進む
+	DupAx actTS, tmpAx
+	tmpAx -> "GoForward"
+	return
+	
+*GoBack			// 戻る
+	DupAx actTS, tmpAx
+	tmpAx -> "GoBack"
+	return
+	
+//#### INI に書き込む ##########################################################
+*SaveIniFile
+	if ( fZoomed == 0 && fIconic == 0 ) {
+		gsel wID_Main, 1
+		WriteINI "Window", "left"  , ginfo(4)
+		WriteINI "Window", "top"   , ginfo(5)
+		WriteINI "Window", "SizeX" , ginfo(12)
+		WriteINI "Window", "SizeY" , ginfo(13)
+	}
+	return
+	

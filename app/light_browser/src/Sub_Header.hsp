@@ -1,0 +1,95 @@
+// LightBrowser - Header
+
+#ifndef __LIGHTBROWSER_HEADER__
+#define __LIGHTBROWSER_HEADER__
+
+//#### win32 API を呼び出す ######################
+#uselib "user32.dll"
+#func   global MessageBoxA			"MessageBoxA"			int,sptr,sptr,int
+#define global MessageBox(%1,%2,%3) MessageBoxA %1,str(%2),"LightBrowserSystem",%3
+#func   global SetForegroundWindow	"SetForegroundWindow"	int
+#func   global SetWindowLong		"SetWindowLongA"		int,int,int
+#cfunc  global GetWindowLong		"GetWindowLongA"		int,int
+#func   global GetClientRect		"GetClientRect"			int,int
+#func   global GetWindowRect		"GetWindowRect"			int,int
+#func   global MoveWindow			"MoveWindow"			int,int,int,int,int,int
+#cfunc  global IsZoomed				"IsZoomed"				int
+#func   global PostMessage			"PostMessageA"			int,int,int,int
+#func   global CharLower			"CharLowerA"			int
+#func   global CharUpper			"CharUpperA"			int
+
+#uselib "kernel32.dll"
+#func   global GetModuleFileName		"GetModuleFileNameA"			int,int,int
+#func   global VirtualProtect			"VirtualProtect"				sptr,int,int,sptr
+#func   global CloseHandle	"CloseHandle"	sptr
+#func   global GetLastError	"GetLastError"
+#func   global GlobalLock   "GlobalLock"   sptr
+#func   global GlobalUnlock "GlobalUnlock" sptr
+#func   global lstrcpyn     "lstrcpyn"     sptr,sptr,sptr
+
+#uselib "shell32.dll"
+#func   global DragAcceptFiles	"DragAcceptFiles"	int,int
+#func   global DragQueryFile	"DragQueryFileA"	int,int,int,int
+#func   global DragQueryPoint	"DragQueryPoint"	int,int
+#func   global DragFinish		"DragFinish"		int
+#define global WM_DROPFILES		0x0233
+
+#uselib "lib/OleDragDrop/OleDragDrop.dll"
+#func   global OLE_IDropTarget_RegisterDragDrop "OLE_IDropTarget_RegisterDragDrop" int,int,int,int
+#func   global OLE_IDropTarget_RevokeDragDrop   "OLE_IDropTarget_RevokeDragDrop"   int
+
+#const  global UM_OLEDD ( 0x400 + 0x100 )
+
+//##############################################################################
+//---- 定義 --------------------------------------------------------------------
+// windowID
+#const global wID_Main			0	// メイン
+#const global wID_Option		1	// オプション
+#const global wID_TabStart		2	// タブの開始
+
+// objectID
+#define global oID_Address objID@(0)
+#define global oID_Google  objID@(1)
+
+#define global hAddress objHwnd@(0)
+#define global hGoogle  objHwnd@(1)
+
+// hMenu
+#define global hTrayMenu hPopMenu@(0)
+#define global hFvrtMenu hPopMenu@(1)
+
+// サイズ
+#const  global BarHeight 50
+#const  global CMD_ZERO   0
+
+#define global TitleStr "LightBrowser - "
+#define global GoogleStr "http://www.google.co.jp/search?hl=ja&q="
+//######## マクロ ##############################################################
+#define global actwin ActTabIndex(mTab@)
+#define global actWID ItoW( mTab@, actwin )
+#define global actTS TS@( TabInt( mTab@, actwin ) )
+
+#define global SetTitle(%1=BLANK) title TitleStr +"["+ (%1) +"]"
+
+//######## ウェブ操作系 ########################################################
+#define global BLANK "about:blank"
+
+//######## フラグ ##############################################################
+
+// NowEditorFlag
+#enum   global fICON = 0
+#enum   global fZOOM
+#define global fIconic		AppendFlag(flags@,fICON)	// 最小化中
+#define global fZoomed		AppendFlag(flags@,fZOOM)	// 最大化中
+
+// UtilityFlags
+#enum   global fNUT
+#enum   global fItTk
+#define global fNotUseTray	AppendFlag(flags@,fNUT)		// TaskTray を使用しない
+#define global fInsteadTask	AppendFlag(flags@,fItTk)	// EndInsteadTask (×ボタンでタスクに常駐)
+
+// 登録
+#enum   global fISTo
+#define global fInSendTo	AppendFlag(flags@,fISTo)
+
+#endif
