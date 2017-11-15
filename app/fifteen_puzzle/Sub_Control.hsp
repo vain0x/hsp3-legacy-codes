@@ -1,0 +1,42 @@
+// FifPz - Sub Control
+
+#ifndef IG_FIFPZ_SUB_CONTROL_HSP
+#define IG_FIFPZ_SUB_CONTROL_HSP
+
+#include "FifPz.as"
+
+#include "Mo/MenuBarAPI.as"
+
+*LCreateMenuBar
+	gsel IDW_MAIN
+	
+	hFileMenu = CreatePopupMenu()
+		AppendMenu hFileMenu, 0, IDM_OPEN,  "開く(&O)"+  "\t\tCtrl + O"
+		AppendMenu hFileMenu, 0, IDM_CLOSE, "閉じる(&C)"+"\t\tCtrl + C"
+		AddSeparator hFileMenu
+		AppendMenu hFileMenu, 0, IDM_QUIT,  "終了(&Q)"+  "\t\tCtrl + Q"
+		
+	hProcMenu = CreatePopupMenu()
+		AppendMenu hProcMenu, 0, IDM_SHUFFLE,   "断片シャッフル(&S)"+ "\tCtrl + S"
+		AppendMenu hProcMenu, 0, IDM_PLACE_ANS, "正しい配置(&A)"+     "\tCtrl + A"
+		AddSeparator hProcMenu
+		AppendMenu hProcMenu, 0, IDM_CHGCLR_DISSHARD, "無効断片の色を変更(&C)"
+		
+	hShardMenu = CreatePopupMenu()
+		repeat MAX_SHARDS_NUMBER
+			AppendMenu hShardMenu, 0, IDM_SHARDS_NUMBER + cnt, ""+ (cnt + 2) +"×"+ (cnt + 2)
+		loop
+		
+	hMenu = CreateMenu()
+		AppendMenu hMenu, 0x10, hFileMenu,  "ファイル(&F)"
+		AppendMenu hMenu, 0x10, hProcMenu,  "操作(&P)"
+		AppendMenu hMenu, 0x10, hShardMenu, "断片数(&S)"
+		                
+	SetRadioMenu hShardMenu, IDM_SHARDS_NUMBER, IDM_SHARDS_NUMBER_END, 2
+	
+	// メニューバーを作成
+	SetMenu     hwnd, hMenu		// メニューをウィンドウに割り当てる
+	DrawMenuBar hwnd
+	return
+	
+#endif
