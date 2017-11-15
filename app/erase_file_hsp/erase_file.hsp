@@ -1,0 +1,80 @@
+
+#include "util/dirlist_rec/dirlist_rec.hsp"
+#include "util/file_try_erase.hsp"
+
+#define global app_name "erase_file"
+
+#module
+
+#define _block_size 0x100
+#define _timeout (10 * 1000)
+
+#deffunc _init
+	randomize
+
+	_target_dir = dir_cur + "/_nobak/clean"
+	//TODO: _parse_command_line
+
+	chdir _target_dir
+	return
+
+#deffunc _find_files  \
+	local i
+
+	dirlist_rec _files, "*"
+	_files_len = stat
+
+	sdim _files_note, _files_len * 260
+	repeat _files_len
+		if (strlen(_files(cnt)) >= 260) { end 1 } // TODO: StrBuilder ‚ðŽg‚¤
+
+		poke _files_note, i, _files(cnt) + "\n"
+		i += strsize
+	loop
+	return
+
+#deffunc _erase_files  \
+	local prog, local count
+
+	repeat _files_len
+		prog = strf("[%d/%d]", cnt, _files_len)
+
+		if (_files(cnt) == ".gitkeep") { count ++ : continue }
+		file_try_erase _files(cnt)
+		if (stat) {
+			logmes prog + "Success: " + _files(cnt)
+			count ++
+		} else {
+			logmes prog + "Failure: " + _files(cnt)
+		}
+	loop
+	return count
+
+#deffunc _main  \
+	local prog, local failures, local failures_len
+
+	_init
+	_find_files
+
+	mesbox _files_note, ginfo_winx, ginfo_winy
+	dialog "Would you like erase these files?", 2, app_name
+	if (stat != 6) { end }
+
+	do
+		if (_timeout > 0) {
+			await _timeout
+		}
+
+		_erase_files
+		if (stat < _files_len) {
+			dialog "Some files couldn't be erased. Retry?", 2, app_name
+			if (stat == 6) { _find_files : _continue }
+		}
+	until 1
+	return
+
+#global
+
+	_main
+	assert
+	end

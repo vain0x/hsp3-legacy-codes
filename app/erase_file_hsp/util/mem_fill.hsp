@@ -1,0 +1,29 @@
+#ifndef ig_mem_fill_hsp
+#define ig_mem_fill_hsp
+
+#module
+
+// 0でないランダムなバイトで埋める
+#deffunc mem_fill_random var buf, int size
+	repeat size
+		poke buf, cnt, rnd(0xFF) + 1
+	loop
+	return
+
+// 一定のパターンの繰り返しを書き込む
+#deffunc mem_cycle var buf, int block_size, int total_size,  \
+	local count, local copy_size
+
+	assert block_size > 0 || total_size == 0
+	assert total_size >= 0
+	repeat , 1
+		copy_size = limit(cnt * block_size, 0, total_size - cnt * block_size)
+		if (copy_size <= 0) { break }
+
+		memcpy buf, buf, copy_size, cnt * block_size, 0
+		continue cnt * 2
+	loop
+	return
+#global
+
+#endif
