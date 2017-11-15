@@ -1,0 +1,178 @@
+#define global app_name "diffView"
+#packopt name app_name
+#packopt hide true
+
+#include "appMisc.hsp"
+#include "util/note_each.hsp"
+#include "util/CheckListBox.as"
+#include "util/ini.hsp"
+
+#enum global IDW_main = 0
+
+#module difff
+
+#define url "http://difff.jp"
+
+#deffunc difff_submit array ie, var content_a, var content_b,  \
+	local o_doc, local o_difff, local o_seqA, local o_seqB
+	
+	ie->"navigate" url
+	while ( ie("busy") || ie("readyState") != 4 )
+		await 17
+	wend
+	
+	o_doc = ie("document")
+	o_difff = o_doc("difff")
+	o_seqA = o_difff("sequenceA")
+	o_seqA("value") = content_a
+	o_seqB = o_difff("sequenceB")
+	o_seqB("value") = content_b
+	o_difff->"submit"
+	
+	//「結果だけ表示」ボタンを押す
+	repeat 1000
+		await 60
+		
+		declvar o_inputs
+		comres  o_inputs
+		o_doc->"getElementsByTagName" "input"
+		if( varuse(o_inputs) == false ) { continue }
+		o_hide = o_inputs("item", 1)
+		
+		if ( varuse(o_hide) == false ) { continue }
+		o_hide->"onclick"
+		break
+	loop
+	return
+	
+#global
+
+#module diffView
+
+#uselib "user32.dll"
+#func   SetWindowLong "SetWindowLongA" int,int,int
+#cfunc  GetWindowLong "GetWindowLongA" int,int
+#func   MoveWindow    "MoveWindow"     int,int,int,int,int,int
+
+#const size_x_left_pane 190 //ファイル名が固定長のため
+#const size_y_radio_button 15
+#const size_x_button 80
+#const size_y_button 20
+
+#deffunc diffView_init str path_tar, \
+	local bakdir, local path, local path_note, \
+	local win_y, \
+	local i, local radio_text
+	
+	bakdir_ = bakdir_from_path_tar(path_tar)
+	
+	//バックアップファイルを収集
+	dirlist path_note, bakdir_ + "/*", dirlist_files
+	count_ = stat
+	if ( count_ <= 1 ) {
+		dialog "ファイルの差分がありません。\n対象: " + path_tar, dialog_warn
+		end
+	}
+	note_each path, path_note
+		files_(cnt) = path
+	note_each_end
+	
+	path_ = path_tar
+	
+	win_y = limit(count_ * size_y_radio_button + size_y_button, 480, ginfo_dispy)
+	screen IDW_main, ginfo_dispx, ginfo_dispy, screen_hide
+	title "diffView " + getpath(path_tar, getpath_filename | getpath_ext)
+	width size_x_left_pane + 640, win_y
+	
+	CL_SetObject size_x_left_pane, ginfo_dispy, path_note
+	ido_listbox_ = stat
+	
+	font msgothic, 11
+	objsize size_x_button, size_y_button
+	button gosub "diff", *LDiff
+	ido_diff_button_ = stat
+	
+	declvar ie_
+	axobj ie_, "Shell.Explorer.2", ginfo_dispx - size_x_left_pane, ginfo_winy
+	ido_browser_ = stat
+	
+	//最新の2つにチェックを付ける
+	repeat 2
+		CL_SetCheckState ido_listbox_, count_ - 1 - cnt, true
+	loop
+	
+	diffView_resize
+	diffView_diff
+	gsel IDW_main, gsel_show
+	return
+	
+#deffunc diffView_resize \
+	local i, local h
+	
+	h = objinfo_hwnd(ido_listbox_)
+	MoveWindow h, 0, 0, size_x_left_pane, ginfo_winy - size_y_button, true
+	
+	h = objinfo_hwnd(ido_diff_button_)
+	MoveWindow h, 0, ginfo_winy - size_y_button, size_x_button, size_y_button, true
+	
+	h = objinfo_hwnd(ido_browser_)
+	MoveWindow h, size_x_left_pane, 0, ginfo_winx - size_x_left_pane, ginfo_winy, true
+	return
+	
+#deffunc diffView_diff  \
+	local checked_indexes, local count_checks, \
+	local path, local content, local content_size
+	
+	CL_GetItemCount ido_listbox_
+	repeat stat
+		CL_GetCheckState ido_listbox_, cnt
+		if ( stat ) {
+			checked_indexes(count_checks) = cnt
+			count_checks ++
+		}
+	loop
+	if ( count_checks != 2 ) {
+		dialog "ちょうど2個だけチェックしてください。", dialog_ok, app_name
+		return
+	}
+	
+	sdim content, , 2
+	repeat 2
+		path = bakdir_ + "/" + files_(checked_indexes(cnt))
+		
+		exist path
+		if ( strsize < 0 ) { break }
+		memexpand content(cnt), strsize + 1
+		bload path, content(cnt), strsize
+	loop
+	
+	difff_submit ie_, content(0), content(1)
+	return
+	
+*LDiff
+	diffView_diff
+	return
+	
+#global
+
+#module
+
+#deffunc main  \
+	local cmdline
+	
+	cmdline = dir_cmdline
+	if ( cmdline == "" ) {
+	#ifdef _DEBUG
+		cmdline = "D:/Docs/prg/hsp/Misc/HsedBackup/src/HsedBackup.hsp"
+	#else
+		dialog "コマンドライン引数が間違っています。\nargc = " + stat, dialog_warn, app_name
+		end
+	#endif //defined(_DEBUG)
+	}
+	
+	diffView_init cmdline
+	return
+
+#global
+
+	main

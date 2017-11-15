@@ -1,0 +1,137 @@
+#ifndef IG_MODULE_CLASS_TIMER_HSP
+#define IG_MODULE_CLASS_TIMER_HSP
+
+// タイマーオブジェクト管理クラス
+
+#module MCTimer mhWnd, mTimerId, mSpan, mpfCallbk, mIsRunning
+
+#define WM_TIMER 0x0113
+
+#define true 1
+#define false 0
+
+#uselib "user32.dll"
+#func   SetTimer@MCTimer  "SetTimer"  int,int,int,int
+#func   KillTimer@MCTimer "KillTimer" int,int
+
+#deffunc _init@MCTimer
+	stt_timerId = 1
+	return
+	
+/*
+%index
+timer_start
+タイマーを起動する
+%inst
+既に起動中の場合は失敗する。
+%*/
+#modfunc timer_start
+	if ( mIsRunning == false ) {
+		SetTimer mhWnd, mTimerId, mSpan, mpfCallbk
+		assert mTimerId == stat
+		mIsRunning = true
+	}
+	return
+
+/*
+%index
+timer_stop
+タイマーを停止する
+%inst
+起動中でなければ何もしない。
+%*/
+#modfunc timer_stop
+	if ( mIsRunning ) {
+		KillTimer mhWnd, mTimerId
+		mIsRunning = false
+	}
+	return
+
+/*
+%index
+timer_reset
+タイマーを設定し直す
+%prm
+new_span_ms
+%inst
+現在のタイマーを停止し、改めて起動する。
+%*/
+#modfunc timer_reset int new_span_ms
+	timer_stop thismod
+	if ( new_span_ms >= 0 ) { mSpan = new_span_ms }
+	timer_start thismod
+	return
+	
+#define global timer_resetSpan(%1, %2) timer_reset (%1), (%2)
+
+/*
+%index
+timer_getId
+タイマーID
+%*/
+#modcfunc timer_getId
+	return mTimerId
+	
+/*
+%index
+timer_getFunc
+タイマーのコールバック関数ポインタ
+%*/
+#modcfunc timer_getFunc
+	return mpfCallbk
+
+/*
+%index
+timer_new
+タイマーオブジェクトを作成する
+%prm
+this, hWnd, span_ms, callback
+window [hwnd]: タイマーに紐づけられるウィンドウ
+span_ms: タイマーの待ち時間 (ミリ秒)
+callback [nullptr]: タイマーに渡されるコールバック関数
+%inst
+タイマーは自動的に起動する。
+
+callback に関数ポインタを指定すると、タイマーの終了時にそれが呼び出される。
+省略した場合は、window に WM_TIMER メッセージが送信される。
+
+内部的に SetTimer 関数を使う。タイマーIDの重複に注意。
+%*/
+#define global timer_new(%1, %2 = hwnd, %3, %4 = 0) %tMCTimer \
+	%i@__ = %4 :\
+	newmod %1, MCTimer@, %2, %3, %o@__
+
+#modinit int hWindow, int span, var callback
+	mhWnd     = hWindow
+	mSpan     = span
+	mTimerId  = stt_timerId
+	stt_timerId ++
+	
+	if ( vartype(callback) == vartype("label") ) {
+		oncmd gosub callback, WM_TIMER
+	} else {
+		mpfCallbk = callback
+	}
+	
+	timer_start thismod
+	return
+	
+/*
+%index
+timer_delete
+タイマーオブジェクトを破棄する
+%prm
+this
+%inst
+タイマーを停止して、オブジェクトを解体する。delmod と同じく、通常は自動で実行されるので、明示的に呼び出す必要はない。
+%*/
+#define global timer_delete(%1) delmod %1
+#modterm
+	timer_stop thismod
+	return
+	
+#global
+
+	_init@MCTimer
+
+#endif

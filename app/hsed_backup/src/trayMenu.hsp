@@ -1,0 +1,37 @@
+
+#include "util/menu.hsp"
+
+#module trayMenu
+
+#enum IDM_none = 0
+#enum IDM_quit
+#enum IDM_backup
+#enum IDM_diff
+
+#deffunc _init@trayMenu
+	h_menu = menu_make_popup()
+	
+	AppendMenu@ h_menu, 0, IDM_backup, "バックアップする(&B)"
+	AppendMenu@ h_menu, 0, IDM_diff, "差分を見る(&D)"
+	menu_append_separator@ h_menu
+	AppendMenu@ h_menu, 0, IDM_quit, "終了する(&Q)"
+	return
+	
+#deffunc trayMenu_popup
+	menu_popup h_menu
+	switch (stat) //メニューID
+		case IDM_quit: end
+		case IDM_backup
+			backup_all
+			timer_reset backup_timer@
+			swbreak
+			
+		case IDM_diff:
+			diffView_exec_active_tab
+			swbreak
+	swend
+	return
+	
+#global
+
+	_init@traymenu
