@@ -1,0 +1,57 @@
+#include "../crouton.as"
+
+// 引数束縛(arguments binding)、あるいは部分適用(partially application)
+
+	op_sub = axcmdOf(_op_sub)
+	
+// 関数：argbind(f, args...)
+// f に実引数 args... を与えた関数を返す。
+// 実引数をすべて与える必要はなく、与えない部分には nobind と書く。
+// (メモ：現在の仕様では、可変長引数は必ずすべて与える必要がある。)
+
+	// 「1 を引く関数」
+	decrease = argbind(op_sub, nobind, 1)
+	
+	mes "decrease : " + vtname(vartype(decrease))
+	
+// 単語：束縛関数(bound function)
+// argbind 関数が返してきた関数。
+// これは、argbind() のときに nobind と指定された場所の引数を受け取る。
+// そして、argbind() のときに与えられた引数と合わせて、元の関数を call する。
+
+	mes "N - 1 (N = 1, 2, 3)"
+	repeat 3, 1
+		// decrease(cnt) = _op_sub(cnt, 1) = cnt - 1
+		mes str(cnt) + " - 1 = " + decrease(cnt)
+	loop
+	
+// キーワード：nobind(N)
+// 上に書いたように、nobind は単に「nobind」とだけ書く。
+// 加えて、これには整数値 N を1つ与えてもよい。
+// そうした場合、N が小さいものほど「先に値を受け取る」ようになる。
+// (メモ：単に nobind と書いたら、それは nobind(0x7FFF) を意味する。)
+
+	// 「後者から前者を引く関数」
+	sub_swapped = argbind( op_sub, nobind(1), nobind(0) )
+	
+	// sub_swapped(a, b) = _op_sub(b, a) = b - a
+	mes "sub_swapped(3, 5) = " + sub_swapped(3, 5)
+	mes
+	
+// おまけ
+// 束縛関数をさらに束縛することもできる。
+
+	// 「1 を足す関数」
+	increase = argbind( sub_swapped, -1 )
+	
+	// increase(a) = sub_swapped(-1, a) = op_sub(a, -1) = a - (-1) = a + 1
+	mes "increase(6) = " + increase(7)
+
+	mes "以上"
+	stop
+	
+	
+// 引き算関数
+#defcfunc _op_sub int lhs, int rhs
+	mes "(lhs, rhs) = (" + lhs + ", " + rhs + ")"
+	return lhs - rhs

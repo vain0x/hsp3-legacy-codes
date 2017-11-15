@@ -1,0 +1,41 @@
+#include "../crouton.as"
+
+// 参照渡し
+
+// 単語：値渡し (call by value)
+// 命令や関数に引数を渡すとき、「0」や「"hello"」のような「値」を渡すこと。
+
+// 単語：参照渡し (call by reference)
+// 命令や関数に引数を渡すとき、「参照」――HSPでいえば、「変数」を渡すこと。
+// 次のときに使う：
+// 1. 呼び出された命令や関数が、その変数に値を書き込みたいとき。
+// 2. 変数の値がコピーできない、またはコピーしたくないとき。
+
+// キーワード：byref( r )
+// 変数、または配列要素 r を参照渡しする。
+// このキーワードを使わなければ、引数に変数を指定しても参照渡しにはならない。
+
+// ユーザ定義コマンドの var, array 引数に変数を渡すのも参照渡しだが、byref を使う必要はない (使っても問題はない)。
+// また、他のタイプの引数には、byref を使っても参照渡しできない (エラーになる)。
+
+	// 変数 strGreet を渡す
+	call *LStrGreet, byref(strGreet)
+	
+	// 変数 strGreet の中身が変わっている
+	mes "strGreet = " + strGreet
+	
+	// 配列変数の要素も渡すことができる
+	call *LStrGreet, byref(strGreet(1))
+	mes "strGreet(1) = " + strGreet(1)
+	
+	stop
+	
+*LStrGreet
+	arguments = flexVector()
+	assert(VectorSize(arguments) >= 1)
+	
+	// 最初の引数に書き込みをする
+	arguments(0) = "Hello, world!"
+	
+	return
+	

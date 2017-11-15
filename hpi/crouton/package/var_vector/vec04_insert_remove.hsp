@@ -1,0 +1,63 @@
+#include "../crouton.as"
+
+// 挿入(insert)と除去(remove)
+
+	v0 = vector(0, 1, 2, 3)
+	mes "v0 = " + VectorToString(v0)
+	
+// 関数：VectorInsert(self, iBgn, X, values...)
+// self の iBgn 番目に (X - iBgn) 個の要素を挿入する。
+// それらの要素は values... の値を持つ。
+// values... の省略時の値は int(0) である。
+
+	v1 = VectorInsert(v0, 2, 6, "a", "b", /*省略*/ , "d")
+	mes "v1 = " + VectorToString(v1)
+	
+	;assert(v1 == vector(0, 1, "a", "b", 0, "d", 2, 3))
+	
+// 関数：VectorInsertOne(self, idx, value)
+// self の idx 番目に、新しい要素を挿入する。その値は value である。
+
+	v2 = VectorInsertOne(v0, 2, "a")
+	mes "v2 = " + VectorToString(v2)
+	
+// 関数：VectorRemove(self, iBgn, iEnd)
+// self の区間 [iBgn, iEnd) の要素をすべて除去する。
+
+	v3 = VectorRemove(v0, 0, 2)
+	mes "v3 = " + VectorToString(v3)
+	
+// 関数：VectorRemoveOne(self, idx)
+// self の位置 idx の要素を除去する。
+
+	v4 = VectorRemoveOne(v0, 2)
+	mes "v4 = " + VectorToString(v4)
+	
+// 関数：VectorReplace(self, iBgn, iEnd, another)
+// self の区間 [iBgn, iEnd) を、vector another で置き換える。
+
+	v5 = VectorReplace(v0, 1, 3, vector("one", "two"))
+	mes "v5 = " + VectorToString(v5)
+	
+// 関数：VectorPushFront(self, value)
+// VectorInsertOne(self, 0, value) に等しい。
+// つまり、self の先頭に新しい要素 (value) を挿入する。
+
+// 関数：VectorPushBack(self, value)
+// VectorInsertOne(self, VectorSize(self), value) に等しい。
+// つまり、self の末尾に新しい要素 (value) を挿入する。
+
+// 関数：VectorPopFront(self)
+// VectorRemoveOne(self, 0) に等しい。
+// つまり、self の先頭の要素を除去する。
+// self の長さが 0 なら「パラメータの値が無効です」のエラーが出る。
+
+// 関数：VectorPushBack(self)
+// VectorRemoveOne(self, VectorSize(self) - 1) に等しい。
+// つまり、self の最後の要素を除去する。
+
+// これらのコマンド cmd はすべて命令としても使えて、
+// 「cmd v, args...」⇔「v = cmd(args...)」となる。
+
+	mes "以上"
+	stop

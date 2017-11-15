@@ -1,0 +1,28 @@
+#include "../crouton.as"
+
+	counter = axcmdOf(_counter)
+	
+	threeCounters = argbind(counter, nobind, 3)
+	threeCounterFrom7 = coCreate(threeCounters, 7)
+	
+	repeat 3
+		mes threecounterFrom7()
+	loop 
+	stop
+
+#defcfunc f
+	return 0
+
+#module
+#defcfunc _counter int init, int step,  local k
+	k = init
+	mes "_counter ŠJn: init = " + init
+	while
+		coYield k
+	
+		assert
+		mes "_counter ÄŠJ: (init, k) = (" + init + ", " + k + ")"
+		k += step
+	wend
+	
+#global

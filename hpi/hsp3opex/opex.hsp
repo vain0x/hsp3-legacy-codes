@@ -1,0 +1,28 @@
+// opex - public header
+
+#ifndef IG_OPEX_HPI_AS
+#define IG_OPEX_HPI_AS
+
+#define HPI_OPEX_VERSION 1.2	// 2011 09/12 (Mon)
+
+#define IF_OPEX_HPI_RELEASE
+
+#ifdef IF_OPEX_HPI_RELEASE
+ #define STR_OPEX_HPI_PATH "opex.hpi"
+#else
+ #define STR_OPEX_HPI_PATH "H:/Docs/prg/cpp/MakeHPI/opex/Debug/opex.hpi"
+#endif
+
+#regcmd "_hpi_opex@4", STR_OPEX_HPI_PATH
+#cmd assign      0x000		// ‘ã“ü
+#cmd swap        0x001		// ŒğŠ·
+
+#cmd short_and   0x100		// ’Z— and
+#cmd short_or    0x101		// ’Z— or
+#cmd eq_and      0x102		// ”äŠr and
+#cmd eq_or       0x103		// ”äŠr or
+#cmd which       0x104		// ğŒ‰‰Z
+#cmd what        0x105		// •ªŠò‰‰Z
+#cmd exprs       0x106		// ƒŠƒXƒg®
+
+#endif

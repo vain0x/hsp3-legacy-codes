@@ -1,0 +1,33 @@
+// ex05
+
+#include "opex.hsp"
+
+// swap( ref a, ref b )
+// @ a と b を“交換”する。
+// @ [1] a, b の一方が配列要素の時
+// @	a, b にそれぞれを代入する。
+// @	⇔ { t = a : a = b : b = t }
+// @	a, b は同じ変数の配列要素でもよい。
+// @ [2] a, b が両方単純変数の時
+// @	a, b の変数データ(PVal)を交換する。
+
+#define global ctype array_3(%1) ("%1 = [" + %1(0) + ", " + %1(1) + ", " + %1(2) + "]")
+#define global output mes array_3(a) : mes array_3(b)
+
+	a = 2, 1, 3
+	b = "a", "b", "c"
+	
+	mes ">> init"
+	output
+	
+	// 配列要素の交換
+	mes ">> swap a(0), a(1)"
+	swap a(0), a(1)
+	output
+	
+	// 変数の交換
+	mes ">> swap a, b"
+	swap a, b
+	output
+	
+	stop

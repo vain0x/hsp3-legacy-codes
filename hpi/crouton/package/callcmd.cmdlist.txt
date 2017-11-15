@@ -1,0 +1,118 @@
+// call_hpi_cmd
+// no include guard
+// this file must be encoded with ANSI (because this is inculuded by HSP script).
+
+#ifdef HSP3PLUGIN
+# ifndef _CmdlistModeProcess
+#  include "hsp3plugin_custom.h"
+# endif
+#endif
+
+HpiCmdlistBegin;
+
+	// core cmds
+	HpiCmdlistSectionBegin(CallCmd);
+
+	HpiCmdSF_(0x000, call);
+	HpiCmdSF_(0x001, declare);
+	HpiCmdS__(0x002, call_setResult_);
+	HpiCmd_F_(0x003, call_getResult_);
+	HpiCmd__V(0x004, thislb);
+	HpiCmd__V(0x005, thisfunc);
+
+	HpiCmd_F_(0x010, arginfo);
+	HpiCmd_F_(0x011, argVal);
+	HpiCmdS__(0x012, argClone);
+	HpiCmdS__(0x01A, argPeekAll);
+//	HpiCmd_F_(0x013, argVector);
+	HpiCmd_F_(0x014, localVal);
+	HpiCmdS__(0x015, localClone);
+	HpiCmd_F_(0x016, localVector);
+	HpiCmd_F_(0x017, flexVal);
+	HpiCmdS__(0x018, flexClone);
+	HpiCmd_F_(0x019, flexVector);
+	
+	HpiCmdS__(0x020, call_defineLabelComparison);
+
+	HpiCmd___(0xF00, call_byRef_);
+	HpiCmd___(0xF01, call_byThismod_);
+	HpiCmd___(0xF02, byDef);
+	HpiCmd___(0xF03, call_byFlex_);
+	HpiCmd___(0xF04, noBind);
+	HpiCmd___(0xF05, noCall);
+	HpiCmd___(0xF06, call_prmOf_);
+//	HpiCmd___(0xF07, call_valOf_);
+
+	HpiCmd_F_(0xFF0, axcmdOf);
+	HpiCmd_F_(0xFF1, labelOf);
+
+	HpiCmdSF_(0xFFF, forwardCmd_);
+
+	// old
+#if 0
+	HpiCmdS__(0x0A0, streamBegin);
+	HpiCmdS__(0x0A1, streamLabel);
+	HpiCmdS__(0x0A2, streamAdd);
+	HpiCmdSF_(0x0A3, streamEnd);
+#endif
+
+#if _DEBUG
+	HpiCmdSF_(0xFFA, test);
+#endif
+
+	HpiCmdlistSectionEnd;
+
+
+	// functor cmds
+	HpiCmdlistSectionBegin(FunctorCmd);
+
+	HpiCmdSFV(0x100, functor);
+	HpiCmd_F_(0x101, prminfo);
+
+	HpiCmd_F_(0x150, argBind);
+	HpiCmd_F_(0x151, unBind);
+	HpiCmd_F_(0x140, streamCallerNew);
+	HpiCmdS__(0x141, streamCallerAdd);
+	HpiCmd_F_(0x160, coCreate);
+	HpiCmdS__(0x161, coYield_);
+	HpiCmd_F_(0x170, lambda);
+	HpiCmdS__(0x171, lambdaBody_);
+	HpiCmd_F_(0x172, lambdaValue_);
+
+	HpiCmdlistSectionEnd;
+
+
+	// method cmds
+	HpiCmdlistSectionBegin(MethodCmd);
+
+#if 0
+	HpiCmdS__(0x200, replace);
+	HpiCmdS__(0x201, add);
+	HpiCmdS__(0x202, cloneThis);
+#endif
+
+	HpiCmdlistSectionEnd;
+
+
+	// modcls cmds
+	HpiCmdlistSectionBegin(ModClsCmd);
+
+#if 0
+	HpiCmdS__(0x300, modcls_init_);
+	HpiCmdS__(0x301, modcls_term_);
+	HpiCmdS__(0x302, regmod);
+	HpiCmdSF_(0x303, newmod);
+	HpiCmdS__(0x304, delmod);
+	HpiCmd_F_(0x305, nullmod);
+	HpiCmdSF_(0x306, dupmod);
+	HpiCmd_F_(0x307, modcls_identity); // idymod; modcls ÇÃç\ízä÷êîéqÇìæÇÈ
+	HpiCmd_F_(0x308, modcls_name);
+	HpiCmd_F_(0x309, modinst_cls);
+	HpiCmd_F_(0x30A, modinst_clsname);
+	HpiCmd_F_(0x30B, modinst_identify);
+	HpiCmd__V(0x30C, thismod);
+#endif
+
+	HpiCmdlistSectionEnd;
+
+HpiCmdlistEnd;

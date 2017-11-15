@@ -1,0 +1,32 @@
+// ex07 : AssocForeach
+
+#include "var_assoc.as"
+
+// AssocForeach 文
+// @ すべてのキーについて、反復処理をする。
+
+// @ repeat と同様、break, continue が使用できる。
+// @	goto などで脱出してはいけない。
+
+	assoc x
+	x("hsp") = "Hot Soup Processor"
+	x("http") = "Hypertext Transfer Protocol"
+	x("uedai") = "上大"
+	x("prograpark") = "プログラ広場"
+	x("today") = 0x20110718				// 当サンプル製作日
+	
+	mes "x:"
+	
+	AssocForeach x, key			// 引数式は反復するたび評価される
+		
+		// この内部が各 key について反復される。
+		
+		mes "\t\"" + key + "\" → " + x(key)
+		
+	AssocForeachEnd
+	
+	// 要素数
+	mes "x.size = " + AssocSize(x)
+	
+	stop
+	
