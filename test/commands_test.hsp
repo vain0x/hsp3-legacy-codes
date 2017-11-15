@@ -1,0 +1,23 @@
+#include "../src/all.hsp"
+
+#module
+#deffunc test_if_init  \
+	local i
+	
+	repeat 5
+		if_init {
+			assert cnt == 0
+			i ++
+		}
+	loop
+	assert i == 1
+	return
+	
+#deffunc test_commands
+
+	test_if_init
+	return
+	
+#global
+
+	test_commands

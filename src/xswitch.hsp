@@ -1,0 +1,108 @@
+#ifndef        ig_hsp_green_xswitch_hsp
+#define global ig_hsp_green_xswitch_hsp
+
+/**
+xswlabel マクロタグ
+
+まず最初に3つのラベルを D, B, D, C0 の順でプッシュ。C0 がスタックトップ。
+D:  goto_xdefault の行き先。xdefault または xswend の位置。
+B:  xswbreak の行き先。xswend の位置。
+Ci: xswfall の行き先。次の xcase, xdefault, xswend のいずれか。
+
+xcase のたび、その入口(判定後)に C0 を配置。これがそのケースへのラベルになる。
+そして新しいラベル C1 をプッシュ。
+xswitch や xcase のなかでは、スタックは [D, B, D, Ci] となっている。
+
+xdefault では、入口にスタックトップから2つのラベル Cn, D を配置。
+その後 E, Cn' をプッシュする。スタックは [D, B, E, Cn'] になる。
+E: 使用されないラベル。
+
+xswend では、スタックトップから3つのラベルを配置する。最後に底の D を除去する。
+もし xdefault があったなら、Cn', E, B が配置される。
+もし xdefault がなかったなら、Cn, D, B が配置される。
+//*/
+#define _init@xswlabel %txswlabel \
+	%i0 %i0 _init2@xswlabel(%p1)
+
+#define ctype _init2@xswlabel(%1) %txswlabel \
+	%s1 %i0
+
+#define _pop_xcase@xswlabel %txswlabel \
+	*%o :\
+	%i0 //
+
+#define _pop_xdefault@xswlabel %txswlabel \
+	*%o : *%o :\
+	%i0 %i0 //
+
+#define _pop_xswend@xswlabel %txswlabel \
+	*%o : *%o : *%o :\
+	%o0 //
+
+#define global xswfall %txswlabel \
+	goto *%p0
+
+#define global goto_xdefault %txswlabel \
+	goto *%p3
+
+#define global xswbreak %txswlabel \
+	goto *%p2
+
+/**
+xswitch マクロタグ
+
+%p0: 比較元の値を保存する変数
+%p1: xswitch の先頭へのラベル (for xswcontinue)
+%p2: xswitch の先頭へのラベル (for xswredo)
+//*/
+#define global xswitch(%1 = 1) %txswitch \
+	_part1@xswitch     \
+	_part2@xswitch(%1) \
+	//
+
+#define _part1@xswitch %txswitch \
+	%i0 %i0                      \
+	_push@xswitch(_tmp_var(%n))  \
+	//
+
+#define ctype _part2@xswitch(%1) %txswitch \
+	_init@xswlabel  :\
+	*%p1            :\
+	%p = (%1)       :\
+	*%p2            :\
+	if (0) {        :\
+	//
+
+#define ctype _push@xswitch(%1) %txswitch \
+	%s1
+
+#define global xcase_if(%1) %txswitch \
+	} else : if (%1) { _pop_xcase@xswlabel
+
+#define global xcase(%1) \
+	xcase_if( xswthis == (%1) )
+
+#define global xdefault %txswitch \
+	} else : if (1) { _pop_xdefault@xswlabel
+
+#define global xswend %txswitch \
+	_xswend_debug@xswitch  :\
+	}                      :\
+	_pop_xswend@xswlabel   :\
+	%o0 %o0 %o0 //
+
+#ifdef _debug
+	#define _xswend_debug@xswitch %txswitch \
+		xdefault: assert_unreachable
+#else //defined(_debug)
+	#define _xswend_debug@xswitch :
+#endif //defined(_debug)
+
+#define global xswthis     %txswitch (%p)
+#define global xswcontinue %txswitch goto *%p1
+#define global xswredo     %txswitch goto *%p2
+
+#define global goto_xcase(%1) %txswitch \
+	%p = (%1) : xswredo
+
+#endif
