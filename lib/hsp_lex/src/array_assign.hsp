@@ -1,0 +1,15 @@
+#ifndef ig_array_assign_hsp
+#define ig_array_assign_hsp
+
+#ifndef array_assign
+#module
+#deffunc array_assign array dst, array src
+	dimtype dst, vartype(src), length(src)
+	foreach src
+		dst(cnt) = src(cnt)
+	loop
+	return
+#global
+#endif //!defined(array_assign)
+
+#endif
