@@ -1,0 +1,13 @@
+# hsp temporary file
+hsptmp
+obj
+packfile
+start.ax
+*.i
+
+# exec binary
+*.exe
+*.dll
+
+# temporary backup file
+*.bak

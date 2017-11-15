@@ -1,0 +1,566 @@
+// ax_viewer
+
+#include "hspcmp.as"
+
+#include "util/cwhich.as"
+#include "util/LexCmdline.as"
+#include "hspconst.as"
+#include "hspKeywords.as"
+
+#undef to32b_from16b
+#define global ctype to32b_from16b(%1) cond_i( (%1) & 0x8000, 0 - ((%1) ^ 0xFFFF) - 1, (%1) )
+
+// consts for application
+#define global STR_APPNAME "ax_viewer"
+#enum   global IDW_MAIN = 0
+
+#define CmpMode_Debug 1
+
+// pack-options
+#packopt name STR_APPNAME
+#packopt hide 1
+
+;#cmpopt optinfo 1
+#cmpopt axiout 0
+
+//------------------------------------------------
+// メイン
+//------------------------------------------------
+*main
+	gsel IDW_MAIN, -1
+	title STR_APPNAME
+	
+	gosub *LGetFilePath
+	gosub *LCompile
+	gosub *LLoadAx
+    gosub *initialize
+	
+	gosub *LShowCodeSegment
+	gosub *LShowLInfo : output += refstr
+	gosub *LShowFInfo : output += refstr
+	gosub *LShowMInfo : output += refstr
+	gosub *LShowHpiBuf: output += refstr
+	
+	gsel IDW_MAIN, 1
+	objmode 2
+	font msgothic, 12
+	mesbox output, 640, 480
+	stop
+	
+//------------------------------------------------
+// ファイルパスを設定
+//------------------------------------------------
+*LGetFilePath
+	LexCmdline cmdopt
+	if ( stat ) {
+		path = cmdopt
+	} else {
+		path = STR_PATH
+	}
+	
+	if ( path == "" ) {
+		dialog "hsp;*.as;*.ax;obj", 16, "HSPスクリプト"
+		if ( stat == 0 ) { end }
+		path = refstr
+	} else {
+		chdir getpath(path, 32)
+	}
+	
+	// ファイルの有無をチェック
+	exist path
+	if ( strsize < 0 ) {
+		dialog "指定されたファイル：\n\""+ path +"\"\n―は存在しません。", 1, STR_APPNAME
+	}
+	
+	return
+	
+//------------------------------------------------
+// コンパイル
+//------------------------------------------------
+*LCompile
+	if ( getpath(path, 2) == ".ax" || getpath(path, 1|2|8) == "obj" ) {
+		obj_path = path
+		
+	// hspcmp.dll でコンパイルして ax ファイルを開く
+	} else {
+		script_file_name = getpath(path, 8)
+		obj_path         = "obj"
+		hsc_ini     script_file_name
+		hsc_objname obj_path
+		hsc_comp    CmpMode_Debug, 0			// デバッグ情報を付加してコンパイル
+		if ( stat ) {
+			dialog "コンパイルエラー", 1, STR_APPNAME
+			end
+		}
+	}
+	
+	hscx_loadsymbols symbols
+	return
+	
+//------------------------------------------------
+// ax ファイルを開き、各種メンバを設定
+//------------------------------------------------
+*LLoadAx
+	exist obj_path
+	if ( strsize < 0 ) {
+		dialog "オブジェクトファイルが存在しません"
+		end
+	}
+	
+	// ax を読み込む
+	sdim ax, strsize
+	bload obj_path, ax
+	if ( strmid(ax, 0, 3) != "HSP" ) {	// 0x33505348 ヘッダのマジックナンバー（h1, h2, h3, h4) をチェック
+		dialog "不正なオブジェクトファイルです"
+		end
+	}
+	
+	// ヘッダから各ブロックのオフセットと長さを取得
+	pt_cs  = lpeek(ax, 16)
+	max_cs = lpeek(ax, 20)
+	pt_ds  = lpeek(ax, 24)
+	max_ds = lpeek(ax, 28)
+	pt_ot  = lpeek(ax, 32)
+	max_ot = lpeek(ax, 36)
+	
+	pt_dinfo  = lpeek(ax, 40)
+	max_dinfo = lpeek(ax, 44)
+	pt_finfo  = lpeek(ax, 56)
+	max_finfo = lpeek(ax, 60)
+	pt_minfo  = lpeek(ax, 64)
+	max_minfo = lpeek(ax, 68)
+	pt_hpidat = lpeek(ax, 80)
+	max_hpi   = wpeek(ax, 84)
+;	max_varhpi= wpeek(ax, 86)	// 拡張される変数型の個数
+	
+	// 各ブロックを取得
+	if ( max_cs ) { dupptr cs, varptr(ax) + pt_cs, max_cs, 2 }
+	if ( max_ds ) { dupptr ds, varptr(ax) + pt_ds, max_ds, 2 }
+	if ( max_ot ) { dupptr ot, varptr(ax) + pt_ot, max_ot, 2 }
+	
+	if ( max_dinfo ) { dupptr dinfo,  varptr(ax) + pt_dinfo,  max_dinfo, 2 }
+	if ( max_finfo ) { dupptr finfo,  varptr(ax) + pt_finfo,  max_finfo, 2 }
+	if ( max_minfo ) { dupptr minfo,  varptr(ax) + pt_minfo,  max_minfo, 2 }
+	if ( max_hpi   ) { dupptr hpidat, varptr(ax) + pt_hpidat, max_hpi,   2 }
+	
+	// 変数名・コマンド名などのリストを作成する
+	gosub *LCreateVarnameList
+	gosub *LCreateModcmdnameList
+	
+	return
+	
+//------------------------------------------------
+// Code Segment の表示
+//------------------------------------------------
+*LShowCodeSegment
+	output  = "[Code Segment]\n"
+	output  = "位置\tタイプ\t\t値\t単項\t文頭\tカンマ\t分岐先\t値の意味\n"
+	output += hr + "\n"
+	
+	// Code Segment をなめる
+	repeat max_cs
+		c    = wpeek(cs, cnt)
+		size = 2
+		type =   c & CSTYPE
+		ex0  = ( c & EXFLG_0 ) != 0
+		ex1  = ( c & EXFLG_1 ) != 0
+		ex2  = ( c & EXFLG_2 ) != 0
+		
+		if ( c & 0x8000 ) {
+			code  = lpeek(cs, cnt + size)
+			size += 4
+		} else {
+			code  = wpeek(cs, cnt + size)
+			size += 2
+		}
+		
+		if ( type == TYPE_CMPCMD ) {	// if, else の場合のみ後ろにスキップ先が格納されている
+			skip_offset = wpeek(cs, cnt + size)
+			size += 2
+		}
+		
+		output += ""+ (cnt / 2) +"\t"			// 位置
+		output += getString_type(type) +"\t"	// タイプ
+		output += ""+ code +"\t"				// 値
+		
+		if ( ex0 ) { output += "yes\t" } else { output += "-\t" }	// 単項
+		if ( ex1 ) { output += "yes\t" } else { output += "-\t" }	// 文頭
+		if ( ex2 ) { output += "yes\t" } else { output += "-\t" }	// カンマ
+		
+		// if, else の飛び先
+		if ( type == TYPE_CMPCMD ) {
+			output += ""+ ((cnt + size) / 2 + skip_offset) +"\t"
+		} else {
+			output += "-\t"
+		}
+		
+		// 値の意味
+		gosub *get_code_meaning
+		output += refstr
+		output += "\n"
+		continue cnt + size
+	loop
+	
+	output += "\n"
+	return
+	
+//------------------------------------------------
+// 初期化
+//------------------------------------------------
+*initialize
+	initialize_hspkeywords
+	
+	// 表示用の水平線
+	sdim   hr, 101
+	memset hr, '-', 100
+	
+	return
+	
+//------------------------------------------------
+// type, code から文字列を生成
+// 
+// @ type 値に応じた code 値の意味 ( 命令・関数名など ) を生成
+// @result-way: refstr
+//------------------------------------------------
+*get_code_meaning
+	switch ( type )
+		case TYPE_VAR    : return varnamelist(code)
+		case TYPE_MODCMD : return modcmdnamelist(code)
+		
+		case TYPE_MARK   : return getString_mark( code )
+		case TYPE_STRING : return strf("\"%s\"", get_cstr(ds, code))
+		case TYPE_DNUM   : return str( get_double(ds, code) )
+		case TYPE_LABEL  : 
+		;	// TYPE_LABEL の code 値はラベルID(= ot-index)なので、それに対応したコードの位置を返す
+		;	return strf("*lb[%d]", lpeek(ot, code * 4))
+			return "*" + label_name_list(code)
+			
+		case TYPE_STRUCT :
+			if ( code < 0 ) { return "thismod" }
+			
+			// structtag の名称は finfo が持っているので、表示する
+			mptype = wpeek(minfo, (code * SizeOf_STRUCTPRM) + 0) : mptype = to32b_from16b(mptype)
+			subid  = wpeek(minfo, (code * SizeOf_STRUCTPRM) + 2) : subid  = to32b_from16b(subid)
+			if ( subid >= 0 ) {
+				nameidx = lpeek(finfo, (subid * SizeOf_STRUCTDAT) + 12)
+				name    = get_cstr( ds, nameidx )
+				
+				// MC-tag
+				if ( mptype == MPTYPE_STRUCTTAG ) {
+					return name
+					
+				// member
+				} else : if ( mptype == MPTYPE_LOCALVAR ) {
+					prmidx = lpeek(finfo, (subid * SizeOf_STRUCTDAT) + 4)	// structtag の STRUCTPRM がある位置
+					return "member_var["+ (code - prmidx - 2 + 1) +"]\tof "+ name +""
+				}
+				
+			// parameter
+			} else : if (subid == STRUCTPRM_SUBID_STACK && prm_name_list(code) != "") {
+				return prm_name_list(code)
+			} else {
+				return strf("prm[%d]", code)
+			}
+			assert_sentinel
+			
+		case TYPE_INTCMD    : return getString_intcmd(code)
+		case TYPE_EXTCMD    : return getString_extcmd(code)
+		case TYPE_EXTSYSVAR : return getString_extsysvar(code)
+		
+		case TYPE_CMPCMD  : return getString_cmpcmd(code)
+		case TYPE_INTFUNC : return getString_intfunc(code)
+		
+		case TYPE_SYSVAR  : return getString_sysvar(code)
+		case TYPE_PROGCMD : return getString_progcmd(code)
+		case TYPE_DLLCTRL : return getString_dllctrl(code)
+		
+		default: swbreak
+	swend
+	return str(code)
+	
+//------------------------------------------------
+// 識別子のリストを作成する
+//------------------------------------------------
+*LCreateVarnameList
+	max_var = lpeek(ax, 8)	// HSPHED::max_val ( 変数の数 )
+	
+	sdim varnamelist, , max_var
+	sdim label_name_list, , max_ot / 4
+	sdim prm_name_list, , max_minfo / 4
+	
+	// Debug Info をなめる
+#enum DsCtx_Default = 0	// 標準の文脈
+#enum DsCtx_LabelName	// ラベル名が並ぶ
+#enum DsCtx_PrmName	// パラメータ名が並ぶ
+#enum DsCtx_End	// 終了している
+	
+	dsctx = DsCtx_Default
+	repeat max_dinfo
+		c    = peek(dinfo, cnt)
+		size = 1
+		
+		// 終端
+		if ( c == 255 ) {
+			dsctx ++
+			
+			if ( dsctx == DsCtx_End ) {
+				// 末尾の2つの 255 が終了の印
+				assert ((mode == DsCtx_End) == (cnt + 2 == max_dinfo))
+				break
+			}
+			
+		// ソースファイル指定
+		} else : if ( c == 254 ) {
+			// 続く 3 byte がソースファイル名への DS オフセット (または 0)
+			// 続く 2 byte がソースファイルの行番号
+				_srcfile_ptr = tripeek(dinfo, cnt + 1)
+				_srcfile_line = wpeek(dinfo, cnt + 4)
+				if ( _srcfile_ptr == 0 ) { logmes "# " + _srcfile_line }
+				else { logmes "# \"" + get_cstr(ds, _srcfile_ptr) + "\" " + _srcfile_line }
+			size += 5
+			
+		// 識別子の指定
+		} else : if ( c == 251 || c == 253 ) {
+			// 続く 3 byte が識別子への DS オフセット
+			// 続く 2 byte は識別子に対応する数値情報
+			size += 5
+			ident_str = get_cstr(ds, tripeek(dinfo, cnt + 1))
+			ident_iparam = wpeek(dinfo, cnt + 4)
+			
+			switch dsctx
+				// 変数名, 変数ID
+				case DsCtx_Default:
+					assert c == 253
+					varnamelist(ident_iparam) = ident_str
+					swbreak
+					
+				// ラベル名, otindex
+				case DsCtx_LabelName:
+					assert c == 251
+					label_name_list(ident_iparam) = ident_str
+					swbreak
+					
+				// パラメータ名, subid (minfo の添字)
+				case DsCtx_PrmName:
+					assert c == 251
+					prm_name_list(ident_iparam) = ident_str
+					swbreak
+				default: assert_sentinel
+			swend
+			
+		// 次行までの CS オフセット値
+		} else : if ( c == 252 ) {
+			// 続く 2 byte が CS オフセット値 (8 bit じゃ足りない場合？)
+			size += 2
+			logmes "cs offset:  " + wpeek(dinfo, cnt + 1)
+		} else {
+			logmes "cs offset: " + c
+		}
+		
+		continue cnt + size
+	loop
+	
+	// DS に与えられていない識別子名を補完する
+#define STM_CompleteEmptyIdent(%1, %2) \
+		foreach (%1) : if (%1(cnt) == "") { %1(cnt) = (%2) } loop
+	
+	STM_CompleteEmptyIdent varnamelist,     strf("[var %03d]", cnt)
+	STM_CompleteEmptyIdent label_name_list, strf("[lb  %03d]", cnt)
+	STM_CompleteEmptyIdent prm_name_list,   strf("[prm %03d]", cnt)
+	
+	return
+	
+//------------------------------------------------
+// ユーザ定義命令・関数名のリストを作成する
+//------------------------------------------------
+*LCreateModcmdnameList
+	sdim modcmdnamelist, 60, (max_finfo / SizeOf_STRUCTDAT)
+	
+	for i, 0, max_finfo, SizeOf_STRUCTDAT
+;		index    = wpeek(finfo, i +  0)
+;		subid    = wpeek(finfo, i +  2)
+;		prmindex = lpeek(finfo, i +  4)
+;		prmmax   = lpeek(finfo, i +  8)
+		nameidx  = lpeek(finfo, i + 12)
+;		size     = lpeek(finfo, i + 16)
+;		otindex  = lpeek(finfo, i + 20)
+;		proc     = lpeek(finfo, i + 24)
+;		funcflag = proc
+		sIdent   = get_cstr( ds, nameidx )
+;		out      = sIdent
+;		is_ctype = ( index == 0xFFFE )
+		
+;		if ( funcflag ) { is_ctype  = ( otindex & 4 ) != 0 }
+;		if ( is_ctype ) { out += "(" } else { out += " " }
+		
+;		repeat prmmax
+;			if ( cnt != 0 ) { out += ", " }
+;			mptype = wpeek(minfo, ( prmindex + cnt ) * 8 + 0)
+;			gosub *gettypename
+;			out += refstr
+;		loop
+		
+;		if ( is_ctype ) { out += ")" }
+;		mes out
+		
+		modcmdnamelist(cntModcmd) = sIdent
+		cntModcmd ++
+	next
+	
+	return
+	
+//------------------------------------------------
+// LINFO を表示する
+//------------------------------------------------
+*LShowLInfo
+	if ( max_linfo == 0 ) { return "" }
+	
+	out = "[LINFO]\n番号\t名称\n"+ hr +"\n"
+	
+	repeat max_linfo / SizeOf_LIBDAT
+		i = cnt * SizeOf_LIBDAT
+		
+		flag    = lpeek( linfo, i +  0 )
+		nameidx = lpeek( linfo, i +  4 )
+		hlib    = lpeek( linfo, i +  8 )
+		clsid   = lpeek( linfo, i + 12 )
+		
+;		out += "flag  = " + flag +"\n"
+;		out += strf("name  = %s\n", get_cstr(ds, nameidx))
+;		out += "hlib  = " + hlib +"\n"
+;		out += "clsid = " + clsid +"\n"
+		out += strf("%d\t%s\n", cnt, get_cstr(ds, nameidx))
+	loop
+	
+	return out +"\n\n"
+	
+//------------------------------------------------
+// FINFO を表示する
+//------------------------------------------------
+*LShowFInfo
+	if ( max_finfo == 0 ) { return "" }
+	
+	out = "[FINFO]\n番号\t名称\t\t\t引数リスト\t\t\t\tidx #prm prms #ot funcflag\n"+ hr +"\n"
+	
+	repeat max_finfo / SizeOf_STRUCTDAT
+		i = cnt * SizeOf_STRUCTDAT
+		
+		index    = wpeek(finfo, i +  0) : index = to32b_from16b(index)
+		subid    = wpeek(finfo, i +  2) : subid = to32b_from16b(subid)
+		prmidx   = lpeek(finfo, i +  4)
+		prmmax   = lpeek(finfo, i +  8)
+		nameidx  = lpeek(finfo, i + 12)
+		size     = lpeek(finfo, i + 16)
+		otindex  = lpeek(finfo, i + 20)
+		funcflag = lpeek(finfo, i + 24)
+		proc     = funcflag
+		name     = get_cstr( ds, nameidx )
+		is_ctype = ( index == 0xFFFE )
+		
+		sdim prmlist
+		
+	;	if ( funcflag ) { is_ctype = ( otindex & 4 ) != 0 }
+		bCType  = ( index == STRUCTDAT_INDEX_CFUNC )
+		bOnExit = ( funcflag & STRUCTDAT_FUNCFLAG_CLEANUP ) != 0
+		
+		if ( bOnExit ) {
+			prmlist = "[onexit]"
+			
+		} else {
+			repeat prmmax
+				if ( cnt != 0 ) { prmlist += ", " }
+				mptype = wpeek(minfo, ( prmidx + cnt ) * SizeOf_STRUCTPRM + 0)
+				prmlist += getString_mptype( mptype )
+				if ( prm_name_list(prmidx) != "" ) {
+					prmlist += " " + trim_scope(prm_name_list(prmidx))
+				}
+			loop
+		}
+		
+		if ( bCType ) { prmlist = "( "+ prmlist +" )" }//{ name += "()" }
+		
+		out += strf("%d\t%-23s\t%-39s", cnt, name, prmlist)
+		out += strf("\t%2d, %3d, %3d, %2d, 0x%08X", index, prmidx, prmmax, otindex, funcflag)
+;		out += strf("[index = %d; subid = %d; prmindex = %d; prmmax = %d; size = %d; otindex = %d; funcflag = 0x%X]\n", index, subid, prmidx, prmmax, size, otindex, funcflag)
+		out += "\n"
+	loop
+	
+	return out +"\n\n"
+	
+//------------------------------------------------
+// MINFO を表示する
+//------------------------------------------------
+*LShowMInfo
+	if ( max_minfo == 0 ) { return "" }
+	
+	out  = "[MINFO]\n"
+	out += "index\tmptype\t\tsubid\n"+ hr +"\n"
+	repeat max_minfo / SizeOf_STRUCTPRM
+		i = cnt * SizeOf_STRUCTPRM
+		
+		mptype = wpeek(minfo, i + 0)
+		subid  = wpeek(minfo, i + 2) : subid = to32b_from16b(subid)
+		offset = lpeek(minfo, i + 4)
+		
+	;	out += "mptype = " + mptype
+	;	out += "subid  = " + subid
+	;	out += "offset = " + offset
+	;	logmes strf("[mptype = %d; subid = %d; offset = %d]", mptype, subid, offset)
+		
+		out += strf("%d\t%-8s\t%d\n", cnt, getString_mptype(mptype), subid)
+	loop
+	
+	return out +"\n\n"
+	
+//------------------------------------------------
+// HPIBUF を表示する
+//------------------------------------------------
+*LShowHpiBuf
+	if ( max_hpi == 0 ) { return "" }
+	
+	out  = "[HPIBUF]\n"
+	out += "index\tname\t\t\tfuncname\n"+ hr +"\n"
+	repeat max_hpi / SizeOf_HPIDAT
+		i = cnt * SizeOf_HPIDAT
+		
+		nameidx  = wpeek(hpidat, i + 4)
+		funcname = wpeek(hpidat, i + 8)
+		
+		out += strf("%d\t%-8s\t%s\n", cnt, get_cstr(ds, nameidx), get_cstr(ds, funcname))
+	loop
+	
+	return out +"\n\n"
+	
+#module
+
+//------------------------------------------------
+// 文字列変数内の指定インデックスからヌル終端文字列を取得する
+//------------------------------------------------
+#defcfunc get_cstr var buf, int offset
+	dupptr ret, varptr(buf) + offset, 1, vartype("str")
+	return ret
+	
+//------------------------------------------------
+// 文字列変数内の指定インデックスからdouble値を取得
+//------------------------------------------------
+#defcfunc get_double var buf, int offset
+	dupptr ret, varptr(buf) + offset, 8, vartype("double")
+	return ret
+	
+//------------------------------------------------
+// 3 byte peek
+//------------------------------------------------
+#defcfunc tripeek var buf, int offset
+//	return lpeek(buf, offset) & 0x00FFFFFF
+	return ( wpeek(buf, offset) | ( peek(buf, offset + 2) << 16 ) )
+
+// スコープ解決を取り除く
+#defcfunc trim_scope var buf,  local iFound
+	iFound = instr(buf, 0, "@")
+	if ( iFound >= 0 ) {
+		return strmid(buf, 0, iFound)
+	} else {
+		return buf
+	}
+	
+#global
