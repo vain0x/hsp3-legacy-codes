@@ -1,0 +1,6 @@
+# HSP temporary files
+obj
+hsptmp
+hsptmp.i
+packfile
+*.ax
