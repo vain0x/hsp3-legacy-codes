@@ -1,0 +1,31 @@
+
+; エディトコントロール内文字色&背景色変更サンプル (by Kpan)　… から引用させていただきました m(_ _)m
+#uselib "gdi32"
+#func SetTextColor "SetTextColor" int, int
+#func SetBkColor "SetBkColor" int, int
+#cfunc CreateSolidBrush "CreateSolidBrush" int
+#func DeleteObject "DeleteObject" int
+
+; Up & Down コントロール用 (by Kpan 様のサンプル) ##################################################
+
+;	追加のウィンドウスタイル
+#define UDS_WRAP $01		; 最大値・最小値に達したらループ
+#define UDS_ALIGNRIGHT $04	; アップダウンボタンを直前のオブジェクト(右部分)に組み込む
+#define UDS_ALIGNLEFT $08	; アップダウンボタンを直前のオブジェクト(左部分)に組み込む
+#define UDS_ARROWKEYS $20	; カーソルキーで数値変更
+#define UDS_HORZ $40		; アップダウンボタンを左右方向に
+#define UDS_NOTHOUSANDS $80	; ３桁コンマ区切り無効
+
+// ウィンドウID
+#enum wid_split_edit = 0  // 分割版エディット用画面
+#enum wid_tool            // ツールウィンドウ (開くたびに変更される)
+#enum wid_exit            // 終了時用の画面
+#enum wid_tab_edit        // タブ版エディット用画面
+#enum wid_secret_key      // 秘密コマンド取得用画面
+#enum wid_exit_save       // 終了時の∞セーブ用画面
+#enum wid_tab_first       // これ以降はタブページに使用される
+
+#define count_boxes 6  // 箱の数
+
+#define font_gui(%1, %2 = 16, %3 = font_normal) \
+	font "MS UI Gothic", %2, %3
