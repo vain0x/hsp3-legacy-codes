@@ -8,4 +8,5 @@
 * [Gitの記録](git_log.md)
 * [GitHubに送る](github_push.md)
 * [Gitの補足](git_appendix.md)
-
+* [Git様のブランチ](chapter09.md)
+* [Gitのマージ](chapter10.md)
