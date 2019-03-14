@@ -1,0 +1,84 @@
+// WIP
+
+#module
+
+#uselib "tomlc99_dll.dll"
+#cfunc _toml_parse "_tomlc99_parse@12" sptr, sptr, sptr
+#func _toml_free "_tomlc99_free@4" sptr
+#cfunc _toml_key_in "_tomlc99_key_in@8" sptr, sptr
+#cfunc _toml_raw_in "_tomlc99_raw_in@8" sptr, sptr
+#cfunc _toml_array_in "_tomlc99_array_in@8" sptr, sptr
+#cfunc _toml_table_in "_tomlc99_table_in@8" sptr, sptr
+#cfunc _toml_raw_at "_tomlc99_raw_at@8" sptr, sptr
+#cfunc _toml_array_at "_tomlc99_array_at@8" sptr, sptr
+#cfunc _toml_table_at "_tomlc99_table_at@8" sptr, sptr
+#cfunc _toml_array_nelem "_tomlc99_array_nelem@4" sptr
+#cfunc _toml_table_nkval "_tomlc99_table_nkval@4" sptr
+#cfunc _toml_rtos "_tomlc99_rtos@8" sptr, var
+#cfunc _toml_rtob "_tomlc99_rtob@8" sptr, var
+#cfunc _toml_rtoi "_tomlc99_rtoi@8" sptr, var
+#cfunc _toml_rtod "_tomlc99_rtod@8" sptr, var
+
+// TOML コードを解析する。
+// 成功したときは、テーブルを返す。
+// このテーブルは、不要になったら toml_free で解放できる。
+// 失敗したときは 0 を返す。errbuf にエラー内容が書き込まれる。
+#defcfunc toml_parse var src, var errbuf, \
+	local errbuf_size
+
+	errbuf_size = 4096
+	sdim errbuf, errbuf_size
+	return _toml_parse(src, errbuf, errbuf)
+
+// TOML ファイルのテーブルを解放する。
+// toml_parse が返したテーブルのみ解放できる。
+#deffunc toml_free int tab
+
+	_toml_free tab
+	return
+
+// 配列の要素数を取得する。
+#defcfunc toml_array_length int arr
+
+	return _toml_array_nelem(arr)
+
+// テーブルの要素数を取得する。
+#defcfunc toml_table_length int tab
+
+	return _toml_table_nkval(tab)
+
+// テーブルにキーが含まれるかを取得する。
+#defcfunc toml_table_has int tab, str key
+
+	return _toml_raw_in(tab, key) != 0
+
+// テーブルの指定されたキーに対応する int 型の値を取得する。
+// キーが存在しないか、値が int 型でないときは default_value を取得する。
+#defcfunc toml_table_int int tab, str key, int default_value, \
+	local raw, local value
+
+	raw = _toml_raw_in(tab, key)
+	if raw == 0 {
+		// キーが存在しないとき
+		return default_value
+	}
+	if _toml_rtoi(raw, value) != 0 {
+		// int 型ではないとき
+		return default_value
+	}
+	return value
+
+#global
+
+	src = "answer = 42\nb = 2\n"
+	table = toml_parse(src, error)
+	if table == 0 {
+		mes error
+		stop
+	}
+
+	mes toml_table_length(table)
+	mes toml_table_int(table, "answer")
+
+	toml_free table
+	stop
