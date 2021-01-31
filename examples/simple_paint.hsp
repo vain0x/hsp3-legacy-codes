@@ -1,0 +1,190 @@
+// 簡易ペイント ePaint
+// 操作先ウィンドウが常に IDW_MAIN になるようにしている
+
+#packopt name "ePaint"
+#packopt hide 1
+
+// WindowID
+#const IDW_MAIN  1		// 僕の新しい書き方 [ID of Window, main]
+#const IDW_TOOL  2		// ツールボックス
+#const IDW_BGPIC 3		// 背景画像
+#const IDW_DREW  4		// 描画された内容 ( drew …… draw の過去形 )
+#const IDW_TEMP  5		// 保存時に内容をコピーするバッファ
+
+// DrawMode
+#const DRAWMODE_ERASER  0	// 消しゴム
+#const DRAWMODE_DOTPEN  1	// 鉛筆( 点 )
+#const DRAWMODE_FREEPEN 2	// 自由線
+#const DRAWMODE_ELLIPSE 3	// 円形
+
+// これは分からなくていい
+#undef mousex
+#undef mousey
+#define global mousex (ginfo(0)-(ginfo(4)+(ginfo(10)-ginfo(12))/2))
+#define global mousey (ginfo(1)-(ginfo(5)+(ginfo(11)-ginfo(13))-(ginfo(10)-ginfo(12))/2))
+
+//######## メインルーチン ########
+*main
+	gosub *init				// initialize の略
+	gsel IDW_TOOL, 1
+	gsel IDW_MAIN, 1
+	goto *mainlp
+	
+*mainlp
+	
+	gosub *Drawn			// 書き込みを受け付ける
+	gosub *RedrawMain		// 再描画
+	
+	do
+		await 17
+	until ( ginfo_act == IDW_MAIN )		// アクティブになるまで次のループに入らない
+	goto *mainlp
+	
+//######## サブルーチン群 ########
+*init
+	randomize
+	gsel 0, -1
+	
+	gosub *SetWindow		// 画面を準備する
+	gosub *ClearVariable	// 変数を初期化
+	return
+	
+*SetWindow
+	buffer IDW_BGPIC, ginfo_dispx, ginfo_dispy	// デスクトップと同じ大きさで作成
+	buffer IDW_DREW,  ginfo_dispx, ginfo_dispy
+	gosub *SetPenetrateColor : boxf : color		// 透過色で塗りつぶす
+	
+	// メイン画面
+	screen IDW_MAIN, ginfo_dispx, ginfo_dispy, 2, , , 480, 360
+	title "簡易ペイント"
+	
+	// ツールボックス
+	screen IDW_TOOL, 100, 25 * 9 - 2, 2 + 4 + 8, ginfo_wx2, ginfo_wy1	// メイン画面の隣に作成
+	title "簡易ペイント - toolbox"
+		objsize 100, 25
+		button gosub "鉛筆",           *ToolBtn_SetDotPen
+		button gosub "自由線",         *ToolBtn_SetFreePen
+		button gosub "円形ペン",       *ToolBtn_SetEllipse
+		button gosub "ペン色を変更",   *ToolBtn_ChgPenColor
+		button gosub "消しゴム",       *ToolBtn_SetEraser
+		button gosub "全部消去",       *ToolBtn_Clear
+		button gosub "背景読み込み",   *ToolBtn_LoadBgpic
+		button gosub "背景塗りつぶし", *ToolBtn_BgBoxf
+		button gosub "全体を保存",     *ToolBtn_SaveAll
+	
+	return
+	
+*ClearVariable
+	dim pencolor, 3				// ペンの色( 0, 0, 0 なので黒 )
+	drawmode = DRAWMODE_FREEPEN	// 自由線
+	dim position, 2, 2			// 書き込み座標( 前回のモノも保存できる )
+	
+	return
+	
+*RedrawMain
+	redraw 2
+	
+	color 255, 255, 255 : boxf
+	
+	// 背景画像をコピー
+	gosub *SetPenetrateColor	// 透過色
+	gmode 0
+	gcopy IDW_BGPIC, 0, 0, ginfo_winx, ginfo_winy
+	
+	// ドロー情報をコピー
+	gmode 4, ginfo_winx, ginfo_winy, 256
+	gcopy IDW_DREW, 0, 0
+	
+	redraw
+	return
+	
+*Drawn
+	getkey bClick, 1
+	if ( bClick == 0 ) { getkey bClick, 2 }	// 左利きの人への配慮
+	
+	if ( bClick != 0 ) {			// クリックされていたら
+		position = mousex, mousey	// 座標を記録
+		gsel IDW_DREW
+		
+		switch drawmode
+		case DRAWMODE_DOTPEN  : pset   position(0), position(1)
+			swbreak
+		case DRAWMODE_FREEPEN : line   position(0), position(1)
+			swbreak
+		case DRAWMODE_ELLIPSE : circle position(0) - 6, position(1) - 6, position(0) + 6, position(1) + 6
+			swbreak
+		case DRAWMODE_ERASER
+			color 123, 123, 123 : boxf position(0) - 6, position(1) - 6, position(0) + 6, position(1) + 6
+			color pencolor(0), pencolor(1), pencolor(2)
+			swbreak
+		default
+			logmes "謎のペンを使用しています！！"	// エラーチェック
+			assert
+		swend
+		
+		gsel IDW_MAIN
+		position(0, 1) = position(0), position(1)	// (0, 1) (1, 1) に書き込んだ座標を保存
+	}
+	return
+	
+// 透過色に設定する
+*SetPenetrateColor
+	color 123, 123, 123
+	return
+	
+// ペン色を反映させる
+*SetPenColor
+	gsel IDW_DREW : color pencolor(0), pencolor(1), pencolor(2)
+	gsel IDW_MAIN
+	return
+	
+//######## ツールボタンの機能 ########
+*ToolBtn_SetDotPen  : drawmode = DRAWMODE_DOTPEN  : return
+*ToolBtn_SetFreePen : drawmode = DRAWMODE_FREEPEN : return
+*ToolBtn_SetEllipse : drawmode = DRAWMODE_ELLIPSE : return
+*ToolBtn_SetEraser  : drawmode = DRAWMODE_ERASER  : return
+*ToolBtn_ChgPenColor
+	dialog "", 33, ""			// 色設定ダイアログ
+	if ( stat == 0 ) { return }
+	repeat 3
+		pencolor(cnt) = ginfo(16 + cnt)	// rgb を pencolor に保存
+	loop
+	gosub *SetPenColor
+	return
+	
+*ToolBtn_Clear
+	gsel IDW_DREW : gosub *SetPenetrateColor : boxf : gosub *SetPenColor
+	gsel IDW_MAIN : gosub *RedrawMain
+	return
+	
+*ToolBtn_LoadBgpic
+	dialog "jpg;*.bmp", 16, "BackGround"	// jpg か bmp 形式のファイルを開く
+	if ( stat == 0 ) { return }				// 選択されなかったら戻る
+	filename = refstr
+	gsel IDW_BGPIC : picload filename		// 背景画像を読み込む
+	gsel IDW_MAIN  : gosub *RedrawMain
+	return
+	
+*ToolBtn_BgBoxf
+	gsel IDW_BGPIC
+	dialog "", 33, ""
+	if ( stat == 0 ) { gsel IDW_MAIN : return }
+	
+	color ginfo_r, ginfo_g, ginfo_b
+	boxf			// 塗りつぶす
+	gsel IDW_MAIN
+	gosub *RedrawMain
+	return
+	
+*ToolBtn_SaveAll
+	dialog "bmp", 17, "Image"		// 保存先のファイルを選んでもらう
+	if ( stat == 0 ) { return }		// 選ばれなかったら戻る
+	filename = refstr				// 記憶しておく
+	
+	buffer IDW_TEMP,       ginfo_winx, ginfo_winy
+	gcopy  IDW_MAIN, 0, 0, ginfo_winx, ginfo_winy
+	
+	bmpsave filename		// 保存
+	gsel IDW_MAIN
+	return
+	

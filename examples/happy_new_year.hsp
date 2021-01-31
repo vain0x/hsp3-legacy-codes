@@ -1,0 +1,61 @@
+// 日章旗：謹賀新年バージョン
+
+#const IDW_MAIN 0
+#const IDW_BUF  1
+#const MULTI   20	// 拡大倍率
+
+*main
+	gosub *LInitialize
+	gosub *LSetVariable
+	gosub *LSetWindow
+	
+	gsel IDW_MAIN, 1
+	stop
+	
+*LInitialize
+	randomize
+	gsel 0, -1
+	return
+	
+*LSetVariable
+	message  = "謹", "賀", "新", "年"
+	arraylen = length(message)
+	fontpt   = 10
+	
+	bufx     = MULTI * 3	// 日章旗は 3 : 2 の比率
+	bufy     = MULTI * 2
+	diameter = bufy * 3 / 5	// 日の丸の直径は旗の縦幅の 3/5
+	return
+	
+*LSetWindow
+	// 旗バッファ
+;	bgscr  IDW_BUF, bufx, bufy
+	buffer IDW_BUF, bufx, bufy
+		color 208, 19, 69		// 日の丸は紅色
+		circle (bufx - diameter) / 2, (bufy - diameter) / 2, bufx - ((bufx - diameter) / 2), bufy - ((bufy - diameter) / 2)
+		
+	// メイン画面
+	screen IDW_MAIN, bufx * fontpt, bufy * fontpt, 2
+		font msgothic, fontpt
+		gosub *LRedrawMain
+	return
+	
+*LRedrawMain
+	redraw 2
+	color 255, 255, 255 : boxf
+	color 208, 19, 69
+	i = 0
+	for x, 0, bufx
+		for y, 0, bufy
+			gsel IDW_BUF
+			pget x, y
+			if ( ginfo_r == 208 && ginfo_g == 19 && ginfo_b == 69 ) {
+				gsel IDW_MAIN
+				pos x * fontpt, y * fontpt : mes message( rnd(arraylen) )
+;				pos x * fontpt, y * fontpt : mes message(i) : i ++ : if ( i == arraylen ) { i = 0 }
+			}
+		next
+	next
+	redraw
+	return
+	

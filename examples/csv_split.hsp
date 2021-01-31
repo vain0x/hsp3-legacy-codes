@@ -1,0 +1,49 @@
+
+#module
+/**
+%index
+csv_split
+CSV文字列の分割
+%prm
+s, dst
+s: CSV文字列の変数
+dst: 分割されたデータが格納される配列変数
+return stat: 要素数
+%inst
+CSV形式の文字列を分割して、配列変数 dst に格納する。
+dst は文字列型に初期化(sdim)される。
+
+" で括られたデータは、内部の , も含めて1つのデータとみなす。エスケープシーケンスはない。
+
+空の要素はスキップされない。末尾のカンマも無視されない。
+%*/
+#deffunc csv_split var s, array dst,  \
+	local dst_len, local i, local len, local l, local delim_len
+	
+	sdim dst
+	len = strlen(s)
+	while (i <= len)  // 末尾カンマも区切りとみなす
+		if ( peek(s, i) == '"' ) {
+			i ++
+			l = instr(s, i, "\",")
+			delim_len = 2
+			
+		} else {
+			l = instr(s, i, ",")
+			delim_len = 1
+		}
+		if ( l < 0 ) { l = len - i }
+		
+		dst(dst_len) = strmid(s, i, l)
+		dst_len ++
+		
+		i += l + delim_len
+	wend
+	return dst_len
+#global
+
+#if 0
+	s = "100,\"100,000\",100"
+	csv_split s, a
+	mes stat
+#endif

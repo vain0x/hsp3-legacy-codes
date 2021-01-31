@@ -1,0 +1,55 @@
+#ifndef IG_DIRLIST_DFS_HSP
+#define IG_DIRLIST_DFS_HSP
+
+#module
+/**
+ファイルを再帰的に検索する
+
+カレントディレクトリ以下にある、ワイルドカードで指定された名前をもつファイルのパスをすべて列挙する。
+パスはカレントディレクトリからの相対パス。
+
+明示的にスタックを使って、深さ優先探索で探す。
+
+@prm pathlist: パスが改行区切りで格納される。
+@prm wildcard: ワイルドカード
+@prm flags: ファイル検索フラグ
+@return: みつかったファイルの数
+*/
+#deffunc dirlist_dfs array paths, str wildcard
+	if ( vartype(paths) != 2 ) { sdim paths }
+	repeat
+		//次に探すべきディレクトリ
+		if ( cnt  == 0 ) {
+			dir = ""
+		} else {
+			if ( dir_stk_len == 0 ) { break }
+			dir = dir_stk(dir_stk_len - 1) + "\\"
+			dir_stk_len --
+		}
+		
+		//ファイルを探す
+		path_note_index = 0
+		dirlist path_note, dir + wildcard, 3
+		repeat stat
+			getstr path, path_note, path_note_index : path_note_index += strsize
+			
+			//みつけたファイルパスを paths に追加する
+			paths(count) += dir + path
+			paths_len ++
+		loop
+		
+		//サブディレクトリを探す
+		subdir_note_index = 0
+		dirlist subdir_note, dir + "*", 5
+		repeat stat
+			getstr subdir, subdir_note, subdir_note_index : subdir_note_index += strsize
+			
+			//探すべきディレクトリの一覧に追加する
+			dir_stk(dir_stk_len) = dir + subdir
+			dir_stk_len ++
+		loop
+	loop
+	return paths_len
+#global
+
+#endif
