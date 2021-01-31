@@ -1,0 +1,15 @@
+// サンプル・スクリプト
+
+#packopt name "sample"
+
+#include "rtjump.as"
+
+	lb = *a
+	jump *a		// ラベル
+	jump lb		// ラベル型変数
+	stop
+	
+*a
+	mes "ジャンプ成功！  (*a)"
+	return
+	

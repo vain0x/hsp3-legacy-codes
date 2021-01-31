@@ -1,0 +1,223 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="hsprt|Win32">
+      <Configuration>hsprt</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\hspsdk\hsp32\win32gui\hsp3.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="hpimain.cpp" />
+    <ClCompile Include="hsp32\dpmread.cpp" />
+    <ClCompile Include="hsp32\hsp3.cpp" />
+    <ClCompile Include="hsp32\hsp3code.cpp" />
+    <ClCompile Include="hsp32\hsp3debug.cpp" />
+    <ClCompile Include="hsp32\hsp3exrt.cpp" />
+    <ClCompile Include="hsp32\hsp3int.cpp" />
+    <ClCompile Include="hsp32\hspvar_core.cpp" />
+    <ClCompile Include="hsp32\hspvar_double.cpp" />
+    <ClCompile Include="hsp32\hspvar_int.cpp" />
+    <ClCompile Include="hsp32\hspvar_label.cpp" />
+    <ClCompile Include="hsp32\hspvar_str.cpp" />
+    <ClCompile Include="hsp32\hspvar_struct.cpp" />
+    <ClCompile Include="hsp32\stack.cpp" />
+    <ClCompile Include="hsp32\strbuf.cpp" />
+    <ClCompile Include="hsp32\strnote.cpp" />
+    <ClCompile Include="hsp32\win32gui\comobj.cpp" />
+    <ClCompile Include="hsp32\win32gui\comobj_event.cpp" />
+    <ClCompile Include="hsp32\win32gui\fcpoly.cpp" />
+    <ClCompile Include="hsp32\win32gui\filedlg.cpp" />
+    <ClCompile Include="hsp32\win32gui\hsp3extlib.cpp" />
+    <ClCompile Include="hsp32\win32gui\hsp3ext_win.cpp" />
+    <ClCompile Include="hsp32\win32gui\hsp3gr_wingui.cpp" />
+    <ClCompile Include="hsp32\win32gui\hsp3win.cpp" />
+    <ClCompile Include="hsp32\win32gui\hspvar_comobj.cpp" />
+    <ClCompile Include="hsp32\win32gui\hspvar_variant.cpp" />
+    <ClCompile Include="hsp32\win32gui\hspwnd_obj.cpp" />
+    <ClCompile Include="hsp32\win32gui\hspwnd_win.cpp" />
+    <ClCompile Include="hsp32\win32gui\main.cpp" />
+    <ClCompile Include="hsp32\win32gui\mmman.cpp" />
+    <ClCompile Include="hsp32\win32gui\supio_win.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="hpimain.h" />
+    <ClInclude Include="hsp32\dpmread.h" />
+    <ClInclude Include="hsp32\hsp3.h" />
+    <ClInclude Include="hsp32\hsp3code.h" />
+    <ClInclude Include="hsp32\hsp3config.h" />
+    <ClInclude Include="hsp32\hsp3debug.h" />
+    <ClInclude Include="hsp32\hsp3exrt.h" />
+    <ClInclude Include="hsp32\hsp3ext.h" />
+    <ClInclude Include="hsp32\hsp3gr.h" />
+    <ClInclude Include="hsp32\hsp3int.h" />
+    <ClInclude Include="hsp32\hsp3struct.h" />
+    <ClInclude Include="hsp32\hspvar_core.h" />
+    <ClInclude Include="hsp32\hspvar_label.h" />
+    <ClInclude Include="hsp32\hspwnd.h" />
+    <ClInclude Include="hsp32\stack.h" />
+    <ClInclude Include="hsp32\strbuf.h" />
+    <ClInclude Include="hsp32\strnote.h" />
+    <ClInclude Include="hsp32\supio.h" />
+    <ClInclude Include="hsp32\win32gui\comobj.h" />
+    <ClInclude Include="hsp32\win32gui\comobj_event.h" />
+    <ClInclude Include="hsp32\win32gui\fcpoly.h" />
+    <ClInclude Include="hsp32\win32gui\filedlg.h" />
+    <ClInclude Include="hsp32\win32gui\hsp3extlib.h" />
+    <ClInclude Include="hsp32\win32gui\hsp3ext_win.h" />
+    <ClInclude Include="hsp32\win32gui\hsp3gr_wingui.h" />
+    <ClInclude Include="hsp32\win32gui\hsp3win.h" />
+    <ClInclude Include="hsp32\win32gui\hspvar_comobj.h" />
+    <ClInclude Include="hsp32\win32gui\hspvar_variant.h" />
+    <ClInclude Include="hsp32\win32gui\hspwnd_win.h" />
+    <ClInclude Include="hsp32\win32gui\mmman.h" />
+    <ClInclude Include="hsp32\win32gui\supio_win.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="hsp32\win32gui\hsp3.ico" />
+    <None Include="hsp32\win32gui\XPStyle.xml" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{05713FB6-5219-4BB5-B965-F30E5040BA7C}</ProjectGuid>
+    <RootNamespace>rtjump</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='hsprt|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='hsprt|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='hsprt|Win32'">$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='hsprt|Win32'">$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='hsprt|Win32'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='hsprt|Win32'">false</GenerateManifest>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;HSPEXRT;HSPWIN;HSPWINGUI;HSPDEBUG;_DEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <AdditionalIncludeDirectories>C:\MyDocs\Programming\Cpp\MakeHPI\rtjump\src\hsp32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)hsprt.exe</OutputFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(OutDir)hsprt.pdb</ProgramDatabaseFile>
+      <SubSystem>Windows</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>WIN32;HSPEXRT;HSPWIN;HSPWINGUI;HSPDEBUG;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>C:\MyDocs\Programming\Cpp\MakeHPI\rtjump\src\hsp32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(ProjectName).exe</OutputFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='hsprt|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>WIN32;HSPEXRT;HSPWIN;HSPWINGUI;NDEBUG;_WINDOWS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>C:\MyDocs\Programming\Cpp\MakeHPI\rtjump\src\hsp32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(ProjectName).exe</OutputFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

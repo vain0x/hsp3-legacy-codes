@@ -1,0 +1,226 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="hspsdk">
+      <UniqueIdentifier>{23ebd6eb-961a-4942-ac42-53e5570c75b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="hspsdk\hsp32">
+      <UniqueIdentifier>{1dd61451-046d-45c6-83b8-b6eebaf31086}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="hspsdk\hsp32\exrt">
+      <UniqueIdentifier>{fc461ff7-b47a-42da-9f81-13fb647d2cbd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="hspsdk\hsp32\win32gui">
+      <UniqueIdentifier>{146885df-7460-457a-920d-172929c26733}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="hspsdk\rc">
+      <UniqueIdentifier>{4d08e7af-ec4e-48e6-bae5-a53cfdd10df3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="jump">
+      <UniqueIdentifier>{f0836e79-91c4-4b5b-baa2-0ed05d4b80f1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\hspsdk\hsp32\win32gui\hsp3.rc">
+      <Filter>hspsdk\rc</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="hsp32\dpmread.cpp">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\hsp3.cpp">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\hsp3code.cpp">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\hsp3debug.cpp">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\hsp3int.cpp">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\hspvar_core.cpp">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\hspvar_double.cpp">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\hspvar_int.cpp">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\hspvar_label.cpp">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\hspvar_str.cpp">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\hspvar_struct.cpp">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\stack.cpp">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\strbuf.cpp">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\strnote.cpp">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\hsp3exrt.cpp">
+      <Filter>hspsdk\hsp32\exrt</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\win32gui\comobj.cpp">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\win32gui\comobj_event.cpp">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\win32gui\fcpoly.cpp">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\win32gui\filedlg.cpp">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\win32gui\hsp3ext_win.cpp">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\win32gui\hsp3extlib.cpp">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\win32gui\hsp3gr_wingui.cpp">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\win32gui\hsp3win.cpp">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\win32gui\hspvar_comobj.cpp">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\win32gui\hspvar_variant.cpp">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\win32gui\hspwnd_obj.cpp">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\win32gui\hspwnd_win.cpp">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\win32gui\main.cpp">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\win32gui\mmman.cpp">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClCompile>
+    <ClCompile Include="hsp32\win32gui\supio_win.cpp">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClCompile>
+    <ClCompile Include="hpimain.cpp">
+      <Filter>jump</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="hsp32\dpmread.h">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\hsp3.h">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\hsp3code.h">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\hsp3config.h">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\hsp3debug.h">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\hsp3ext.h">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\hsp3gr.h">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\hsp3int.h">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\hsp3struct.h">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\hspvar_core.h">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\hspvar_label.h">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\hspwnd.h">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\stack.h">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\strbuf.h">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\strnote.h">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\supio.h">
+      <Filter>hspsdk\hsp32</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\hsp3exrt.h">
+      <Filter>hspsdk\hsp32\exrt</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\win32gui\comobj.h">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\win32gui\comobj_event.h">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\win32gui\fcpoly.h">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\win32gui\filedlg.h">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\win32gui\hsp3ext_win.h">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\win32gui\hsp3extlib.h">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\win32gui\hsp3gr_wingui.h">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\win32gui\hsp3win.h">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\win32gui\hspvar_comobj.h">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\win32gui\hspvar_variant.h">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\win32gui\hspwnd_win.h">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\win32gui\mmman.h">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClInclude>
+    <ClInclude Include="hsp32\win32gui\supio_win.h">
+      <Filter>hspsdk\hsp32\win32gui</Filter>
+    </ClInclude>
+    <ClInclude Include="hpimain.h">
+      <Filter>jump</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="hsp32\win32gui\hsp3.ico">
+      <Filter>hspsdk\rc</Filter>
+    </None>
+    <None Include="hsp32\win32gui\XPStyle.xml">
+      <Filter>hspsdk\rc</Filter>
+    </None>
+  </ItemGroup>
+</Project>

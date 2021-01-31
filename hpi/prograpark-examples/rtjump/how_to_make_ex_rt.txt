@@ -1,0 +1,59 @@
+
+	How to make ex-Runtime for hsp3.2 (from hpi)
+	
+＠準備
+	hpi のソースをおくフォルダを prj とする。これを元に拡張ランタイムを作る。
+	prj/hsp32 フォルダに、OpenHSP の trunk/hsp3 フォルダの内部のファイル群をすべてコピーする。
+		download: from OpenHSP/trunk(http://dev.onionsoft.net/trac/browser/trunk)
+	
+	また、hspsdk/hsp32 の中に次の２ファイルを保存しておく。
+		- hsp3exrt.h		// exrt: extra runtime (拡張ランタイム) の略
+		- hsp3exrt.cpp
+	hpi 版との互換性を保つには、hsp3plugin.h, hsp3plugin.cpp もこの中に入れておく。
+	
+＠プロジェクト作成
+	フォルダ hsp32/win32gui の中にある hsp3_vc2008.vcproj を prj にコピーし、これを開く。
+	※その前にテキストエディタで開いて、「Name="hsp3"」「RootNamespace="hsp3"」の hsp3 を、hpi の名称に直しておいてもよい。
+	元々含まれているファイルを取り除き、以下の３つを放り込む。適当にフィルターで分類する。
+		- hsp32/ と hsp32/win32gui/ 以下の .h, .cpp, .rc, .ico
+		- hsp3exrt.cpp, hsp3exrt.h
+		- プラグイン側のソース
+	
+＠コードの修正
+	次の２ファイルなどを、それぞれ修正する (ただし xxx はプロジェクトにあわせて変更すべし)。
+	
+	@ hsp3struct.h
+		- #define TYPE_xxx 18 を追加。
+		- TYPE_USERDEF を 18 から 19 に変更。
+		- HSP3_FUNC_MAX, HSP3_TYPE_USER を TYPE_USERDEF に変更。
+		
+	@ hsp3win.cpp
+		- extern void hsp3typeinit_xxx( HSP3TYPEINFO* info );
+			// 前方の #include 群の最後尾あたりに。
+		- hsp3typeinit_xxx( code_gettypeinfo( TYPE_xxx ) );
+			// 360~363 行目くらいに、これと似た行がいくつかあるので、その最後尾あたりに。
+		
+	@ その他
+		- hsp3typeinit_xxx の宣言の、「EXPORT void WINAPI」を「HPIINIT(void)」に変更する。
+		- "hsp3plugin.h" を include しているのを、すべて "hsp3exrt.h" に書き換える。
+		
+	@ hsp3typeinit_xxx は、hsp3sdk_init() を呼び出す関数で、HSP から #regcmd されるときの関数名。
+	@	違ったら改名すべし。
+	
+＠プロジェクトの設定
+	「追加のインクルードディレクトリ」に、１つ追加する。
+		- hsp32
+	
+	「プリプロセッサの定義」に、１つ追加する。
+		- HSPEXRT
+	
+	ちなみに、各構成の役割は以下のとおり。
+		Debug   : ランタイムのデバッグ版
+		Release : デバッグ実行用のランタイム
+		hsprt   : 実行形式を作成するときのランタイム。
+	hsprt は *.exe を吐くが、これは *.hrt または hsprt に改名して使用する。
+	
+	
+＠完了
+	デバッグするなり公開するなり。
+	
